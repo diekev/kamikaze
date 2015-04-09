@@ -1,0 +1,7 @@
+# build files
+*.o
+*.out
+
+# path to the build
+/bin
+
