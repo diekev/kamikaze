@@ -1,5 +1,8 @@
 #include <fstream>
+#include <GL/glew.h>
+#include <GL/freeglut.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "GLSLShader.h"
@@ -8,6 +11,8 @@
 #define XDIM 256
 #define YDIM 256
 #define ZDIM 256
+
+std::string volume_file = "/home/kevin/Téléchargements/Engine256.raw";
 
 GLuint textureID;
 GLuint volumeVAO, volumeVBO;
@@ -101,23 +106,20 @@ int FindAbsMax(glm::vec3 v) {
 	return max_dim;
 }
 
-void render()
+void sliceVolume()
 {
-	glGenVertexArrays(1, &volumeVAO);
-	glGenBuffers(1, &volumeVBO);
-	glBindVertexArray(volumeVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, volumeVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vTextureSlices), 0, GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glBindVertexArray(0);
-
+	/* get the max and min distance of eacg vertex of the unit cube
+	 * in the viewing direction
+	 */
 	float max_dist = glm::dot(viewDir, vertexList[0]);
 	float min_dist = max_dist;
 	int max_index = 0;
 	int count = 0;
 
 	for (int i = 0; i < 8; ++i) {
+		/* get the distance between the current unit cube vertex and
+		 * the view vector by dot product
+		 */
 		float dist = glm::dot(viewDir, vertexList[i]);
 
 		if (dist > max_dist) {
@@ -134,18 +136,33 @@ void render()
 	max_dist -= EPSILON;
 	min_dist += EPSILON;
 
-	// determine max and min distances
+	/* start and direction vectors */
 	glm::vec3 vecStart[12], vecDir[12];
+	/* lambda intersection values */
 	float lambda[12], lambda_inc[12];
 	float denom = 0.0f;
+
+	/* set the minimum distance as the plane_dist
+	 * subtract the max and min distance and divide by the total number of
+	 * slices to get the plane increment
+	 */
 	float plane_dist = min_dist;
 	float plane_dist_inc = (max_dist - min_dist) / float(num_slices);
 
+	/* for all egdes */
 	for (int i = 0; i < 12; ++i) {
+		/* get the start position vertex by table lookup */
 		vecStart[i] = vertexList[edges[edgeList[max_index][i]][0]];
+
+		/* get the direction by table lookup */
 		vecDir[i] = vertexList[edges[edgeList[max_index][i]][1]] - vecStart[i];
+
+		/* do a dot of vecDir and the view direction vector */
 		denom = glm::dot(vecDir[i], viewDir);
 
+		/* determine the plane intersection parameter (lambda) and
+		 * plane intersection parameter increment (lambda_inc)
+		 */
 		if (1.0f + denom != 1.0f) {
 			lambda_inc[i] = plane_dist_inc / denom;
 			lambda[i] = (plane_dist - glm::dot(vecStart[i], viewDir)) / denom;
@@ -156,7 +173,9 @@ void render()
 		}
 	}
 
-	// determine vecStart and vecDir values
+	/* for a plane and sub intersection, we can have a minimum of 3 and
+	 * a maximum of 6 vertex polygon
+	 */
 	glm::vec3 intersections[6];
 	float dL[12];
 
@@ -244,13 +263,140 @@ void render()
 		}
 	}
 
-	// update buffer object
+	/* update buffer object */
 	glBindBuffer(GL_ARRAY_BUFFER, volumeVBO);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vTextureSlices), &(vTextureSlices[0].x));
 }
 
-void onRender()
+#include <iostream>
+
+// camera transform variables
+int state = 0, oldX = 0, oldY = 0;
+float rX = 4.0f, rY = 50.0f, dist = -2.0f;
+
+glm::vec4 bg = glm::vec4(0.5f, 0.5f, 1.0f, 1.0f);
+
+bool bViewRotated = false;
+
+void OnMouseDown(int button, int s, int x, int y)
 {
+	if (s == GLUT_DOWN) {
+		oldX = x;
+		oldY = y;
+	}
+
+	if (button == GLUT_MIDDLE_BUTTON) {
+		state = 0;
+	}
+	else {
+		state = 1;
+	}
+
+	if (s == GLUT_UP) {
+		bViewRotated = false;
+	}
+}
+
+void OnMouseMove(int x, int y)
+{
+	if (state == 0) {
+		dist += (y - oldY) / 50.0f;
+	}
+	else {
+		rX += (y - oldY) / 5.0f;
+		rY += (x - oldX) / 5.0f;
+		bViewRotated = true;
+	}
+
+	oldX = x;
+	oldY = y;
+
+	glutPostRedisplay();
+}
+
+void OnInit()
+{
+	shader.LoadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
+	shader.LoadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
+
+	shader.CreateAndLinkProgram();
+	shader.Use();
+	shader.AddAttribute("vVertex");
+	shader.AddUniform("MVP");
+	shader.AddUniform("volume");
+	glUniform1i(shader("volume"), 0);
+	shader.UnUse();
+
+	if (loadVolumeFile(volume_file)) {
+		std::cout << "Volume data loaded succesfully.\n";
+	}
+	else {
+		std::cerr << "Cannot load volume data!\n";
+		return;
+	}
+
+	glClearColor(bg.r, bg.g, bg.b, bg.a);
+
+	glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, dist));
+	glm::mat4 Rx = glm::rotate(T, rX, glm::vec3(1.0f, 0.0f, 0.0f));
+	glm::mat4 MV = glm::rotate(Rx, rY, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	viewDir = -glm::vec3(MV[0][2], MV[1][2], MV[2][2]);
+
+	/* setup the vertex array and buffer objects */
+	glGenVertexArrays(1, &volumeVAO);
+	glGenBuffers(1, &volumeVBO);
+
+	glBindVertexArray(volumeVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, volumeVBO);
+
+	// pass the sliced volume vectore to buffer output memory
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vTextureSlices), 0, GL_DYNAMIC_DRAW);
+
+	// enable vertex attribute array for position
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindVertexArray(0);
+
+	sliceVolume();
+
+	std::cout << "Initialisation succesfull!\n";
+}
+
+void OnShutDown()
+{
+	shader.DeleteShaderProgram();
+
+	glDeleteVertexArrays(1, &volumeVAO);
+	glDeleteBuffers(1, &volumeVBO);
+	glDeleteTextures(1, &textureID);
+
+	std::cout << "Shutdown succesfull!\n";
+}
+
+void OnResize(int w, int h)
+{
+	glViewport(0, 0, (GLsizei)w, (GLsizei)h);
+	P = glm::perspective(60.0f, (float)w/h, 0.1f, 1000.0f);
+}
+
+void OnRender()
+{
+	glm::mat4 Tr = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, dist));
+	glm::mat4 Rx = glm::rotate(Tr, rX, glm::vec3(1.0f, 0.0f, 0.0f));
+	glm::mat4 MV = glm::rotate(Rx, rY, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	viewDir = -glm::vec3(MV[0][2], MV[1][2], MV[2][2]);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glm::mat4 MVP = P * MV;
+
+	if (bViewRotated) {
+		sliceVolume();
+	}
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glBindVertexArray(volumeVAO);
@@ -259,4 +405,49 @@ void onRender()
 	glDrawArrays(GL_TRIANGLES, 0, sizeof(vTextureSlices) / sizeof(vTextureSlices[0]));
 	shader.UnUse();
 	glDisable(GL_BLEND);
+	glutSwapBuffers();
+}
+
+const int WIDTH = 1280;
+const int HEIGHT = 960;
+
+int main(int argc, char *argv[])
+{
+	int i = pthread_getconcurrency();
+	(void)i;
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+	glutInitContextVersion(3, 3);
+	glutInitContextFlags(GLUT_CORE_PROFILE | GLUT_DEBUG);
+	glutInitContextProfile(GLUT_FORWARD_COMPATIBLE);
+	glutInitWindowSize(WIDTH, HEIGHT);
+	glutCreateWindow("Getting started with OpenGL 3.3");
+	glewExperimental = GL_TRUE;
+	GLenum err = glewInit();
+
+	if (GLEW_OK != err) {
+		std::cerr << "Error: " << glewGetErrorString(err) << std::endl;
+	}
+	else {
+		if (GLEW_VERSION_3_3) {
+			std::cout << "Driver supports OpenGL 3.3\nDetails:\n";
+		}
+	}
+
+	std::cout << "\tUsing glew " << glewGetString(GLEW_VERSION) << std::endl;
+	std::cout << "\tVendor " << glGetString(GL_VENDOR) << std::endl;
+	std::cout << "\tRenderer " << glGetString(GL_RENDERER) << std::endl;
+	std::cout << "\tVersion " << glGetString(GL_VERSION) << std::endl;
+	std::cout << "\tGLSL " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+
+	OnInit();
+	glutCloseFunc(OnShutDown);
+	glutDisplayFunc(OnRender);
+	glutReshapeFunc(OnResize);
+	glutMouseFunc(OnMouseDown);
+	glutMotionFunc(OnMouseMove);
+
+	glutMainLoop();
+
+	return 0;
 }

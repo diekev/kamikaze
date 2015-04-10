@@ -6,7 +6,7 @@ OBJ_DIR = bin
 LIB_DIR = -L/usr/lib
 INC_DIR = -I/usr/include
 
-SRC = main.cpp GLSLShader.cpp
+SRC = volume.cpp GLSLShader.cpp
 OBJECTS = $(SRC:%.cpp=$(OBJ_DIR)/%.o)
 EXEC = window.out
 
