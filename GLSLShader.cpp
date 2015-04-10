@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 #include "GLSLShader.h"
 
@@ -43,17 +44,16 @@ void GLSLShader::LoadFromString(GLenum whichShader, const std::string &source)
 
 void GLSLShader::LoadFromFile(GLenum whichShader, const std::string &source)
 {
-	std::ifstream fp;
-	fp.open(source.c_str(), std::ios_base::in);
+	std::ifstream fp(source.c_str());
 
 	if (fp) {
-		std::string line, buffer;
-		while (getline(fp, line)) {
-			buffer.append(line);
-			buffer.append("\b");
-		}
+		std::stringstream shader_data;
+		shader_data << fp.rdbuf();
 
-		LoadFromString(whichShader, buffer);
+		fp.close();
+
+		const std::string &shader = shader_data.str();
+		LoadFromString(whichShader, shader);
 	}
 	else {
 		std::cerr << "Error loading shader: " << source << std::endl;
