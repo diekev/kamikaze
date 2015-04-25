@@ -1,28 +1,36 @@
 #include <fstream>
-#include <iostream>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
-
-#define GLM_FORCE_RADIANS
-
+#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "volume.h"
+#include "GLSLShader.h"
 
-/* Resolution of the volume texture */
+// Resolution of the volume texture
 #define XDIM 256
 #define YDIM 256
 #define ZDIM 256
 
 std::string volume_file = "/home/kevin/Téléchargements/Engine256.raw";
 
-const float EPSILON = 0.0001f;
+GLuint textureID;
+GLuint volumeVAO, volumeVBO;
 
-/* total number of slices curently used */
+const float EPSILON = 0.0001f;
+const int MAX_SLICES = 512;
+
+// modelview and projection
+glm::mat4 MV, P;
+
+glm::vec3 vTextureSlices[MAX_SLICES * 12];
+
+GLSLShader shader;
+
+// total number of slices curently used
 int num_slices = 256;
 
-/*unit cube vertices */
+//unit cube vertices
 glm::vec3 vertexList[8] = {
 	glm::vec3(-0.5,-0.5,-0.5),
 	glm::vec3( 0.5,-0.5,-0.5),
@@ -34,16 +42,16 @@ glm::vec3 vertexList[8] = {
 	glm::vec3(-0.5, 0.5, 0.5)
 };
 
-/*unit cube edges */
+//unit cube edges
 int edgeList[8][12] = {
-	{ 0,1,5,6,   4,8,11,9,  3,7,2,10 }, /* v0 is front */
-	{ 0,4,3,11,  1,2,6,7,   5,9,8,10 }, /* v1 is front */
-	{ 1,5,0,8,   2,3,7,4,   6,10,9,11}, /* v2 is front */
-	{ 7,11,10,8, 2,6,1,9,   3,0,4,5  }, /* v3 is front */
-	{ 8,5,9,1,   11,10,7,6, 4,3,0,2  }, /* v4 is front */
-	{ 9,6,10,2,  8,11,4,7,  5,0,1,3  }, /* v5 is front */
-	{ 9,8,5,4,   6,1,2,0,   10,7,11,3}, /* v6 is front */
-	{ 10,9,6,5,  7,2,3,1,   11,4,8,0 }  /* v7 is front */
+	{ 0,1,5,6,   4,8,11,9,  3,7,2,10 }, // v0 is front
+	{ 0,4,3,11,  1,2,6,7,   5,9,8,10 }, // v1 is front
+	{ 1,5,0,8,   2,3,7,4,   6,10,9,11}, // v2 is front
+	{ 7,11,10,8, 2,6,1,9,   3,0,4,5  }, // v3 is front
+	{ 8,5,9,1,   11,10,7,6, 4,3,0,2  }, // v4 is front
+	{ 9,6,10,2,  8,11,4,7,  5,0,1,3  }, // v5 is front
+	{ 9,8,5,4,   6,1,2,0,   10,7,11,3}, // v6 is front
+	{ 10,9,6,5,  7,2,3,1,   11,4,8,0 }  // v7 is front
 };
 
 const int edges[12][2]= {
@@ -53,7 +61,9 @@ const int edges[12][2]= {
 	{5,6},{6,7},{7,4}
 };
 
-bool loadVolumeFile(const std::string &volume_file, GLuint textureID)
+glm::vec3 viewDir;
+
+bool loadVolumeFile(const std::string &volume_file)
 {
 	std::ifstream infile(volume_file.c_str(), std::ios_base::binary);
 
@@ -76,15 +86,11 @@ bool loadVolumeFile(const std::string &volume_file, GLuint textureID)
 
 		return true;
 	}
-	else {
-		std::cerr << "Unable to open file \'" << volume_file << "\'\n";
-	}
 
 	return false;
 }
 
-#if 0
-/*function to get the max (abs) dimension of the given vertex v */
+//function to get the max (abs) dimension of the given vertex v
 int FindAbsMax(glm::vec3 v) {
 	v = glm::abs(v);
 	int max_dim = 0;
@@ -99,9 +105,8 @@ int FindAbsMax(glm::vec3 v) {
 	}
 	return max_dim;
 }
-#endif
 
-void sliceVolume(GPUVolumeShader &volume, glm::vec3 viewDir)
+void sliceVolume()
 {
 	/* get the max and min distance of eacg vertex of the unit cube
 	 * in the viewing direction
@@ -127,7 +132,7 @@ void sliceVolume(GPUVolumeShader &volume, glm::vec3 viewDir)
 		}
 	}
 
-	/* int max_dim = FindAbsMax(viewDir); */
+	// int max_dim = FindAbsMax(viewDir);
 	max_dist -= EPSILON;
 	min_dist += EPSILON;
 
@@ -179,8 +184,8 @@ void sliceVolume(GPUVolumeShader &volume, glm::vec3 viewDir)
 			dL[e] = lambda[e] + i * lambda_inc[e];
 		}
 
-		/*if the values are between 0-1, we have an intersection at the current edge */
-		/*repeat the same for all 12 edges */
+		//if the values are between 0-1, we have an intersection at the current edge
+		//repeat the same for all 12 edges
 		if ((dL[0] >= 0.0f) && (dL[0] < 1.0f))	{
 			intersections[0] = vecStart[0] + dL[0]*vecDir[0];
 		}
@@ -254,76 +259,195 @@ void sliceVolume(GPUVolumeShader &volume, glm::vec3 viewDir)
 		int indices[] = {0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5};
 
 		for (int i = 0; i < 12; ++i) {
-			volume.vTextureSlices[count++] = intersections[indices[i]];
+			vTextureSlices[count++] = intersections[indices[i]];
 		}
 	}
 
 	/* update buffer object */
-	glBindBuffer(GL_ARRAY_BUFFER, volume.volumeVBO);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(volume.vTextureSlices), &(volume.vTextureSlices[0].x));
+	glBindBuffer(GL_ARRAY_BUFFER, volumeVBO);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vTextureSlices), &(vTextureSlices[0].x));
 }
 
-bool init_volume_shader(GPUVolumeShader &volume)
+#include <iostream>
+
+// camera transform variables
+int state = 0, oldX = 0, oldY = 0;
+float rX = 4.0f, rY = 50.0f, dist = -2.0f;
+
+glm::vec4 bg = glm::vec4(0.5f, 0.5f, 1.0f, 1.0f);
+
+bool bViewRotated = false;
+
+void OnMouseDown(int button, int s, int x, int y)
 {
-	GLSLShader *shader = &volume.shader;
+	if (s == GLUT_DOWN) {
+		oldX = x;
+		oldY = y;
+	}
 
-	shader->LoadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
-	shader->LoadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
+	if (button == GLUT_MIDDLE_BUTTON) {
+		state = 0;
+	}
+	else {
+		state = 1;
+	}
 
-	shader->CreateAndLinkProgram();
-	shader->Use();
-	shader->AddAttribute("vVertex");
-	shader->AddUniform("MVP");
-	shader->AddUniform("volume");
-	glUniform1i((*shader)("volume"), 0);
-	shader->UnUse();
-
-	return loadVolumeFile(volume_file, volume.textureID);
+	if (s == GLUT_UP) {
+		bViewRotated = false;
+	}
 }
 
-void setup_volume_render(GPUVolumeShader &volume, glm::vec3 viewDir)
+void OnMouseMove(int x, int y)
 {
+	if (state == 0) {
+		dist += (y - oldY) / 50.0f;
+	}
+	else {
+		rX += (y - oldY) / 5.0f;
+		rY += (x - oldX) / 5.0f;
+		bViewRotated = true;
+	}
+
+	oldX = x;
+	oldY = y;
+
+	glutPostRedisplay();
+}
+
+void OnInit()
+{
+	shader.LoadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
+	shader.LoadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
+
+	shader.CreateAndLinkProgram();
+	shader.Use();
+	shader.AddAttribute("vVertex");
+	shader.AddUniform("MVP");
+	shader.AddUniform("volume");
+	glUniform1i(shader("volume"), 0);
+	shader.UnUse();
+
+	if (loadVolumeFile(volume_file)) {
+		std::cout << "Volume data loaded succesfully.\n";
+	}
+	else {
+		std::cerr << "Cannot load volume data!\n";
+		return;
+	}
+
+	glClearColor(bg.r, bg.g, bg.b, bg.a);
+
+	glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, dist));
+	glm::mat4 Rx = glm::rotate(T, rX, glm::vec3(1.0f, 0.0f, 0.0f));
+	glm::mat4 MV = glm::rotate(Rx, rY, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	viewDir = -glm::vec3(MV[0][2], MV[1][2], MV[2][2]);
+
 	/* setup the vertex array and buffer objects */
-	glGenVertexArrays(1, &volume.volumeVAO);
-	glGenBuffers(1, &volume.volumeVBO);
+	glGenVertexArrays(1, &volumeVAO);
+	glGenBuffers(1, &volumeVBO);
 
-	glBindVertexArray(volume.volumeVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, volume.volumeVBO);
+	glBindVertexArray(volumeVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, volumeVBO);
 
-	/* pass the sliced volume vectore to buffer output memory */
-	glBufferData(GL_ARRAY_BUFFER, sizeof(volume.vTextureSlices), 0, GL_DYNAMIC_DRAW);
+	// pass the sliced volume vectore to buffer output memory
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vTextureSlices), 0, GL_DYNAMIC_DRAW);
 
-	/* enable vertex attribute array for position */
+	// enable vertex attribute array for position
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	glBindVertexArray(0);
 
-	sliceVolume(volume, viewDir);
+	sliceVolume();
+
+	std::cout << "Initialisation succesfull!\n";
 }
 
-void delete_volume_shader(GPUVolumeShader &volume)
+void OnShutDown()
 {
-	volume.shader.DeleteShaderProgram();
+	shader.DeleteShaderProgram();
 
-	glDeleteVertexArrays(1, &volume.volumeVAO);
-	glDeleteBuffers(1, &volume.volumeVBO);
-	glDeleteTextures(1, &volume.textureID);
+	glDeleteVertexArrays(1, &volumeVAO);
+	glDeleteBuffers(1, &volumeVBO);
+	glDeleteTextures(1, &textureID);
+
+	std::cout << "Shutdown succesfull!\n";
 }
 
-void render_volume(GPUVolumeShader &volume, glm::vec3 viewDir, glm::mat4 MVP, bool view_rotated)
+void OnResize(int w, int h)
 {
-	if (view_rotated) {
-		sliceVolume(volume, viewDir);
+	glViewport(0, 0, (GLsizei)w, (GLsizei)h);
+	P = glm::perspective(60.0f, (float)w/h, 0.1f, 1000.0f);
+}
+
+void OnRender()
+{
+	glm::mat4 Tr = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, dist));
+	glm::mat4 Rx = glm::rotate(Tr, rX, glm::vec3(1.0f, 0.0f, 0.0f));
+	glm::mat4 MV = glm::rotate(Rx, rY, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	viewDir = -glm::vec3(MV[0][2], MV[1][2], MV[2][2]);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glm::mat4 MVP = P * MV;
+
+	if (bViewRotated) {
+		sliceVolume();
 	}
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glBindVertexArray(volume.volumeVAO);
-	volume.shader.Use();
-	glUniformMatrix4fv(volume.shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
-	glDrawArrays(GL_TRIANGLES, 0, sizeof(volume.vTextureSlices) / sizeof(volume.vTextureSlices[0]));
-	volume.shader.UnUse();
+	glBindVertexArray(volumeVAO);
+	shader.Use();
+	glUniformMatrix4fv(shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+	glDrawArrays(GL_TRIANGLES, 0, sizeof(vTextureSlices) / sizeof(vTextureSlices[0]));
+	shader.UnUse();
 	glDisable(GL_BLEND);
+	glutSwapBuffers();
 }
 
+const int WIDTH = 1280;
+const int HEIGHT = 960;
+
+int main(int argc, char *argv[])
+{
+	int i = pthread_getconcurrency();
+	(void)i;
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+	glutInitContextVersion(3, 3);
+	glutInitContextFlags(GLUT_CORE_PROFILE | GLUT_DEBUG);
+	glutInitContextProfile(GLUT_FORWARD_COMPATIBLE);
+	glutInitWindowSize(WIDTH, HEIGHT);
+	glutCreateWindow("Getting started with OpenGL 3.3");
+	glewExperimental = GL_TRUE;
+	GLenum err = glewInit();
+
+	if (GLEW_OK != err) {
+		std::cerr << "Error: " << glewGetErrorString(err) << std::endl;
+	}
+	else {
+		if (GLEW_VERSION_3_3) {
+			std::cout << "Driver supports OpenGL 3.3\nDetails:\n";
+		}
+	}
+
+	std::cout << "\tUsing glew " << glewGetString(GLEW_VERSION) << std::endl;
+	std::cout << "\tVendor " << glGetString(GL_VENDOR) << std::endl;
+	std::cout << "\tRenderer " << glGetString(GL_RENDERER) << std::endl;
+	std::cout << "\tVersion " << glGetString(GL_VERSION) << std::endl;
+	std::cout << "\tGLSL " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+
+	OnInit();
+	glutCloseFunc(OnShutDown);
+	glutDisplayFunc(OnRender);
+	glutReshapeFunc(OnResize);
+	glutMouseFunc(OnMouseDown);
+	glutMotionFunc(OnMouseMove);
+
+	glutMainLoop();
+
+	return 0;
+}
