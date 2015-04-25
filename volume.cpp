@@ -275,7 +275,9 @@ bool init_volume_shader(GPUVolumeShader &volume)
 	shader->AddAttribute("vVertex");
 	shader->AddUniform("MVP");
 	shader->AddUniform("volume");
+	shader->AddUniform("lut");
 	glUniform1i((*shader)("volume"), 0);
+	glUniform1i((*shader)("lut"), 1);
 	shader->UnUse();
 
 	return loadVolumeFile(volume_file, volume.textureID);

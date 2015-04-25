@@ -25,6 +25,76 @@ glm::vec4 bg = glm::vec4(0.5f, 0.5f, 1.0f, 1.0f);
 
 bool bViewRotated = false;
 
+GLuint tfTexID;
+
+/* transfer function (lookup table) colour values */
+const glm::vec4 jet_values[9] = {
+	glm::vec4(0.0f, 0.0f, 0.5f, 0.0f),
+	glm::vec4(0.0f, 0.0f, 1.0f, 0.1f),
+	glm::vec4(0.0f, 0.5f, 1.0f, 0.3f),
+	glm::vec4(0.0f, 1.0f, 1.0f, 0.3f),
+	glm::vec4(0.5f, 1.0f, 0.5f, 0.75f),
+	glm::vec4(1.0f, 1.0f, 0.0f, 0.8f),
+	glm::vec4(1.0f, 0.5f, 0.0f, 0.6f),
+	glm::vec4(1.0f, 0.0f, 0.0f, 0.5f),
+	glm::vec4(0.5f, 0.0f, 0.0f, 0.0f),
+};
+
+/* Function to generate interpolated colours from the set of colours values
+ * (jet_values). This function first calculates the amount of increments for
+ * each component and the index difference. Then it linearly interpolates the
+ * adjacent values to get the interpolated result.
+ */
+void loadTransferFunction()
+{
+	float pData[256][4];
+	int indices[9];
+
+	/* fill the colour values at the place where the colour shuld be after
+	 * interpolation */
+	for (int i = 0; i < 9; ++i) {
+		auto index = i * 28;
+		pData[index][0] = jet_values[i].x;
+		pData[index][1] = jet_values[i].y;
+		pData[index][2] = jet_values[i].z;
+		pData[index][3] = jet_values[i].w;
+		indices[i] = index;
+	}
+
+	/* for each adjacent pair of colours, find the difference in the rgba values
+	 * and then interpolate */
+	for (int j = 0; j < 9 - 1; ++j) {
+		auto dDataR = (pData[indices[j + 1]][0] - pData[indices[j]][0]);
+		auto dDataG = (pData[indices[j + 1]][1] - pData[indices[j]][1]);
+		auto dDataB = (pData[indices[j + 1]][2] - pData[indices[j]][2]);
+		auto dDataA = (pData[indices[j + 1]][3] - pData[indices[j]][3]);
+
+		auto dIndex = indices[j + 1] - indices[j];
+
+		auto dDatatIncR = dDataR / static_cast<float>(dIndex);
+		auto dDatatIncG = dDataG / static_cast<float>(dIndex);
+		auto dDatatIncB = dDataB / static_cast<float>(dIndex);
+		auto dDatatIncA = dDataA / static_cast<float>(dIndex);
+
+		for (int i = indices[j] + 1; i < indices[j + 1]; ++i) {
+			pData[i][0] = (pData[i - 1][0] + dDatatIncR);
+			pData[i][1] = (pData[i - 1][1] + dDatatIncG);
+			pData[i][2] = (pData[i - 1][2] + dDatatIncB);
+			pData[i][3] = (pData[i - 1][3] + dDatatIncA);
+		}
+	}
+
+	glGenTextures(1, &tfTexID);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_1D, tfTexID);
+
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 256, 0, GL_RGBA, GL_FLOAT, pData);
+}
+
 typedef struct GPUVolumeShader GPUVolumeShader;
 GPUVolumeShader volume_shader;
 
@@ -34,6 +104,9 @@ void OnInit()
 		std::cerr << "Initialisation of the volume data failed!\n";
 		return;
 	}
+
+	/* load the transfuer function data and generate the transfer look up table */
+	loadTransferFunction();
 
 	glClearColor(bg.r, bg.g, bg.b, bg.a);
 
@@ -51,6 +124,8 @@ void OnInit()
 void OnShutDown()
 {
 	delete_volume_shader(volume_shader);
+
+	glDeleteTextures(1, &tfTexID);
 	std::cout << "Shutdown successfull!\n";
 }
 
