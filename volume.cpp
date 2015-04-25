@@ -70,8 +70,8 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 	std::ifstream infile(volume_file.c_str(), std::ios_base::binary);
 
 	if (infile.good()) {
-		GLubyte *pData = new GLubyte[XDIM * YDIM * ZDIM];
-		infile.read(reinterpret_cast<char *>(pData), XDIM*YDIM*ZDIM*sizeof(GLubyte));
+		GLubyte *data = new GLubyte[XDIM * YDIM * ZDIM];
+		infile.read(reinterpret_cast<char *>(data), XDIM*YDIM*ZDIM*sizeof(GLubyte));
 		infile.close();
 
 		glGenTextures(1, &m_texture_id);
@@ -83,14 +83,15 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_BASE_LEVEL, 0);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 4);
-		glTexImage3D(GL_TEXTURE_3D, 0, GL_RED, XDIM, YDIM, ZDIM, 0, GL_RED, GL_UNSIGNED_BYTE, pData);
+		glTexImage3D(GL_TEXTURE_3D, 0, GL_RED, XDIM, YDIM, ZDIM, 0, GL_RED, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_3D);
+
+		delete [] data;
 
 		return true;
 	}
-	else {
-		std::cerr << "Unable to open file \'" << volume_file << "\'\n";
-	}
+
+	std::cerr << "Unable to open file \'" << volume_file << "\'\n";
 
 	return false;
 }
@@ -154,7 +155,7 @@ void VolumeShader::slice(const glm::vec3 &dir)
 	 * slices to get the plane increment
 	 */
 	float plane_dist = min_dist;
-	float plane_dist_inc = (max_dist - min_dist) / float(num_slices);
+	float plane_dist_inc = (max_dist - min_dist) / static_cast<float>(num_slices);
 
 	/* for all egdes */
 	for (int i = 0; i < 12; ++i) {
@@ -193,77 +194,77 @@ void VolumeShader::slice(const glm::vec3 &dir)
 
 		/*if the values are between 0-1, we have an intersection at the current edge */
 		/*repeat the same for all 12 edges */
-		if ((dL[0] >= 0.0f) && (dL[0] < 1.0f))	{
-			intersections[0] = vecStart[0] + dL[0]*vecDir[0];
+		if ((dL[0] >= 0.0f) && (dL[0] < 1.0f)) {
+			intersections[0] = vecStart[0] + dL[0] * vecDir[0];
 		}
-		else if ((dL[1] >= 0.0f) && (dL[1] < 1.0f))	{
-			intersections[0] = vecStart[1] + dL[1]*vecDir[1];
+		else if ((dL[1] >= 0.0f) && (dL[1] < 1.0f)) {
+			intersections[0] = vecStart[1] + dL[1] * vecDir[1];
 		}
-		else if ((dL[3] >= 0.0f) && (dL[3] < 1.0f))	{
-			intersections[0] = vecStart[3] + dL[3]*vecDir[3];
+		else if ((dL[3] >= 0.0f) && (dL[3] < 1.0f)) {
+			intersections[0] = vecStart[3] + dL[3] * vecDir[3];
 		}
 		else continue;
 
 		if ((dL[2] >= 0.0f) && (dL[2] < 1.0f)) {
-			intersections[1] = vecStart[2] + dL[2]*vecDir[2];
+			intersections[1] = vecStart[2] + dL[2] * vecDir[2];
 		}
 		else if ((dL[0] >= 0.0f) && (dL[0] < 1.0f)) {
-			intersections[1] = vecStart[0] + dL[0]*vecDir[0];
+			intersections[1] = vecStart[0] + dL[0] * vecDir[0];
 		}
 		else if ((dL[1] >= 0.0f) && (dL[1] < 1.0f)) {
-			intersections[1] = vecStart[1] + dL[1]*vecDir[1];
+			intersections[1] = vecStart[1] + dL[1] * vecDir[1];
 		}
 		else {
-			intersections[1] = vecStart[3] + dL[3]*vecDir[3];
+			intersections[1] = vecStart[3] + dL[3] * vecDir[3];
 		}
 
 		if ((dL[4] >= 0.0f) && (dL[4] < 1.0f)) {
-			intersections[2] = vecStart[4] + dL[4]*vecDir[4];
+			intersections[2] = vecStart[4] + dL[4] * vecDir[4];
 		}
 		else if ((dL[5] >= 0.0f) && (dL[5] < 1.0f)) {
-			intersections[2] = vecStart[5] + dL[5]*vecDir[5];
+			intersections[2] = vecStart[5] + dL[5] * vecDir[5];
 		}
 		else {
-			intersections[2] = vecStart[7] + dL[7]*vecDir[7];
+			intersections[2] = vecStart[7] + dL[7] * vecDir[7];
 		}
 
 		if ((dL[6] >= 0.0f) && (dL[6] < 1.0f)) {
-			intersections[3] = vecStart[6] + dL[6]*vecDir[6];
+			intersections[3] = vecStart[6] + dL[6] * vecDir[6];
 		}
 		else if ((dL[4] >= 0.0f) && (dL[4] < 1.0f)) {
-			intersections[3] = vecStart[4] + dL[4]*vecDir[4];
+			intersections[3] = vecStart[4] + dL[4] * vecDir[4];
 		}
 		else if ((dL[5] >= 0.0f) && (dL[5] < 1.0f)) {
-			intersections[3] = vecStart[5] + dL[5]*vecDir[5];
+			intersections[3] = vecStart[5] + dL[5] * vecDir[5];
 		}
 		else {
-			intersections[3] = vecStart[7] + dL[7]*vecDir[7];
+			intersections[3] = vecStart[7] + dL[7] * vecDir[7];
 		}
 
 		if ((dL[8] >= 0.0f) && (dL[8] < 1.0f)) {
-			intersections[4] = vecStart[8] + dL[8]*vecDir[8];
+			intersections[4] = vecStart[8] + dL[8] * vecDir[8];
 		}
 		else if ((dL[9] >= 0.0f) && (dL[9] < 1.0f)) {
-			intersections[4] = vecStart[9] + dL[9]*vecDir[9];
+			intersections[4] = vecStart[9] + dL[9] * vecDir[9];
 		}
 		else {
-			intersections[4] = vecStart[11] + dL[11]*vecDir[11];
+			intersections[4] = vecStart[11] + dL[11] * vecDir[11];
 		}
 
 		if ((dL[10]>= 0.0f) && (dL[10]< 1.0f)) {
-			intersections[5] = vecStart[10] + dL[10]*vecDir[10];
+			intersections[5] = vecStart[10] + dL[10] * vecDir[10];
 		}
 		else if ((dL[8] >= 0.0f) && (dL[8] < 1.0f)) {
-			intersections[5] = vecStart[8] + dL[8]*vecDir[8];
+			intersections[5] = vecStart[8] + dL[8] * vecDir[8];
 		}
 		else if ((dL[9] >= 0.0f) && (dL[9] < 1.0f)) {
-			intersections[5] = vecStart[9] + dL[9]*vecDir[9];
+			intersections[5] = vecStart[9] + dL[9] * vecDir[9];
 		}
 		else {
-			intersections[5] = vecStart[11] + dL[11]*vecDir[11];
+			intersections[5] = vecStart[11] + dL[11] * vecDir[11];
 		}
 
-		int indices[] = {0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5};
+		int indices[] = { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5 };
 
 		for (int i = 0; i < 12; ++i) {
 			m_texture_slices[count++] = intersections[indices[i]];
