@@ -3,18 +3,21 @@
 
 const int MAX_SLICES = 512;
 
-struct GPUVolumeShader {
-	GLuint volumeVAO;
-	GLuint volumeVBO;
-	GLuint textureID;
-	GLSLShader shader;
-	glm::vec3 vTextureSlices[MAX_SLICES * 12];
-};
+class VolumeShader {
+	GLuint m_vao;
+	GLuint m_vbo;
+	GLuint m_texture_id;
+	GLSLShader m_shader;
+	glm::vec3 m_texture_slices[MAX_SLICES * 12];
 
-bool loadVolumeFile(const std::string &volume_file, GLuint textureID);
-void sliceVolume(GPUVolumeShader &volume, glm::vec3 viewDir);
-bool init_volume_shader(GPUVolumeShader &volume);
-void setup_volume_render(GPUVolumeShader &volume, glm::vec3 viewDir);
-void delete_volume_shader(GPUVolumeShader &volume);
-void render_volume(GPUVolumeShader &volume, glm::vec3 viewDir, glm::mat4 MVP, bool view_rotated);
+public:
+	VolumeShader();
+	~VolumeShader();
+
+	bool init();
+	bool loadVolumeFile(const std::string &filename);
+	void slice(const glm::vec3 &dir);
+	void setupRender(const glm::vec3 &dir);
+	void render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool is_rotated);
+};
 

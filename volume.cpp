@@ -53,7 +53,19 @@ const int edges[12][2]= {
 	{5,6},{6,7},{7,4}
 };
 
-bool loadVolumeFile(const std::string &volume_file, GLuint textureID)
+VolumeShader::VolumeShader()
+{}
+
+VolumeShader::~VolumeShader()
+{
+	m_shader.DeleteShaderProgram();
+
+	glDeleteVertexArrays(1, &m_vao);
+	glDeleteBuffers(1, &m_vbo);
+	glDeleteTextures(1, &m_texture_id);
+}
+
+bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 {
 	std::ifstream infile(volume_file.c_str(), std::ios_base::binary);
 
@@ -62,8 +74,8 @@ bool loadVolumeFile(const std::string &volume_file, GLuint textureID)
 		infile.read(reinterpret_cast<char *>(pData), XDIM*YDIM*ZDIM*sizeof(GLubyte));
 		infile.close();
 
-		glGenTextures(1, &textureID);
-		glBindTexture(GL_TEXTURE_3D, textureID);
+		glGenTextures(1, &m_texture_id);
+		glBindTexture(GL_TEXTURE_3D, m_texture_id);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
@@ -101,12 +113,12 @@ int FindAbsMax(glm::vec3 v) {
 }
 #endif
 
-void sliceVolume(GPUVolumeShader &volume, glm::vec3 viewDir)
+void VolumeShader::slice(const glm::vec3 &dir)
 {
 	/* get the max and min distance of eacg vertex of the unit cube
 	 * in the viewing direction
 	 */
-	float max_dist = glm::dot(viewDir, vertexList[0]);
+	float max_dist = glm::dot(dir, vertexList[0]);
 	float min_dist = max_dist;
 	int max_index = 0;
 	int count = 0;
@@ -115,7 +127,7 @@ void sliceVolume(GPUVolumeShader &volume, glm::vec3 viewDir)
 		/* get the distance between the current unit cube vertex and
 		 * the view vector by dot product
 		 */
-		float dist = glm::dot(viewDir, vertexList[i]);
+		float dist = glm::dot(dir, vertexList[i]);
 
 		if (dist > max_dist) {
 			max_dist = dist;
@@ -153,14 +165,14 @@ void sliceVolume(GPUVolumeShader &volume, glm::vec3 viewDir)
 		vecDir[i] = vertexList[edges[edgeList[max_index][i]][1]] - vecStart[i];
 
 		/* do a dot of vecDir and the view direction vector */
-		denom = glm::dot(vecDir[i], viewDir);
+		denom = glm::dot(vecDir[i], dir);
 
 		/* determine the plane intersection parameter (lambda) and
 		 * plane intersection parameter increment (lambda_inc)
 		 */
 		if (1.0f + denom != 1.0f) {
 			lambda_inc[i] = plane_dist_inc / denom;
-			lambda[i] = (plane_dist - glm::dot(vecStart[i], viewDir)) / denom;
+			lambda[i] = (plane_dist - glm::dot(vecStart[i], dir)) / denom;
 		}
 		else {
 			lambda[i] = -1.0f;
@@ -254,18 +266,18 @@ void sliceVolume(GPUVolumeShader &volume, glm::vec3 viewDir)
 		int indices[] = {0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5};
 
 		for (int i = 0; i < 12; ++i) {
-			volume.vTextureSlices[count++] = intersections[indices[i]];
+			m_texture_slices[count++] = intersections[indices[i]];
 		}
 	}
 
 	/* update buffer object */
-	glBindBuffer(GL_ARRAY_BUFFER, volume.volumeVBO);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(volume.vTextureSlices), &(volume.vTextureSlices[0].x));
+	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(m_texture_slices), &(m_texture_slices[0].x));
 }
 
-bool init_volume_shader(GPUVolumeShader &volume)
+bool VolumeShader::init()
 {
-	GLSLShader *shader = &volume.shader;
+	GLSLShader *shader = &m_shader;
 
 	shader->LoadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
 	shader->LoadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
@@ -280,20 +292,20 @@ bool init_volume_shader(GPUVolumeShader &volume)
 	glUniform1i((*shader)("lut"), 1);
 	shader->UnUse();
 
-	return loadVolumeFile(volume_file, volume.textureID);
+	return loadVolumeFile(volume_file);
 }
 
-void setup_volume_render(GPUVolumeShader &volume, glm::vec3 viewDir)
+void VolumeShader::setupRender(const glm::vec3 &dir)
 {
 	/* setup the vertex array and buffer objects */
-	glGenVertexArrays(1, &volume.volumeVAO);
-	glGenBuffers(1, &volume.volumeVBO);
+	glGenVertexArrays(1, &m_vao);
+	glGenBuffers(1, &m_vbo);
 
-	glBindVertexArray(volume.volumeVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, volume.volumeVBO);
+	glBindVertexArray(m_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 
 	/* pass the sliced volume vectore to buffer output memory */
-	glBufferData(GL_ARRAY_BUFFER, sizeof(volume.vTextureSlices), 0, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(m_texture_slices), 0, GL_DYNAMIC_DRAW);
 
 	/* enable vertex attribute array for position */
 	glEnableVertexAttribArray(0);
@@ -301,31 +313,22 @@ void setup_volume_render(GPUVolumeShader &volume, glm::vec3 viewDir)
 
 	glBindVertexArray(0);
 
-	sliceVolume(volume, viewDir);
+	slice(dir);
 }
 
-void delete_volume_shader(GPUVolumeShader &volume)
+void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool is_rotated)
 {
-	volume.shader.DeleteShaderProgram();
-
-	glDeleteVertexArrays(1, &volume.volumeVAO);
-	glDeleteBuffers(1, &volume.volumeVBO);
-	glDeleteTextures(1, &volume.textureID);
-}
-
-void render_volume(GPUVolumeShader &volume, glm::vec3 viewDir, glm::mat4 MVP, bool view_rotated)
-{
-	if (view_rotated) {
-		sliceVolume(volume, viewDir);
+	if (is_rotated) {
+		slice(dir);
 	}
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glBindVertexArray(volume.volumeVAO);
-	volume.shader.Use();
-	glUniformMatrix4fv(volume.shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
-	glDrawArrays(GL_TRIANGLES, 0, sizeof(volume.vTextureSlices) / sizeof(volume.vTextureSlices[0]));
-	volume.shader.UnUse();
+	glBindVertexArray(m_vao);
+	m_shader.Use();
+	glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+	glDrawArrays(GL_TRIANGLES, 0, sizeof(m_texture_slices) / sizeof(m_texture_slices[0]));
+	m_shader.UnUse();
 	glDisable(GL_BLEND);
 }
 

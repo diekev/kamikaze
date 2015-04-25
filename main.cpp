@@ -95,12 +95,11 @@ void loadTransferFunction()
 	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 256, 0, GL_RGBA, GL_FLOAT, pData);
 }
 
-typedef struct GPUVolumeShader GPUVolumeShader;
-GPUVolumeShader volume_shader;
+VolumeShader volumeShader;
 
 void OnInit()
 {
-	if (!init_volume_shader(volume_shader)) {
+	if (!volumeShader.init()) {
 		std::cerr << "Initialisation of the volume data failed!\n";
 		return;
 	}
@@ -116,14 +115,14 @@ void OnInit()
 
 	viewDir = -glm::vec3(MV[0][2], MV[1][2], MV[2][2]);
 
-	setup_volume_render(volume_shader, viewDir);
+	volumeShader.setupRender(viewDir);
 
 	std::cout << "Initialization successfull!\n";
 }
 
 void OnShutDown()
 {
-	delete_volume_shader(volume_shader);
+	volumeShader.~VolumeShader();
 
 	glDeleteTextures(1, &tfTexID);
 	std::cout << "Shutdown successfull!\n";
@@ -183,7 +182,7 @@ void OnRender()
 
 	glm::mat4 MVP = P * MV;
 
-	render_volume(volume_shader, viewDir, MVP, bViewRotated);
+	volumeShader.render(viewDir, MVP, bViewRotated);
 
 	glutSwapBuffers();
 }
