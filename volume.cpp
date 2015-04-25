@@ -22,7 +22,7 @@ const float EPSILON = 0.0001f;
 /* total number of slices curently used */
 int num_slices = 256;
 
-/*unit cube vertices */
+/* unit cube vertices */
 glm::vec3 vertexList[8] = {
 	glm::vec3(-0.5,-0.5,-0.5),
 	glm::vec3( 0.5,-0.5,-0.5),
@@ -34,7 +34,7 @@ glm::vec3 vertexList[8] = {
 	glm::vec3(-0.5, 0.5, 0.5)
 };
 
-/*unit cube edges */
+/* unit cube edges */
 int edgeList[8][12] = {
 	{ 0,1,5,6,   4,8,11,9,  3,7,2,10 }, /* v0 is front */
 	{ 0,4,3,11,  1,2,6,7,   5,9,8,10 }, /* v1 is front */
@@ -84,7 +84,7 @@ bool loadVolumeFile(const std::string &volume_file, GLuint textureID)
 }
 
 #if 0
-/*function to get the max (abs) dimension of the given vertex v */
+/* function to get the max (abs) dimension of the given vertex v */
 int FindAbsMax(glm::vec3 v) {
 	v = glm::abs(v);
 	int max_dim = 0;
@@ -111,7 +111,7 @@ void sliceVolume(GPUVolumeShader &volume, glm::vec3 viewDir)
 	int max_index = 0;
 	int count = 0;
 
-	for (int i = 0; i < 8; ++i) {
+	for (int i = 1; i < 8; ++i) {
 		/* get the distance between the current unit cube vertex and
 		 * the view vector by dot product
 		 */
@@ -119,7 +119,7 @@ void sliceVolume(GPUVolumeShader &volume, glm::vec3 viewDir)
 
 		if (dist > max_dist) {
 			max_dist = dist;
-			max_index = 0;
+			max_index = i;
 		}
 
 		if (dist < min_dist) {

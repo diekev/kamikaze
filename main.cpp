@@ -38,8 +38,8 @@ void OnInit()
 	glClearColor(bg.r, bg.g, bg.b, bg.a);
 
 	glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, dist));
-	glm::mat4 Rx = glm::rotate(T, rX, glm::vec3(1.0f, 0.0f, 0.0f));
-	glm::mat4 MV = glm::rotate(Rx, rY, glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 Rx = glm::rotate(T, glm::radians(rX), glm::vec3(1.0f, 0.0f, 0.0f));
+	glm::mat4 MV = glm::rotate(Rx, glm::radians(rY), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	viewDir = -glm::vec3(MV[0][2], MV[1][2], MV[2][2]);
 
@@ -57,7 +57,7 @@ void OnShutDown()
 void OnResize(int w, int h)
 {
 	glViewport(0, 0, (GLsizei)w, (GLsizei)h);
-	P = glm::perspective(60.0f, (float)w/h, 0.1f, 1000.0f);
+	P = glm::perspective(glm::radians(60.0f), (float)w/h, 0.1f, 1000.0f);
 }
 
 void OnMouseDown(int button, int s, int x, int y)
@@ -99,8 +99,8 @@ void OnMouseMove(int x, int y)
 void OnRender()
 {
 	glm::mat4 Tr = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, dist));
-	glm::mat4 Rx = glm::rotate(Tr, rX, glm::vec3(1.0f, 0.0f, 0.0f));
-	glm::mat4 MV = glm::rotate(Rx, rY, glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 Rx = glm::rotate(Tr, glm::radians(rX), glm::vec3(1.0f, 0.0f, 0.0f));
+	glm::mat4 MV = glm::rotate(Rx, glm::radians(rY), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	viewDir = -glm::vec3(MV[0][2], MV[1][2], MV[2][2]);
 
