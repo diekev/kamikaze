@@ -5,3 +5,4 @@
 # path to the build
 /bin
 
+*.swp
