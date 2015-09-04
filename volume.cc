@@ -302,21 +302,23 @@ void VolumeShader::slice(const glm::vec3 &dir)
 
 bool VolumeShader::init(const std::string &filename)
 {
-	GLSLShader *shader = &m_shader;
+	m_shader.LoadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
+	m_shader.LoadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
 
-	shader->LoadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
-	shader->LoadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
+	m_shader.CreateAndLinkProgram();
 
-	shader->CreateAndLinkProgram();
-	shader->Use();
-	shader->AddAttribute("vVertex");
-	shader->AddUniform("MVP");
-	shader->AddUniform("offset");
-	shader->AddUniform("volume");
-	shader->AddUniform("lut");
-	glUniform1i((*shader)("volume"), 0);
-	glUniform1i((*shader)("lut"), 1);
-	shader->UnUse();
+	m_shader.Use();
+
+	m_shader.AddAttribute("vVertex");
+	m_shader.AddUniform("MVP");
+	m_shader.AddUniform("offset");
+	m_shader.AddUniform("volume");
+	m_shader.AddUniform("lut");
+
+	glUniform1i(m_shader("volume"), 0);
+	glUniform1i(m_shader("lut"), 1);
+
+	m_shader.UnUse();
 
 	return loadVolumeFile(filename);
 }
