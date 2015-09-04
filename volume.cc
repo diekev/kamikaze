@@ -26,6 +26,25 @@ VolumeShader::~VolumeShader()
 	glDeleteTextures(1, &m_texture_id);
 }
 
+void convert_grid(const openvdb::FloatGrid &grid, GLfloat *data,
+                  const openvdb::Coord &min, const openvdb::Coord &max)
+{
+	using namespace openvdb;
+
+	FloatGrid::ConstAccessor acc = grid.getAccessor();
+	math::Coord ijk;
+	int &x = ijk[0], &y = ijk[1], &z = ijk[2];
+
+	auto index = 0;
+	for (z = min[2]; z < max[2]; ++z) {
+		for (y = min[1]; y < max[1]; ++y) {
+			for (x = min[0]; x < max[0]; ++x, ++index) {
+				data[index] = acc.getValue(ijk);
+			}
+		}
+	}
+}
+
 bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 {
 	using namespace openvdb;
@@ -87,22 +106,8 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 #endif
 
 		/* Copy data */
-
 		GLfloat *data = new GLfloat[X_DIM * Y_DIM * Z_DIM];
-		FloatGrid::Accessor acc = grid->getAccessor();
-		Coord ijk;
-		int &x = ijk[0], &y = ijk[1], &z = ijk[2];
-
-		auto index = 0;
-		for (z = bbox_min[2]; z < bbox_max[2]; ++z) {
-			for (y = bbox_min[1]; y < bbox_max[1]; ++y) {
-				for (x = bbox_min[0]; x < bbox_max[0]; ++x, ++index) {
-					data[index] = acc.getValue(ijk);
-				}
-			}
-		}
-
-		assert(index == (X_DIM * Y_DIM * Z_DIM));
+		convert_grid(*grid, data, bbox_min, bbox_max);
 
 		glGenTextures(1, &m_texture_id);
 		glBindTexture(GL_TEXTURE_3D, m_texture_id);
