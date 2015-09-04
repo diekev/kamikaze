@@ -115,7 +115,8 @@ void OnInit(const char *filename)
 
 	viewDir = -glm::vec3(MV[0][2], MV[1][2], MV[2][2]);
 
-	volumeShader.setupRender(viewDir);
+	volumeShader.setupRender();
+	volumeShader.slice(viewDir);
 
 	std::cout << "Initialization successfull!\n";
 }

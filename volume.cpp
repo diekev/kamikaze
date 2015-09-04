@@ -321,7 +321,7 @@ bool VolumeShader::init(const std::string &filename)
 	return loadVolumeFile(filename);
 }
 
-void VolumeShader::setupRender(const glm::vec3 &dir)
+void VolumeShader::setupRender()
 {
 	/* setup the vertex array and buffer objects */
 	glGenVertexArrays(1, &m_vao);
@@ -338,8 +338,6 @@ void VolumeShader::setupRender(const glm::vec3 &dir)
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	glBindVertexArray(0);
-
-	slice(dir);
 }
 
 void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool is_rotated)
