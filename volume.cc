@@ -90,7 +90,7 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 		auto index = 0;
 		for (z = bbox.min()[2]; z < bbox.max()[2]; ++z) {
 			for (y = bbox.min()[1]; y < bbox.max()[1]; ++y) {
-				for (x = bbox.min()[0];  x < bbox.max()[0]; ++x, ++index) {
+				for (x = bbox.min()[0]; x < bbox.max()[0]; ++x, ++index) {
 					data[index] = static_cast<GLubyte>(acc.getValue(ijk) * 255.0f);
 				}
 			}
