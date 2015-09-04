@@ -117,14 +117,11 @@ void OnInit(const char *filename)
 
 	volumeShader.setupRender();
 	volumeShader.slice(viewDir);
-
-	std::cout << "Initialization successfull!\n";
 }
 
 void OnShutDown()
 {
 	glDeleteTextures(1, &tfTexID);
-	std::cout << "Shutdown successfull!\n";
 }
 
 void OnResize(int w, int h)
@@ -188,32 +185,22 @@ void OnRender()
 
 int main(int argc, char *argv[])
 {
-	int i = pthread_getconcurrency();
-	(void)i;
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 	glutInitContextVersion(3, 3);
 	glutInitContextFlags(GLUT_CORE_PROFILE | GLUT_DEBUG);
 	glutInitContextProfile(GLUT_FORWARD_COMPATIBLE);
+
 	glutInitWindowSize(WIDTH, HEIGHT);
 	glutCreateWindow("ikirin");
+
 	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
 
 	if (GLEW_OK != err) {
-		std::cerr << "Error: " << glewGetErrorString(err) << std::endl;
+		std::cerr << "Error: " << glewGetErrorString(err) << '\n';
+		return 1;
 	}
-	else {
-		if (GLEW_VERSION_3_3) {
-			std::cout << "Driver supports OpenGL 3.3\nDetails:\n";
-		}
-	}
-
-	std::cout << "\tUsing glew " << glewGetString(GLEW_VERSION) << std::endl;
-	std::cout << "\tVendor " << glGetString(GL_VENDOR) << std::endl;
-	std::cout << "\tRenderer " << glGetString(GL_RENDERER) << std::endl;
-	std::cout << "\tVersion " << glGetString(GL_VERSION) << std::endl;
-	std::cout << "\tGLSL " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
 	OnInit(argv[1]);
 
