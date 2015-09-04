@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
 	glutInitContextFlags(GLUT_CORE_PROFILE | GLUT_DEBUG);
 	glutInitContextProfile(GLUT_FORWARD_COMPATIBLE);
 	glutInitWindowSize(WIDTH, HEIGHT);
-	glutCreateWindow("Getting started with OpenGL 3.3");
+	glutCreateWindow("ikirin");
 	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
 
