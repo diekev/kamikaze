@@ -120,24 +120,6 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 	return false;
 }
 
-#if 0
-/* function to get the max (abs) dimension of the given vertex v */
-int FindAbsMax(glm::vec3 v) {
-	v = glm::abs(v);
-	int max_dim = 0;
-	float val = v.x;
-	if(v.y>val) {
-		val = v.y;
-		max_dim = 1;
-	}
-	if(v.z > val) {
-		val = v.z;
-		max_dim = 2;
-	}
-	return max_dim;
-}
-#endif
-
 void VolumeShader::slice(const glm::vec3 &dir)
 {
 	const int edges[12][2] = {

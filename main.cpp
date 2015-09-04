@@ -122,8 +122,6 @@ void OnInit(const char *filename)
 
 void OnShutDown()
 {
-	volumeShader.~VolumeShader();
-
 	glDeleteTextures(1, &tfTexID);
 	std::cout << "Shutdown successfull!\n";
 }
