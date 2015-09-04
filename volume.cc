@@ -350,7 +350,7 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 	glBindVertexArray(m_vao);
 	m_shader.use();
 	glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
-	glDrawArrays(GL_TRIANGLES, 0, sizeof(m_texture_slices) / sizeof(m_texture_slices[0]));
+	glDrawArrays(GL_TRIANGLES, 0, MAX_SLICES * 12);
 	m_shader.unUse();
 	glDisable(GL_BLEND);
 }
