@@ -47,15 +47,19 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 			return false;
 		}
 
-		/* Get resolution */
 		CoordBBox bbox = grid->evalActiveVoxelBoundingBox();
-		const int X_DIM = bbox.extents()[0] - 1;
-		const int Y_DIM = bbox.extents()[1] - 1;
-		const int Z_DIM = bbox.extents()[2] - 1;
+		Coord bbox_min = bbox.min();
+		Coord bbox_max = bbox.max();
+
+		/* Get resolution */
+		auto extent = bbox_max - bbox_min;
+		const int X_DIM = extent[0];
+		const int Y_DIM = extent[1];
+		const int Z_DIM = extent[2];
 
 		/* Compute grid size */
-		Vec3f min = grid->transform().indexToWorld(bbox.min());
-		Vec3f max = grid->transform().indexToWorld(bbox.max());
+		Vec3f min = grid->transform().indexToWorld(bbox_min);
+		Vec3f max = grid->transform().indexToWorld(bbox_max);
 		Vec3f size = (max - min);
 		Vec3f inv_size = 1.0f / size;
 
@@ -76,9 +80,11 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 		m_vertices[6] = glm::vec3(max[0], max[1], max[2]);
 		m_vertices[7] = glm::vec3(min[0], max[1], max[2]);
 
-//		printf("Dimensions: %d, %d, %d\n", X_DIM, Y_DIM, Z_DIM);
-//		printf("Min: %f, %f, %f\n", min[0], min[1], min[2]);
-//		printf("Max: %f, %f, %f\n", max[0], max[1], max[2]);
+#if 0
+		printf("Dimensions: %d, %d, %d\n", X_DIM, Y_DIM, Z_DIM);
+		printf("Min: %f, %f, %f\n", min[0], min[1], min[2]);
+		printf("Max: %f, %f, %f\n", max[0], max[1], max[2]);
+#endif
 
 		/* Copy data */
 
@@ -88,13 +94,15 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 		int &x = ijk[0], &y = ijk[1], &z = ijk[2];
 
 		auto index = 0;
-		for (z = bbox.min()[2]; z < bbox.max()[2]; ++z) {
-			for (y = bbox.min()[1]; y < bbox.max()[1]; ++y) {
-				for (x = bbox.min()[0]; x < bbox.max()[0]; ++x, ++index) {
+		for (z = bbox_min[2]; z < bbox_max[2]; ++z) {
+			for (y = bbox_min[1]; y < bbox_max[1]; ++y) {
+				for (x = bbox_min[0]; x < bbox_max[0]; ++x, ++index) {
 					data[index] = static_cast<GLubyte>(acc.getValue(ijk) * 255.0f);
 				}
 			}
 		}
+
+		assert(index == (X_DIM * Y_DIM * Z_DIM));
 
 		glGenTextures(1, &m_texture_id);
 		glBindTexture(GL_TEXTURE_3D, m_texture_id);
