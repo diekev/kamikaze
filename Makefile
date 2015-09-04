@@ -6,8 +6,8 @@ OBJ_DIR = bin
 LIB_DIR = -L/usr/lib -L/opt/lib/openvdb/lib -L/opt/lib/openexr/lib -L/opt/lib/blosc/lib
 INC_DIR = -I/usr/include -I/opt/lib/openvdb/include -I/opt/lib/openexr/include
 
-SRC = main.cpp volume.cpp GLSLShader.cpp
-OBJECTS = $(SRC:%.cpp=$(OBJ_DIR)/%.o)
+SRC = main.cc volume.cc GLSLShader.cc
+OBJECTS = $(SRC:%.cc=$(OBJ_DIR)/%.o)
 EXEC = window.out
 
 all: init $(OBJECTS) $(EXEC)
@@ -15,7 +15,7 @@ all: init $(OBJECTS) $(EXEC)
 $(EXEC):
 	$(CXX) $(CXXFLAGS) $(LIB_DIR) -o $@ $(OBJECTS) $(LDLIBS)
 
-$(OBJ_DIR)/%.o: %.cpp
+$(OBJ_DIR)/%.o: %.cc
 	$(CXX) $(CXXFLAGS) $(INC_DIR) -c $< -o $@
 
 init:
