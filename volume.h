@@ -12,7 +12,7 @@ class VolumeShader {
 	glm::vec3 m_vertices[8];
 
 public:
-	VolumeShader();
+	VolumeShader() = default;
 	~VolumeShader();
 
 	bool init(const std::string &filename);

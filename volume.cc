@@ -17,9 +17,6 @@ const float EPSILON = 0.0001f;
 /* total number of slices curently used */
 int num_slices = 256;
 
-VolumeShader::VolumeShader()
-{}
-
 VolumeShader::~VolumeShader()
 {
 	m_shader.deleteShaderProgram();
