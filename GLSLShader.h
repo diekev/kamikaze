@@ -19,16 +19,16 @@ public:
 	GLSLShader();
 	~GLSLShader();
 
-	void LoadFromString(GLenum whichShader, const std::string &source);
-	void LoadFromFile(GLenum whichShader, const std::string &source);
-	void CreateAndLinkProgram();
-	void Use();
-	void UnUse();
-	void AddAttribute(const std::string &attribute);
-	void AddUniform(const std::string &uniform);
+	void loadFromString(GLenum whichShader, const std::string &source);
+	void loadFromFile(GLenum whichShader, const std::string &source);
+	void createAndLinkProgram();
+	void use();
+	void unUse();
+	void addAttribute(const std::string &attribute);
+	void addUniform(const std::string &uniform);
 
 	GLuint operator[](const std::string &attribute);
 	GLuint operator()(const std::string &uniform);
 
-	void DeleteShaderProgram();
+	void deleteShaderProgram();
 };

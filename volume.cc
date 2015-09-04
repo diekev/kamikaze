@@ -22,7 +22,7 @@ VolumeShader::VolumeShader()
 
 VolumeShader::~VolumeShader()
 {
-	m_shader.DeleteShaderProgram();
+	m_shader.deleteShaderProgram();
 
 	glDeleteVertexArrays(1, &m_vao);
 	glDeleteBuffers(1, &m_vbo);
@@ -66,9 +66,9 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 		min *= inv_size;
 		max *= inv_size;
 
-		m_shader.Use();
+		m_shader.use();
 		glUniform3fv(m_shader("offset"), 1, &min[0]);
-		m_shader.UnUse();
+		m_shader.unUse();
 
 		m_vertices[0] = glm::vec3(min[0], min[1], min[2]);
 		m_vertices[1] = glm::vec3(max[0], min[1], min[2]);
@@ -302,23 +302,23 @@ void VolumeShader::slice(const glm::vec3 &dir)
 
 bool VolumeShader::init(const std::string &filename)
 {
-	m_shader.LoadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
-	m_shader.LoadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
+	m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
+	m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
 
-	m_shader.CreateAndLinkProgram();
+	m_shader.createAndLinkProgram();
 
-	m_shader.Use();
+	m_shader.use();
 
-	m_shader.AddAttribute("vVertex");
-	m_shader.AddUniform("MVP");
-	m_shader.AddUniform("offset");
-	m_shader.AddUniform("volume");
-	m_shader.AddUniform("lut");
+	m_shader.addAttribute("vVertex");
+	m_shader.addUniform("MVP");
+	m_shader.addUniform("offset");
+	m_shader.addUniform("volume");
+	m_shader.addUniform("lut");
 
 	glUniform1i(m_shader("volume"), 0);
 	glUniform1i(m_shader("lut"), 1);
 
-	m_shader.UnUse();
+	m_shader.unUse();
 
 	return loadVolumeFile(filename);
 }
@@ -351,10 +351,9 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glBindVertexArray(m_vao);
-	m_shader.Use();
+	m_shader.use();
 	glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 	glDrawArrays(GL_TRIANGLES, 0, sizeof(m_texture_slices) / sizeof(m_texture_slices[0]));
-	m_shader.UnUse();
+	m_shader.unUse();
 	glDisable(GL_BLEND);
 }
-
