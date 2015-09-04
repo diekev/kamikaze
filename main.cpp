@@ -97,9 +97,9 @@ void loadTransferFunction()
 
 VolumeShader volumeShader;
 
-void OnInit()
+void OnInit(const char *filename)
 {
-	if (!volumeShader.init()) {
+	if (!volumeShader.init(filename)) {
 		std::cerr << "Initialisation of the volume data failed!\n";
 		return;
 	}
@@ -216,7 +216,8 @@ int main(int argc, char *argv[])
 	std::cout << "\tVersion " << glGetString(GL_VERSION) << std::endl;
 	std::cout << "\tGLSL " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
-	OnInit();
+	OnInit(argv[1]);
+
 	glutCloseFunc(OnShutDown);
 	glutDisplayFunc(OnRender);
 	glutReshapeFunc(OnResize);

@@ -9,12 +9,13 @@ class VolumeShader {
 	GLuint m_texture_id;
 	GLSLShader m_shader;
 	glm::vec3 m_texture_slices[MAX_SLICES * 12];
+	glm::vec3 m_vertices[8];
 
 public:
 	VolumeShader();
 	~VolumeShader();
 
-	bool init();
+	bool init(const std::string &filename);
 	bool loadVolumeFile(const std::string &filename);
 	void slice(const glm::vec3 &dir);
 	void setupRender(const glm::vec3 &dir);

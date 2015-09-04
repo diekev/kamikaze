@@ -1,10 +1,10 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -g -Wall -pthread
-LDLIBS = -lGL -lglut -lGLEW
+CXXFLAGS = -std=c++11 -g -Wall -pthread -fsanitize=address -fno-omit-frame-pointer
+LDLIBS = -lGL -lglut -lGLEW -lopenvdb -lHalf -ltbb -lblosc -lz -fsanitize=address
 
 OBJ_DIR = bin
-LIB_DIR = -L/usr/lib
-INC_DIR = -I/usr/include
+LIB_DIR = -L/usr/lib -L/opt/lib/openvdb/lib -L/opt/lib/openexr/lib -L/opt/lib/blosc/lib
+INC_DIR = -I/usr/include -I/opt/lib/openvdb/include -I/opt/lib/openexr/include
 
 SRC = main.cpp volume.cpp GLSLShader.cpp
 OBJECTS = $(SRC:%.cpp=$(OBJ_DIR)/%.o)

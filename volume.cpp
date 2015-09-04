@@ -8,50 +8,14 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <openvdb/openvdb.h>
+
 #include "volume.h"
-
-/* Resolution of the volume texture */
-#define XDIM 256
-#define YDIM 256
-#define ZDIM 256
-
-std::string volume_file = "/home/kevin/Téléchargements/Engine256.raw";
 
 const float EPSILON = 0.0001f;
 
 /* total number of slices curently used */
 int num_slices = 256;
-
-/* unit cube vertices */
-glm::vec3 vertexList[8] = {
-	glm::vec3(-0.5,-0.5,-0.5),
-	glm::vec3( 0.5,-0.5,-0.5),
-	glm::vec3(0.5, 0.5,-0.5),
-	glm::vec3(-0.5, 0.5,-0.5),
-	glm::vec3(-0.5,-0.5, 0.5),
-	glm::vec3(0.5,-0.5, 0.5),
-	glm::vec3( 0.5, 0.5, 0.5),
-	glm::vec3(-0.5, 0.5, 0.5)
-};
-
-/* unit cube edges */
-int edgeList[8][12] = {
-	{ 0,1,5,6,   4,8,11,9,  3,7,2,10 }, /* v0 is front */
-	{ 0,4,3,11,  1,2,6,7,   5,9,8,10 }, /* v1 is front */
-	{ 1,5,0,8,   2,3,7,4,   6,10,9,11}, /* v2 is front */
-	{ 7,11,10,8, 2,6,1,9,   3,0,4,5  }, /* v3 is front */
-	{ 8,5,9,1,   11,10,7,6, 4,3,0,2  }, /* v4 is front */
-	{ 9,6,10,2,  8,11,4,7,  5,0,1,3  }, /* v5 is front */
-	{ 9,8,5,4,   6,1,2,0,   10,7,11,3}, /* v6 is front */
-	{ 10,9,6,5,  7,2,3,1,   11,4,8,0 }  /* v7 is front */
-};
-
-const int edges[12][2]= {
-	{0,1},{1,2},{2,3},
-	{3,0},{0,4},{1,5},
-	{2,6},{3,7},{4,5},
-	{5,6},{6,7},{7,4}
-};
 
 VolumeShader::VolumeShader()
 {}
@@ -67,12 +31,73 @@ VolumeShader::~VolumeShader()
 
 bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 {
-	std::ifstream infile(volume_file.c_str(), std::ios_base::binary);
+	using namespace openvdb;
+	using namespace openvdb::math;
 
-	if (infile.good()) {
-		GLubyte *data = new GLubyte[XDIM * YDIM * ZDIM];
-		infile.read(reinterpret_cast<char *>(data), XDIM*YDIM*ZDIM*sizeof(GLubyte));
-		infile.close();
+	initialize();
+	io::File file(volume_file);
+
+	if (file.open()) {
+		FloatGrid::Ptr grid;
+
+		if (file.hasGrid(Name("Density"))) {
+			grid = gridPtrCast<FloatGrid>(file.readGrid(Name("Density")));
+		}
+		else if (file.hasGrid(Name("density"))) {
+			grid = gridPtrCast<FloatGrid>(file.readGrid(Name("density")));
+		}
+		else {
+			return false;
+		}
+
+		/* Get resolution */
+		CoordBBox bbox = grid->evalActiveVoxelBoundingBox();
+		const int X_DIM = bbox.extents()[0] - 1;
+		const int Y_DIM = bbox.extents()[1] - 1;
+		const int Z_DIM = bbox.extents()[2] - 1;
+
+		/* Compute grid size */
+		Vec3f min = grid->transform().indexToWorld(bbox.min());
+		Vec3f max = grid->transform().indexToWorld(bbox.max());
+		Vec3f size = (max - min);
+		Vec3f inv_size = 1.0f / size;
+
+		/* Normalise min, max */
+		min *= inv_size;
+		max *= inv_size;
+
+		m_shader.Use();
+		glUniform3fv(m_shader("offset"), 1, &min[0]);
+		m_shader.UnUse();
+
+		m_vertices[0] = glm::vec3(min[0], min[1], min[2]);
+		m_vertices[1] = glm::vec3(max[0], min[1], min[2]);
+		m_vertices[2] = glm::vec3(max[0], max[1], min[2]);
+		m_vertices[3] = glm::vec3(min[0], max[1], min[2]);
+		m_vertices[4] = glm::vec3(min[0], min[1], max[2]);
+		m_vertices[5] = glm::vec3(max[0], min[1], max[2]);
+		m_vertices[6] = glm::vec3(max[0], max[1], max[2]);
+		m_vertices[7] = glm::vec3(min[0], max[1], max[2]);
+
+//		printf("Dimensions: %d, %d, %d\n", X_DIM, Y_DIM, Z_DIM);
+//		printf("Min: %f, %f, %f\n", min[0], min[1], min[2]);
+//		printf("Max: %f, %f, %f\n", max[0], max[1], max[2]);
+
+		/* Copy data */
+
+		GLubyte *data = new GLubyte[X_DIM * Y_DIM * Z_DIM];
+		FloatGrid::Accessor acc = grid->getAccessor();
+		Coord ijk;
+		int &x = ijk[0], &y = ijk[1], &z = ijk[2];
+
+		auto index = 0;
+		for (z = 0; z < Z_DIM; ++z) {
+			for (y = 0; y < Y_DIM; ++y) {
+				for (x = 0; x < X_DIM; ++x, ++index) {
+					data[index] = static_cast<GLubyte>(acc.getValue(ijk) * 255.0f);
+				}
+			}
+		}
 
 		glGenTextures(1, &m_texture_id);
 		glBindTexture(GL_TEXTURE_3D, m_texture_id);
@@ -83,16 +108,15 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_BASE_LEVEL, 0);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 4);
-		glTexImage3D(GL_TEXTURE_3D, 0, GL_RED, XDIM, YDIM, ZDIM, 0, GL_RED, GL_UNSIGNED_BYTE, data);
+		glTexImage3D(GL_TEXTURE_3D, 0, GL_RED, X_DIM, Y_DIM, Z_DIM, 0, GL_RED, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_3D);
 
+		file.close();
 		delete [] data;
-
 		return true;
 	}
 
 	std::cerr << "Unable to open file \'" << volume_file << "\'\n";
-
 	return false;
 }
 
@@ -116,10 +140,28 @@ int FindAbsMax(glm::vec3 v) {
 
 void VolumeShader::slice(const glm::vec3 &dir)
 {
+	const int edges[12][2] = {
+	    { 0, 1 }, { 1, 2 }, { 2, 3 },
+	    { 3, 0 }, { 0, 4 }, { 1, 5 },
+	    { 2, 6 }, { 3, 7 }, { 4, 5 },
+	    { 5, 6 }, { 6, 7 }, { 7, 4 }
+	};
+
+	const int edge_list[8][12] = {
+	    { 0, 1, 5, 6, 4, 8, 11, 9, 3, 7, 2, 10 },
+	    { 0, 4, 3, 11, 1, 2, 6, 7, 5, 9, 8, 10 },
+	    { 1, 5, 0, 8, 2, 3, 7, 4, 6, 10, 9, 11 },
+	    { 7, 11, 10, 8, 2, 6, 1, 9, 3, 0, 4, 5 },
+	    { 8, 5, 9, 1, 11, 10, 7, 6, 4, 3, 0, 2 },
+	    { 9, 6, 10, 2, 8, 11, 4, 7, 5, 0, 1, 3 },
+	    { 9, 8, 5, 4, 6, 1, 2, 0, 10, 7, 11, 3 },
+	    { 10, 9, 6, 5, 7, 2, 3, 1, 11, 4, 8, 0 }
+	};
+
 	/* get the max and min distance of eacg vertex of the unit cube
 	 * in the viewing direction
 	 */
-	float max_dist = glm::dot(dir, vertexList[0]);
+	float max_dist = glm::dot(dir, m_vertices[0]);
 	float min_dist = max_dist;
 	int max_index = 0;
 	int count = 0;
@@ -128,7 +170,7 @@ void VolumeShader::slice(const glm::vec3 &dir)
 		/* get the distance between the current unit cube vertex and
 		 * the view vector by dot product
 		 */
-		float dist = glm::dot(dir, vertexList[i]);
+		float dist = glm::dot(dir, m_vertices[i]);
 
 		if (dist > max_dist) {
 			max_dist = dist;
@@ -160,10 +202,10 @@ void VolumeShader::slice(const glm::vec3 &dir)
 	/* for all egdes */
 	for (int i = 0; i < 12; ++i) {
 		/* get the start position vertex by table lookup */
-		vecStart[i] = vertexList[edges[edgeList[max_index][i]][0]];
+		vecStart[i] = m_vertices[edges[edge_list[max_index][i]][0]];
 
 		/* get the direction by table lookup */
-		vecDir[i] = vertexList[edges[edgeList[max_index][i]][1]] - vecStart[i];
+		vecDir[i] = m_vertices[edges[edge_list[max_index][i]][1]] - vecStart[i];
 
 		/* do a dot of vecDir and the view direction vector */
 		denom = glm::dot(vecDir[i], dir);
@@ -276,7 +318,7 @@ void VolumeShader::slice(const glm::vec3 &dir)
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(m_texture_slices), &(m_texture_slices[0].x));
 }
 
-bool VolumeShader::init()
+bool VolumeShader::init(const std::string &filename)
 {
 	GLSLShader *shader = &m_shader;
 
@@ -287,13 +329,14 @@ bool VolumeShader::init()
 	shader->Use();
 	shader->AddAttribute("vVertex");
 	shader->AddUniform("MVP");
+	shader->AddUniform("offset");
 	shader->AddUniform("volume");
 	shader->AddUniform("lut");
 	glUniform1i((*shader)("volume"), 0);
 	glUniform1i((*shader)("lut"), 1);
 	shader->UnUse();
 
-	return loadVolumeFile(volume_file);
+	return loadVolumeFile(filename);
 }
 
 void VolumeShader::setupRender(const glm::vec3 &dir)
