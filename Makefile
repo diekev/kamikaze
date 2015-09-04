@@ -12,11 +12,19 @@ EXEC = window.out
 
 all: init $(OBJECTS) $(EXEC)
 
-$(EXEC):
-	$(CXX) $(CXXFLAGS) $(LIB_DIR) -o $@ $(OBJECTS) $(LDLIBS)
+$(EXEC): $(OBJECTS)
+	$(CXX) $(CXXFLAGS) $(LIB_DIR) -o $@ $^ $(LDLIBS)
 
 $(OBJ_DIR)/%.o: %.cc
 	$(CXX) $(CXXFLAGS) $(INC_DIR) -c $< -o $@
+
+depend: $(OBJ_DIR)/.depend
+
+$(OBJ_DIR)/.depend: $(SRC)
+	@rm -f $(OBJ_DIR)/.depend
+	$(CXX) $(CXXFLAGS) -MM $^>>$(OBJ_DIR)/.depend
+
+include $(OBJ_DIR)/.depend
 
 init:
 	@mkdir -p $(OBJ_DIR)
