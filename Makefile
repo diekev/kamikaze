@@ -6,7 +6,7 @@ OBJ_DIR = bin
 LIB_DIR = -L/usr/lib -L/opt/lib/openvdb/lib -L/opt/lib/openexr/lib -L/opt/lib/blosc/lib
 INC_DIR = -I/usr/include -I/opt/lib/openvdb/include -I/opt/lib/openexr/include
 
-SRC = main.cc volume.cc GLSLShader.cc
+SRC = main.cc volume.cc viewer.cc GLSLShader.cc
 OBJECTS = $(SRC:%.cc=$(OBJ_DIR)/%.o)
 EXEC = window.out
 
