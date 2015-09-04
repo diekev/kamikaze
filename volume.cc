@@ -80,24 +80,12 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 		Vec3f min = grid->transform().indexToWorld(bbox_min);
 		Vec3f max = grid->transform().indexToWorld(bbox_max);
 		Vec3f size = (max - min);
-		Vec3f inv_size = 1.0f / size;
 
-		/* Normalise min, max */
-		min *= inv_size;
-		max *= inv_size;
-
-		m_shader.use();
-		glUniform3fv(m_shader("offset"), 1, &min[0]);
-		m_shader.unUse();
-
-		m_vertices[0] = glm::vec3(min[0], min[1], min[2]);
-		m_vertices[1] = glm::vec3(max[0], min[1], min[2]);
-		m_vertices[2] = glm::vec3(max[0], max[1], min[2]);
-		m_vertices[3] = glm::vec3(min[0], max[1], min[2]);
-		m_vertices[4] = glm::vec3(min[0], min[1], max[2]);
-		m_vertices[5] = glm::vec3(max[0], min[1], max[2]);
-		m_vertices[6] = glm::vec3(max[0], max[1], max[2]);
-		m_vertices[7] = glm::vec3(min[0], max[1], max[2]);
+		for (int i(0); i < 3; ++i) {
+			m_size[i] = size[i];
+			m_min[i] = min[i];
+			m_max[i] = max[i];
+		}
 
 #if 0
 		printf("Dimensions: %d, %d, %d\n", X_DIM, Y_DIM, Z_DIM);
@@ -130,8 +118,28 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 	return false;
 }
 
+#if 0
 void VolumeShader::slice(const glm::vec3 &dir)
 {
+	auto inv_size = 1.0f / m_size;
+	auto min = m_min * inv_size;
+	auto max = m_max * inv_size;
+
+	m_shader.use();
+	glUniform3fv(m_shader("offset"), 1, &min[0]);
+	m_shader.unUse();
+
+	const glm::vec3 vertices[8] = {
+	    glm::vec3(min[0], min[1], min[2]),
+	    glm::vec3(max[0], min[1], min[2]),
+	    glm::vec3(max[0], max[1], min[2]),
+	    glm::vec3(min[0], max[1], min[2]),
+	    glm::vec3(min[0], min[1], max[2]),
+	    glm::vec3(max[0], min[1], max[2]),
+	    glm::vec3(max[0], max[1], max[2]),
+	    glm::vec3(min[0], max[1], max[2])
+	};
+
 	const int edges[12][2] = {
 	    { 0, 1 }, { 1, 2 }, { 2, 3 },
 	    { 3, 0 }, { 0, 4 }, { 1, 5 },
@@ -153,7 +161,7 @@ void VolumeShader::slice(const glm::vec3 &dir)
 	/* get the max and min distance of eacg vertex of the unit cube
 	 * in the viewing direction
 	 */
-	float max_dist = glm::dot(dir, m_vertices[0]);
+	float max_dist = glm::dot(dir, vertices[0]);
 	float min_dist = max_dist;
 	int max_index = 0;
 	int count = 0;
@@ -162,7 +170,7 @@ void VolumeShader::slice(const glm::vec3 &dir)
 		/* get the distance between the current unit cube vertex and
 		 * the view vector by dot product
 		 */
-		float dist = glm::dot(dir, m_vertices[i]);
+		float dist = glm::dot(dir, vertices[i]);
 
 		if (dist > max_dist) {
 			max_dist = dist;
@@ -194,10 +202,10 @@ void VolumeShader::slice(const glm::vec3 &dir)
 	/* for all egdes */
 	for (int i = 0; i < 12; ++i) {
 		/* get the start position vertex by table lookup */
-		vecStart[i] = m_vertices[edges[edge_list[max_index][i]][0]];
+		vecStart[i] = vertices[edges[edge_list[max_index][i]][0]];
 
 		/* get the direction by table lookup */
-		vecDir[i] = m_vertices[edges[edge_list[max_index][i]][1]] - vecStart[i];
+		vecDir[i] = vertices[edges[edge_list[max_index][i]][1]] - vecStart[i];
 
 		/* do a dot of vecDir and the view direction vector */
 		denom = glm::dot(vecDir[i], dir);
@@ -309,6 +317,79 @@ void VolumeShader::slice(const glm::vec3 &dir)
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(m_texture_slices), &(m_texture_slices[0].x));
 }
+#else
+int axis_dominant_v3_single(const glm::vec3 &vec)
+{
+	const float x = glm::abs(vec[0]);
+	const float y = glm::abs(vec[1]);
+	const float z = glm::abs(vec[2]);
+	return ((x > y) ?
+	       ((x > z) ? 0 : 2) :
+	       ((y > z) ? 1 : 2));
+}
+
+void VolumeShader::slice(const glm::vec3 &dir)
+{
+	auto view_dir = glm::normalize(dir);
+	int axis = axis_dominant_v3_single(view_dir);
+	sliceAxisAligned(view_dir, axis);
+}
+
+void VolumeShader::sliceAxisAligned(const glm::vec3 &view_dir, const int axis)
+{
+	auto count = 0;
+	auto depth = m_min[axis];
+	auto slice_size = m_size[axis] / num_slices;
+	auto inv_size = 1.0f / m_size;
+	auto min = m_min * inv_size;
+
+	m_shader.use();
+	glUniform3fv(m_shader("offset"), 1, &min[0]);
+	m_shader.unUse();
+
+	/* always process slices in back to front order! */
+	if (view_dir[axis] > 0.0f) {
+		depth = m_max[axis];
+		slice_size = -slice_size;
+	}
+
+	for (auto slice(0); slice < num_slices; slice++) {
+		const glm::vec3 vertices[3][4] = {
+		    {
+		        glm::vec3(depth, m_min[1], m_min[2]),
+		        glm::vec3(depth, m_max[1], m_min[2]),
+		        glm::vec3(depth, m_max[1], m_max[2]),
+		        glm::vec3(depth, m_min[1], m_max[2])
+		    },
+		    {
+		        glm::vec3(m_min[0], depth, m_min[2]),
+		        glm::vec3(m_min[0], depth, m_max[2]),
+		        glm::vec3(m_max[0], depth, m_max[2]),
+		        glm::vec3(m_max[0], depth, m_min[2])
+		    },
+		    {
+		        glm::vec3(m_min[0], m_min[1], depth),
+		        glm::vec3(m_min[0], m_max[1], depth),
+		        glm::vec3(m_max[0], m_max[1], depth),
+		        glm::vec3(m_max[0], m_min[1], depth)
+		    }
+		};
+
+		m_texture_slices[count++] = vertices[axis][0] * inv_size;
+		m_texture_slices[count++] = vertices[axis][1] * inv_size;
+		m_texture_slices[count++] = vertices[axis][2] * inv_size;
+		m_texture_slices[count++] = vertices[axis][0] * inv_size;
+		m_texture_slices[count++] = vertices[axis][2] * inv_size;
+		m_texture_slices[count++] = vertices[axis][3] * inv_size;
+
+		depth += slice_size;
+	}
+
+	/* update buffer object */
+	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(m_texture_slices), &(m_texture_slices[0].x));
+}
+#endif
 
 bool VolumeShader::init(const std::string &filename)
 {
