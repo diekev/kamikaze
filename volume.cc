@@ -88,7 +88,7 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 
 		/* Copy data */
 
-		GLubyte *data = new GLubyte[X_DIM * Y_DIM * Z_DIM];
+		GLfloat *data = new GLfloat[X_DIM * Y_DIM * Z_DIM];
 		FloatGrid::Accessor acc = grid->getAccessor();
 		Coord ijk;
 		int &x = ijk[0], &y = ijk[1], &z = ijk[2];
@@ -97,7 +97,7 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 		for (z = bbox_min[2]; z < bbox_max[2]; ++z) {
 			for (y = bbox_min[1]; y < bbox_max[1]; ++y) {
 				for (x = bbox_min[0]; x < bbox_max[0]; ++x, ++index) {
-					data[index] = static_cast<GLubyte>(acc.getValue(ijk) * 255.0f);
+					data[index] = acc.getValue(ijk);
 				}
 			}
 		}
@@ -113,7 +113,7 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_BASE_LEVEL, 0);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 4);
-		glTexImage3D(GL_TEXTURE_3D, 0, GL_RED, X_DIM, Y_DIM, Z_DIM, 0, GL_RED, GL_UNSIGNED_BYTE, data);
+		glTexImage3D(GL_TEXTURE_3D, 0, GL_RED, X_DIM, Y_DIM, Z_DIM, 0, GL_RED, GL_FLOAT, data);
 		glGenerateMipmap(GL_TEXTURE_3D);
 
 		file.close();
