@@ -39,11 +39,7 @@ void Viewer::init(const char *filename)
 
 	glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
 
-	glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, m_dist));
-	glm::mat4 Rx = glm::rotate(T, glm::radians(m_rX), glm::vec3(1.0f, 0.0f, 0.0f));
-	m_model_view = glm::rotate(Rx, glm::radians(m_rY), glm::vec3(0.0f, 1.0f, 0.0f));
-
-	m_view_dir = -glm::vec3(m_model_view[0][2], m_model_view[1][2], m_model_view[2][2]);
+	setViewDir();
 
 	m_volume_shader->setupRender();
 	m_volume_shader->slice(m_view_dir);
@@ -114,11 +110,7 @@ void Viewer::keyboardEvent(unsigned char key, int /*x*/, int /*y*/)
 
 void Viewer::render()
 {
-	glm::mat4 Tr = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, m_dist));
-	glm::mat4 Rx = glm::rotate(Tr, glm::radians(m_rX), glm::vec3(1.0f, 0.0f, 0.0f));
-	m_model_view = glm::rotate(Rx, glm::radians(m_rY), glm::vec3(0.0f, 1.0f, 0.0f));
-
-	m_view_dir = -glm::vec3(m_model_view[0][2], m_model_view[1][2], m_model_view[2][2]);
+	setViewDir();
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -127,6 +119,14 @@ void Viewer::render()
 	m_volume_shader->render(m_view_dir, MVP, m_view_rotated);
 
 	glutSwapBuffers();
+}
+
+void Viewer::setViewDir()
+{
+	glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, m_dist));
+	glm::mat4 R = glm::rotate(T, glm::radians(m_rX), glm::vec3(1.0f, 0.0f, 0.0f));
+	m_model_view = glm::rotate(R, glm::radians(m_rY), glm::vec3(0.0f, 1.0f, 0.0f));
+	m_view_dir = -glm::vec3(m_model_view[0][2], m_model_view[1][2], m_model_view[2][2]);
 }
 
 void Viewer::loadTransferFunction()

@@ -53,4 +53,5 @@ public:
 	 * adjacent values to get the interpolated result.
 	 */
 	void loadTransferFunction();
+	void setViewDir();
 };
