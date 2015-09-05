@@ -52,6 +52,7 @@ VolumeShader::VolumeShader()
     , m_size(glm::vec3(0.0f))
     , m_inv_size(glm::vec3(0.0f))
     , m_num_slices(256)
+    , m_axis(-1)
 {}
 
 VolumeShader::~VolumeShader()
@@ -334,18 +335,22 @@ void VolumeShader::slice(const glm::vec3 &dir)
 {
 	auto view_dir = glm::normalize(dir);
 	int axis = axis_dominant_v3_single(view_dir);
-	sliceAxisAligned(view_dir, axis);
+
+	if (m_axis != axis) {
+		m_axis = axis;
+		sliceAxisAligned(view_dir);
+	}
 }
 
-void VolumeShader::sliceAxisAligned(const glm::vec3 &view_dir, const int axis)
+void VolumeShader::sliceAxisAligned(const glm::vec3 &view_dir)
 {
 	auto count = 0;
-	auto depth = m_min[axis];
-	auto slice_size = m_size[axis] / m_num_slices;
+	auto depth = m_min[m_axis];
+	auto slice_size = m_size[m_axis] / m_num_slices;
 
 	/* always process slices in back to front order! */
-	if (view_dir[axis] > 0.0f) {
-		depth = m_max[axis];
+	if (view_dir[m_axis] > 0.0f) {
+		depth = m_max[m_axis];
 		slice_size = -slice_size;
 	}
 
@@ -371,12 +376,12 @@ void VolumeShader::sliceAxisAligned(const glm::vec3 &view_dir, const int axis)
 		    }
 		};
 
-		m_texture_slices[count++] = vertices[axis][0] * m_inv_size;
-		m_texture_slices[count++] = vertices[axis][1] * m_inv_size;
-		m_texture_slices[count++] = vertices[axis][2] * m_inv_size;
-		m_texture_slices[count++] = vertices[axis][0] * m_inv_size;
-		m_texture_slices[count++] = vertices[axis][2] * m_inv_size;
-		m_texture_slices[count++] = vertices[axis][3] * m_inv_size;
+		m_texture_slices[count++] = vertices[m_axis][0] * m_inv_size;
+		m_texture_slices[count++] = vertices[m_axis][1] * m_inv_size;
+		m_texture_slices[count++] = vertices[m_axis][2] * m_inv_size;
+		m_texture_slices[count++] = vertices[m_axis][0] * m_inv_size;
+		m_texture_slices[count++] = vertices[m_axis][2] * m_inv_size;
+		m_texture_slices[count++] = vertices[m_axis][3] * m_inv_size;
 
 		depth += slice_size;
 	}
