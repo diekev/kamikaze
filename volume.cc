@@ -14,8 +14,9 @@
 
 const float EPSILON = 0.0001f;
 
-/* total number of slices curently used */
-int num_slices = 256;
+VolumeShader::VolumeShader()
+    : m_num_slices(256)
+{}
 
 VolumeShader::~VolumeShader()
 {
@@ -197,7 +198,7 @@ void VolumeShader::slice(const glm::vec3 &dir)
 	 * slices to get the plane increment
 	 */
 	float plane_dist = min_dist;
-	float plane_dist_inc = (max_dist - min_dist) / static_cast<float>(num_slices);
+	float plane_dist_inc = (max_dist - min_dist) / static_cast<float>(m_num_slices);
 
 	/* for all egdes */
 	for (int i = 0; i < 12; ++i) {
@@ -229,7 +230,7 @@ void VolumeShader::slice(const glm::vec3 &dir)
 	glm::vec3 intersections[6];
 	float dL[12];
 
-	for (int i = num_slices - 1; i >= 0; --i) {
+	for (int i = m_num_slices - 1; i >= 0; --i) {
 		for (int e = 0; e < 12; ++e) {
 			dL[e] = lambda[e] + i * lambda_inc[e];
 		}
@@ -339,7 +340,7 @@ void VolumeShader::sliceAxisAligned(const glm::vec3 &view_dir, const int axis)
 {
 	auto count = 0;
 	auto depth = m_min[axis];
-	auto slice_size = m_size[axis] / num_slices;
+	auto slice_size = m_size[axis] / m_num_slices;
 	auto inv_size = 1.0f / m_size;
 	auto min = m_min * inv_size;
 
@@ -353,7 +354,7 @@ void VolumeShader::sliceAxisAligned(const glm::vec3 &view_dir, const int axis)
 		slice_size = -slice_size;
 	}
 
-	for (auto slice(0); slice < num_slices; slice++) {
+	for (auto slice(0); slice < m_num_slices; slice++) {
 		const glm::vec3 vertices[3][4] = {
 		    {
 		        glm::vec3(depth, m_min[1], m_min[2]),
@@ -447,4 +448,10 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 	glDrawArrays(GL_TRIANGLES, 0, MAX_SLICES * 12);
 	m_shader.unUse();
 	glDisable(GL_BLEND);
+}
+
+void VolumeShader::changeNumSlicesBy(int x)
+{
+	m_num_slices += x;
+	m_num_slices = std::min(MAX_SLICES, std::max(m_num_slices, 3));
 }

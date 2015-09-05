@@ -44,6 +44,7 @@ public:
 	void resize(int w, int h);
 	void mouseDownEvent(int button, int s, int x, int y);
 	void mouseMoveEvent(int x, int y);
+	void keyboardEvent(unsigned char key, int x, int y);
 	void render();
 
 	/* Function to generate interpolated colours from the set of colours values

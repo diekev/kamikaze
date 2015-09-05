@@ -55,6 +55,13 @@ void OnMouseMoveCB(int x, int y)
 	}
 }
 
+void OnKeyEventCB(unsigned char key, int x, int y)
+{
+	if (viewer) {
+		viewer->keyboardEvent(key, x, y);
+	}
+}
+
 }  /* namespace */
 
 int main(int argc, char *argv[])
@@ -83,6 +90,7 @@ int main(int argc, char *argv[])
 	glutReshapeFunc(OnResizeCB);
 	glutMouseFunc(OnMouseDownCB);
 	glutMotionFunc(OnMouseMoveCB);
+	glutKeyboardFunc(OnKeyEventCB);
 	glutMainLoop();
 
 	return 0;

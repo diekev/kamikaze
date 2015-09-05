@@ -12,9 +12,10 @@ class VolumeShader {
 	glm::vec3 m_texture_slices[MAX_SLICES * 12];
 
 	glm::vec3 m_size, m_min, m_max;
+	int m_num_slices;
 
 public:
-	VolumeShader() = default;
+	VolumeShader();
 	~VolumeShader();
 
 	bool init(const std::string &filename);
@@ -23,5 +24,6 @@ public:
 	void sliceAxisAligned(const glm::vec3 &view_dir, const int axis);
 	void setupRender();
 	void render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool is_rotated);
+	void changeNumSlicesBy(int x);
 };
 

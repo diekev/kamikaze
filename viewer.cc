@@ -96,6 +96,22 @@ void Viewer::mouseMoveEvent(int x, int y)
 	glutPostRedisplay();
 }
 
+void Viewer::keyboardEvent(unsigned char key, int /*x*/, int /*y*/)
+{
+	switch (key) {
+		case '-':
+			m_volume_shader->changeNumSlicesBy(-1);
+			break;
+		case '+':
+			m_volume_shader->changeNumSlicesBy(1);
+			break;
+	}
+
+	m_volume_shader->slice(m_view_dir);
+
+	glutPostRedisplay();
+}
+
 void Viewer::render()
 {
 	glm::mat4 Tr = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, m_dist));
