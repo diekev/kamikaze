@@ -34,9 +34,6 @@ void Viewer::init(const char *filename)
 		return;
 	}
 
-	/* load the transfer function data and generate the transfer look up table */
-	loadTransferFunction();
-
 	glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
 
 	setViewDir();
@@ -46,9 +43,7 @@ void Viewer::init(const char *filename)
 }
 
 void Viewer::shutDown()
-{
-	glDeleteTextures(1, &m_tf_tex_ID);
-}
+{}
 
 void Viewer::resize(int w, int h)
 {
@@ -126,54 +121,4 @@ void Viewer::setViewDir()
 	glm::mat4 R = glm::rotate(T, glm::radians(m_rX), glm::vec3(1.0f, 0.0f, 0.0f));
 	m_model_view = glm::rotate(R, glm::radians(m_rY), glm::vec3(0.0f, 1.0f, 0.0f));
 	m_view_dir = -glm::vec3(m_model_view[0][2], m_model_view[1][2], m_model_view[2][2]);
-}
-
-void Viewer::loadTransferFunction()
-{
-	float data[256][4];
-	int indices[9];
-
-	/* fill the color values at the place where the color should be after
-	 * interpolation */
-	for (int i = 0; i < 9; ++i) {
-		auto index = i * 28;
-		data[index][0] = jet_values[i].x;
-		data[index][1] = jet_values[i].y;
-		data[index][2] = jet_values[i].z;
-		data[index][3] = jet_values[i].w;
-		indices[i] = index;
-	}
-
-	/* for each adjacent pair of colors, find the difference in the RGBA values
-	 * and then interpolate */
-	for (int j = 0; j < 9 - 1; ++j) {
-		auto data_r = (data[indices[j + 1]][0] - data[indices[j]][0]);
-		auto data_g = (data[indices[j + 1]][1] - data[indices[j]][1]);
-		auto data_b = (data[indices[j + 1]][2] - data[indices[j]][2]);
-		auto data_a = (data[indices[j + 1]][3] - data[indices[j]][3]);
-
-		auto index = indices[j + 1] - indices[j];
-
-		auto inc_r = data_r / static_cast<float>(index);
-		auto inc_g = data_g / static_cast<float>(index);
-		auto inc_b = data_b / static_cast<float>(index);
-		auto inc_a = data_a / static_cast<float>(index);
-
-		for (int i = indices[j] + 1; i < indices[j + 1]; ++i) {
-			data[i][0] = (data[i - 1][0] + inc_r);
-			data[i][1] = (data[i - 1][1] + inc_g);
-			data[i][2] = (data[i - 1][2] + inc_b);
-			data[i][3] = (data[i - 1][3] + inc_a);
-		}
-	}
-
-	glGenTextures(1, &m_tf_tex_ID);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_1D, m_tf_tex_ID);
-
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 256, 0, GL_RGBA, GL_FLOAT, data);
 }
