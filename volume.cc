@@ -8,6 +8,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#define DWREAL_IS_DOUBLE 0
+
 #include <openvdb/openvdb.h>
 
 #include "volume.h"
