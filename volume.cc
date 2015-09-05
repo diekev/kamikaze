@@ -449,12 +449,12 @@ void VolumeShader::setupRender()
 	glBindVertexArray(m_vao);
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 
-	/* pass the sliced volume vectore to buffer output memory */
-	glBufferData(GL_ARRAY_BUFFER, sizeof(m_texture_slices), 0, GL_DYNAMIC_DRAW);
+	/* pass the sliced volume vector to buffer output memory */
+	glBufferData(GL_ARRAY_BUFFER, sizeof(m_texture_slices), nullptr, GL_DYNAMIC_DRAW);
 
 	/* enable vertex attribute array for position */
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
 	glBindVertexArray(0);
 }
@@ -468,10 +468,12 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glBindVertexArray(m_vao);
+
 	m_shader.use();
 	glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 	glDrawArrays(GL_TRIANGLES, 0, MAX_SLICES * 12);
 	m_shader.unUse();
+
 	glDisable(GL_BLEND);
 }
 

@@ -34,7 +34,7 @@ void Viewer::init(const char *filename)
 		return;
 	}
 
-	/* load the transfuer function data and generate the transfer look up table */
+	/* load the transfer function data and generate the transfer look up table */
 	loadTransferFunction();
 
 	glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
@@ -110,10 +110,9 @@ void Viewer::keyboardEvent(unsigned char key, int /*x*/, int /*y*/)
 
 void Viewer::render()
 {
-	setViewDir();
-
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	setViewDir();
 	glm::mat4 MVP = m_projection * m_model_view;
 
 	m_volume_shader->render(m_view_dir, MVP, m_view_rotated);
@@ -131,40 +130,40 @@ void Viewer::setViewDir()
 
 void Viewer::loadTransferFunction()
 {
-	float pData[256][4];
+	float data[256][4];
 	int indices[9];
 
-	/* fill the colour values at the place where the colour shuld be after
-		 * interpolation */
+	/* fill the color values at the place where the color should be after
+	 * interpolation */
 	for (int i = 0; i < 9; ++i) {
 		auto index = i * 28;
-		pData[index][0] = jet_values[i].x;
-		pData[index][1] = jet_values[i].y;
-		pData[index][2] = jet_values[i].z;
-		pData[index][3] = jet_values[i].w;
+		data[index][0] = jet_values[i].x;
+		data[index][1] = jet_values[i].y;
+		data[index][2] = jet_values[i].z;
+		data[index][3] = jet_values[i].w;
 		indices[i] = index;
 	}
 
-	/* for each adjacent pair of colours, find the difference in the rgba values
-		 * and then interpolate */
+	/* for each adjacent pair of colors, find the difference in the RGBA values
+	 * and then interpolate */
 	for (int j = 0; j < 9 - 1; ++j) {
-		auto dDataR = (pData[indices[j + 1]][0] - pData[indices[j]][0]);
-		auto dDataG = (pData[indices[j + 1]][1] - pData[indices[j]][1]);
-		auto dDataB = (pData[indices[j + 1]][2] - pData[indices[j]][2]);
-		auto dDataA = (pData[indices[j + 1]][3] - pData[indices[j]][3]);
+		auto data_r = (data[indices[j + 1]][0] - data[indices[j]][0]);
+		auto data_g = (data[indices[j + 1]][1] - data[indices[j]][1]);
+		auto data_b = (data[indices[j + 1]][2] - data[indices[j]][2]);
+		auto data_a = (data[indices[j + 1]][3] - data[indices[j]][3]);
 
-		auto dIndex = indices[j + 1] - indices[j];
+		auto index = indices[j + 1] - indices[j];
 
-		auto dDatatIncR = dDataR / static_cast<float>(dIndex);
-		auto dDatatIncG = dDataG / static_cast<float>(dIndex);
-		auto dDatatIncB = dDataB / static_cast<float>(dIndex);
-		auto dDatatIncA = dDataA / static_cast<float>(dIndex);
+		auto inc_r = data_r / static_cast<float>(index);
+		auto inc_g = data_g / static_cast<float>(index);
+		auto inc_b = data_b / static_cast<float>(index);
+		auto inc_a = data_a / static_cast<float>(index);
 
 		for (int i = indices[j] + 1; i < indices[j + 1]; ++i) {
-			pData[i][0] = (pData[i - 1][0] + dDatatIncR);
-			pData[i][1] = (pData[i - 1][1] + dDatatIncG);
-			pData[i][2] = (pData[i - 1][2] + dDatatIncB);
-			pData[i][3] = (pData[i - 1][3] + dDatatIncA);
+			data[i][0] = (data[i - 1][0] + inc_r);
+			data[i][1] = (data[i - 1][1] + inc_g);
+			data[i][2] = (data[i - 1][2] + inc_b);
+			data[i][3] = (data[i - 1][3] + inc_a);
 		}
 	}
 
@@ -176,5 +175,5 @@ void Viewer::loadTransferFunction()
 	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 256, 0, GL_RGBA, GL_FLOAT, pData);
+	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 256, 0, GL_RGBA, GL_FLOAT, data);
 }
