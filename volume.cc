@@ -333,12 +333,11 @@ void VolumeShader::slice(const glm::vec3 &dir)
 
 void VolumeShader::slice(const glm::vec3 &dir)
 {
-	auto view_dir = glm::normalize(dir);
-	int axis = axis_dominant_v3_single(view_dir);
+	auto axis = axis_dominant_v3_single(dir);
 
 	if (m_axis != axis) {
 		m_axis = axis;
-		sliceAxisAligned(view_dir);
+		sliceAxisAligned(dir);
 	}
 }
 
