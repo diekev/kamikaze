@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -g -Wall -Og -Wno-error=unused-function \
+CXXFLAGS = -std=c++11 -g -Wall -Wno-error=unused-function \
 -Wextra -Wno-missing-field-initializers -Wno-sign-compare -Wno-type-limits  \
 -Wno-unknown-pragmas -Wno-unused-parameter -Wno-ignored-qualifiers          \
 -Wmissing-format-attribute -Wno-delete-non-virtual-dtor                     \
@@ -19,7 +19,7 @@ OBJ_DIR = bin
 LIB_DIR = -L/usr/lib -L/opt/lib/openvdb/lib -L/opt/lib/openexr/lib -L/opt/lib/blosc/lib
 INC_DIR = -I/usr/include -I/opt/lib/openvdb/include -I/opt/lib/openexr/include
 
-SRC = main.cc volume.cc viewer.cc GLSLShader.cc
+SRC = main.cc GLSLShader.cc utils.cc viewer.cc volume.cc
 OBJECTS = $(SRC:%.cc=$(OBJ_DIR)/%.o)
 EXEC = window.out
 
