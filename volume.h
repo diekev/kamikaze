@@ -7,7 +7,7 @@ const int MAX_SLICES = 512;
 class VolumeShader {
 	GLuint m_vao;
 	GLuint m_vbo;
-	GLuint m_texture_id;
+	GLuint m_texture_id, m_transfer_func_id;
 	GLSLShader m_shader;
 	glm::vec3 m_texture_slices[MAX_SLICES * 12];
 
@@ -27,5 +27,11 @@ public:
 	void setupRender();
 	void render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool is_rotated);
 	void changeNumSlicesBy(int x);
-};
 
+	/* Function to generate interpolated colours from the set of colours values
+	 * (jet_values). This function first calculates the amount of increments for
+	 * each component and the index difference. Then it linearly interpolates the
+	 * adjacent values to get the interpolated result.
+	 */
+	void loadTransferFunction();
+};

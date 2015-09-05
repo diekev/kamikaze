@@ -34,25 +34,16 @@ void Viewer::init(const char *filename)
 		return;
 	}
 
-	/* load the transfuer function data and generate the transfer look up table */
-	loadTransferFunction();
-
 	glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
 
-	glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, m_dist));
-	glm::mat4 Rx = glm::rotate(T, glm::radians(m_rX), glm::vec3(1.0f, 0.0f, 0.0f));
-	m_model_view = glm::rotate(Rx, glm::radians(m_rY), glm::vec3(0.0f, 1.0f, 0.0f));
-
-	m_view_dir = -glm::vec3(m_model_view[0][2], m_model_view[1][2], m_model_view[2][2]);
+	setViewDir();
 
 	m_volume_shader->setupRender();
 	m_volume_shader->slice(m_view_dir);
 }
 
 void Viewer::shutDown()
-{
-	glDeleteTextures(1, &m_tf_tex_ID);
-}
+{}
 
 void Viewer::resize(int w, int h)
 {
@@ -114,14 +105,9 @@ void Viewer::keyboardEvent(unsigned char key, int /*x*/, int /*y*/)
 
 void Viewer::render()
 {
-	glm::mat4 Tr = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, m_dist));
-	glm::mat4 Rx = glm::rotate(Tr, glm::radians(m_rX), glm::vec3(1.0f, 0.0f, 0.0f));
-	m_model_view = glm::rotate(Rx, glm::radians(m_rY), glm::vec3(0.0f, 1.0f, 0.0f));
-
-	m_view_dir = -glm::vec3(m_model_view[0][2], m_model_view[1][2], m_model_view[2][2]);
-
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	setViewDir();
 	glm::mat4 MVP = m_projection * m_model_view;
 
 	m_volume_shader->render(m_view_dir, MVP, m_view_rotated);
@@ -129,52 +115,10 @@ void Viewer::render()
 	glutSwapBuffers();
 }
 
-void Viewer::loadTransferFunction()
+void Viewer::setViewDir()
 {
-	float pData[256][4];
-	int indices[9];
-
-	/* fill the colour values at the place where the colour shuld be after
-		 * interpolation */
-	for (int i = 0; i < 9; ++i) {
-		auto index = i * 28;
-		pData[index][0] = jet_values[i].x;
-		pData[index][1] = jet_values[i].y;
-		pData[index][2] = jet_values[i].z;
-		pData[index][3] = jet_values[i].w;
-		indices[i] = index;
-	}
-
-	/* for each adjacent pair of colours, find the difference in the rgba values
-		 * and then interpolate */
-	for (int j = 0; j < 9 - 1; ++j) {
-		auto dDataR = (pData[indices[j + 1]][0] - pData[indices[j]][0]);
-		auto dDataG = (pData[indices[j + 1]][1] - pData[indices[j]][1]);
-		auto dDataB = (pData[indices[j + 1]][2] - pData[indices[j]][2]);
-		auto dDataA = (pData[indices[j + 1]][3] - pData[indices[j]][3]);
-
-		auto dIndex = indices[j + 1] - indices[j];
-
-		auto dDatatIncR = dDataR / static_cast<float>(dIndex);
-		auto dDatatIncG = dDataG / static_cast<float>(dIndex);
-		auto dDatatIncB = dDataB / static_cast<float>(dIndex);
-		auto dDatatIncA = dDataA / static_cast<float>(dIndex);
-
-		for (int i = indices[j] + 1; i < indices[j + 1]; ++i) {
-			pData[i][0] = (pData[i - 1][0] + dDatatIncR);
-			pData[i][1] = (pData[i - 1][1] + dDatatIncG);
-			pData[i][2] = (pData[i - 1][2] + dDatatIncB);
-			pData[i][3] = (pData[i - 1][3] + dDatatIncA);
-		}
-	}
-
-	glGenTextures(1, &m_tf_tex_ID);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_1D, m_tf_tex_ID);
-
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 256, 0, GL_RGBA, GL_FLOAT, pData);
+	glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, m_dist));
+	glm::mat4 R = glm::rotate(T, glm::radians(m_rX), glm::vec3(1.0f, 0.0f, 0.0f));
+	m_model_view = glm::rotate(R, glm::radians(m_rY), glm::vec3(0.0f, 1.0f, 0.0f));
+	m_view_dir = -glm::vec3(m_model_view[0][2], m_model_view[1][2], m_model_view[2][2]);
 }

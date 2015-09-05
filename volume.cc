@@ -120,6 +120,7 @@ VolumeShader::~VolumeShader()
 	glDeleteVertexArrays(1, &m_vao);
 	glDeleteBuffers(1, &m_vbo);
 	glDeleteTextures(1, &m_texture_id);
+	glDeleteTextures(1, &m_transfer_func_id);
 }
 
 bool VolumeShader::loadVolumeFile(const std::string &volume_file)
@@ -476,6 +477,8 @@ bool VolumeShader::init(const std::string &filename)
 
 		m_shader.unUse();
 
+		loadTransferFunction();
+
 		return true;
 	}
 
@@ -491,12 +494,12 @@ void VolumeShader::setupRender()
 	glBindVertexArray(m_vao);
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 
-	/* pass the sliced volume vectore to buffer output memory */
-	glBufferData(GL_ARRAY_BUFFER, sizeof(m_texture_slices), 0, GL_DYNAMIC_DRAW);
+	/* pass the sliced volume vector to buffer output memory */
+	glBufferData(GL_ARRAY_BUFFER, sizeof(m_texture_slices), nullptr, GL_DYNAMIC_DRAW);
 
 	/* enable vertex attribute array for position */
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
 	glBindVertexArray(0);
 }
@@ -510,10 +513,12 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glBindVertexArray(m_vao);
+
 	m_shader.use();
 	glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 	glDrawArrays(GL_TRIANGLES, 0, MAX_SLICES * 12);
 	m_shader.unUse();
+
 	glDisable(GL_BLEND);
 }
 
@@ -521,4 +526,67 @@ void VolumeShader::changeNumSlicesBy(int x)
 {
 	m_num_slices += x;
 	m_num_slices = std::min(MAX_SLICES, std::max(m_num_slices, 3));
+}
+
+void VolumeShader::loadTransferFunction()
+{
+	/* transfer function (lookup table) color values */
+	const glm::vec4 jet_values[9] = {
+		glm::vec4(0.0f, 0.0f, 0.5f, 0.0f),
+		glm::vec4(0.0f, 0.0f, 1.0f, 0.1f),
+		glm::vec4(0.0f, 0.5f, 1.0f, 0.3f),
+		glm::vec4(0.0f, 1.0f, 1.0f, 0.3f),
+		glm::vec4(0.5f, 1.0f, 0.5f, 0.75f),
+		glm::vec4(1.0f, 1.0f, 0.0f, 0.8f),
+		glm::vec4(1.0f, 0.5f, 0.0f, 0.6f),
+		glm::vec4(1.0f, 0.0f, 0.0f, 0.5f),
+		glm::vec4(0.5f, 0.0f, 0.0f, 0.0f),
+	};
+
+	float data[256][4];
+	int indices[9];
+
+	/* fill the color values at the place where the color should be after
+	 * interpolation */
+	for (int i = 0; i < 9; ++i) {
+		auto index = i * 28;
+		data[index][0] = jet_values[i].x;
+		data[index][1] = jet_values[i].y;
+		data[index][2] = jet_values[i].z;
+		data[index][3] = jet_values[i].w;
+		indices[i] = index;
+	}
+
+	/* for each adjacent pair of colors, find the difference in the RGBA values
+	 * and then interpolate */
+	for (int j = 0; j < 9 - 1; ++j) {
+		auto data_r = (data[indices[j + 1]][0] - data[indices[j]][0]);
+		auto data_g = (data[indices[j + 1]][1] - data[indices[j]][1]);
+		auto data_b = (data[indices[j + 1]][2] - data[indices[j]][2]);
+		auto data_a = (data[indices[j + 1]][3] - data[indices[j]][3]);
+
+		auto index = indices[j + 1] - indices[j];
+
+		auto inc_r = data_r / static_cast<float>(index);
+		auto inc_g = data_g / static_cast<float>(index);
+		auto inc_b = data_b / static_cast<float>(index);
+		auto inc_a = data_a / static_cast<float>(index);
+
+		for (int i = indices[j] + 1; i < indices[j + 1]; ++i) {
+			data[i][0] = (data[i - 1][0] + inc_r);
+			data[i][1] = (data[i - 1][1] + inc_g);
+			data[i][2] = (data[i - 1][2] + inc_b);
+			data[i][3] = (data[i - 1][3] + inc_a);
+		}
+	}
+
+	glGenTextures(1, &m_transfer_func_id);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_1D, m_transfer_func_id);
+
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 256, 0, GL_RGBA, GL_FLOAT, data);
 }
