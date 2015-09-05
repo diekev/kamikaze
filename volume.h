@@ -11,7 +11,8 @@ class VolumeShader {
 	GLSLShader m_shader;
 	glm::vec3 m_texture_slices[MAX_SLICES * 12];
 
-	glm::vec3 m_size, m_min, m_max;
+	glm::vec3 m_min, m_max;
+	glm::vec3 m_size, m_inv_size;
 	int m_num_slices;
 
 public:

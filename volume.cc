@@ -14,19 +14,6 @@
 
 const float EPSILON = 0.0001f;
 
-VolumeShader::VolumeShader()
-    : m_num_slices(256)
-{}
-
-VolumeShader::~VolumeShader()
-{
-	m_shader.deleteShaderProgram();
-
-	glDeleteVertexArrays(1, &m_vao);
-	glDeleteBuffers(1, &m_vbo);
-	glDeleteTextures(1, &m_texture_id);
-}
-
 void convert_grid(const openvdb::FloatGrid &grid, GLfloat *data,
                   const openvdb::Coord &min, const openvdb::Coord &max)
 {
@@ -44,6 +31,36 @@ void convert_grid(const openvdb::FloatGrid &grid, GLfloat *data,
 			}
 		}
 	}
+}
+
+int axis_dominant_v3_single(const glm::vec3 &vec)
+{
+	const float x = glm::abs(vec[0]);
+	const float y = glm::abs(vec[1]);
+	const float z = glm::abs(vec[2]);
+	return ((x > y) ?
+	       ((x > z) ? 0 : 2) :
+	       ((y > z) ? 1 : 2));
+}
+
+VolumeShader::VolumeShader()
+    : m_vao(0)
+    , m_vbo(0)
+    , m_texture_id(0)
+    , m_min(glm::vec3(0.0f))
+    , m_max(glm::vec3(0.0f))
+    , m_size(glm::vec3(0.0f))
+    , m_inv_size(glm::vec3(0.0f))
+    , m_num_slices(256)
+{}
+
+VolumeShader::~VolumeShader()
+{
+	m_shader.deleteShaderProgram();
+
+	glDeleteVertexArrays(1, &m_vao);
+	glDeleteBuffers(1, &m_vbo);
+	glDeleteTextures(1, &m_texture_id);
 }
 
 bool VolumeShader::loadVolumeFile(const std::string &volume_file)
@@ -80,13 +97,14 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 		/* Compute grid size */
 		Vec3f min = grid->transform().indexToWorld(bbox_min);
 		Vec3f max = grid->transform().indexToWorld(bbox_max);
-		Vec3f size = (max - min);
 
 		for (int i(0); i < 3; ++i) {
-			m_size[i] = size[i];
 			m_min[i] = min[i];
 			m_max[i] = max[i];
 		}
+
+		m_size = (m_max - m_min);
+		m_inv_size = 1.0f / m_size;
 
 #if 0
 		printf("Dimensions: %d, %d, %d\n", X_DIM, Y_DIM, Z_DIM);
@@ -122,23 +140,15 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 #if 0
 void VolumeShader::slice(const glm::vec3 &dir)
 {
-	auto inv_size = 1.0f / m_size;
-	auto min = m_min * inv_size;
-	auto max = m_max * inv_size;
-
-	m_shader.use();
-	glUniform3fv(m_shader("offset"), 1, &min[0]);
-	m_shader.unUse();
-
 	const glm::vec3 vertices[8] = {
-	    glm::vec3(min[0], min[1], min[2]),
-	    glm::vec3(max[0], min[1], min[2]),
-	    glm::vec3(max[0], max[1], min[2]),
-	    glm::vec3(min[0], max[1], min[2]),
-	    glm::vec3(min[0], min[1], max[2]),
-	    glm::vec3(max[0], min[1], max[2]),
-	    glm::vec3(max[0], max[1], max[2]),
-	    glm::vec3(min[0], max[1], max[2])
+	    glm::vec3(m_min[0], m_min[1], m_min[2]),
+	    glm::vec3(m_max[0], m_min[1], m_min[2]),
+	    glm::vec3(m_max[0], m_max[1], m_min[2]),
+	    glm::vec3(m_min[0], m_max[1], m_min[2]),
+	    glm::vec3(m_min[0], m_min[1], m_max[2]),
+	    glm::vec3(m_max[0], m_min[1], m_max[2]),
+	    glm::vec3(m_max[0], m_max[1], m_max[2]),
+	    glm::vec3(m_min[0], m_max[1], m_max[2])
 	};
 
 	const int edges[12][2] = {
@@ -310,7 +320,7 @@ void VolumeShader::slice(const glm::vec3 &dir)
 		int indices[] = { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5 };
 
 		for (int i = 0; i < 12; ++i) {
-			m_texture_slices[count++] = intersections[indices[i]];
+			m_texture_slices[count++] = intersections[indices[i]] * m_inv_size;
 		}
 	}
 
@@ -319,15 +329,6 @@ void VolumeShader::slice(const glm::vec3 &dir)
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(m_texture_slices), &(m_texture_slices[0].x));
 }
 #else
-int axis_dominant_v3_single(const glm::vec3 &vec)
-{
-	const float x = glm::abs(vec[0]);
-	const float y = glm::abs(vec[1]);
-	const float z = glm::abs(vec[2]);
-	return ((x > y) ?
-	       ((x > z) ? 0 : 2) :
-	       ((y > z) ? 1 : 2));
-}
 
 void VolumeShader::slice(const glm::vec3 &dir)
 {
@@ -341,12 +342,6 @@ void VolumeShader::sliceAxisAligned(const glm::vec3 &view_dir, const int axis)
 	auto count = 0;
 	auto depth = m_min[axis];
 	auto slice_size = m_size[axis] / m_num_slices;
-	auto inv_size = 1.0f / m_size;
-	auto min = m_min * inv_size;
-
-	m_shader.use();
-	glUniform3fv(m_shader("offset"), 1, &min[0]);
-	m_shader.unUse();
 
 	/* always process slices in back to front order! */
 	if (view_dir[axis] > 0.0f) {
@@ -376,12 +371,12 @@ void VolumeShader::sliceAxisAligned(const glm::vec3 &view_dir, const int axis)
 		    }
 		};
 
-		m_texture_slices[count++] = vertices[axis][0] * inv_size;
-		m_texture_slices[count++] = vertices[axis][1] * inv_size;
-		m_texture_slices[count++] = vertices[axis][2] * inv_size;
-		m_texture_slices[count++] = vertices[axis][0] * inv_size;
-		m_texture_slices[count++] = vertices[axis][2] * inv_size;
-		m_texture_slices[count++] = vertices[axis][3] * inv_size;
+		m_texture_slices[count++] = vertices[axis][0] * m_inv_size;
+		m_texture_slices[count++] = vertices[axis][1] * m_inv_size;
+		m_texture_slices[count++] = vertices[axis][2] * m_inv_size;
+		m_texture_slices[count++] = vertices[axis][0] * m_inv_size;
+		m_texture_slices[count++] = vertices[axis][2] * m_inv_size;
+		m_texture_slices[count++] = vertices[axis][3] * m_inv_size;
 
 		depth += slice_size;
 	}
@@ -394,25 +389,32 @@ void VolumeShader::sliceAxisAligned(const glm::vec3 &view_dir, const int axis)
 
 bool VolumeShader::init(const std::string &filename)
 {
-	m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
-	m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
+	if (loadVolumeFile(filename)) {
+		m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
+		m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
 
-	m_shader.createAndLinkProgram();
+		m_shader.createAndLinkProgram();
 
-	m_shader.use();
+		m_shader.use();
 
-	m_shader.addAttribute("vVertex");
-	m_shader.addUniform("MVP");
-	m_shader.addUniform("offset");
-	m_shader.addUniform("volume");
-	m_shader.addUniform("lut");
+		m_shader.addAttribute("vVertex");
+		m_shader.addUniform("MVP");
+		m_shader.addUniform("offset");
+		m_shader.addUniform("volume");
+		m_shader.addUniform("lut");
 
-	glUniform1i(m_shader("volume"), 0);
-	glUniform1i(m_shader("lut"), 1);
+		glUniform1i(m_shader("volume"), 0);
+		glUniform1i(m_shader("lut"), 1);
 
-	m_shader.unUse();
+		auto min = m_min * m_inv_size;
+		glUniform3fv(m_shader("offset"), 1, &min[0]);
 
-	return loadVolumeFile(filename);
+		m_shader.unUse();
+
+		return true;
+	}
+
+	return false;
 }
 
 void VolumeShader::setupRender()
