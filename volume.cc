@@ -12,6 +12,7 @@
 
 #include <openvdb/openvdb.h>
 
+#include "utils.h"
 #include "volume.h"
 
 const float EPSILON = 0.0001f;
@@ -19,20 +20,33 @@ const float EPSILON = 0.0001f;
 void convert_grid(const openvdb::FloatGrid &grid, GLfloat *data,
                   const openvdb::Coord &min, const openvdb::Coord &max)
 {
+	Timer(__func__);
+
 	using namespace openvdb;
 
-	FloatGrid::ConstAccessor acc = grid.getAccessor();
-	math::Coord ijk;
-	int &x = ijk[0], &y = ijk[1], &z = ijk[2];
+	FloatGrid::ConstAccessor main_acc = grid.getAccessor();
+	auto extent = max - min;
+	auto slabsize = extent[0] * extent[1];
 
-	auto index = 0;
-	for (z = min[2]; z < max[2]; ++z) {
-		for (y = min[1]; y < max[1]; ++y) {
-			for (x = min[0]; x < max[0]; ++x, ++index) {
-				data[index] = acc.getValue(ijk);
+	tbb::parallel_for(tbb::blocked_range<int>(min[2], max[2]),
+	        [&](const tbb::blocked_range<int> &r)
+	{
+		FloatGrid::ConstAccessor acc(main_acc);
+		math::Coord ijk;
+		int &x = ijk[0], &y = ijk[1], &z = ijk[2];
+		z = r.begin();
+
+		/* Subtract min z coord so that 'index' always start at zero or above. */
+		auto index = (z - min[2]) * slabsize;
+
+		for (auto e = r.end(); z < e; ++z) {
+			for (y = min[1]; y < max[1]; ++y) {
+				for (x = min[0]; x < max[0]; ++x, ++index) {
+					data[index] = acc.getValue(ijk);
+				}
 			}
 		}
-	}
+	});
 }
 
 int axis_dominant_v3_single(const glm::vec3 &vec)
@@ -128,7 +142,10 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_BASE_LEVEL, 0);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 4);
+
+		Timer("Move data to GPU")
 		glTexImage3D(GL_TEXTURE_3D, 0, GL_RED, X_DIM, Y_DIM, Z_DIM, 0, GL_RED, GL_FLOAT, data);
+
 		glGenerateMipmap(GL_TEXTURE_3D);
 
 		file.close();
