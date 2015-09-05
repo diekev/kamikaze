@@ -17,6 +17,48 @@
 
 const float EPSILON = 0.0001f;
 
+void max_leaf_per_axis(int dim[3], int voxel_per_leaf, int result[3])
+{
+	// x axis
+	result[0] = (dim[0] - (dim[0] % voxel_per_leaf)) / voxel_per_leaf;
+
+	// y axis
+	result[1] = (dim[1] - (dim[1] % voxel_per_leaf)) / voxel_per_leaf;
+
+	// z axis // z = num_leaf_in_tree / (x * y) + 1
+	auto resolution = dim[0] * dim[1] * dim[2];
+	auto difference = result[0] * result[1];
+
+	auto temp_max = resolution / difference;
+
+	result[2] = (temp_max - (temp_max % voxel_per_leaf)) / voxel_per_leaf;
+	assert(difference * result[2] > resolution / 256);
+}
+
+void texture_from_leaf(const openvdb::FloatGrid &grid)
+{
+	using namespace openvdb;
+
+	typedef FloatTree::LeafNodeType LeafType;
+	typedef FloatGrid::ValueType ValueType;
+
+	const int leafDim = LeafType::DIM;
+	FloatTree::LeafCIter leaf_iter = grid.tree().cbeginLeaf();
+
+	GLint xoffset = 0, yoffset = 0, zoffset = 0;
+
+	for (; leaf_iter; ++leaf_iter) {
+		const ValueType *data = leaf_iter.getLeaf()->buffer().data();
+
+		glTexSubImage3D(GL_TEXTURE_3D, 0,
+		                xoffset, yoffset, zoffset,
+		                leafDim, leafDim, leafDim,
+		                GL_RED, GL_FLOAT, data);
+
+		zoffset += leafDim;
+	}
+}
+
 void convert_grid(const openvdb::FloatGrid &grid, GLfloat *data,
                   const openvdb::Coord &min, const openvdb::Coord &max)
 {
