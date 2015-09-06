@@ -1,23 +1,16 @@
 #pragma once
 
-#define GLM_FORCE_RADIANS
-#include <glm/gtc/matrix_transform.hpp>
-
 const int WIDTH = 1280;
 const int HEIGHT = 960;
 
+class Camera;
 class VolumeShader;
 
 class Viewer {
-	/* camera transform variables */
-	int m_state, m_old_x, m_old_y;
-	float m_rX, m_rY, m_dist;
-
-	glm::mat4 m_model_view, m_projection;
-	glm::vec3 m_view_dir;
+	int m_mouse_state;
 	glm::vec4 m_bg;
-	bool m_view_rotated;
 
+	Camera *m_camera;
 	VolumeShader *m_volume_shader;
 
 public:

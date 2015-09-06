@@ -15,6 +15,7 @@ class VolumeShader {
 	glm::vec3 m_size, m_inv_size;
 	int m_num_slices;
 	int m_axis;
+	bool m_use_lut;
 
 public:
 	VolumeShader();
@@ -34,4 +35,5 @@ public:
 	 * adjacent values to get the interpolated result.
 	 */
 	void loadTransferFunction();
+	void toggleUseLUT();
 };
