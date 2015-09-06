@@ -15,6 +15,7 @@ class VolumeShader {
 	glm::vec3 m_size, m_inv_size;
 	int m_num_slices;
 	int m_axis;
+	float m_scale; // scale of the values contained in the grid (1 / (max - min))
 	bool m_use_lut;
 
 public:

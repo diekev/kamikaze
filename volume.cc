@@ -11,6 +11,8 @@
 #define DWREAL_IS_DOUBLE 0
 
 #include <openvdb/openvdb.h>
+#include <openvdb/util/PagedArray.h>
+#include <tbb/enumerable_thread_specific.h>
 
 #include "utils.h"
 #include "volume.h"
@@ -18,7 +20,7 @@
 const float EPSILON = 0.0001f;
 
 void convert_grid(const openvdb::FloatGrid &grid, GLfloat *data,
-                  const openvdb::Coord &min, const openvdb::Coord &max)
+                  const openvdb::Coord &min, const openvdb::Coord &max, float &scale)
 {
 	Timer(__func__);
 
@@ -27,6 +29,7 @@ void convert_grid(const openvdb::FloatGrid &grid, GLfloat *data,
 	FloatGrid::ConstAccessor main_acc = grid.getAccessor();
 	auto extent = max - min;
 	auto slabsize = extent[0] * extent[1];
+	util::PagedArray<float> min_array, max_array;
 
 	tbb::parallel_for(tbb::blocked_range<int>(min[2], max[2]),
 	        [&](const tbb::blocked_range<int> &r)
@@ -36,17 +39,36 @@ void convert_grid(const openvdb::FloatGrid &grid, GLfloat *data,
 		int &x = ijk[0], &y = ijk[1], &z = ijk[2];
 		z = r.begin();
 
+		auto min_value = std::numeric_limits<float>::max();
+		auto max_value = std::numeric_limits<float>::min();
+
 		/* Subtract min z coord so that 'index' always start at zero or above. */
 		auto index = (z - min[2]) * slabsize;
 
 		for (auto e = r.end(); z < e; ++z) {
 			for (y = min[1]; y < max[1]; ++y) {
 				for (x = min[0]; x < max[0]; ++x, ++index) {
-					data[index] = acc.getValue(ijk);
+					auto value = acc.getValue(ijk);
+
+					if (value < min_value) {
+						min_value = value;
+					}
+					else if (value > max_value) {
+						max_value = value;
+					}
+
+					data[index] = value;
 				}
 			}
 		}
+
+		min_array.push_back(min_value);
+		max_array.push_back(max_value);
 	});
+
+	auto min_value = std::min_element(min_array.begin(), min_array.end());
+	auto max_value = std::max_element(max_array.begin(), max_array.end());
+	scale = 1.0f / (*max_value - *min_value);
 }
 
 int axis_dominant_v3_single(const glm::vec3 &vec)
@@ -69,6 +91,7 @@ VolumeShader::VolumeShader()
     , m_inv_size(glm::vec3(0.0f))
     , m_num_slices(256)
     , m_axis(-1)
+    , m_scale(0.0f)
     , m_use_lut(false)
 {}
 
@@ -137,7 +160,7 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 
 		/* Copy data */
 		GLfloat *data = new GLfloat[X_DIM * Y_DIM * Z_DIM];
-		convert_grid(*grid, data, bbox_min, bbox_max);
+		convert_grid(*grid, data, bbox_min, bbox_max, m_scale);
 
 		glGenTextures(1, &m_texture_id);
 		glBindTexture(GL_TEXTURE_3D, m_texture_id);
@@ -432,12 +455,14 @@ bool VolumeShader::init(const std::string &filename)
 		m_shader.addUniform("volume");
 		m_shader.addUniform("lut");
 		m_shader.addUniform("use_lut");
+		m_shader.addUniform("scale");
 
 		glUniform1i(m_shader("volume"), 0);
 		glUniform1i(m_shader("lut"), 1);
 
 		auto min = m_min * m_inv_size;
 		glUniform3fv(m_shader("offset"), 1, &min[0]);
+		glUniform1f(m_shader("scale"), m_scale);
 
 		m_shader.unUse();
 
