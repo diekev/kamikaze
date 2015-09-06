@@ -7,7 +7,7 @@ class Camera;
 class VolumeShader;
 
 class Viewer {
-	int m_state;
+	int m_mouse_state;
 	glm::vec4 m_bg;
 
 	Camera *m_camera;

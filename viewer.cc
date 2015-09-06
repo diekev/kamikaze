@@ -10,23 +10,20 @@
 #include "volume.h"
 
 Viewer::Viewer()
-    : m_camera(new Camera())
-{
-	m_state = 0;
-
-	m_bg = glm::vec4(0.5f, 0.5f, 1.0f, 1.0f);
-	m_volume_shader = nullptr;
-}
+    : m_mouse_state(0)
+    , m_bg(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f))
+    , m_camera(new Camera())
+    , m_volume_shader(new VolumeShader())
+{}
 
 Viewer::~Viewer()
 {
+	delete m_camera;
 	delete m_volume_shader;
 }
 
 void Viewer::init(const char *filename)
 {
-	m_volume_shader = new VolumeShader();
-
 	if (!m_volume_shader->init(filename)) {
 		std::cerr << "Initialisation of the volume data failed!\n";
 		return;
@@ -52,10 +49,10 @@ void Viewer::resize(int w, int h)
 void Viewer::mouseDownEvent(int button, int s, int x, int y)
 {
 	if (button == GLUT_MIDDLE_BUTTON) {
-		m_state = 0;
+		m_mouse_state = 0;
 	}
 	else {
-		m_state = 1;
+		m_mouse_state = 1;
 	}
 
 	m_camera->mouseDownEvent(s, x, y);
@@ -63,7 +60,7 @@ void Viewer::mouseDownEvent(int button, int s, int x, int y)
 
 void Viewer::mouseMoveEvent(int x, int y)
 {
-	m_camera->mouseMoveEvent(m_state, x, y);
+	m_camera->mouseMoveEvent(m_mouse_state, x, y);
 	glutPostRedisplay();
 }
 
