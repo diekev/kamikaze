@@ -7,7 +7,7 @@
 
 #include "viewer.h"
 
-namespace  {
+namespace {
 
 Viewer *viewer = nullptr;
 
