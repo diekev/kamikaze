@@ -89,19 +89,25 @@ void Viewer::mouseMoveEvent(int x, int y)
 
 void Viewer::keyboardEvent(unsigned char key, int /*x*/, int /*y*/)
 {
+	bool need_slicing = false;
+
 	switch (key) {
 		case '-':
 			m_volume_shader->changeNumSlicesBy(-1);
+			need_slicing = true;
 			break;
 		case '+':
 			m_volume_shader->changeNumSlicesBy(1);
+			need_slicing = true;
 			break;
 		case 'l':
 			m_volume_shader->toggleUseLUT();
 			break;
 	}
 
-	m_volume_shader->slice(m_view_dir);
+	if (need_slicing) {
+		m_volume_shader->slice(m_view_dir);
+	}
 
 	glutPostRedisplay();
 }
