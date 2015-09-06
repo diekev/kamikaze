@@ -99,9 +99,14 @@ VolumeShader::VolumeShader()
 VolumeShader::~VolumeShader()
 {
 	m_shader.deleteShaderProgram();
+	m_bbox_shader.deleteShaderProgram();
 
 	glDeleteVertexArrays(1, &m_vao);
 	glDeleteBuffers(1, &m_vbo);
+	glDeleteVertexArrays(1, &m_bbox_vao);
+	glDeleteBuffers(1, &m_bbox_index_vbo);
+	glDeleteBuffers(1, &m_bbox_verts_vbo);
+
 	glDeleteTextures(1, &m_texture_id);
 	glDeleteTextures(1, &m_transfer_func_id);
 }
@@ -559,7 +564,7 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 	m_shader.use();
 	glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 	glUniform1i(m_shader("use_lut"), m_use_lut);
-	glDrawArrays(GL_TRIANGLES, 0, MAX_SLICES * 12);
+	glDrawArrays(GL_TRIANGLES, 0, MAX_SLICES * 6);
 	m_shader.unUse();
 
 	if (m_draw_bbox) {
