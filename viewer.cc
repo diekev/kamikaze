@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "camera.h"
+#include "grid.h"
 #include "viewer.h"
 #include "volume.h"
 
@@ -13,12 +14,14 @@ Viewer::Viewer()
     : m_mouse_state(0)
     , m_bg(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f))
     , m_camera(new Camera())
+    , m_grid(new Grid(20, 20))
     , m_volume_shader(new VolumeShader())
 {}
 
 Viewer::~Viewer()
 {
 	delete m_camera;
+	delete m_grid;
 	delete m_volume_shader;
 }
 
@@ -100,6 +103,7 @@ void Viewer::render()
 	auto view_dir = m_camera->viewDir();
 	auto MVP = m_camera->MVP();
 
+	m_grid->render(MVP);
 	m_volume_shader->render(view_dir, MVP, m_camera->hasRotated());
 
 	glutSwapBuffers();

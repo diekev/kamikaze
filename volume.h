@@ -1,7 +1,5 @@
 #include <glm/glm.hpp>
 
-#include "GLSLShader.h"
-
 const int MAX_SLICES = 512;
 
 class VolumeShader {

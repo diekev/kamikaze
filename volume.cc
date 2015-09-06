@@ -14,6 +14,7 @@
 #include <openvdb/util/PagedArray.h>
 #include <tbb/enumerable_thread_specific.h>
 
+#include "GLSLShader.h"
 #include "utils.h"
 #include "volume.h"
 
