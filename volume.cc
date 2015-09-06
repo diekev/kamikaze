@@ -69,6 +69,7 @@ VolumeShader::VolumeShader()
     , m_inv_size(glm::vec3(0.0f))
     , m_num_slices(256)
     , m_axis(-1)
+    , m_use_lut(false)
 {}
 
 VolumeShader::~VolumeShader()
@@ -99,6 +100,10 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 			grid = gridPtrCast<FloatGrid>(file.readGrid(Name("density")));
 		}
 		else {
+			return false;
+		}
+
+		if (grid->getGridClass() == GRID_LEVEL_SET) {
 			return false;
 		}
 
@@ -426,6 +431,7 @@ bool VolumeShader::init(const std::string &filename)
 		m_shader.addUniform("offset");
 		m_shader.addUniform("volume");
 		m_shader.addUniform("lut");
+		m_shader.addUniform("use_lut");
 
 		glUniform1i(m_shader("volume"), 0);
 		glUniform1i(m_shader("lut"), 1);
@@ -474,6 +480,7 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 
 	m_shader.use();
 	glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+	glUniform1i(m_shader("use_lut"), m_use_lut);
 	glDrawArrays(GL_TRIANGLES, 0, MAX_SLICES * 12);
 	m_shader.unUse();
 
@@ -547,4 +554,9 @@ void VolumeShader::loadTransferFunction()
 	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 256, 0, GL_RGBA, GL_FLOAT, data);
+}
+
+void VolumeShader::toggleUseLUT()
+{
+	m_use_lut = ((m_use_lut) ? false : true);
 }

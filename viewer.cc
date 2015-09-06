@@ -96,6 +96,9 @@ void Viewer::keyboardEvent(unsigned char key, int /*x*/, int /*y*/)
 		case '+':
 			m_volume_shader->changeNumSlicesBy(1);
 			break;
+		case 'l':
+			m_volume_shader->toggleUseLUT();
+			break;
 	}
 
 	m_volume_shader->slice(m_view_dir);
