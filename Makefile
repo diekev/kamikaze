@@ -21,7 +21,7 @@ INC_DIR = -I/usr/include -I/opt/lib/openvdb/include -I/opt/lib/openexr/include
 
 SRC = main.cc camera.cc GLSLShader.cc utils.cc viewer.cc volume.cc
 OBJECTS = $(SRC:%.cc=$(OBJ_DIR)/%.o)
-EXEC = window.out
+EXEC = ikirin
 
 all: init $(OBJECTS) $(EXEC)
 
