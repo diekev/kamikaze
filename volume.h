@@ -5,10 +5,10 @@
 const int MAX_SLICES = 512;
 
 class VolumeShader {
-	GLuint m_vao;
-	GLuint m_vbo;
-	GLuint m_texture_id, m_transfer_func_id;
-	GLSLShader m_shader;
+	GLuint m_vao, m_bbox_vao;
+	GLuint m_vbo, m_bbox_verts_vbo, m_bbox_index_vbo;
+	GLuint m_texture_id, m_transfer_func_id, m_bbox_texture_id;
+	GLSLShader m_shader, m_bbox_shader;
 	glm::vec3 m_texture_slices[MAX_SLICES * 12];
 
 	glm::vec3 m_min, m_max;
@@ -16,7 +16,7 @@ class VolumeShader {
 	int m_num_slices;
 	int m_axis;
 	float m_scale; // scale of the values contained in the grid (1 / (max - min))
-	bool m_use_lut;
+	bool m_use_lut, m_draw_bbox;
 
 public:
 	VolumeShader();
@@ -37,4 +37,5 @@ public:
 	 */
 	void loadTransferFunction();
 	void toggleUseLUT();
+	void toggleBBoxDrawing();
 };

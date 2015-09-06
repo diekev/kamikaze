@@ -93,6 +93,7 @@ VolumeShader::VolumeShader()
     , m_axis(-1)
     , m_scale(0.0f)
     , m_use_lut(false)
+    , m_draw_bbox(false)
 {}
 
 VolumeShader::~VolumeShader()
@@ -442,6 +443,7 @@ void VolumeShader::sliceAxisAligned(const glm::vec3 &view_dir)
 bool VolumeShader::init(const std::string &filename)
 {
 	if (loadVolumeFile(filename)) {
+		// loadVolumeShader
 		m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
 		m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
 
@@ -465,6 +467,57 @@ bool VolumeShader::init(const std::string &filename)
 		glUniform1f(m_shader("scale"), m_scale);
 
 		m_shader.unUse();
+
+		// loadFlatShader
+		m_bbox_shader.loadFromFile(GL_VERTEX_SHADER, "shader/flat_shader.vert");
+		m_bbox_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/flat_shader.frag");
+
+		m_bbox_shader.createAndLinkProgram();
+
+		m_bbox_shader.use();
+
+		m_bbox_shader.addAttribute("vVertex");
+		m_bbox_shader.addUniform("MVP");
+
+		m_bbox_shader.unUse();
+
+		glm::vec3 vertices[8] = {
+		    glm::vec3(m_min[0], m_min[1], m_min[2]),
+		    glm::vec3(m_max[0], m_min[1], m_min[2]),
+		    glm::vec3(m_max[0], m_max[1], m_min[2]),
+		    glm::vec3(m_min[0], m_max[1], m_min[2]),
+		    glm::vec3(m_min[0], m_min[1], m_max[2]),
+		    glm::vec3(m_max[0], m_min[1], m_max[2]),
+		    glm::vec3(m_max[0], m_max[1], m_max[2]),
+		    glm::vec3(m_min[0], m_max[1], m_max[2])
+		};
+
+		for (int i(0); i < 8; ++i) {
+			vertices[i] *= m_inv_size;
+		}
+
+		const GLushort indices[24] = {
+		    0, 1, 1, 2,
+		    2, 3, 3, 0,
+		    4, 5, 5, 6,
+		    6, 7, 7, 4,
+		    0, 4, 1, 5,
+		    2, 6, 3, 7
+		};
+
+		glGenVertexArrays(1, &m_bbox_vao);
+		glGenBuffers(1, &m_bbox_verts_vbo);
+		glGenBuffers(1, &m_bbox_index_vbo);
+		glBindVertexArray(m_bbox_vao);
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_bbox_verts_vbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &(vertices[0].x), GL_STATIC_DRAW);
+		glEnableVertexAttribArray(m_bbox_shader["vVertex"]);
+		glVertexAttribPointer(m_bbox_shader["vVertex"], 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bbox_index_vbo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices[0], GL_STATIC_DRAW);
+		glBindVertexArray(0);
 
 		loadTransferFunction();
 
@@ -508,6 +561,15 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 	glUniform1i(m_shader("use_lut"), m_use_lut);
 	glDrawArrays(GL_TRIANGLES, 0, MAX_SLICES * 12);
 	m_shader.unUse();
+
+	if (m_draw_bbox) {
+		glBindVertexArray(m_bbox_vao);
+
+		m_bbox_shader.use();
+		glUniformMatrix4fv(m_bbox_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+		glDrawElements(GL_LINES, 24, GL_UNSIGNED_SHORT, nullptr);
+		m_bbox_shader.unUse();
+	}
 
 	glDisable(GL_BLEND);
 }
@@ -584,4 +646,9 @@ void VolumeShader::loadTransferFunction()
 void VolumeShader::toggleUseLUT()
 {
 	m_use_lut = ((m_use_lut) ? false : true);
+}
+
+void VolumeShader::toggleBBoxDrawing()
+{
+	m_draw_bbox = ((m_draw_bbox) ? false : true);
 }

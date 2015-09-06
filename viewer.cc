@@ -80,6 +80,9 @@ void Viewer::keyboardEvent(unsigned char key, int /*x*/, int /*y*/)
 		case 'l':
 			m_volume_shader->toggleUseLUT();
 			break;
+		case 'b':
+			m_volume_shader->toggleBBoxDrawing();
+			break;
 	}
 
 	if (need_slicing) {
