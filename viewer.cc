@@ -27,10 +27,10 @@ Viewer::~Viewer()
 	delete m_volume_shader;
 }
 
-void Viewer::init(const char *filename)
+void Viewer::init(const char *filename, std::ostream &os)
 {
-	if (!m_volume_shader->init(filename)) {
-		std::cerr << "Initialisation of the volume data failed!\n";
+	if (!m_volume_shader->init(filename, os)) {
+		os << "Initialisation of the volume data failed!\n";
 		return;
 	}
 

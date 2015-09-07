@@ -112,9 +112,9 @@ VolumeShader::~VolumeShader()
 	glDeleteTextures(1, &m_transfer_func_id);
 }
 
-bool VolumeShader::init(const std::string &filename)
+bool VolumeShader::init(const std::string &filename, std::ostream &os)
 {
-	if (loadVolumeFile(filename)) {
+	if (loadVolumeFile(filename, os)) {
 		loadVolumeShader();
 		loadBBoxShader();
 		loadTransferFunction();
@@ -124,7 +124,7 @@ bool VolumeShader::init(const std::string &filename)
 	return false;
 }
 
-bool VolumeShader::loadVolumeFile(const std::string &volume_file)
+bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &os)
 {
 	using namespace openvdb;
 	using namespace openvdb::math;
@@ -142,10 +142,12 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 			grid = gridPtrCast<FloatGrid>(file.readGrid(Name("density")));
 		}
 		else {
+			os << "No density grid found in file: \'" << volume_file << "\'!\n";
 			return false;
 		}
 
 		if (grid->getGridClass() == GRID_LEVEL_SET) {
+			os << "Grid \'" << grid->getName() << "\'is a level set!\n";
 			return false;
 		}
 
@@ -222,7 +224,8 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 		return true;
 	}
 
-	std::cerr << "Unable to open file \'" << volume_file << "\'\n";
+	os << "Unable to open file \'" << volume_file << "\'\n";
+
 	return false;
 }
 
