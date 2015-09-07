@@ -19,7 +19,7 @@ OBJ_DIR = bin
 LIB_DIR = -L/usr/lib -L/opt/lib/openvdb/lib -L/opt/lib/openexr/lib -L/opt/lib/blosc/lib
 INC_DIR = -I/usr/include -I/opt/lib/openvdb/include -I/opt/lib/openexr/include
 
-SRC = main.cc camera.cc GLSLShader.cc grid.cc utils.cc viewer.cc volume.cc
+SRC = main.cc camera.cc cube.cc GLSLShader.cc grid.cc utils.cc viewer.cc volume.cc
 OBJECTS = $(SRC:%.cc=$(OBJ_DIR)/%.o)
 EXEC = ikirin
 

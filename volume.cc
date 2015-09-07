@@ -15,6 +15,8 @@
 #include <openvdb/util/PagedArray.h>
 
 #include "GLSLShader.h"
+
+#include "cube.h"
 #include "utils.h"
 #include "volume.h"
 
@@ -86,6 +88,7 @@ VolumeShader::VolumeShader()
     : m_vao(0)
     , m_vbo(0)
     , m_texture_id(0)
+    , m_bbox(nullptr)
     , m_min(glm::vec3(0.0f))
     , m_max(glm::vec3(0.0f))
     , m_size(glm::vec3(0.0f))
@@ -102,23 +105,20 @@ VolumeShader::VolumeShader()
 VolumeShader::~VolumeShader()
 {
 	m_shader.deleteShaderProgram();
-	m_bbox_shader.deleteShaderProgram();
 
 	glDeleteVertexArrays(1, &m_vao);
 	glDeleteBuffers(1, &m_vbo);
-	glDeleteVertexArrays(1, &m_bbox_vao);
-	glDeleteBuffers(1, &m_bbox_index_vbo);
-	glDeleteBuffers(1, &m_bbox_verts_vbo);
 
 	glDeleteTextures(1, &m_texture_id);
 	glDeleteTextures(1, &m_transfer_func_id);
+
+	delete m_bbox;
 }
 
 bool VolumeShader::init(const std::string &filename, std::ostream &os)
 {
 	if (loadVolumeFile(filename, os)) {
 		loadVolumeShader();
-		loadBBoxShader();
 		loadTransferFunction();
 		return true;
 	}
@@ -197,6 +197,8 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &
 		m_size = (m_max - m_min);
 		m_inv_size = 1.0f / m_size;
 
+		m_bbox = new Cube(m_min, m_max);
+
 #if 0
 		printf("Dimensions: %d, %d, %d\n", X_DIM, Y_DIM, Z_DIM);
 		printf("Min: %f, %f, %f\n", min[0], min[1], min[2]);
@@ -229,61 +231,6 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &
 	os << "Unable to open file \'" << volume_file << "\'\n";
 
 	return false;
-}
-
-void VolumeShader::loadBBoxShader()
-{
-	m_bbox_shader.loadFromFile(GL_VERTEX_SHADER, "shader/flat_shader.vert");
-	m_bbox_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/flat_shader.frag");
-
-	m_bbox_shader.createAndLinkProgram();
-
-	m_bbox_shader.use();
-	{
-		m_bbox_shader.addAttribute("vVertex");
-		m_bbox_shader.addUniform("MVP");
-	}
-	m_bbox_shader.unUse();
-
-	glm::vec3 vertices[8] = {
-	    glm::vec3(m_min[0], m_min[1], m_min[2]),
-	    glm::vec3(m_max[0], m_min[1], m_min[2]),
-	    glm::vec3(m_max[0], m_max[1], m_min[2]),
-	    glm::vec3(m_min[0], m_max[1], m_min[2]),
-	    glm::vec3(m_min[0], m_min[1], m_max[2]),
-	    glm::vec3(m_max[0], m_min[1], m_max[2]),
-	    glm::vec3(m_max[0], m_max[1], m_max[2]),
-	    glm::vec3(m_min[0], m_max[1], m_max[2])
-	};
-
-	for (int i(0); i < 8; ++i) {
-		vertices[i] *= m_inv_size;
-	}
-
-	const GLushort indices[24] = {
-	    0, 1, 1, 2,
-	    2, 3, 3, 0,
-	    4, 5, 5, 6,
-	    6, 7, 7, 4,
-	    0, 4, 1, 5,
-	    2, 6, 3, 7
-	};
-
-	glGenVertexArrays(1, &m_bbox_vao);
-	glGenBuffers(1, &m_bbox_verts_vbo);
-	glGenBuffers(1, &m_bbox_index_vbo);
-
-	glBindVertexArray(m_bbox_vao);
-
-	glBindBuffer(GL_ARRAY_BUFFER, m_bbox_verts_vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &(vertices[0].x), GL_STATIC_DRAW);
-	glEnableVertexAttribArray(m_bbox_shader["vVertex"]);
-	glVertexAttribPointer(m_bbox_shader["vVertex"], 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bbox_index_vbo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices[0], GL_STATIC_DRAW);
-
-	glBindVertexArray(0);
 }
 
 void VolumeShader::loadVolumeShader()
@@ -455,12 +402,7 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 	m_shader.unUse();
 
 	if (m_draw_bbox) {
-		glBindVertexArray(m_bbox_vao);
-
-		m_bbox_shader.use();
-		glUniformMatrix4fv(m_bbox_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
-		glDrawElements(GL_LINES, 24, GL_UNSIGNED_SHORT, nullptr);
-		m_bbox_shader.unUse();
+		m_bbox->render(MVP);
 	}
 
 	glDisable(GL_BLEND);

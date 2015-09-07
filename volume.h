@@ -3,12 +3,16 @@
 
 const int MAX_SLICES = 512;
 
+class Cube;
+
 class VolumeShader {
-	GLuint m_vao, m_bbox_vao;
-	GLuint m_vbo, m_bbox_verts_vbo, m_bbox_index_vbo;
+	GLuint m_vao;
+	GLuint m_vbo;
 	GLuint m_texture_id, m_transfer_func_id;
-	GLSLShader m_shader, m_bbox_shader;
+	GLSLShader m_shader;
 	std::vector<glm::vec3> m_texture_slices;
+
+	Cube *m_bbox;
 
 	glm::vec3 m_min, m_max;
 	glm::vec3 m_size, m_inv_size;
@@ -18,7 +22,6 @@ class VolumeShader {
 	bool m_use_lut, m_draw_bbox;
 
 	bool loadVolumeFile(const std::string &filename, std::ostream &os);
-	void loadBBoxShader();
 	void loadTransferFunction();
 	void loadVolumeShader();
 
