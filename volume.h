@@ -22,8 +22,7 @@ public:
 
 	bool init(const std::string &filename);
 	bool loadVolumeFile(const std::string &filename);
-	void slice(const glm::vec3 &dir);
-	void sliceAxisAligned(const glm::vec3 &view_dir);
+	void slice(const glm::vec3 &view_dir);
 	void setupRender();
 	void render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool is_rotated);
 	void changeNumSlicesBy(int x);
