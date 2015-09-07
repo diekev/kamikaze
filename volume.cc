@@ -11,8 +11,8 @@
 #define DWREAL_IS_DOUBLE 0
 
 #include <openvdb/openvdb.h>
+#include <openvdb/tools/GridTransformer.h>
 #include <openvdb/util/PagedArray.h>
-#include <tbb/enumerable_thread_specific.h>
 
 #include "GLSLShader.h"
 #include "utils.h"
@@ -137,6 +137,29 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 			return false;
 		}
 
+		auto meta_map = file.getMetadata();
+
+		file.close();
+
+		if ((*meta_map)["creator"]) {
+			auto creator = (*meta_map)["creator"]->str();
+
+			/* If the grid comes from Blender (Z-up), rotate it so it is Y-up */
+			if (creator == "Blender/OpenVDBWriter") {
+				constexpr auto deg2rad = M_PI / 180.0;
+
+				openvdb::Mat4R mat(openvdb::Mat4R::identity());
+		        mat.preRotate(openvdb::math::X_AXIS, -deg2rad * 90);
+
+				FloatGrid::Ptr xformed_grid = FloatGrid::create(grid->background());
+
+				tools::GridTransformer transformer(mat);
+				transformer.transformGrid<tools::BoxSampler>(*grid, *xformed_grid);
+
+				grid = xformed_grid;
+			}
+		}
+
 		CoordBBox bbox = grid->evalActiveVoxelBoundingBox();
 		Coord bbox_min = bbox.min();
 		Coord bbox_max = bbox.max();
@@ -184,7 +207,6 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 
 		glGenerateMipmap(GL_TEXTURE_3D);
 
-		file.close();
 		delete [] data;
 		return true;
 	}
