@@ -14,10 +14,10 @@
 #include <openvdb/tools/GridTransformer.h>
 #include <openvdb/util/PagedArray.h>
 
-#include "GLSLShader.h"
+#include "render/GLSLShader.h"
+#include "util/utils.h"
 
 #include "cube.h"
-#include "utils.h"
 #include "volume.h"
 
 const float EPSILON = 0.0001f;

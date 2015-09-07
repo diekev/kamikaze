@@ -25,7 +25,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "GLSLShader.h"
+#include "render/GLSLShader.h"
 
 #include "cube.h"
 

@@ -28,7 +28,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "GLSLShader.h"
+#include "render/GLSLShader.h"
 #include "grid.h"
 
 Grid::Grid(int x, int y)
