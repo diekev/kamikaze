@@ -146,10 +146,8 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 
 			/* If the grid comes from Blender (Z-up), rotate it so it is Y-up */
 			if (creator == "Blender/OpenVDBWriter") {
-				constexpr auto deg2rad = M_PI / 180.0;
-
 				openvdb::Mat4R mat(openvdb::Mat4R::identity());
-		        mat.preRotate(openvdb::math::X_AXIS, -deg2rad * 90);
+		        mat.preRotate(openvdb::math::X_AXIS, -M_PI_2);
 
 				FloatGrid::Ptr xformed_grid = FloatGrid::create(grid->background());
 
