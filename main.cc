@@ -11,13 +11,13 @@ namespace {
 
 Viewer *viewer = nullptr;
 
-void OnInit(const char *filename, std::ostream &os)
+bool initViewer(const char *filename, std::ostream &os)
 {
 	if (viewer == nullptr) {
 		viewer = new Viewer;
 	}
 
-	viewer->init(filename, os);
+	return viewer->init(filename, os);
 }
 
 void OnShutDownCB()
@@ -87,7 +87,10 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	OnInit(argv[1], os);
+	if (!initViewer(argv[1], os)) {
+		OnShutDownCB();
+		return 1;
+	}
 
 	glutCloseFunc(OnShutDownCB);
 	glutDisplayFunc(OnRenderCB);

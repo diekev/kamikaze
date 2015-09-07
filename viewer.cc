@@ -27,17 +27,19 @@ Viewer::~Viewer()
 	delete m_volume_shader;
 }
 
-void Viewer::init(const char *filename, std::ostream &os)
+bool Viewer::init(const char *filename, std::ostream &os)
 {
-	if (!m_volume_shader->init(filename, os)) {
-		os << "Initialisation of the volume data failed!\n";
-		return;
+	if (m_volume_shader->init(filename, os)) {
+		glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
+
+		m_camera->updateViewDir();
+		m_volume_shader->slice(m_camera->viewDir());
+
+		return true;
 	}
 
-	glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
-
-	m_camera->updateViewDir();
-	m_volume_shader->slice(m_camera->viewDir());
+	os << "Initialisation of the volume data failed!\n";
+	return false;
 }
 
 void Viewer::shutDown()

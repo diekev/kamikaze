@@ -19,7 +19,7 @@ public:
 	Viewer();
 	~Viewer();
 
-	void init(const char *filename, std::ostream &os);
+	bool init(const char *filename, std::ostream &os);
 	void shutDown();
 	void resize(int w, int h);
 	void mouseDownEvent(int button, int s, int x, int y);
