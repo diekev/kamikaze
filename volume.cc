@@ -95,7 +95,9 @@ VolumeShader::VolumeShader()
     , m_scale(0.0f)
     , m_use_lut(false)
     , m_draw_bbox(false)
-{}
+{
+	m_texture_slices.resize(m_num_slices * 6);
+}
 
 VolumeShader::~VolumeShader()
 {
@@ -318,7 +320,7 @@ void VolumeShader::loadVolumeShader()
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 
 	/* pass the sliced volume vector to buffer output memory */
-	glBufferData(GL_ARRAY_BUFFER, sizeof(m_texture_slices), nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, MAX_SLICES * 6 * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
 
 	/* enable vertex attribute array for position */
 	glEnableVertexAttribArray(0);
@@ -433,7 +435,7 @@ void VolumeShader::slice(const glm::vec3 &view_dir)
 
 	/* update buffer object */
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(m_texture_slices), &(m_texture_slices[0].x));
+	glBufferSubData(GL_ARRAY_BUFFER, 0, m_texture_slices.size() * sizeof(glm::vec3), &(m_texture_slices[0].x));
 }
 
 void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool is_rotated)
@@ -449,7 +451,7 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 	m_shader.use();
 	glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 	glUniform1i(m_shader("use_lut"), m_use_lut);
-	glDrawArrays(GL_TRIANGLES, 0, MAX_SLICES * 6);
+	glDrawArrays(GL_TRIANGLES, 0, m_texture_slices.size());
 	m_shader.unUse();
 
 	if (m_draw_bbox) {
@@ -468,6 +470,7 @@ void VolumeShader::changeNumSlicesBy(int x)
 {
 	m_num_slices += x;
 	m_num_slices = std::min(MAX_SLICES, std::max(m_num_slices, 3));
+	m_texture_slices.resize(m_num_slices * 6);
 }
 
 void VolumeShader::toggleUseLUT()

@@ -1,4 +1,5 @@
 #include <glm/glm.hpp>
+#include <vector>
 
 const int MAX_SLICES = 512;
 
@@ -7,7 +8,7 @@ class VolumeShader {
 	GLuint m_vbo, m_bbox_verts_vbo, m_bbox_index_vbo;
 	GLuint m_texture_id, m_transfer_func_id;
 	GLSLShader m_shader, m_bbox_shader;
-	glm::vec3 m_texture_slices[MAX_SLICES * 6];
+	std::vector<glm::vec3> m_texture_slices;
 
 	glm::vec3 m_min, m_max;
 	glm::vec3 m_size, m_inv_size;
