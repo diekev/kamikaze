@@ -5,6 +5,8 @@
 
 #include <iostream>
 
+#include "GLSLShader.h"
+
 #include "camera.h"
 #include "grid.h"
 #include "viewer.h"
@@ -35,8 +37,6 @@ void Viewer::init(const char *filename)
 	glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
 
 	m_camera->updateViewDir();
-
-	m_volume_shader->setupRender();
 	m_volume_shader->slice(m_camera->viewDir());
 }
 

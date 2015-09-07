@@ -112,6 +112,18 @@ VolumeShader::~VolumeShader()
 	glDeleteTextures(1, &m_transfer_func_id);
 }
 
+bool VolumeShader::init(const std::string &filename)
+{
+	if (loadVolumeFile(filename)) {
+		loadVolumeShader();
+		loadBBoxShader();
+		loadTransferFunction();
+		return true;
+	}
+
+	return false;
+}
+
 bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 {
 	using namespace openvdb;
@@ -146,6 +158,7 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 
 			/* If the grid comes from Blender (Z-up), rotate it so it is Y-up */
 			if (creator == "Blender/OpenVDBWriter") {
+				Timer("Transform Blender Grid");
 				openvdb::Mat4R mat(openvdb::Mat4R::identity());
 		        mat.preRotate(openvdb::math::X_AXIS, -M_PI_2);
 
@@ -213,6 +226,157 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 	return false;
 }
 
+void VolumeShader::loadBBoxShader()
+{
+	m_bbox_shader.loadFromFile(GL_VERTEX_SHADER, "shader/flat_shader.vert");
+	m_bbox_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/flat_shader.frag");
+
+	m_bbox_shader.createAndLinkProgram();
+
+	m_bbox_shader.use();
+	{
+		m_bbox_shader.addAttribute("vVertex");
+		m_bbox_shader.addUniform("MVP");
+	}
+	m_bbox_shader.unUse();
+
+	glm::vec3 vertices[8] = {
+	    glm::vec3(m_min[0], m_min[1], m_min[2]),
+	    glm::vec3(m_max[0], m_min[1], m_min[2]),
+	    glm::vec3(m_max[0], m_max[1], m_min[2]),
+	    glm::vec3(m_min[0], m_max[1], m_min[2]),
+	    glm::vec3(m_min[0], m_min[1], m_max[2]),
+	    glm::vec3(m_max[0], m_min[1], m_max[2]),
+	    glm::vec3(m_max[0], m_max[1], m_max[2]),
+	    glm::vec3(m_min[0], m_max[1], m_max[2])
+	};
+
+	for (int i(0); i < 8; ++i) {
+		vertices[i] *= m_inv_size;
+	}
+
+	const GLushort indices[24] = {
+	    0, 1, 1, 2,
+	    2, 3, 3, 0,
+	    4, 5, 5, 6,
+	    6, 7, 7, 4,
+	    0, 4, 1, 5,
+	    2, 6, 3, 7
+	};
+
+	glGenVertexArrays(1, &m_bbox_vao);
+	glGenBuffers(1, &m_bbox_verts_vbo);
+	glGenBuffers(1, &m_bbox_index_vbo);
+
+	glBindVertexArray(m_bbox_vao);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_bbox_verts_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &(vertices[0].x), GL_STATIC_DRAW);
+	glEnableVertexAttribArray(m_bbox_shader["vVertex"]);
+	glVertexAttribPointer(m_bbox_shader["vVertex"], 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bbox_index_vbo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices[0], GL_STATIC_DRAW);
+
+	glBindVertexArray(0);
+}
+
+void VolumeShader::loadVolumeShader()
+{
+	m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
+	m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
+
+	m_shader.createAndLinkProgram();
+
+	m_shader.use();
+	{
+		m_shader.addAttribute("vVertex");
+		m_shader.addUniform("MVP");
+		m_shader.addUniform("offset");
+		m_shader.addUniform("volume");
+		m_shader.addUniform("lut");
+		m_shader.addUniform("use_lut");
+		m_shader.addUniform("scale");
+
+		glUniform1i(m_shader("volume"), 0);
+		glUniform1i(m_shader("lut"), 1);
+
+		auto min = m_min * m_inv_size;
+		glUniform3fv(m_shader("offset"), 1, &min[0]);
+		glUniform1f(m_shader("scale"), m_scale);
+	}
+	m_shader.unUse();
+
+	/* setup the vertex array and buffer objects */
+	glGenVertexArrays(1, &m_vao);
+	glGenBuffers(1, &m_vbo);
+
+	glBindVertexArray(m_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+
+	/* pass the sliced volume vector to buffer output memory */
+	glBufferData(GL_ARRAY_BUFFER, sizeof(m_texture_slices), nullptr, GL_DYNAMIC_DRAW);
+
+	/* enable vertex attribute array for position */
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+	glBindVertexArray(0);
+}
+
+void VolumeShader::loadTransferFunction()
+{
+	/* transfer function (lookup table) color values */
+	const glm::vec3 jet_values[12] = {
+	    glm::vec3(1.0f, 0.0f, 0.0f),
+		glm::vec3(1.0f, 0.0f, 0.5f),
+		glm::vec3(1.0f, 0.0f, 1.0f),
+
+		glm::vec3(0.5f, 0.0f, 1.0f),
+		glm::vec3(0.0f, 0.5f, 1.0f),
+		glm::vec3(0.0f, 1.0f, 1.0f),
+
+		glm::vec3(0.0f, 1.0f, 0.5f),
+		glm::vec3(0.0f, 1.0f, 0.0f),
+		glm::vec3(0.5f, 1.0f, 0.0f),
+
+		glm::vec3(1.0f, 1.0f, 0.0f),
+		glm::vec3(1.0f, 0.5f, 0.0f),
+		glm::vec3(1.0f, 0.0f, 0.0f),
+	};
+
+	float data[256][3];
+	int indices[12];
+
+	for (int i = 0; i < 12; ++i) {
+		indices[i] = i * 21;
+	}
+
+	/* for each adjacent pair of colors, find the difference in the RGBA values
+	 * and then interpolate */
+	for (int j = 0; j < 12 - 1; ++j) {
+		auto color_diff = jet_values[j + 1] - jet_values[j];
+		auto index = indices[j + 1] - indices[j];
+		auto inc = color_diff / static_cast<float>(index);
+
+		for (int i = indices[j] + 1; i < indices[j + 1]; ++i) {
+			data[i][0] = jet_values[j].r + i * inc.r;
+			data[i][1] = jet_values[j].g + i * inc.g;
+			data[i][2] = jet_values[j].b + i * inc.b;
+		}
+	}
+
+	glGenTextures(1, &m_transfer_func_id);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_1D, m_transfer_func_id);
+
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 256, 0, GL_RGB, GL_FLOAT, data);
+}
+
 void VolumeShader::slice(const glm::vec3 &view_dir)
 {
 	auto axis = axis_dominant_v3_single(view_dir);
@@ -269,112 +433,6 @@ void VolumeShader::slice(const glm::vec3 &view_dir)
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(m_texture_slices), &(m_texture_slices[0].x));
 }
 
-bool VolumeShader::init(const std::string &filename)
-{
-	if (loadVolumeFile(filename)) {
-		// loadVolumeShader
-		m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
-		m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
-
-		m_shader.createAndLinkProgram();
-
-		m_shader.use();
-
-		m_shader.addAttribute("vVertex");
-		m_shader.addUniform("MVP");
-		m_shader.addUniform("offset");
-		m_shader.addUniform("volume");
-		m_shader.addUniform("lut");
-		m_shader.addUniform("use_lut");
-		m_shader.addUniform("scale");
-
-		glUniform1i(m_shader("volume"), 0);
-		glUniform1i(m_shader("lut"), 1);
-
-		auto min = m_min * m_inv_size;
-		glUniform3fv(m_shader("offset"), 1, &min[0]);
-		glUniform1f(m_shader("scale"), m_scale);
-
-		m_shader.unUse();
-
-		// loadFlatShader
-		m_bbox_shader.loadFromFile(GL_VERTEX_SHADER, "shader/flat_shader.vert");
-		m_bbox_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/flat_shader.frag");
-
-		m_bbox_shader.createAndLinkProgram();
-
-		m_bbox_shader.use();
-
-		m_bbox_shader.addAttribute("vVertex");
-		m_bbox_shader.addUniform("MVP");
-
-		m_bbox_shader.unUse();
-
-		glm::vec3 vertices[8] = {
-		    glm::vec3(m_min[0], m_min[1], m_min[2]),
-		    glm::vec3(m_max[0], m_min[1], m_min[2]),
-		    glm::vec3(m_max[0], m_max[1], m_min[2]),
-		    glm::vec3(m_min[0], m_max[1], m_min[2]),
-		    glm::vec3(m_min[0], m_min[1], m_max[2]),
-		    glm::vec3(m_max[0], m_min[1], m_max[2]),
-		    glm::vec3(m_max[0], m_max[1], m_max[2]),
-		    glm::vec3(m_min[0], m_max[1], m_max[2])
-		};
-
-		for (int i(0); i < 8; ++i) {
-			vertices[i] *= m_inv_size;
-		}
-
-		const GLushort indices[24] = {
-		    0, 1, 1, 2,
-		    2, 3, 3, 0,
-		    4, 5, 5, 6,
-		    6, 7, 7, 4,
-		    0, 4, 1, 5,
-		    2, 6, 3, 7
-		};
-
-		glGenVertexArrays(1, &m_bbox_vao);
-		glGenBuffers(1, &m_bbox_verts_vbo);
-		glGenBuffers(1, &m_bbox_index_vbo);
-		glBindVertexArray(m_bbox_vao);
-
-		glBindBuffer(GL_ARRAY_BUFFER, m_bbox_verts_vbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &(vertices[0].x), GL_STATIC_DRAW);
-		glEnableVertexAttribArray(m_bbox_shader["vVertex"]);
-		glVertexAttribPointer(m_bbox_shader["vVertex"], 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bbox_index_vbo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices[0], GL_STATIC_DRAW);
-		glBindVertexArray(0);
-
-		loadTransferFunction();
-
-		return true;
-	}
-
-	return false;
-}
-
-void VolumeShader::setupRender()
-{
-	/* setup the vertex array and buffer objects */
-	glGenVertexArrays(1, &m_vao);
-	glGenBuffers(1, &m_vbo);
-
-	glBindVertexArray(m_vao);
-	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-
-	/* pass the sliced volume vector to buffer output memory */
-	glBufferData(GL_ARRAY_BUFFER, sizeof(m_texture_slices), nullptr, GL_DYNAMIC_DRAW);
-
-	/* enable vertex attribute array for position */
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-	glBindVertexArray(0);
-}
-
 void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool is_rotated)
 {
 	if (is_rotated) {
@@ -407,59 +465,6 @@ void VolumeShader::changeNumSlicesBy(int x)
 {
 	m_num_slices += x;
 	m_num_slices = std::min(MAX_SLICES, std::max(m_num_slices, 3));
-}
-
-void VolumeShader::loadTransferFunction()
-{
-	/* transfer function (lookup table) color values */
-	const glm::vec3 jet_values[12] = {
-	    glm::vec3(1.0f, 0.0f, 0.0f),
-		glm::vec3(1.0f, 0.0f, 0.5f),
-		glm::vec3(1.0f, 0.0f, 1.0f),
-
-		glm::vec3(0.5f, 0.0f, 1.0f),
-		glm::vec3(0.0f, 0.5f, 1.0f),
-		glm::vec3(0.0f, 1.0f, 1.0f),
-
-		glm::vec3(0.0f, 1.0f, 0.5f),
-		glm::vec3(0.0f, 1.0f, 0.0f),
-		glm::vec3(0.5f, 1.0f, 0.0f),
-
-		glm::vec3(1.0f, 1.0f, 0.0f),
-		glm::vec3(1.0f, 0.5f, 0.0f),
-		glm::vec3(1.0f, 0.0f, 0.0f),
-	};
-
-	float data[256][3];
-	int indices[12];
-
-	for (int i = 0; i < 12; ++i) {
-		indices[i] = i * 21;
-	}
-
-	/* for each adjacent pair of colors, find the difference in the RGBA values
-	 * and then interpolate */
-	for (int j = 0; j < 12 - 1; ++j) {
-		auto color_diff = jet_values[j + 1] - jet_values[j];
-		auto index = indices[j + 1] - indices[j];
-		auto inc = color_diff / static_cast<float>(index);
-
-		for (int i = indices[j] + 1; i < indices[j + 1]; ++i) {
-			data[i][0] = jet_values[j].r + i * inc.r;
-			data[i][1] = jet_values[j].g + i * inc.g;
-			data[i][2] = jet_values[j].b + i * inc.b;
-		}
-	}
-
-	glGenTextures(1, &m_transfer_func_id);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_1D, m_transfer_func_id);
-
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 256, 0, GL_RGB, GL_FLOAT, data);
 }
 
 void VolumeShader::toggleUseLUT()
