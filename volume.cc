@@ -11,7 +11,10 @@
 #define DWREAL_IS_DOUBLE 0
 
 #include <openvdb/openvdb.h>
+#include <openvdb/tools/GridTransformer.h>
+#include <openvdb/util/PagedArray.h>
 
+#include "GLSLShader.h"
 #include "utils.h"
 #include "volume.h"
 
@@ -60,7 +63,7 @@ void texture_from_leaf(const openvdb::FloatGrid &grid)
 }
 
 void convert_grid(const openvdb::FloatGrid &grid, GLfloat *data,
-                  const openvdb::Coord &min, const openvdb::Coord &max)
+                  const openvdb::Coord &min, const openvdb::Coord &max, float &scale)
 {
 	Timer(__func__);
 
@@ -69,6 +72,7 @@ void convert_grid(const openvdb::FloatGrid &grid, GLfloat *data,
 	FloatGrid::ConstAccessor main_acc = grid.getAccessor();
 	auto extent = max - min;
 	auto slabsize = extent[0] * extent[1];
+	util::PagedArray<float> min_array, max_array;
 
 	tbb::parallel_for(tbb::blocked_range<int>(min[2], max[2]),
 	        [&](const tbb::blocked_range<int> &r)
@@ -78,17 +82,36 @@ void convert_grid(const openvdb::FloatGrid &grid, GLfloat *data,
 		int &x = ijk[0], &y = ijk[1], &z = ijk[2];
 		z = r.begin();
 
+		auto min_value = std::numeric_limits<float>::max();
+		auto max_value = std::numeric_limits<float>::min();
+
 		/* Subtract min z coord so that 'index' always start at zero or above. */
 		auto index = (z - min[2]) * slabsize;
 
 		for (auto e = r.end(); z < e; ++z) {
 			for (y = min[1]; y < max[1]; ++y) {
 				for (x = min[0]; x < max[0]; ++x, ++index) {
-					data[index] = acc.getValue(ijk);
+					auto value = acc.getValue(ijk);
+
+					if (value < min_value) {
+						min_value = value;
+					}
+					else if (value > max_value) {
+						max_value = value;
+					}
+
+					data[index] = value;
 				}
 			}
 		}
+
+		min_array.push_back(min_value);
+		max_array.push_back(max_value);
 	});
+
+	auto min_value = std::min_element(min_array.begin(), min_array.end());
+	auto max_value = std::max_element(max_array.begin(), max_array.end());
+	scale = 1.0f / (*max_value - *min_value);
 }
 
 int axis_dominant_v3_single(const glm::vec3 &vec)
@@ -111,20 +134,39 @@ VolumeShader::VolumeShader()
     , m_inv_size(glm::vec3(0.0f))
     , m_num_slices(256)
     , m_axis(-1)
+    , m_scale(0.0f)
     , m_use_lut(false)
+    , m_draw_bbox(false)
 {}
 
 VolumeShader::~VolumeShader()
 {
 	m_shader.deleteShaderProgram();
+	m_bbox_shader.deleteShaderProgram();
 
 	glDeleteVertexArrays(1, &m_vao);
 	glDeleteBuffers(1, &m_vbo);
+	glDeleteVertexArrays(1, &m_bbox_vao);
+	glDeleteBuffers(1, &m_bbox_index_vbo);
+	glDeleteBuffers(1, &m_bbox_verts_vbo);
+
 	glDeleteTextures(1, &m_texture_id);
 	glDeleteTextures(1, &m_transfer_func_id);
 }
 
-bool VolumeShader::loadVolumeFile(const std::string &volume_file)
+bool VolumeShader::init(const std::string &filename, std::ostream &os)
+{
+	if (loadVolumeFile(filename, os)) {
+		loadVolumeShader();
+		loadBBoxShader();
+		loadTransferFunction();
+		return true;
+	}
+
+	return false;
+}
+
+bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &os)
 {
 	using namespace openvdb;
 	using namespace openvdb::math;
@@ -142,11 +184,35 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 			grid = gridPtrCast<FloatGrid>(file.readGrid(Name("density")));
 		}
 		else {
+			os << "No density grid found in file: \'" << volume_file << "\'!\n";
 			return false;
 		}
 
 		if (grid->getGridClass() == GRID_LEVEL_SET) {
+			os << "Grid \'" << grid->getName() << "\'is a level set!\n";
 			return false;
+		}
+
+		auto meta_map = file.getMetadata();
+
+		file.close();
+
+		if ((*meta_map)["creator"]) {
+			auto creator = (*meta_map)["creator"]->str();
+
+			/* If the grid comes from Blender (Z-up), rotate it so it is Y-up */
+			if (creator == "Blender/OpenVDBWriter") {
+				Timer("Transform Blender Grid");
+				openvdb::Mat4R mat(openvdb::Mat4R::identity());
+		        mat.preRotate(openvdb::math::X_AXIS, -M_PI_2);
+
+				FloatGrid::Ptr xformed_grid = FloatGrid::create(grid->background());
+
+				tools::GridTransformer transformer(mat);
+				transformer.transformGrid<tools::BoxSampler>(*grid, *xformed_grid);
+
+				grid = xformed_grid;
+			}
 		}
 
 		CoordBBox bbox = grid->evalActiveVoxelBoundingBox();
@@ -179,7 +245,7 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 
 		/* Copy data */
 		GLfloat *data = new GLfloat[X_DIM * Y_DIM * Z_DIM];
-		convert_grid(*grid, data, bbox_min, bbox_max);
+		convert_grid(*grid, data, bbox_min, bbox_max, m_scale);
 
 		glGenTextures(1, &m_texture_id);
 		glBindTexture(GL_TEXTURE_3D, m_texture_id);
@@ -196,19 +262,30 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file)
 
 		glGenerateMipmap(GL_TEXTURE_3D);
 
-		file.close();
 		delete [] data;
 		return true;
 	}
 
-	std::cerr << "Unable to open file \'" << volume_file << "\'\n";
+	os << "Unable to open file \'" << volume_file << "\'\n";
+
 	return false;
 }
 
-#if 0
-void VolumeShader::slice(const glm::vec3 &dir)
+void VolumeShader::loadBBoxShader()
 {
-	const glm::vec3 vertices[8] = {
+	m_bbox_shader.loadFromFile(GL_VERTEX_SHADER, "shader/flat_shader.vert");
+	m_bbox_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/flat_shader.frag");
+
+	m_bbox_shader.createAndLinkProgram();
+
+	m_bbox_shader.use();
+	{
+		m_bbox_shader.addAttribute("vVertex");
+		m_bbox_shader.addUniform("MVP");
+	}
+	m_bbox_shader.unUse();
+
+	glm::vec3 vertices[8] = {
 	    glm::vec3(m_min[0], m_min[1], m_min[2]),
 	    glm::vec3(m_max[0], m_min[1], m_min[2]),
 	    glm::vec3(m_max[0], m_max[1], m_min[2]),
@@ -219,197 +296,141 @@ void VolumeShader::slice(const glm::vec3 &dir)
 	    glm::vec3(m_min[0], m_max[1], m_max[2])
 	};
 
-	const int edges[12][2] = {
-	    { 0, 1 }, { 1, 2 }, { 2, 3 },
-	    { 3, 0 }, { 0, 4 }, { 1, 5 },
-	    { 2, 6 }, { 3, 7 }, { 4, 5 },
-	    { 5, 6 }, { 6, 7 }, { 7, 4 }
+	for (int i(0); i < 8; ++i) {
+		vertices[i] *= m_inv_size;
+	}
+
+	const GLushort indices[24] = {
+	    0, 1, 1, 2,
+	    2, 3, 3, 0,
+	    4, 5, 5, 6,
+	    6, 7, 7, 4,
+	    0, 4, 1, 5,
+	    2, 6, 3, 7
 	};
 
-	const int edge_list[8][12] = {
-	    { 0, 1, 5, 6, 4, 8, 11, 9, 3, 7, 2, 10 },
-	    { 0, 4, 3, 11, 1, 2, 6, 7, 5, 9, 8, 10 },
-	    { 1, 5, 0, 8, 2, 3, 7, 4, 6, 10, 9, 11 },
-	    { 7, 11, 10, 8, 2, 6, 1, 9, 3, 0, 4, 5 },
-	    { 8, 5, 9, 1, 11, 10, 7, 6, 4, 3, 0, 2 },
-	    { 9, 6, 10, 2, 8, 11, 4, 7, 5, 0, 1, 3 },
-	    { 9, 8, 5, 4, 6, 1, 2, 0, 10, 7, 11, 3 },
-	    { 10, 9, 6, 5, 7, 2, 3, 1, 11, 4, 8, 0 }
-	};
+	glGenVertexArrays(1, &m_bbox_vao);
+	glGenBuffers(1, &m_bbox_verts_vbo);
+	glGenBuffers(1, &m_bbox_index_vbo);
 
-	/* get the max and min distance of eacg vertex of the unit cube
-	 * in the viewing direction
-	 */
-	float max_dist = glm::dot(dir, vertices[0]);
-	float min_dist = max_dist;
-	int max_index = 0;
-	int count = 0;
+	glBindVertexArray(m_bbox_vao);
 
-	for (int i = 1; i < 8; ++i) {
-		/* get the distance between the current unit cube vertex and
-		 * the view vector by dot product
-		 */
-		float dist = glm::dot(dir, vertices[i]);
+	glBindBuffer(GL_ARRAY_BUFFER, m_bbox_verts_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &(vertices[0].x), GL_STATIC_DRAW);
+	glEnableVertexAttribArray(m_bbox_shader["vVertex"]);
+	glVertexAttribPointer(m_bbox_shader["vVertex"], 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-		if (dist > max_dist) {
-			max_dist = dist;
-			max_index = i;
-		}
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bbox_index_vbo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices[0], GL_STATIC_DRAW);
 
-		if (dist < min_dist) {
-			min_dist = dist;
-		}
+	glBindVertexArray(0);
+}
+
+void VolumeShader::loadVolumeShader()
+{
+	m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
+	m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
+
+	m_shader.createAndLinkProgram();
+
+	m_shader.use();
+	{
+		m_shader.addAttribute("vVertex");
+		m_shader.addUniform("MVP");
+		m_shader.addUniform("offset");
+		m_shader.addUniform("volume");
+		m_shader.addUniform("lut");
+		m_shader.addUniform("use_lut");
+		m_shader.addUniform("scale");
+
+		glUniform1i(m_shader("volume"), 0);
+		glUniform1i(m_shader("lut"), 1);
+
+		auto min = m_min * m_inv_size;
+		glUniform3fv(m_shader("offset"), 1, &min[0]);
+		glUniform1f(m_shader("scale"), m_scale);
 	}
+	m_shader.unUse();
 
-	/* int max_dim = FindAbsMax(viewDir); */
-	max_dist -= EPSILON;
-	min_dist += EPSILON;
+	/* setup the vertex array and buffer objects */
+	glGenVertexArrays(1, &m_vao);
+	glGenBuffers(1, &m_vbo);
 
-	/* start and direction vectors */
-	glm::vec3 vecStart[12], vecDir[12];
-	/* lambda intersection values */
-	float lambda[12], lambda_inc[12];
-	float denom = 0.0f;
-
-	/* set the minimum distance as the plane_dist
-	 * subtract the max and min distance and divide by the total number of
-	 * slices to get the plane increment
-	 */
-	float plane_dist = min_dist;
-	float plane_dist_inc = (max_dist - min_dist) / static_cast<float>(m_num_slices);
-
-	/* for all egdes */
-	for (int i = 0; i < 12; ++i) {
-		/* get the start position vertex by table lookup */
-		vecStart[i] = vertices[edges[edge_list[max_index][i]][0]];
-
-		/* get the direction by table lookup */
-		vecDir[i] = vertices[edges[edge_list[max_index][i]][1]] - vecStart[i];
-
-		/* do a dot of vecDir and the view direction vector */
-		denom = glm::dot(vecDir[i], dir);
-
-		/* determine the plane intersection parameter (lambda) and
-		 * plane intersection parameter increment (lambda_inc)
-		 */
-		if (1.0f + denom != 1.0f) {
-			lambda_inc[i] = plane_dist_inc / denom;
-			lambda[i] = (plane_dist - glm::dot(vecStart[i], dir)) / denom;
-		}
-		else {
-			lambda[i] = -1.0f;
-			lambda_inc[i] = 0.0f;
-		}
-	}
-
-	/* for a plane and sub intersection, we can have a minimum of 3 and
-	 * a maximum of 6 vertex polygon
-	 */
-	glm::vec3 intersections[6];
-	float dL[12];
-
-	for (int i = m_num_slices - 1; i >= 0; --i) {
-		for (int e = 0; e < 12; ++e) {
-			dL[e] = lambda[e] + i * lambda_inc[e];
-		}
-
-		/*if the values are between 0-1, we have an intersection at the current edge */
-		/*repeat the same for all 12 edges */
-		if ((dL[0] >= 0.0f) && (dL[0] < 1.0f)) {
-			intersections[0] = vecStart[0] + dL[0] * vecDir[0];
-		}
-		else if ((dL[1] >= 0.0f) && (dL[1] < 1.0f)) {
-			intersections[0] = vecStart[1] + dL[1] * vecDir[1];
-		}
-		else if ((dL[3] >= 0.0f) && (dL[3] < 1.0f)) {
-			intersections[0] = vecStart[3] + dL[3] * vecDir[3];
-		}
-		else continue;
-
-		if ((dL[2] >= 0.0f) && (dL[2] < 1.0f)) {
-			intersections[1] = vecStart[2] + dL[2] * vecDir[2];
-		}
-		else if ((dL[0] >= 0.0f) && (dL[0] < 1.0f)) {
-			intersections[1] = vecStart[0] + dL[0] * vecDir[0];
-		}
-		else if ((dL[1] >= 0.0f) && (dL[1] < 1.0f)) {
-			intersections[1] = vecStart[1] + dL[1] * vecDir[1];
-		}
-		else {
-			intersections[1] = vecStart[3] + dL[3] * vecDir[3];
-		}
-
-		if ((dL[4] >= 0.0f) && (dL[4] < 1.0f)) {
-			intersections[2] = vecStart[4] + dL[4] * vecDir[4];
-		}
-		else if ((dL[5] >= 0.0f) && (dL[5] < 1.0f)) {
-			intersections[2] = vecStart[5] + dL[5] * vecDir[5];
-		}
-		else {
-			intersections[2] = vecStart[7] + dL[7] * vecDir[7];
-		}
-
-		if ((dL[6] >= 0.0f) && (dL[6] < 1.0f)) {
-			intersections[3] = vecStart[6] + dL[6] * vecDir[6];
-		}
-		else if ((dL[4] >= 0.0f) && (dL[4] < 1.0f)) {
-			intersections[3] = vecStart[4] + dL[4] * vecDir[4];
-		}
-		else if ((dL[5] >= 0.0f) && (dL[5] < 1.0f)) {
-			intersections[3] = vecStart[5] + dL[5] * vecDir[5];
-		}
-		else {
-			intersections[3] = vecStart[7] + dL[7] * vecDir[7];
-		}
-
-		if ((dL[8] >= 0.0f) && (dL[8] < 1.0f)) {
-			intersections[4] = vecStart[8] + dL[8] * vecDir[8];
-		}
-		else if ((dL[9] >= 0.0f) && (dL[9] < 1.0f)) {
-			intersections[4] = vecStart[9] + dL[9] * vecDir[9];
-		}
-		else {
-			intersections[4] = vecStart[11] + dL[11] * vecDir[11];
-		}
-
-		if ((dL[10]>= 0.0f) && (dL[10]< 1.0f)) {
-			intersections[5] = vecStart[10] + dL[10] * vecDir[10];
-		}
-		else if ((dL[8] >= 0.0f) && (dL[8] < 1.0f)) {
-			intersections[5] = vecStart[8] + dL[8] * vecDir[8];
-		}
-		else if ((dL[9] >= 0.0f) && (dL[9] < 1.0f)) {
-			intersections[5] = vecStart[9] + dL[9] * vecDir[9];
-		}
-		else {
-			intersections[5] = vecStart[11] + dL[11] * vecDir[11];
-		}
-
-		int indices[] = { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5 };
-
-		for (int i = 0; i < 12; ++i) {
-			m_texture_slices[count++] = intersections[indices[i]] * m_inv_size;
-		}
-	}
-
-	/* update buffer object */
+	glBindVertexArray(m_vao);
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(m_texture_slices), &(m_texture_slices[0].x));
+
+	/* pass the sliced volume vector to buffer output memory */
+	glBufferData(GL_ARRAY_BUFFER, sizeof(m_texture_slices), nullptr, GL_DYNAMIC_DRAW);
+
+	/* enable vertex attribute array for position */
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+	glBindVertexArray(0);
 }
-#else
 
-void VolumeShader::slice(const glm::vec3 &dir)
+void VolumeShader::loadTransferFunction()
 {
-	auto axis = axis_dominant_v3_single(dir);
+	/* transfer function (lookup table) color values */
+	const glm::vec3 jet_values[12] = {
+	    glm::vec3(1.0f, 0.0f, 0.0f),
+		glm::vec3(1.0f, 0.0f, 0.5f),
+		glm::vec3(1.0f, 0.0f, 1.0f),
 
-	if (m_axis != axis) {
-		m_axis = axis;
-		sliceAxisAligned(dir);
+		glm::vec3(0.5f, 0.0f, 1.0f),
+		glm::vec3(0.0f, 0.5f, 1.0f),
+		glm::vec3(0.0f, 1.0f, 1.0f),
+
+		glm::vec3(0.0f, 1.0f, 0.5f),
+		glm::vec3(0.0f, 1.0f, 0.0f),
+		glm::vec3(0.5f, 1.0f, 0.0f),
+
+		glm::vec3(1.0f, 1.0f, 0.0f),
+		glm::vec3(1.0f, 0.5f, 0.0f),
+		glm::vec3(1.0f, 0.0f, 0.0f),
+	};
+
+	float data[256][3];
+	int indices[12];
+
+	for (int i = 0; i < 12; ++i) {
+		indices[i] = i * 21;
 	}
+
+	/* for each adjacent pair of colors, find the difference in the RGBA values
+	 * and then interpolate */
+	for (int j = 0; j < 12 - 1; ++j) {
+		auto color_diff = jet_values[j + 1] - jet_values[j];
+		auto index = indices[j + 1] - indices[j];
+		auto inc = color_diff / static_cast<float>(index);
+
+		for (int i = indices[j] + 1; i < indices[j + 1]; ++i) {
+			data[i][0] = jet_values[j].r + i * inc.r;
+			data[i][1] = jet_values[j].g + i * inc.g;
+			data[i][2] = jet_values[j].b + i * inc.b;
+		}
+	}
+
+	glGenTextures(1, &m_transfer_func_id);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_1D, m_transfer_func_id);
+
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 256, 0, GL_RGB, GL_FLOAT, data);
 }
 
-void VolumeShader::sliceAxisAligned(const glm::vec3 &view_dir)
+void VolumeShader::slice(const glm::vec3 &view_dir)
 {
+	auto axis = axis_dominant_v3_single(view_dir);
+
+	if (m_axis == axis) {
+		return;
+	}
+
+	m_axis = axis;
 	auto count = 0;
 	auto depth = m_min[m_axis];
 	auto slice_size = m_size[m_axis] / m_num_slices;
@@ -456,59 +477,6 @@ void VolumeShader::sliceAxisAligned(const glm::vec3 &view_dir)
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(m_texture_slices), &(m_texture_slices[0].x));
 }
-#endif
-
-bool VolumeShader::init(const std::string &filename)
-{
-	if (loadVolumeFile(filename)) {
-		m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
-		m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
-
-		m_shader.createAndLinkProgram();
-
-		m_shader.use();
-
-		m_shader.addAttribute("vVertex");
-		m_shader.addUniform("MVP");
-		m_shader.addUniform("offset");
-		m_shader.addUniform("volume");
-		m_shader.addUniform("lut");
-		m_shader.addUniform("use_lut");
-
-		glUniform1i(m_shader("volume"), 0);
-		glUniform1i(m_shader("lut"), 1);
-
-		auto min = m_min * m_inv_size;
-		glUniform3fv(m_shader("offset"), 1, &min[0]);
-
-		m_shader.unUse();
-
-		loadTransferFunction();
-
-		return true;
-	}
-
-	return false;
-}
-
-void VolumeShader::setupRender()
-{
-	/* setup the vertex array and buffer objects */
-	glGenVertexArrays(1, &m_vao);
-	glGenBuffers(1, &m_vbo);
-
-	glBindVertexArray(m_vao);
-	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-
-	/* pass the sliced volume vector to buffer output memory */
-	glBufferData(GL_ARRAY_BUFFER, sizeof(m_texture_slices), nullptr, GL_DYNAMIC_DRAW);
-
-	/* enable vertex attribute array for position */
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-	glBindVertexArray(0);
-}
 
 void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool is_rotated)
 {
@@ -523,8 +491,17 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 	m_shader.use();
 	glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 	glUniform1i(m_shader("use_lut"), m_use_lut);
-	glDrawArrays(GL_TRIANGLES, 0, MAX_SLICES * 12);
+	glDrawArrays(GL_TRIANGLES, 0, MAX_SLICES * 6);
 	m_shader.unUse();
+
+	if (m_draw_bbox) {
+		glBindVertexArray(m_bbox_vao);
+
+		m_bbox_shader.use();
+		glUniformMatrix4fv(m_bbox_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+		glDrawElements(GL_LINES, 24, GL_UNSIGNED_SHORT, nullptr);
+		m_bbox_shader.unUse();
+	}
 
 	glDisable(GL_BLEND);
 }
@@ -535,70 +512,12 @@ void VolumeShader::changeNumSlicesBy(int x)
 	m_num_slices = std::min(MAX_SLICES, std::max(m_num_slices, 3));
 }
 
-void VolumeShader::loadTransferFunction()
-{
-	/* transfer function (lookup table) color values */
-	const glm::vec4 jet_values[9] = {
-		glm::vec4(0.0f, 0.0f, 0.5f, 0.0f),
-		glm::vec4(0.0f, 0.0f, 1.0f, 0.1f),
-		glm::vec4(0.0f, 0.5f, 1.0f, 0.3f),
-		glm::vec4(0.0f, 1.0f, 1.0f, 0.3f),
-		glm::vec4(0.5f, 1.0f, 0.5f, 0.75f),
-		glm::vec4(1.0f, 1.0f, 0.0f, 0.8f),
-		glm::vec4(1.0f, 0.5f, 0.0f, 0.6f),
-		glm::vec4(1.0f, 0.0f, 0.0f, 0.5f),
-		glm::vec4(0.5f, 0.0f, 0.0f, 0.0f),
-	};
-
-	float data[256][4];
-	int indices[9];
-
-	/* fill the color values at the place where the color should be after
-	 * interpolation */
-	for (int i = 0; i < 9; ++i) {
-		auto index = i * 28;
-		data[index][0] = jet_values[i].x;
-		data[index][1] = jet_values[i].y;
-		data[index][2] = jet_values[i].z;
-		data[index][3] = jet_values[i].w;
-		indices[i] = index;
-	}
-
-	/* for each adjacent pair of colors, find the difference in the RGBA values
-	 * and then interpolate */
-	for (int j = 0; j < 9 - 1; ++j) {
-		auto data_r = (data[indices[j + 1]][0] - data[indices[j]][0]);
-		auto data_g = (data[indices[j + 1]][1] - data[indices[j]][1]);
-		auto data_b = (data[indices[j + 1]][2] - data[indices[j]][2]);
-		auto data_a = (data[indices[j + 1]][3] - data[indices[j]][3]);
-
-		auto index = indices[j + 1] - indices[j];
-
-		auto inc_r = data_r / static_cast<float>(index);
-		auto inc_g = data_g / static_cast<float>(index);
-		auto inc_b = data_b / static_cast<float>(index);
-		auto inc_a = data_a / static_cast<float>(index);
-
-		for (int i = indices[j] + 1; i < indices[j + 1]; ++i) {
-			data[i][0] = (data[i - 1][0] + inc_r);
-			data[i][1] = (data[i - 1][1] + inc_g);
-			data[i][2] = (data[i - 1][2] + inc_b);
-			data[i][3] = (data[i - 1][3] + inc_a);
-		}
-	}
-
-	glGenTextures(1, &m_transfer_func_id);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_1D, m_transfer_func_id);
-
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 256, 0, GL_RGBA, GL_FLOAT, data);
-}
-
 void VolumeShader::toggleUseLUT()
 {
 	m_use_lut = ((m_use_lut) ? false : true);
+}
+
+void VolumeShader::toggleBBoxDrawing()
+{
+	m_draw_bbox = ((m_draw_bbox) ? false : true);
 }

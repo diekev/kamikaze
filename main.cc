@@ -1,21 +1,23 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
+#include <glm/glm.hpp>
+
 #include <iostream>
 
 #include "viewer.h"
 
-namespace  {
+namespace {
 
 Viewer *viewer = nullptr;
 
-void OnInit(const char *filename)
+bool initViewer(const char *filename, std::ostream &os)
 {
 	if (viewer == nullptr) {
 		viewer = new Viewer;
 	}
 
-	viewer->init(filename);
+	return viewer->init(filename, os);
 }
 
 void OnShutDownCB()
@@ -78,12 +80,17 @@ int main(int argc, char *argv[])
 	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
 
+	std::ostream &os = std::cerr;
+
 	if (GLEW_OK != err) {
-		std::cerr << "Error: " << glewGetErrorString(err) << '\n';
+		os << "Error: " << glewGetErrorString(err) << '\n';
 		return 1;
 	}
 
-	OnInit(argv[1]);
+	if (!initViewer(argv[1], os)) {
+		OnShutDownCB();
+		return 1;
+	}
 
 	glutCloseFunc(OnShutDownCB);
 	glutDisplayFunc(OnRenderCB);

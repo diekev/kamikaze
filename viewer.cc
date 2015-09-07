@@ -5,7 +5,10 @@
 
 #include <iostream>
 
+#include "GLSLShader.h"
+
 #include "camera.h"
+#include "grid.h"
 #include "viewer.h"
 #include "volume.h"
 
@@ -13,28 +16,30 @@ Viewer::Viewer()
     : m_mouse_state(0)
     , m_bg(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f))
     , m_camera(new Camera())
+    , m_grid(new Grid(20, 20))
     , m_volume_shader(new VolumeShader())
 {}
 
 Viewer::~Viewer()
 {
 	delete m_camera;
+	delete m_grid;
 	delete m_volume_shader;
 }
 
-void Viewer::init(const char *filename)
+bool Viewer::init(const char *filename, std::ostream &os)
 {
-	if (!m_volume_shader->init(filename)) {
-		std::cerr << "Initialisation of the volume data failed!\n";
-		return;
+	if (m_volume_shader->init(filename, os)) {
+		glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
+
+		m_camera->updateViewDir();
+		m_volume_shader->slice(m_camera->viewDir());
+
+		return true;
 	}
 
-	glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
-
-	m_camera->updateViewDir();
-
-	m_volume_shader->setupRender();
-	m_volume_shader->slice(m_camera->viewDir());
+	os << "Initialisation of the volume data failed!\n";
+	return false;
 }
 
 void Viewer::shutDown()
@@ -80,6 +85,9 @@ void Viewer::keyboardEvent(unsigned char key, int /*x*/, int /*y*/)
 		case 'l':
 			m_volume_shader->toggleUseLUT();
 			break;
+		case 'b':
+			m_volume_shader->toggleBBoxDrawing();
+			break;
 	}
 
 	if (need_slicing) {
@@ -97,6 +105,7 @@ void Viewer::render()
 	auto view_dir = m_camera->viewDir();
 	auto MVP = m_camera->MVP();
 
+	m_grid->render(MVP);
 	m_volume_shader->render(view_dir, MVP, m_camera->hasRotated());
 
 	glutSwapBuffers();
