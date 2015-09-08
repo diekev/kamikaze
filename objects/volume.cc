@@ -180,13 +180,17 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &
 			/* If the grid comes from Blender (Z-up), rotate it so it is Y-up */
 			if (creator == "Blender/OpenVDBWriter") {
 				Timer("Transform Blender Grid");
-				openvdb::Mat4R mat(openvdb::Mat4R::identity());
-		        mat.preRotate(openvdb::math::X_AXIS, -M_PI_2);
 
-				FloatGrid::Ptr xformed_grid = FloatGrid::create(grid->background());
+				Mat4R rotate_mat(Mat4R::identity());
+				rotate_mat.preRotate(X_AXIS, -M_PI_2);
 
-				tools::GridTransformer transformer(mat);
-				transformer.transformGrid<tools::BoxSampler>(*grid, *xformed_grid);
+				/* make sure the new grid has the same transform and metadatas
+				 * as the old. */
+				FloatGrid::Ptr xformed_grid = grid->copy(CopyPolicy::CP_NEW);
+
+				tools::GridTransformer transformer(rotate_mat);
+				transformer.transformGrid<tools::PointSampler>(*grid, *xformed_grid);
+				tools::prune(xformed_grid->tree());
 
 				grid = xformed_grid;
 			}
