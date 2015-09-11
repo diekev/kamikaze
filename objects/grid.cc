@@ -42,7 +42,7 @@ Grid::Grid(int x, int y)
 
 	m_shader->use();
 
-	m_shader->addAttribute("vVertex");
+	m_shader->addAttribute("vertex");
 	m_shader->addUniform("MVP");
 
 	m_shader->unUse();
@@ -70,8 +70,8 @@ Grid::Grid(int x, int y)
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo_id);
 	glBufferData(GL_ARRAY_BUFFER, total_vertices * sizeof(glm::vec3), &(vertices[0].x), GL_STATIC_DRAW);
-	glEnableVertexAttribArray((*m_shader)["vVertex"]);
-	glVertexAttribPointer((*m_shader)["vVertex"], 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray((*m_shader)["vertex"]);
+	glVertexAttribPointer((*m_shader)["vertex"], 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	/* setup index buffer */
 

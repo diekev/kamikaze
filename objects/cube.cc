@@ -38,7 +38,7 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 
 	m_shader.use();
 	{
-		m_shader.addAttribute("vVertex");
+		m_shader.addAttribute("vertex");
 		m_shader.addUniform("MVP");
 	}
 	m_shader.unUse();
@@ -71,8 +71,8 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_verts_vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &(vertices[0].x), GL_STATIC_DRAW);
-	glEnableVertexAttribArray(m_shader["vVertex"]);
-	glVertexAttribPointer(m_shader["vVertex"], 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(m_shader["vertex"]);
+	glVertexAttribPointer(m_shader["vertex"], 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_vbo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices[0], GL_STATIC_DRAW);

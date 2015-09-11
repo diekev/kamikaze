@@ -263,7 +263,7 @@ void VolumeShader::loadVolumeShader()
 
 	m_shader.use();
 	{
-		m_shader.addAttribute("vVertex");
+		m_shader.addAttribute("vertex");
 		m_shader.addUniform("MVP");
 		m_shader.addUniform("offset");
 		m_shader.addUniform("volume");
