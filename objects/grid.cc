@@ -41,10 +41,10 @@ Grid::Grid(int x, int y)
 	m_shader->createAndLinkProgram();
 
 	m_shader->use();
-
-	m_shader->addAttribute("vertex");
-	m_shader->addUniform("MVP");
-
+	{
+		m_shader->addAttribute("vertex");
+		m_shader->addUniform("MVP");
+	}
 	m_shader->unUse();
 
 	glGenVertexArrays(1, &m_vao);
@@ -97,12 +97,16 @@ Grid::~Grid()
 
 void Grid::render(const glm::mat4 &MVP)
 {
+	glEnable(GL_DEPTH_TEST);
+
 	m_shader->use();
-
-	glBindVertexArray(m_vao);
-	glUniformMatrix4fv((*m_shader)("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
-	glDrawElements(GL_LINES, m_total_indices, GL_UNSIGNED_INT, nullptr);
-	glBindVertexArray(0);
-
+	{
+		glBindVertexArray(m_vao);
+		glUniformMatrix4fv((*m_shader)("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+		glDrawElements(GL_LINES, m_total_indices, GL_UNSIGNED_INT, nullptr);
+		glBindVertexArray(0);
+	}
 	m_shader->unUse();
+
+	glDisable(GL_DEPTH_TEST);
 }

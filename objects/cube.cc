@@ -91,12 +91,16 @@ Cube::~Cube()
 
 void Cube::render(const glm::mat4 &MVP)
 {
+	glEnable(GL_DEPTH_TEST);
+
 	m_shader.use();
-
-	glBindVertexArray(m_vao);
-	glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
-	glDrawElements(GL_LINES, 24, GL_UNSIGNED_SHORT, nullptr);
-	glBindVertexArray(0);
-
+	{
+		glBindVertexArray(m_vao);
+		glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+		glDrawElements(GL_LINES, 24, GL_UNSIGNED_SHORT, nullptr);
+		glBindVertexArray(0);
+	}
 	m_shader.unUse();
+
+	glDisable(GL_DEPTH_TEST);
 }

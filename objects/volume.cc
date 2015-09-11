@@ -414,20 +414,25 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 	}
 
 	glEnable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	glBindVertexArray(m_vao);
 
 	m_shader.use();
-	glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
-	glUniform1i(m_shader("use_lut"), m_use_lut);
-	glDrawArrays(GL_TRIANGLES, 0, m_texture_slices.size());
+	{
+		glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+		glUniform1i(m_shader("use_lut"), m_use_lut);
+		glDrawArrays(GL_TRIANGLES, 0, m_texture_slices.size());
+	}
 	m_shader.unUse();
+
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
 
 	if (m_draw_bbox) {
 		m_bbox->render(MVP);
 	}
-
-	glDisable(GL_BLEND);
 }
 
 void VolumeShader::changeNumSlicesBy(int x)
