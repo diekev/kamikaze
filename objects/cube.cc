@@ -43,9 +43,6 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 	}
 	m_shader.unUse();
 
-	auto size = max - min;
-	auto inv_size = 1.0f / size;
-
 	glm::vec3 vertices[8] = {
 	    glm::vec3(min[0], min[1], min[2]),
 	    glm::vec3(max[0], min[1], min[2]),
@@ -56,10 +53,6 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 	    glm::vec3(max[0], max[1], max[2]),
 	    glm::vec3(min[0], max[1], max[2])
 	};
-
-	for (int i(0); i < 8; ++i) {
-		vertices[i] *= inv_size;
-	}
 
 	const GLushort indices[24] = {
 	    0, 1, 1, 2,

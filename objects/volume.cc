@@ -232,9 +232,9 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &
 
 		glGenTextures(1, &m_texture_id);
 		glBindTexture(GL_TEXTURE_3D, m_texture_id);
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_BASE_LEVEL, 0);
@@ -270,12 +270,13 @@ void VolumeShader::loadVolumeShader()
 		m_shader.addUniform("lut");
 		m_shader.addUniform("use_lut");
 		m_shader.addUniform("scale");
+		m_shader.addUniform("inv_size");
 
 		glUniform1i(m_shader("volume"), 0);
 		glUniform1i(m_shader("lut"), 1);
 
-		auto min = m_min * m_inv_size;
-		glUniform3fv(m_shader("offset"), 1, &min[0]);
+		glUniform3fv(m_shader("offset"), 1, &m_min[0]);
+		glUniform3fv(m_shader("inv_size"), 1, &m_inv_size[0]);
 		glUniform1f(m_shader("scale"), m_scale);
 	}
 	m_shader.unUse();
@@ -391,12 +392,12 @@ void VolumeShader::slice(const glm::vec3 &view_dir)
 		    }
 		};
 
-		m_texture_slices[count++] = vertices[m_axis][0] * m_inv_size;
-		m_texture_slices[count++] = vertices[m_axis][1] * m_inv_size;
-		m_texture_slices[count++] = vertices[m_axis][2] * m_inv_size;
-		m_texture_slices[count++] = vertices[m_axis][0] * m_inv_size;
-		m_texture_slices[count++] = vertices[m_axis][2] * m_inv_size;
-		m_texture_slices[count++] = vertices[m_axis][3] * m_inv_size;
+		m_texture_slices[count++] = vertices[m_axis][0];
+		m_texture_slices[count++] = vertices[m_axis][1];
+		m_texture_slices[count++] = vertices[m_axis][2];
+		m_texture_slices[count++] = vertices[m_axis][0];
+		m_texture_slices[count++] = vertices[m_axis][2];
+		m_texture_slices[count++] = vertices[m_axis][3];
 
 		depth += slice_size;
 	}
