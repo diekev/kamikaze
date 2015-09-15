@@ -92,7 +92,30 @@ int evalLeafBBoxAndCount(const openvdb::FloatTree &tree, Coord &min, Coord &max)
 	return leaf_count;
 }
 
-void texture_from_leaf(const openvdb::FloatGrid &grid)
+void gl_check_errors()
+{
+	GLenum error = glGetError();
+	if (error == GL_NO_ERROR) {
+		return;
+	}
+
+	switch (error) {
+		case GL_INVALID_ENUM:
+			std::cerr << "GL Invalid Enum Error\n";
+			break;
+		case GL_INVALID_VALUE:
+			std::cerr << "GL Invalid Value Error\n";
+			break;
+		case GL_INVALID_OPERATION:
+			std::cerr << "GL Invalid Operation Error\n";
+			break;
+		case GL_OUT_OF_MEMORY:
+			std::cerr << "GL Invalid Out of Memory Error\n";
+			break;
+	}
+}
+
+void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id)
 {
 	Timer(__func__);
 
@@ -116,8 +139,6 @@ void texture_from_leaf(const openvdb::FloatGrid &grid)
 	Vec3i leaf_per_axis;
 	max_leaf_per_axis(leaf_bbox_extent.asPointer(), DIM, leaf_count, leaf_per_axis.asPointer());
 
-//	Vec3i packed_texture_res(leaf_per_axis * 8);
-
 	Vec3i index_texture_res(
 	        leaf_bbox_extent[0] >> LOG2DIM,
 	        leaf_bbox_extent[1] >> LOG2DIM,
@@ -132,6 +153,9 @@ void texture_from_leaf(const openvdb::FloatGrid &grid)
 
 	assert(index_texture_size > 0);
 
+	Vec3i packed_texture_res(leaf_per_axis * 8);
+	create_texture_3D(texture_id, nullptr, packed_texture_res[0], packed_texture_res[1], packed_texture_res[2]);
+
 	std::vector<glm::ivec3> index_texture;
 	index_texture.resize(index_texture_size, glm::ivec3(-1));
 
@@ -139,12 +163,14 @@ void texture_from_leaf(const openvdb::FloatGrid &grid)
 
 	for (LeafCIterType leaf_iter = grid.tree().cbeginLeaf(); leaf_iter; ++leaf_iter) {
 		const LeafType &leaf = *leaf_iter.getLeaf();
-//		const ValueType *data = leaf.buffer().data();
+		const ValueType *data = leaf.buffer().data();
 
-//		glTexSubImage3D(GL_TEXTURE_3D, 0,
-//		                xoffset, yoffset, zoffset,
-//		                leafDim, leafDim, leafDim,
-//		                GL_RED, GL_FLOAT, data);
+		glTexSubImage3D(GL_TEXTURE_3D, 0,
+		                xoffset, yoffset, zoffset,
+		                DIM, DIM, DIM,
+		                GL_RED, GL_FLOAT, data);
+
+		gl_check_errors();
 
 		const Coord &co = (leaf.origin() - bbox_min) >> LOG2DIM;
 		int index = co.x() + co.y() * index_texture_res[0] + co.z() * leaf_slab_size;
@@ -163,13 +189,17 @@ void texture_from_leaf(const openvdb::FloatGrid &grid)
 
 		index_texture[index] = glm::ivec3(xoffset, yoffset, zoffset);
 
-		// TODO
 		xoffset += DIM;
-		yoffset += DIM;
-		zoffset += DIM;
 
-		xoffset %= leaf_per_axis[0] * DIM;
-		yoffset %= leaf_per_axis[1] * DIM;
+		if (xoffset == packed_texture_res[0]) {
+			xoffset = 0;
+			yoffset += DIM;
+
+			if (yoffset == packed_texture_res[1]) {
+				yoffset = 0;
+				zoffset += DIM;
+			}
+		}
 	}
 }
 
@@ -246,7 +276,7 @@ VolumeShader::VolumeShader()
     , m_inv_size(glm::vec3(0.0f))
     , m_num_slices(256)
     , m_axis(-1)
-    , m_scale(0.0f)
+    , m_scale(1.0f)
     , m_use_lut(false)
     , m_draw_bbox(false)
 {
@@ -362,10 +392,10 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &
 
 		/* Copy data */
 		GLfloat *data = new GLfloat[X_DIM * Y_DIM * Z_DIM];
-		convert_grid(*grid, data, bbox_min, bbox_max, m_scale);
-		texture_from_leaf(*grid);
+		//convert_grid(*grid, data, bbox_min, bbox_max, m_scale);
+		texture_from_leaf(*grid, m_texture_id);
 
-		create_texture_3D(m_texture_id, data, X_DIM, Y_DIM, Z_DIM);
+		//create_texture_3D(m_texture_id, data, X_DIM, Y_DIM, Z_DIM);
 
 		delete [] data;
 		return true;
