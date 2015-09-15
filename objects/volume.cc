@@ -374,15 +374,7 @@ void VolumeShader::loadTransferFunction()
 		}
 	}
 
-	glGenTextures(1, &m_transfer_func_id);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_1D, m_transfer_func_id);
-
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 256, 0, GL_RGB, GL_FLOAT, data);
+	create_texture_1D(m_transfer_func_id, 256, &data[0][0]);
 }
 
 void VolumeShader::slice(const glm::vec3 &view_dir)

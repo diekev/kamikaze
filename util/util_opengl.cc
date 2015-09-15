@@ -51,6 +51,19 @@ void gl_check_errors()
 	}
 }
 
+void create_texture_1D(GLuint &texture_id, const int size, GLfloat *data)
+{
+	glGenTextures(1, &texture_id);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_1D, texture_id);
+
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, size, 0, GL_RGB, GL_FLOAT, data);
+}
+
 void create_texture_3D(GLuint &texture_id, GLfloat *data, const int X_DIM, const int Y_DIM, const int Z_DIM)
 {
 	Timer(__func__);
