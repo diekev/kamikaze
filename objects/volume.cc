@@ -48,6 +48,24 @@ void max_leaf_per_axis(const int dim[3], int voxel_per_leaf, int num_leaf, int r
 	result[2] = num_leaf / (result[0] * result[1]) + 1;
 }
 
+void create_texture_3D(GLuint &texture_id, GLfloat *data, const int X_DIM, const int Y_DIM, const int Z_DIM)
+{
+	glGenTextures(1, &texture_id);
+	glBindTexture(GL_TEXTURE_3D, texture_id);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_BASE_LEVEL, 0);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 4);
+
+	Timer("Move data to GPU")
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RED, X_DIM, Y_DIM, Z_DIM, 0, GL_RED, GL_FLOAT, data);
+
+	glGenerateMipmap(GL_TEXTURE_3D);
+}
+
 int evalLeafBBoxAndCount(const openvdb::FloatTree &tree, Coord &min, Coord &max)
 {
 	typedef openvdb::FloatTree::LeafNodeType LeafType;
@@ -347,20 +365,7 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &
 		convert_grid(*grid, data, bbox_min, bbox_max, m_scale);
 		texture_from_leaf(*grid);
 
-		glGenTextures(1, &m_texture_id);
-		glBindTexture(GL_TEXTURE_3D, m_texture_id);
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_BASE_LEVEL, 0);
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 4);
-
-		Timer("Move data to GPU")
-		glTexImage3D(GL_TEXTURE_3D, 0, GL_RED, X_DIM, Y_DIM, Z_DIM, 0, GL_RED, GL_FLOAT, data);
-
-		glGenerateMipmap(GL_TEXTURE_3D);
+		create_texture_3D(m_texture_id, data, X_DIM, Y_DIM, Z_DIM);
 
 		delete [] data;
 		return true;
