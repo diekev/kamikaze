@@ -39,7 +39,7 @@
 
 const float EPSILON = 0.0001f;
 
-void max_leaf_per_axis(int dim[3], int voxel_per_leaf, int result[3])
+void max_leaf_per_axis(const int dim[3], int voxel_per_leaf, int num_leaf, int result[3])
 {
 	// x axis
 	result[0] = (dim[0] - (dim[0] % voxel_per_leaf)) / voxel_per_leaf;
@@ -47,19 +47,16 @@ void max_leaf_per_axis(int dim[3], int voxel_per_leaf, int result[3])
 	// y axis
 	result[1] = (dim[1] - (dim[1] % voxel_per_leaf)) / voxel_per_leaf;
 
-	// z axis // z = num_leaf_in_tree / (x * y) + 1
-	auto resolution = dim[0] * dim[1] * dim[2];
-	auto difference = result[0] * result[1];
-
-	auto temp_max = resolution / difference;
-
-	result[2] = (temp_max - (temp_max % voxel_per_leaf)) / voxel_per_leaf;
-	assert(difference * result[2] > resolution / 256);
+	// z axis
+	result[2] = num_leaf / (result[0] * result[1]) + 1;
 }
 
 void texture_from_leaf(const openvdb::FloatGrid &grid)
 {
+	Timer(__func__);
+
 	using namespace openvdb;
+	using namespace openvdb::math;
 
 	typedef FloatTree::LeafNodeType LeafType;
 	typedef FloatGrid::ValueType ValueType;
@@ -67,18 +64,86 @@ void texture_from_leaf(const openvdb::FloatGrid &grid)
 	const int leafDim = LeafType::DIM;
 	FloatTree::LeafCIter leaf_iter = grid.tree().cbeginLeaf();
 
+	// compute number of leaves per axis for the index texture
+
+	CoordBBox bbox = grid.evalActiveVoxelBoundingBox();
+	Coord bbox_min = bbox.min();
+	Coord bbox_max = bbox.max();
+
+	auto extent = bbox_max - bbox_min;
+
+	int leaf_count(0);
+	for (; leaf_iter; ++leaf_iter) {
+		++leaf_count;
+	}
+
+	Vec3i leaf_per_axis;
+	max_leaf_per_axis(extent.asPointer(), leafDim, leaf_count, leaf_per_axis.asPointer());
+
+	Vec3i index_texture_res(extent[0] >> 3, extent[1] >> 3, extent[2] >> 3);
+	auto leaf_slab_size = index_texture_res[1] * index_texture_res[2];
+	auto index_texture_size = index_texture_res[0] * leaf_slab_size;
+
+	assert(index_texture_size > 0);
+
+	std::vector<int> index_texture;
+	index_texture.resize(index_texture_size, int(-1));
+//	glm::vec3 *index_texture = new glm::vec3[index_texture_size];
+
+//	for (int i(0); i < index_texture_size; ++i) {
+//		index_texture[i] = glm::vec3(0);
+//	}
+
 	GLint xoffset = 0, yoffset = 0, zoffset = 0;
+	int duplicates(0);
+	leaf_iter = grid.tree().cbeginLeaf();
+//	Coord leaf_co_min = leaf_iter.getLeaf()->origin();
 
 	for (; leaf_iter; ++leaf_iter) {
-		const ValueType *data = leaf_iter.getLeaf()->buffer().data();
+		const LeafType &leaf = *leaf_iter.getLeaf();
+//		const ValueType *data = leaf.buffer().data();
 
-		glTexSubImage3D(GL_TEXTURE_3D, 0,
-		                xoffset, yoffset, zoffset,
-		                leafDim, leafDim, leafDim,
-		                GL_RED, GL_FLOAT, data);
+//		glTexSubImage3D(GL_TEXTURE_3D, 0,
+//		                xoffset, yoffset, zoffset,
+//		                leafDim, leafDim, leafDim,
+//		                GL_RED, GL_FLOAT, data);
 
+		// TODO: normalize co.
+		const Coord co = leaf.origin();
+		//int index = (co.x() >> 3) + (co.y() >> 3) * index_texture_res[0] + (co.z() >> 3) * leaf_slab_size;
+		int index = LeafType::coordToOffset(co);
+
+//		if (index >= index_texture_size) {
+//			printf("Index too big: %d, coord: %d, %d, %d, num leaves: %d, tex size: %d\n",
+//			       index, co.x(), co.y(), co.z(), leaf_count, index_texture_size);
+//			printf("BBox min: %d, %d, %d.\n", bbox_min.x(), bbox_min.y(), bbox_min.z());
+//			printf("leaf_co_min: %d, %d, %d.\n", leaf_co_min.x(), leaf_co_min.y(), leaf_co_min.z());
+//		}
+
+//		if (index < 0) {
+//			printf("Index too small: %d, coord: %d, %d, %d, num leaves: %d, tex size: %d\n",
+//			       index, co.x(), co.y(), co.z(), leaf_count, index_texture_size);
+//			printf("BBox min: %d, %d, %d.\n", bbox_min.x(), bbox_min.y(), bbox_min.z());
+//			printf("leaf_co_min: %d, %d, %d.\n", leaf_co_min.x(), leaf_co_min.y(), leaf_co_min.z());
+//		}
+
+		//index_texture[index] = glm::ivec3(xoffset, yoffset, zoffset);
+		index_texture[duplicates++] = index;
+
+		// TODO
+		xoffset += leafDim;
+		yoffset += leafDim;
 		zoffset += leafDim;
+
+		xoffset %= leaf_per_axis[0] * leafDim;
+		yoffset %= leaf_per_axis[1] * leafDim;
 	}
+
+	for (const auto index : index_texture)
+		printf("Index: %d\n", index);
+	//printf("%d duplicates, total leaves: %d!\n", duplicates, leaf_count);
+
+//	delete [] index_texture;
 }
 
 void convert_grid(const openvdb::FloatGrid &grid, GLfloat *data,
@@ -271,6 +336,7 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &
 		/* Copy data */
 		GLfloat *data = new GLfloat[X_DIM * Y_DIM * Z_DIM];
 		convert_grid(*grid, data, bbox_min, bbox_max, m_scale);
+		texture_from_leaf(*grid);
 
 		glGenTextures(1, &m_texture_id);
 		glBindTexture(GL_TEXTURE_3D, m_texture_id);
