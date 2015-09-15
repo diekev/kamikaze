@@ -53,14 +53,15 @@ void max_leaf_per_axis(const int dim[3], int voxel_per_leaf, int num_leaf, int r
 	result[2] = num_leaf / (result[0] * result[1]) + 1;
 }
 
-int evalLeafBBoxAndCount(openvdb::FloatTree::LeafCIter leaf_iter, Coord &min, Coord &max)
+int evalLeafBBoxAndCount(const openvdb::FloatTree &tree, Coord &min, Coord &max)
 {
 	typedef openvdb::FloatTree::LeafNodeType LeafType;
+	typedef openvdb::FloatTree::LeafCIter LeafCIterType;
 
 	const int DIM = LeafType::DIM;
 	int leaf_count(0);
 
-	for (; leaf_iter; ++leaf_iter) {
+	for (LeafCIterType leaf_iter = tree.cbeginLeaf() ; leaf_iter; ++leaf_iter) {
 		++leaf_count;
 
 		const LeafType &leaf = *leaf_iter.getLeaf();
@@ -98,7 +99,7 @@ void texture_from_leaf(const openvdb::FloatGrid &grid)
 	Coord bbox_min(std::numeric_limits<Coord::ValueType>::max());
 	Coord bbox_max(std::numeric_limits<Coord::ValueType>::min());
 
-	int leaf_count = evalLeafBBoxAndCount(leaf_iter, bbox_min, bbox_max);
+	int leaf_count = evalLeafBBoxAndCount(grid.tree(), bbox_min, bbox_max);
 	auto leaf_bbox_extent = bbox_max - bbox_min;
 
 #ifndef NDEBUG
