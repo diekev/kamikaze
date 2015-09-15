@@ -38,6 +38,8 @@
 #include "cube.h"
 #include "volume.h"
 
+#define TEXTURE_ATLAS
+
 const float EPSILON = 0.0001f;
 
 using openvdb::math::Coord;
@@ -57,16 +59,15 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id)
 	using namespace openvdb::math;
 
 	typedef FloatTree::LeafNodeType LeafType;
+	typedef FloatTree::LeafCIter LeafCIterType;
 	typedef FloatGrid::ValueType ValueType;
-	typedef openvdb::FloatTree::LeafCIter LeafCIterType;
 
 	const int DIM = LeafType::DIM;
 	const int LOG2DIM = LeafType::LOG2DIM;
 
 	/* compute number of leaves per axis there will be in the packed texture */
 
-	Coord bbox_min(std::numeric_limits<Coord::ValueType>::max());
-	Coord bbox_max(std::numeric_limits<Coord::ValueType>::min());
+	Coord bbox_min, bbox_max;
 	int leaf_count = evalLeafBBoxAndCount(grid.tree(), bbox_min, bbox_max);
 	auto leaf_bbox_extent = bbox_max - bbox_min;
 
@@ -88,7 +89,7 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id)
 	assert(index_texture_size > 0);
 
 	Vec3i packed_texture_res(leaf_per_axis * 8);
-	create_texture_3D(texture_id, nullptr, packed_texture_res[0], packed_texture_res[1], packed_texture_res[2]);
+	create_texture_3D(texture_id, packed_texture_res.asPointer(), nullptr);
 
 	std::vector<glm::ivec3> index_texture;
 	index_texture.resize(index_texture_size, glm::ivec3(-1));
@@ -246,12 +247,6 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &
 		Coord bbox_min = bbox.min();
 		Coord bbox_max = bbox.max();
 
-		/* Get resolution */
-		auto extent = bbox_max - bbox_min;
-		const int X_DIM = extent[0];
-		const int Y_DIM = extent[1];
-		const int Z_DIM = extent[2];
-
 		/* Compute grid size */
 		Vec3f min = grid->transform().indexToWorld(bbox_min);
 		Vec3f max = grid->transform().indexToWorld(bbox_max);
@@ -266,20 +261,24 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &
 
 		m_bbox = new Cube(m_min, m_max);
 
+#ifdef TEXTURE_ATLAS
+		texture_from_leaf(*grid, m_texture_id);
+#else
+		/* Get resolution */
+		auto extent = bbox_max - bbox_min;
+		GLfloat *data = new GLfloat[extent[0] * extent[1] * extent[2]];
+
+		convert_grid(*grid, data, bbox_min, bbox_max, m_scale);
+		create_texture_3D(m_texture_id, extent.asPointer(), data);
+
+		delete [] data;
+#endif
+
 #if 0
 		printf("Dimensions: %d, %d, %d\n", X_DIM, Y_DIM, Z_DIM);
 		printf("Min: %f, %f, %f\n", min[0], min[1], min[2]);
 		printf("Max: %f, %f, %f\n", max[0], max[1], max[2]);
 #endif
-
-		/* Copy data */
-		GLfloat *data = new GLfloat[X_DIM * Y_DIM * Z_DIM];
-		//convert_grid(*grid, data, bbox_min, bbox_max, m_scale);
-		texture_from_leaf(*grid, m_texture_id);
-
-		//create_texture_3D(m_texture_id, data, X_DIM, Y_DIM, Z_DIM);
-
-		delete [] data;
 		return true;
 	}
 

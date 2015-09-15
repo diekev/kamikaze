@@ -64,7 +64,7 @@ void create_texture_1D(GLuint &texture_id, const int size, GLfloat *data)
 	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, size, 0, GL_RGB, GL_FLOAT, data);
 }
 
-void create_texture_3D(GLuint &texture_id, GLfloat *data, const int X_DIM, const int Y_DIM, const int Z_DIM)
+void create_texture_3D(GLuint &texture_id, const int size[3], GLfloat *data)
 {
 	Timer(__func__);
 
@@ -78,7 +78,7 @@ void create_texture_3D(GLuint &texture_id, GLfloat *data, const int X_DIM, const
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_BASE_LEVEL, 0);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 4);
 
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_RED, X_DIM, Y_DIM, Z_DIM, 0, GL_RED, GL_FLOAT, data);
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RED, size[0], size[1], size[2], 0, GL_RED, GL_FLOAT, data);
 
 	glGenerateMipmap(GL_TEXTURE_3D);
 }

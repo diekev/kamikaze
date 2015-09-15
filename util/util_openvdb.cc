@@ -38,6 +38,9 @@ int evalLeafBBoxAndCount(const openvdb::FloatTree &tree, Coord &min, Coord &max)
 	const int DIM = LeafType::DIM;
 	int leaf_count(0);
 
+	min = Coord(std::numeric_limits<Coord::ValueType>::max());
+	max = Coord(std::numeric_limits<Coord::ValueType>::min());
+
 	for (LeafCIterType leaf_iter = tree.cbeginLeaf(); leaf_iter; ++leaf_iter) {
 		++leaf_count;
 

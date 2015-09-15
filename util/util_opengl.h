@@ -26,4 +26,4 @@
 void gl_check_errors();
 
 void create_texture_1D(GLuint &texture_id, const int size, GLfloat *data);
-void create_texture_3D(GLuint &texture_id, GLfloat *data, const int X_DIM, const int Y_DIM, const int Z_DIM);
+void create_texture_3D(GLuint &texture_id, const int size[3], GLfloat *data);
