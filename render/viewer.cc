@@ -7,10 +7,11 @@
 
 #include "GLSLShader.h"
 
+#include "objects/grid.h"
+#include "objects/volume.h"
+
 #include "camera.h"
-#include "grid.h"
 #include "viewer.h"
-#include "volume.h"
 
 Viewer::Viewer()
     : m_mouse_state(0)

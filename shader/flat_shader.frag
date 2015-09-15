@@ -1,9 +1,8 @@
 #version 330 core
 
-layout(location = 0) out vec4 vFragColor;	//fragment shader output
+layout(location = 0) out vec4 fragment_color;
 
 void main()
 {
-	//return the constant white colour as shader output
-	vFragColor = vec4(1,1,1,1);
+	fragment_color = vec4(1.0, 1.0, 1.0, 1.0);
 }

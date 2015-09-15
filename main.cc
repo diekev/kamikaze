@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-#include "viewer.h"
+#include "render/viewer.h"
 
 namespace {
 

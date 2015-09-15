@@ -19,28 +19,40 @@ OBJ_DIR = bin
 LIB_DIR = -L/usr/lib -L/opt/lib/openvdb/lib -L/opt/lib/openexr/lib -L/opt/lib/blosc/lib
 INC_DIR = -I/usr/include -I/opt/lib/openvdb/include -I/opt/lib/openexr/include
 
-SRC = main.cc camera.cc GLSLShader.cc grid.cc utils.cc viewer.cc volume.cc
+SRC = \
+	main.cc \
+	objects/cube.cc \
+	objects/grid.cc \
+	objects/volume.cc \
+	render/camera.cc \
+	render/GLSLShader.cc \
+	render/viewer.cc \
+	util/utils.cc
+
 OBJECTS = $(SRC:%.cc=$(OBJ_DIR)/%.o)
 EXEC = ikirin
 
 all: init $(OBJECTS) $(EXEC)
 
 $(EXEC): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) $(LIB_DIR) -o $@ $^ $(LDLIBS)
+	$(CXX) $(CXXFLAGS) -I . $(LIB_DIR) -o $@ $^ $(LDLIBS)
 
 $(OBJ_DIR)/%.o: %.cc
-	$(CXX) $(CXXFLAGS) $(INC_DIR) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -I . $(INC_DIR) -c $< -o $@
 
 depend: $(OBJ_DIR)/.depend
 
 $(OBJ_DIR)/.depend: $(SRC)
 	@rm -f $(OBJ_DIR)/.depend
-	$(CXX) $(CXXFLAGS) -MM $^>>$(OBJ_DIR)/.depend
+	$(CXX) $(CXXFLAGS) -I . -MM $^>>$(OBJ_DIR)/.depend
 
 include $(OBJ_DIR)/.depend
 
 init:
 	@mkdir -p $(OBJ_DIR)
+	@mkdir -p $(OBJ_DIR)/objects
+	@mkdir -p $(OBJ_DIR)/render
+	@mkdir -p $(OBJ_DIR)/util
 
 clean:
 	rm $(OBJECTS) $(EXEC)
