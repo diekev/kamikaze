@@ -43,13 +43,8 @@ using openvdb::math::Coord;
 
 void max_leaf_per_axis(const int dim[3], int voxel_per_leaf, int num_leaf, int result[3])
 {
-	// x axis
 	result[0] = (dim[0] - (dim[0] % voxel_per_leaf)) / voxel_per_leaf;
-
-	// y axis
 	result[1] = (dim[1] - (dim[1] % voxel_per_leaf)) / voxel_per_leaf;
-
-	// z axis
 	result[2] = num_leaf / (result[0] * result[1]) + 1;
 }
 
@@ -61,7 +56,7 @@ int evalLeafBBoxAndCount(const openvdb::FloatTree &tree, Coord &min, Coord &max)
 	const int DIM = LeafType::DIM;
 	int leaf_count(0);
 
-	for (LeafCIterType leaf_iter = tree.cbeginLeaf() ; leaf_iter; ++leaf_iter) {
+	for (LeafCIterType leaf_iter = tree.cbeginLeaf(); leaf_iter; ++leaf_iter) {
 		++leaf_count;
 
 		const LeafType &leaf = *leaf_iter.getLeaf();
@@ -88,25 +83,18 @@ void texture_from_leaf(const openvdb::FloatGrid &grid)
 
 	typedef FloatTree::LeafNodeType LeafType;
 	typedef FloatGrid::ValueType ValueType;
+	typedef openvdb::FloatTree::LeafCIter LeafCIterType;
 
 	const int DIM = LeafType::DIM;
 	const int LOG2DIM = LeafType::LOG2DIM;
-	FloatTree::LeafCIter leaf_iter = grid.tree().cbeginLeaf();
 
-	// compute number of leaves per axis for the index texture
+	/* compute number of leaves per axis there will be in the packed texture */
 
-	/* Leaves bbox might be different than the actual bbox of the volume */
 	Coord bbox_min(std::numeric_limits<Coord::ValueType>::max());
 	Coord bbox_max(std::numeric_limits<Coord::ValueType>::min());
-
 	int leaf_count = evalLeafBBoxAndCount(grid.tree(), bbox_min, bbox_max);
 	auto leaf_bbox_extent = bbox_max - bbox_min;
 
-#ifndef NDEBUG
-	printf("Leaf BBox min: %d, %d, %d.\n", bbox_min.x(), bbox_min.y(), bbox_min.z());
-#endif
-
-	/* Get number of leaves per axis there will be in the packed texture */
 	Vec3i leaf_per_axis;
 	max_leaf_per_axis(leaf_bbox_extent.asPointer(), DIM, leaf_count, leaf_per_axis.asPointer());
 
@@ -120,7 +108,9 @@ void texture_from_leaf(const openvdb::FloatGrid &grid)
 	auto leaf_slab_size = index_texture_res[0] * index_texture_res[1];
 	auto index_texture_size = index_texture_res[2] * leaf_slab_size;
 
+#ifndef NDEBUG
 	printf("Index Texture Res: %d, %d, %d.\n", index_texture_res.x(), index_texture_res.y(), index_texture_res.z());
+#endif
 
 	assert(index_texture_size > 0);
 
@@ -128,9 +118,8 @@ void texture_from_leaf(const openvdb::FloatGrid &grid)
 	index_texture.resize(index_texture_size, glm::ivec3(-1));
 
 	GLint xoffset = 0, yoffset = 0, zoffset = 0;
-	leaf_iter = grid.tree().cbeginLeaf();
 
-	for (; leaf_iter; ++leaf_iter) {
+	for (LeafCIterType leaf_iter = grid.tree().cbeginLeaf(); leaf_iter; ++leaf_iter) {
 		const LeafType &leaf = *leaf_iter.getLeaf();
 //		const ValueType *data = leaf.buffer().data();
 
