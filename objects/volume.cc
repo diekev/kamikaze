@@ -29,9 +29,10 @@
 #define DWREAL_IS_DOUBLE 0
 #include <openvdb/openvdb.h>
 #include <openvdb/tools/GridTransformer.h>
-#include <openvdb/util/PagedArray.h>
 
 #include "render/GLSLShader.h"
+#include "util/util_opengl.h"
+#include "util/util_openvdb.h"
 #include "util/utils.h"
 
 #include "cube.h"
@@ -46,73 +47,6 @@ void max_leaf_per_axis(const int dim[3], int voxel_per_leaf, int num_leaf, int r
 	result[0] = (dim[0] - (dim[0] % voxel_per_leaf)) / voxel_per_leaf;
 	result[1] = (dim[1] - (dim[1] % voxel_per_leaf)) / voxel_per_leaf;
 	result[2] = num_leaf / (result[0] * result[1]) + 1;
-}
-
-void create_texture_3D(GLuint &texture_id, GLfloat *data, const int X_DIM, const int Y_DIM, const int Z_DIM)
-{
-	glGenTextures(1, &texture_id);
-	glBindTexture(GL_TEXTURE_3D, texture_id);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_BASE_LEVEL, 0);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 4);
-
-	Timer("Move data to GPU")
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_RED, X_DIM, Y_DIM, Z_DIM, 0, GL_RED, GL_FLOAT, data);
-
-	glGenerateMipmap(GL_TEXTURE_3D);
-}
-
-int evalLeafBBoxAndCount(const openvdb::FloatTree &tree, Coord &min, Coord &max)
-{
-	typedef openvdb::FloatTree::LeafNodeType LeafType;
-	typedef openvdb::FloatTree::LeafCIter LeafCIterType;
-
-	const int DIM = LeafType::DIM;
-	int leaf_count(0);
-
-	for (LeafCIterType leaf_iter = tree.cbeginLeaf(); leaf_iter; ++leaf_iter) {
-		++leaf_count;
-
-		const LeafType &leaf = *leaf_iter.getLeaf();
-		const Coord co = leaf.origin();
-
-		min[0] = std::min(min[0], co[0]);
-		min[1] = std::min(min[1], co[1]);
-		min[2] = std::min(min[2], co[2]);
-
-		max[0] = std::max(max[0], co[0] + DIM);
-		max[1] = std::max(max[1], co[1] + DIM);
-		max[2] = std::max(max[2], co[2] + DIM);
-	}
-
-	return leaf_count;
-}
-
-void gl_check_errors()
-{
-	GLenum error = glGetError();
-	if (error == GL_NO_ERROR) {
-		return;
-	}
-
-	switch (error) {
-		case GL_INVALID_ENUM:
-			std::cerr << "GL Invalid Enum Error\n";
-			break;
-		case GL_INVALID_VALUE:
-			std::cerr << "GL Invalid Value Error\n";
-			break;
-		case GL_INVALID_OPERATION:
-			std::cerr << "GL Invalid Operation Error\n";
-			break;
-		case GL_OUT_OF_MEMORY:
-			std::cerr << "GL Invalid Out of Memory Error\n";
-			break;
-	}
 }
 
 void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id)
@@ -201,58 +135,6 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id)
 			}
 		}
 	}
-}
-
-void convert_grid(const openvdb::FloatGrid &grid, GLfloat *data,
-                  const openvdb::Coord &min, const openvdb::Coord &max, float &scale)
-{
-	Timer(__func__);
-
-	using namespace openvdb;
-
-	FloatGrid::ConstAccessor main_acc = grid.getAccessor();
-	auto extent = max - min;
-	auto slabsize = extent[0] * extent[1];
-	util::PagedArray<float> min_array, max_array;
-
-	tbb::parallel_for(tbb::blocked_range<int>(min[2], max[2]),
-	        [&](const tbb::blocked_range<int> &r)
-	{
-		FloatGrid::ConstAccessor acc(main_acc);
-		math::Coord ijk;
-		int &x = ijk[0], &y = ijk[1], &z = ijk[2];
-		z = r.begin();
-
-		auto min_value = std::numeric_limits<float>::max();
-		auto max_value = std::numeric_limits<float>::min();
-
-		/* Subtract min z coord so that 'index' always start at zero or above. */
-		auto index = (z - min[2]) * slabsize;
-
-		for (auto e = r.end(); z < e; ++z) {
-			for (y = min[1]; y < max[1]; ++y) {
-				for (x = min[0]; x < max[0]; ++x, ++index) {
-					auto value = acc.getValue(ijk);
-
-					if (value < min_value) {
-						min_value = value;
-					}
-					else if (value > max_value) {
-						max_value = value;
-					}
-
-					data[index] = value;
-				}
-			}
-		}
-
-		min_array.push_back(min_value);
-		max_array.push_back(max_value);
-	});
-
-	auto min_value = std::min_element(min_array.begin(), min_array.end());
-	auto max_value = std::max_element(max_array.begin(), max_array.end());
-	scale = 1.0f / (*max_value - *min_value);
 }
 
 int axis_dominant_v3_single(const glm::vec3 &vec)

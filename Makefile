@@ -27,6 +27,8 @@ SRC = \
 	render/camera.cc \
 	render/GLSLShader.cc \
 	render/viewer.cc \
+	util/util_opengl.cc \
+	util/util_openvdb.cc \
 	util/utils.cc
 
 OBJECTS = $(SRC:%.cc=$(OBJ_DIR)/%.o)
