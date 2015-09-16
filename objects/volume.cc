@@ -28,7 +28,6 @@
 
 #define DWREAL_IS_DOUBLE 0
 #include <openvdb/openvdb.h>
-#include <openvdb/tools/GridTransformer.h>
 
 #include "render/GLSLShader.h"
 #include "util/util_opengl.h"
@@ -37,10 +36,6 @@
 
 #include "cube.h"
 #include "volume.h"
-
-#define TEXTURE_ATLAS
-
-const float EPSILON = 0.0001f;
 
 using openvdb::math::Coord;
 
@@ -82,10 +77,6 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuin
 	auto leaf_slab_size = index_texture_res[0] * index_texture_res[1];
 	auto index_texture_size = index_texture_res[2] * leaf_slab_size;
 
-#ifndef NDEBUG
-	printf("Index Texture Res: %d, %d, %d.\n", index_texture_res.x(), index_texture_res.y(), index_texture_res.z());
-#endif
-
 	assert(index_texture_size > 0);
 
 	Vec3i packed_texture_res(leaf_per_axis * 8);
@@ -110,18 +101,6 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuin
 		const Coord &co = (leaf.origin() - bbox_min) >> LOG2DIM;
 		int index = co.x() + co.y() * index_texture_res[0] + co.z() * leaf_slab_size;
 
-#ifndef NDEBUG
-		if (index >= index_texture_size) {
-			printf("Index too big: %d, coord: %d, %d, %d, num leaves: %d, tex size: %d\n",
-			       index, co.x(), co.y(), co.z(), leaf_count, index_texture_size);
-		}
-
-		if (index < 0) {
-			printf("Index too small: %d, coord: %d, %d, %d, num leaves: %d, tex size: %d\n",
-			       index, co.x(), co.y(), co.z(), leaf_count, index_texture_size);
-		}
-#endif
-
 		index_texture[index] = glm::vec3(xoffset, yoffset, zoffset);
 
 		xoffset += DIM;
@@ -139,16 +118,6 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuin
 
 	create_texture_3D(index_texture_id, index_texture_res.asPointer(), 3, &index_texture[0][0]);
 	gl_check_errors();
-}
-
-int axis_dominant_v3_single(const glm::vec3 &vec)
-{
-	const float x = glm::abs(vec[0]);
-	const float y = glm::abs(vec[1]);
-	const float z = glm::abs(vec[2]);
-	return ((x > y) ?
-	       ((x > z) ? 0 : 2) :
-	       ((y > z) ? 1 : 2));
 }
 
 VolumeShader::VolumeShader()
@@ -193,32 +162,6 @@ bool VolumeShader::init(const std::string &filename, std::ostream &os)
 	}
 
 	return false;
-}
-
-openvdb::FloatGrid::Ptr transform_grid(const openvdb::FloatGrid &grid,
-                                       const openvdb::Vec3s &rot,
-                                       const openvdb::Vec3s &scale,
-                                       const openvdb::Vec3s &translate,
-                                       const openvdb::Vec3s &pivot)
-{
-	/* make sure the new grid has the same transform and metadatas
-	 * as the old. */
-	openvdb::FloatGrid::Ptr xformed = grid.copy(openvdb::CopyPolicy::CP_NEW);
-
-	openvdb::Mat4R mat(openvdb::Mat4R::identity());
-	mat.preTranslate(pivot);
-	mat.preRotate(openvdb::math::X_AXIS, rot[0]);
-	mat.preRotate(openvdb::math::Y_AXIS, rot[1]);
-	mat.preRotate(openvdb::math::Z_AXIS, rot[2]);
-    mat.preScale(scale);
-    mat.preTranslate(-pivot);
-    mat.preTranslate(translate);
-
-	openvdb::tools::GridTransformer transformer(mat);
-	transformer.transformGrid<openvdb::tools::PointSampler>(grid, *xformed);
-	openvdb::tools::prune(xformed->tree());
-
-	return xformed;
 }
 
 bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &os)
@@ -281,18 +224,7 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &
 
 		m_bbox = new Cube(m_min, m_max);
 
-#ifdef TEXTURE_ATLAS
 		texture_from_leaf(*grid, m_texture_id, m_index_texture_id);
-#else
-		/* Get resolution */
-		auto extent = bbox_max - bbox_min;
-		GLfloat *data = new GLfloat[extent[0] * extent[1] * extent[2]];
-
-		convert_grid(*grid, data, bbox_min, bbox_max, m_scale);
-		create_texture_3D(m_texture_id, extent.asPointer(), data);
-
-		delete [] data;
-#endif
 
 #if 0
 		printf("Dimensions: %d, %d, %d\n", X_DIM, Y_DIM, Z_DIM);
@@ -400,7 +332,7 @@ void VolumeShader::loadTransferFunction()
 
 void VolumeShader::slice(const glm::vec3 &view_dir)
 {
-	auto axis = axis_dominant_v3_single(view_dir);
+	auto axis = axis_dominant_v3_single(glm::value_ptr(view_dir));
 
 	if (m_axis == axis) {
 		return;

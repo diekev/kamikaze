@@ -50,3 +50,5 @@ public:
 
 #define Timer(x) \
 	ScopeTimer func(x);
+
+int axis_dominant_v3_single(const float vec[3]);

@@ -23,6 +23,7 @@
 
 #define DWREAL_IS_DOUBLE 0
 #include <openvdb/openvdb.h>
+#include <openvdb/tools/GridTransformer.h>
 #include <openvdb/util/PagedArray.h>
 
 #include "util_openvdb.h"
@@ -108,4 +109,30 @@ void convert_grid(const openvdb::FloatGrid &grid, float *data, const openvdb::Co
 	auto min_value = std::min_element(min_array.begin(), min_array.end());
 	auto max_value = std::max_element(max_array.begin(), max_array.end());
 	scale = 1.0f / (*max_value - *min_value);
+}
+
+openvdb::FloatGrid::Ptr transform_grid(const openvdb::FloatGrid &grid,
+                                       const openvdb::Vec3s &rot,
+                                       const openvdb::Vec3s &scale,
+                                       const openvdb::Vec3s &translate,
+                                       const openvdb::Vec3s &pivot)
+{
+	/* make sure the new grid has the same transform and metadatas
+	 * as the old. */
+	openvdb::FloatGrid::Ptr xformed = grid.copy(openvdb::CopyPolicy::CP_NEW);
+
+	openvdb::Mat4R mat(openvdb::Mat4R::identity());
+	mat.preTranslate(pivot);
+	mat.preRotate(openvdb::math::X_AXIS, rot[0]);
+	mat.preRotate(openvdb::math::Y_AXIS, rot[1]);
+	mat.preRotate(openvdb::math::Z_AXIS, rot[2]);
+	mat.preScale(scale);
+	mat.preTranslate(-pivot);
+	mat.preTranslate(translate);
+
+	openvdb::tools::GridTransformer transformer(mat);
+	transformer.transformGrid<openvdb::tools::PointSampler>(grid, *xformed);
+	openvdb::tools::prune(xformed->tree());
+
+	return xformed;
 }

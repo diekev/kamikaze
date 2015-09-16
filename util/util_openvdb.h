@@ -27,3 +27,9 @@ int evalLeafBBoxAndCount(const openvdb::FloatTree &tree, openvdb::math::Coord &m
 
 void convert_grid(const openvdb::FloatGrid &grid, float *data,
                   const openvdb::Coord &min, const openvdb::Coord &max, float &scale);
+
+openvdb::FloatGrid::Ptr transform_grid(const openvdb::FloatGrid &grid,
+                                       const openvdb::Vec3s &rot,
+                                       const openvdb::Vec3s &scale,
+                                       const openvdb::Vec3s &translate,
+                                       const openvdb::Vec3s &pivot);
