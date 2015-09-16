@@ -320,6 +320,7 @@ void VolumeShader::loadVolumeShader()
 		m_shader.addUniform("MVP");
 		m_shader.addUniform("offset");
 		m_shader.addUniform("volume");
+		m_shader.addUniform("coordinates");
 		m_shader.addUniform("lut");
 		m_shader.addUniform("use_lut");
 		m_shader.addUniform("scale");
@@ -327,6 +328,7 @@ void VolumeShader::loadVolumeShader()
 
 		glUniform1i(m_shader("volume"), 0);
 		glUniform1i(m_shader("lut"), 1);
+		glUniform1i(m_shader("coordinates"), 2);
 
 		glUniform3fv(m_shader("offset"), 1, &m_min[0]);
 		glUniform3fv(m_shader("inv_size"), 1, &m_inv_size[0]);
@@ -468,6 +470,7 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 	{
 		texture_bind(GL_TEXTURE_3D, m_texture_id, 0);
 		texture_bind(GL_TEXTURE_1D, m_transfer_func_id, 1);
+		texture_bind(GL_TEXTURE_3D, m_index_texture_id, 2);
 
 		glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 		glUniform1i(m_shader("use_lut"), m_use_lut);
@@ -475,6 +478,7 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 
 		texture_unbind(GL_TEXTURE_3D, 0);
 		texture_unbind(GL_TEXTURE_1D, 1);
+		texture_unbind(GL_TEXTURE_3D, 2);
 	}
 	m_shader.unUse();
 
