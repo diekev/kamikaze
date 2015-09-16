@@ -143,6 +143,32 @@ bool VolumeShader::init(const std::string &filename, std::ostream &os)
 	return false;
 }
 
+openvdb::FloatGrid::Ptr transform_grid(const openvdb::FloatGrid &grid,
+                                       const openvdb::Vec3s &rot,
+                                       const openvdb::Vec3s &scale,
+                                       const openvdb::Vec3s &translate,
+                                       const openvdb::Vec3s &pivot)
+{
+	/* make sure the new grid has the same transform and metadatas
+	 * as the old. */
+	openvdb::FloatGrid::Ptr xformed = grid.copy(openvdb::CopyPolicy::CP_NEW);
+
+	openvdb::Mat4R mat(openvdb::Mat4R::identity());
+	mat.preTranslate(pivot);
+	mat.preRotate(openvdb::math::X_AXIS, rot[0]);
+	mat.preRotate(openvdb::math::Y_AXIS, rot[1]);
+	mat.preRotate(openvdb::math::Z_AXIS, rot[2]);
+    mat.preScale(scale);
+    mat.preTranslate(-pivot);
+    mat.preTranslate(translate);
+
+	openvdb::tools::GridTransformer transformer(mat);
+	transformer.transformGrid<openvdb::tools::PointSampler>(grid, *xformed);
+	openvdb::tools::prune(xformed->tree());
+
+	return xformed;
+}
+
 bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &os)
 {
 	using namespace openvdb;
@@ -180,19 +206,8 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &
 			/* If the grid comes from Blender (Z-up), rotate it so it is Y-up */
 			if (creator == "Blender/OpenVDBWriter") {
 				Timer("Transform Blender Grid");
-
-				Mat4R rotate_mat(Mat4R::identity());
-				rotate_mat.preRotate(X_AXIS, -M_PI_2);
-
-				/* make sure the new grid has the same transform and metadatas
-				 * as the old. */
-				FloatGrid::Ptr xformed_grid = grid->copy(CopyPolicy::CP_NEW);
-
-				tools::GridTransformer transformer(rotate_mat);
-				transformer.transformGrid<tools::PointSampler>(*grid, *xformed_grid);
-				tools::prune(xformed_grid->tree());
-
-				grid = xformed_grid;
+				grid = transform_grid(*grid, Vec3s(-M_PI_2, 0.0f, 0.0f),
+				                      Vec3s(1.0f), Vec3s(0.0f), Vec3s(0.0f));
 			}
 		}
 
