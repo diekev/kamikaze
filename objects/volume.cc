@@ -106,7 +106,7 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuin
 
 	IndexVolume index_volume(index_volume_res, -1.0f);
 
-	Vec3i packed_volume_res(leaf_per_axis * 8);
+	Vec3i packed_volume_res(leaf_per_axis * DIM);
 
 	create_texture_3D(texture_id, packed_volume_res.asPointer(), 1, nullptr);
 
