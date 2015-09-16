@@ -39,6 +39,36 @@
 
 using openvdb::math::Coord;
 
+class IndexVolume {
+	glm::vec3 *m_data;
+	glm::ivec3 m_res;
+	int m_slab_size;
+
+public:
+	IndexVolume(const glm::ivec3 &res, const float background)
+		: m_data(new glm::vec3[res[0] * res[1] * res[2]])
+	    , m_res(res)
+	    , m_slab_size(res[0] * res[1])
+	{
+		std::fill_n(m_data, res[0] * res[1] * res[2], glm::vec3(background));
+	}
+
+	~IndexVolume()
+	{
+		delete [] m_data;
+	}
+
+	void setValue(int x, int y, int z, const glm::vec3 &value)
+	{
+		m_data[x + y * m_res[0] + z * m_slab_size] = value;
+	}
+
+	glm::vec3 *data() const
+	{
+		return m_data;
+	}
+};
+
 void max_leaf_per_axis(const int dim[3], int voxel_per_leaf, int num_leaf, int result[3])
 {
 	result[0] = (dim[0] - (dim[0] % voxel_per_leaf)) / voxel_per_leaf;
@@ -64,59 +94,53 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuin
 
 	Coord bbox_min, bbox_max;
 	int leaf_count = evalLeafBBoxAndCount(grid.tree(), bbox_min, bbox_max);
-	auto leaf_bbox_extent = bbox_max - bbox_min;
+	auto bbox_extent = bbox_max - bbox_min;
 
 	Vec3i leaf_per_axis;
-	max_leaf_per_axis(leaf_bbox_extent.asPointer(), DIM, leaf_count, leaf_per_axis.asPointer());
+	max_leaf_per_axis(bbox_extent.asPointer(), DIM, leaf_count, leaf_per_axis.asPointer());
 
-	Vec3i index_texture_res(
-	        leaf_bbox_extent[0] >> LOG2DIM,
-	        leaf_bbox_extent[1] >> LOG2DIM,
-	        leaf_bbox_extent[2] >> LOG2DIM);
+	glm::ivec3 index_volume_res(
+	        bbox_extent[0] >> LOG2DIM,
+	        bbox_extent[1] >> LOG2DIM,
+	        bbox_extent[2] >> LOG2DIM);
 
-	auto leaf_slab_size = index_texture_res[0] * index_texture_res[1];
-	auto index_texture_size = index_texture_res[2] * leaf_slab_size;
+	IndexVolume index_volume(index_volume_res, -1.0f);
 
-	assert(index_texture_size > 0);
+	Vec3i packed_volume_res(leaf_per_axis * 8);
 
-	Vec3i packed_texture_res(leaf_per_axis * 8);
-	create_texture_3D(texture_id, packed_texture_res.asPointer(), 1, nullptr);
+	create_texture_3D(texture_id, packed_volume_res.asPointer(), 1, nullptr);
 
-	std::vector<glm::vec3> index_texture;
-	index_texture.resize(index_texture_size, glm::vec3(-1));
-
-	GLint xoffset = 0, yoffset = 0, zoffset = 0;
+	glm::vec3 offset(0);
 
 	for (LeafCIterType leaf_iter = grid.tree().cbeginLeaf(); leaf_iter; ++leaf_iter) {
 		const LeafType &leaf = *leaf_iter.getLeaf();
 		const ValueType *data = leaf.buffer().data();
 
 		glTexSubImage3D(GL_TEXTURE_3D, 0,
-		                xoffset, yoffset, zoffset,
+		                offset.x, offset.y, offset.z,
 		                DIM, DIM, DIM,
 		                GL_RED, GL_FLOAT, data);
 
 		gl_check_errors();
 
 		const Coord &co = (leaf.origin() - bbox_min) >> LOG2DIM;
-		int index = co.x() + co.y() * index_texture_res[0] + co.z() * leaf_slab_size;
+		index_volume.setValue(co.x(), co.y(), co.z(), offset);
 
-		index_texture[index] = glm::vec3(xoffset, yoffset, zoffset);
+		offset[0] += DIM;
 
-		xoffset += DIM;
+		if (offset[0] == packed_volume_res[0]) {
+			offset[0] = 0;
+			offset[1] += DIM;
 
-		if (xoffset == packed_texture_res[0]) {
-			xoffset = 0;
-			yoffset += DIM;
-
-			if (yoffset == packed_texture_res[1]) {
-				yoffset = 0;
-				zoffset += DIM;
+			if (offset[1] == packed_volume_res[1]) {
+				offset[1] = 0;
+				offset[2] += DIM;
 			}
 		}
 	}
 
-	create_texture_3D(index_texture_id, index_texture_res.asPointer(), 3, &index_texture[0][0]);
+	create_texture_3D(index_texture_id, glm::value_ptr(index_volume_res), 3, &index_volume.data()[0][0]);
+
 	gl_check_errors();
 }
 
@@ -252,7 +276,7 @@ void VolumeShader::loadVolumeShader()
 		m_shader.addUniform("MVP");
 		m_shader.addUniform("offset");
 		m_shader.addUniform("volume");
-		m_shader.addUniform("coordinates");
+		m_shader.addUniform("index_volume");
 		m_shader.addUniform("lut");
 		m_shader.addUniform("use_lut");
 		m_shader.addUniform("scale");
@@ -260,7 +284,7 @@ void VolumeShader::loadVolumeShader()
 
 		glUniform1i(m_shader("volume"), 0);
 		glUniform1i(m_shader("lut"), 1);
-		glUniform1i(m_shader("coordinates"), 2);
+		glUniform1i(m_shader("index_volume"), 2);
 
 		glUniform3fv(m_shader("offset"), 1, &m_min[0]);
 		glUniform3fv(m_shader("inv_size"), 1, &m_inv_size[0]);

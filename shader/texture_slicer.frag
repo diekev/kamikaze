@@ -3,14 +3,14 @@
 layout(location = 0) out vec4 fragment_color;
 smooth in vec3 UV;
 uniform sampler3D volume;
+uniform sampler3D index_volume;
 uniform sampler1D lut;
-uniform sampler3D coordinates;
 uniform bool use_lut;
 uniform float scale;
 
 void main()
 {
-	vec3 co = texture(coordinates, UV).rgb;
+	vec3 co = texture(index_volume, UV).rgb;
 	co = co + (UV - fract(UV));
 
 	float density = texture(volume, co).r;

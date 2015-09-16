@@ -117,8 +117,7 @@ openvdb::FloatGrid::Ptr transform_grid(const openvdb::FloatGrid &grid,
                                        const openvdb::Vec3s &translate,
                                        const openvdb::Vec3s &pivot)
 {
-	/* make sure the new grid has the same transform and metadatas
-	 * as the old. */
+	/* make sure the new grid has the same transform and metadatas as the old. */
 	openvdb::FloatGrid::Ptr xformed = grid.copy(openvdb::CopyPolicy::CP_NEW);
 
 	openvdb::Mat4R mat(openvdb::Mat4R::identity());
