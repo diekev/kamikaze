@@ -31,7 +31,7 @@ class Cube;
 class VolumeShader {
 	GLuint m_vao;
 	GLuint m_vbo;
-	GLuint m_texture_id, m_transfer_func_id;
+	GLuint m_texture_id, m_transfer_func_id, m_index_texture_id;
 	GLSLShader m_shader;
 	std::vector<glm::vec3> m_texture_slices;
 

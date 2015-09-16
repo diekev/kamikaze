@@ -51,7 +51,7 @@ void max_leaf_per_axis(const int dim[3], int voxel_per_leaf, int num_leaf, int r
 	result[2] = num_leaf / (result[0] * result[1]) + 1;
 }
 
-void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id)
+void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuint &index_texture_id)
 {
 	Timer(__func__);
 
@@ -89,10 +89,10 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id)
 	assert(index_texture_size > 0);
 
 	Vec3i packed_texture_res(leaf_per_axis * 8);
-	create_texture_3D(texture_id, packed_texture_res.asPointer(), nullptr);
+	create_texture_3D(texture_id, packed_texture_res.asPointer(), 1, nullptr);
 
-	std::vector<glm::ivec3> index_texture;
-	index_texture.resize(index_texture_size, glm::ivec3(-1));
+	std::vector<glm::vec3> index_texture;
+	index_texture.resize(index_texture_size, glm::vec3(-1));
 
 	GLint xoffset = 0, yoffset = 0, zoffset = 0;
 
@@ -122,7 +122,7 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id)
 		}
 #endif
 
-		index_texture[index] = glm::ivec3(xoffset, yoffset, zoffset);
+		index_texture[index] = glm::vec3(xoffset, yoffset, zoffset);
 
 		xoffset += DIM;
 
@@ -136,6 +136,9 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id)
 			}
 		}
 	}
+
+	create_texture_3D(index_texture_id, index_texture_res.asPointer(), 3, &index_texture[0][0]);
+	gl_check_errors();
 }
 
 int axis_dominant_v3_single(const glm::vec3 &vec)
@@ -152,6 +155,7 @@ VolumeShader::VolumeShader()
     : m_vao(0)
     , m_vbo(0)
     , m_texture_id(0)
+    , m_index_texture_id(0)
     , m_bbox(nullptr)
     , m_min(glm::vec3(0.0f))
     , m_max(glm::vec3(0.0f))
@@ -174,6 +178,7 @@ VolumeShader::~VolumeShader()
 	glDeleteBuffers(1, &m_vbo);
 
 	glDeleteTextures(1, &m_texture_id);
+	glDeleteTextures(1, &m_index_texture_id);
 	glDeleteTextures(1, &m_transfer_func_id);
 
 	delete m_bbox;
@@ -277,7 +282,7 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &
 		m_bbox = new Cube(m_min, m_max);
 
 #ifdef TEXTURE_ATLAS
-		texture_from_leaf(*grid, m_texture_id);
+		texture_from_leaf(*grid, m_texture_id, m_index_texture_id);
 #else
 		/* Get resolution */
 		auto extent = bbox_max - bbox_min;
