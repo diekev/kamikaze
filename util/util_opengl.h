@@ -25,5 +25,8 @@
 
 void gl_check_errors();
 
+void texture_bind(const GLenum target, const GLuint texture_id, const GLint num);
+void texture_unbind(const GLenum target, const GLint num);
+
 void create_texture_1D(GLuint &texture_id, const int size, GLfloat *data);
 void create_texture_3D(GLuint &texture_id, const int size[3], const int channels, GLfloat *data);

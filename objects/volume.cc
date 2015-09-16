@@ -466,9 +466,15 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 
 	m_shader.use();
 	{
+		texture_bind(GL_TEXTURE_3D, m_texture_id, 0);
+		texture_bind(GL_TEXTURE_1D, m_transfer_func_id, 1);
+
 		glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 		glUniform1i(m_shader("use_lut"), m_use_lut);
 		glDrawArrays(GL_TRIANGLES, 0, m_texture_slices.size());
+
+		texture_unbind(GL_TEXTURE_3D, 0);
+		texture_unbind(GL_TEXTURE_1D, 1);
 	}
 	m_shader.unUse();
 

@@ -51,10 +51,21 @@ void gl_check_errors()
 	}
 }
 
+void texture_bind(const GLenum target, const GLuint texture_id, const GLint num)
+{
+	glActiveTexture(GL_TEXTURE0 + num);
+	glBindTexture(target, texture_id);
+}
+
+void texture_unbind(const GLenum target, const GLint num)
+{
+	glActiveTexture(GL_TEXTURE0 + num);
+	glBindTexture(target, 0);
+}
+
 void create_texture_1D(GLuint &texture_id, const int size, GLfloat *data)
 {
 	glGenTextures(1, &texture_id);
-	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_1D, texture_id);
 
 	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -82,6 +93,7 @@ void create_texture_3D(GLuint &texture_id, const int size[3], const int channels
 
 	glGenTextures(1, &texture_id);
 	glBindTexture(GL_TEXTURE_3D, texture_id);
+
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
