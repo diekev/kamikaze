@@ -111,10 +111,24 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuin
 	create_texture_3D(texture_id, packed_volume_res.asPointer(), 1, nullptr);
 
 	glm::vec3 offset(0);
+	FloatGrid::ConstAccessor acc = grid.getConstAccessor();
+	ValueType *data = new ValueType[DIM * DIM * DIM];
 
 	for (LeafCIterType leaf_iter = grid.tree().cbeginLeaf(); leaf_iter; ++leaf_iter) {
 		const LeafType &leaf = *leaf_iter.getLeaf();
-		const ValueType *data = leaf.buffer().data();
+		const Coord &lco = leaf.origin();
+		Coord ijk;
+		int &x = ijk[0], &y = ijk[1], &z = ijk[2];
+
+		/* VDB is using zyx storage so we transform the leaf voxels to xyz storage */
+		int index(0);
+		for (z = lco[2]; z < lco[2] + DIM; ++z) {
+			for (y = lco[1]; y < lco[1] + DIM; ++y) {
+				for (x = lco[0]; x < lco[0] + DIM; ++x, ++index) {
+					data[index] = acc.getValue(ijk);
+				}
+			}
+		}
 
 		glTexSubImage3D(GL_TEXTURE_3D, 0,
 		                offset.x, offset.y, offset.z,
@@ -142,6 +156,8 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuin
 	create_texture_3D(index_texture_id, glm::value_ptr(index_volume_res), 3, &index_volume.data()[0][0]);
 
 	gl_check_errors();
+
+	delete [] data;
 }
 
 VolumeShader::VolumeShader()
