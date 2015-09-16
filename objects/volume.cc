@@ -28,6 +28,7 @@
 
 #define DWREAL_IS_DOUBLE 0
 #include <openvdb/openvdb.h>
+#include <openvdb/tools/Dense.h>
 
 #include "render/GLSLShader.h"
 #include "util/util_opengl.h"
@@ -38,36 +39,6 @@
 #include "volume.h"
 
 using openvdb::math::Coord;
-
-class IndexVolume {
-	glm::vec3 *m_data;
-	glm::ivec3 m_res;
-	int m_slab_size;
-
-public:
-	IndexVolume(const glm::ivec3 &res, const float background)
-		: m_data(new glm::vec3[res[0] * res[1] * res[2]])
-	    , m_res(res)
-	    , m_slab_size(res[0] * res[1])
-	{
-		std::fill_n(m_data, res[0] * res[1] * res[2], glm::vec3(background));
-	}
-
-	~IndexVolume()
-	{
-		delete [] m_data;
-	}
-
-	void setValue(int x, int y, int z, const glm::vec3 &value)
-	{
-		m_data[x + y * m_res[0] + z * m_slab_size] = value;
-	}
-
-	glm::vec3 *data() const
-	{
-		return m_data;
-	}
-};
 
 void max_leaf_per_axis(const int dim[3], int voxel_per_leaf, int num_leaf, int result[3])
 {
@@ -104,13 +75,14 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuin
 	        bbox_extent[1] >> LOG2DIM,
 	        bbox_extent[2] >> LOG2DIM);
 
-	IndexVolume index_volume(index_volume_res, -1.0f);
+	tools::Dense<Vec3s> index_volume(bbox_extent >> LOG2DIM, bbox_min);
+	index_volume.fill(Vec3s(-1.0f));
 
 	Vec3i packed_volume_res(leaf_per_axis * DIM);
 
 	create_texture_3D(texture_id, packed_volume_res.asPointer(), 1, nullptr);
 
-	glm::vec3 offset(0);
+	Vec3s offset(0);
 	FloatGrid::ConstAccessor acc = grid.getConstAccessor();
 	ValueType *data = new ValueType[DIM * DIM * DIM];
 
@@ -131,13 +103,13 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuin
 		}
 
 		glTexSubImage3D(GL_TEXTURE_3D, 0,
-		                offset.x, offset.y, offset.z,
+		                offset.x(), offset.y(), offset.z(),
 		                DIM, DIM, DIM,
 		                GL_RED, GL_FLOAT, data);
 
 		gl_check_errors();
 
-		const Coord &co = (leaf.origin() - bbox_min) >> LOG2DIM;
+		const Coord &co = leaf.origin() >> LOG2DIM;
 		index_volume.setValue(co.x(), co.y(), co.z(), offset);
 
 		offset[0] += DIM;
