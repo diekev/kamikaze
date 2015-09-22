@@ -32,74 +32,12 @@
 #include <openvdb/util/PagedArray.h>
 
 #include "render/GLSLShader.h"
+#include "util/util_opengl.h"
+#include "util/util_openvdb.h"
 #include "util/utils.h"
 
 #include "cube.h"
 #include "volume.h"
-
-const float EPSILON = 0.0001f;
-
-void convert_grid(const openvdb::FloatGrid &grid, GLfloat *data,
-                  const openvdb::Coord &min, const openvdb::Coord &max, float &scale)
-{
-	Timer(__func__);
-
-	using namespace openvdb;
-
-	FloatGrid::ConstAccessor main_acc = grid.getAccessor();
-	auto extent = max - min;
-	auto slabsize = extent[0] * extent[1];
-	util::PagedArray<float> min_array, max_array;
-
-	tbb::parallel_for(tbb::blocked_range<int>(min[2], max[2]),
-	        [&](const tbb::blocked_range<int> &r)
-	{
-		FloatGrid::ConstAccessor acc(main_acc);
-		math::Coord ijk;
-		int &x = ijk[0], &y = ijk[1], &z = ijk[2];
-		z = r.begin();
-
-		auto min_value = std::numeric_limits<float>::max();
-		auto max_value = std::numeric_limits<float>::min();
-
-		/* Subtract min z coord so that 'index' always start at zero or above. */
-		auto index = (z - min[2]) * slabsize;
-
-		for (auto e = r.end(); z < e; ++z) {
-			for (y = min[1]; y < max[1]; ++y) {
-				for (x = min[0]; x < max[0]; ++x, ++index) {
-					auto value = acc.getValue(ijk);
-
-					if (value < min_value) {
-						min_value = value;
-					}
-					else if (value > max_value) {
-						max_value = value;
-					}
-
-					data[index] = value;
-				}
-			}
-		}
-
-		min_array.push_back(min_value);
-		max_array.push_back(max_value);
-	});
-
-	auto min_value = std::min_element(min_array.begin(), min_array.end());
-	auto max_value = std::max_element(max_array.begin(), max_array.end());
-	scale = 1.0f / (*max_value - *min_value);
-}
-
-int axis_dominant_v3_single(const glm::vec3 &vec)
-{
-	const float x = glm::abs(vec[0]);
-	const float y = glm::abs(vec[1]);
-	const float z = glm::abs(vec[2]);
-	return ((x > y) ?
-	       ((x > z) ? 0 : 2) :
-	       ((y > z) ? 1 : 2));
-}
 
 VolumeShader::VolumeShader()
     : m_vao(0)
@@ -143,32 +81,6 @@ bool VolumeShader::init(const std::string &filename, std::ostream &os)
 	}
 
 	return false;
-}
-
-openvdb::FloatGrid::Ptr transform_grid(const openvdb::FloatGrid &grid,
-                                       const openvdb::Vec3s &rot,
-                                       const openvdb::Vec3s &scale,
-                                       const openvdb::Vec3s &translate,
-                                       const openvdb::Vec3s &pivot)
-{
-	/* make sure the new grid has the same transform and metadatas
-	 * as the old. */
-	openvdb::FloatGrid::Ptr xformed = grid.copy(openvdb::CopyPolicy::CP_NEW);
-
-	openvdb::Mat4R mat(openvdb::Mat4R::identity());
-	mat.preTranslate(pivot);
-	mat.preRotate(openvdb::math::X_AXIS, rot[0]);
-	mat.preRotate(openvdb::math::Y_AXIS, rot[1]);
-	mat.preRotate(openvdb::math::Z_AXIS, rot[2]);
-    mat.preScale(scale);
-    mat.preTranslate(-pivot);
-    mat.preTranslate(translate);
-
-	openvdb::tools::GridTransformer transformer(mat);
-	transformer.transformGrid<openvdb::tools::PointSampler>(grid, *xformed);
-	openvdb::tools::prune(xformed->tree());
-
-	return xformed;
 }
 
 bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &os)
@@ -245,22 +157,9 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &
 
 		/* Copy data */
 		GLfloat *data = new GLfloat[X_DIM * Y_DIM * Z_DIM];
+
 		convert_grid(*grid, data, bbox_min, bbox_max, m_scale);
-
-		glGenTextures(1, &m_texture_id);
-		glBindTexture(GL_TEXTURE_3D, m_texture_id);
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_BASE_LEVEL, 0);
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 4);
-
-		Timer("Move data to GPU")
-		glTexImage3D(GL_TEXTURE_3D, 0, GL_RED, X_DIM, Y_DIM, Z_DIM, 0, GL_RED, GL_FLOAT, data);
-
-		glGenerateMipmap(GL_TEXTURE_3D);
+		create_texture_3D(m_texture_id, extent.asPointer(), 1, data);
 
 		delete [] data;
 		return true;
@@ -359,20 +258,12 @@ void VolumeShader::loadTransferFunction()
 		}
 	}
 
-	glGenTextures(1, &m_transfer_func_id);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_1D, m_transfer_func_id);
-
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 256, 0, GL_RGB, GL_FLOAT, data);
+	create_texture_1D(m_transfer_func_id, 256, &data[0][0]);
 }
 
 void VolumeShader::slice(const glm::vec3 &view_dir)
 {
-	auto axis = axis_dominant_v3_single(view_dir);
+	auto axis = axis_dominant_v3_single(glm::value_ptr(view_dir));
 
 	if (m_axis == axis) {
 		return;
@@ -464,9 +355,15 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 	{
 		glBindVertexArray(m_vao);
 
+		texture_bind(GL_TEXTURE_3D, m_texture_id, 0);
+		texture_bind(GL_TEXTURE_1D, m_transfer_func_id, 1);
+
 		glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 		glUniform1i(m_shader("use_lut"), m_use_lut);
 		glDrawElements(GL_TRIANGLES, m_num_slices * 6, GL_UNSIGNED_SHORT, nullptr);
+
+		texture_unbind(GL_TEXTURE_3D, 0);
+		texture_unbind(GL_TEXTURE_1D, 1);
 
 		glBindVertexArray(0);
 	}

@@ -21,25 +21,12 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include "utils.h"
+#pragma once
 
-#include <cmath>
-#include <sys/time.h>
+void gl_check_errors();
 
-double time_dt()
-{
-	struct timeval now;
-	gettimeofday(&now, nullptr);
+void texture_bind(const GLenum target, const GLuint texture_id, const GLint num);
+void texture_unbind(const GLenum target, const GLint num);
 
-	return now.tv_sec + now.tv_usec*1e-6;
-}
-
-int axis_dominant_v3_single(const float vec[])
-{
-	const float x = std::abs(vec[0]);
-	const float y = std::abs(vec[1]);
-	const float z = std::abs(vec[2]);
-
-	return ((x > y) ? ((x > z) ? 0 : 2) : ((y > z) ? 1 : 2));
-}
-
+void create_texture_1D(GLuint &texture_id, const int size, GLfloat *data);
+void create_texture_3D(GLuint &texture_id, const int size[3], const int channels, GLfloat *data);
