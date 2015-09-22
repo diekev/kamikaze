@@ -21,20 +21,20 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include "utils.h"
-
 #include <cmath>
 #include <sys/time.h>
+
+#include "utils.h"
 
 double time_dt()
 {
 	struct timeval now;
 	gettimeofday(&now, nullptr);
 
-	return now.tv_sec + now.tv_usec*1e-6;
+	return now.tv_sec + now.tv_usec * 1e-6;
 }
 
-int axis_dominant_v3_single(const float vec[])
+int axis_dominant_v3_single(const float vec[3])
 {
 	const float x = std::abs(vec[0]);
 	const float y = std::abs(vec[1]);
@@ -42,4 +42,3 @@ int axis_dominant_v3_single(const float vec[])
 
 	return ((x > y) ? ((x > z) ? 0 : 2) : ((y > z) ? 1 : 2));
 }
-

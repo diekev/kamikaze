@@ -28,8 +28,6 @@
 
 #define DWREAL_IS_DOUBLE 0
 #include <openvdb/openvdb.h>
-#include <openvdb/tools/GridTransformer.h>
-#include <openvdb/util/PagedArray.h>
 
 #include "render/GLSLShader.h"
 #include "util/util_opengl.h"
@@ -44,6 +42,7 @@ VolumeShader::VolumeShader()
     , m_vbo(0)
     , m_index_vbo(0)
     , m_texture_id(0)
+    , m_transfer_func_id(0)
     , m_bbox(nullptr)
     , m_min(glm::vec3(0.0f))
     , m_max(glm::vec3(0.0f))
