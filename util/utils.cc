@@ -21,7 +21,7 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <algorithm>
+#include <cmath>
 #include <sys/time.h>
 
 #include "utils.h"

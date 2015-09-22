@@ -135,6 +135,7 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuin
 VolumeShader::VolumeShader()
     : m_vao(0)
     , m_vbo(0)
+    , m_index_vbo(0)
     , m_texture_id(0)
     , m_index_texture_id(0)
     , m_bbox(nullptr)
@@ -148,7 +149,7 @@ VolumeShader::VolumeShader()
     , m_use_lut(false)
     , m_draw_bbox(false)
 {
-	m_texture_slices.resize(m_num_slices * 6);
+	m_texture_slices.resize(m_num_slices * 4);
 }
 
 VolumeShader::~VolumeShader()
@@ -157,6 +158,7 @@ VolumeShader::~VolumeShader()
 
 	glDeleteVertexArrays(1, &m_vao);
 	glDeleteBuffers(1, &m_vbo);
+	glDeleteBuffers(1, &m_index_vbo);
 
 	glDeleteTextures(1, &m_texture_id);
 	glDeleteTextures(1, &m_index_texture_id);
@@ -283,12 +285,14 @@ void VolumeShader::loadVolumeShader()
 	/* setup the vertex array and buffer objects */
 	glGenVertexArrays(1, &m_vao);
 	glGenBuffers(1, &m_vbo);
-
+	glGenBuffers(1, &m_index_vbo);
 	glBindVertexArray(m_vao);
-	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 
-	/* pass the sliced volume vector to buffer output memory */
-	glBufferData(GL_ARRAY_BUFFER, MAX_SLICES * 6 * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+	glBufferData(GL_ARRAY_BUFFER, MAX_SLICES * 4 * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_vbo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, MAX_SLICES * 6 * sizeof(GLuint), nullptr, GL_DYNAMIC_DRAW);
 
 	/* enable vertex attribute array for position */
 	glEnableVertexAttribArray(0);
@@ -361,41 +365,65 @@ void VolumeShader::slice(const glm::vec3 &view_dir)
 		slice_size = -slice_size;
 	}
 
-	for (auto slice(0); slice < m_num_slices; slice++) {
-		const glm::vec3 vertices[3][4] = {
-		    {
-		        glm::vec3(depth, m_min[1], m_min[2]),
-		        glm::vec3(depth, m_max[1], m_min[2]),
-		        glm::vec3(depth, m_max[1], m_max[2]),
-		        glm::vec3(depth, m_min[1], m_max[2])
-		    },
-		    {
-		        glm::vec3(m_min[0], depth, m_min[2]),
-		        glm::vec3(m_min[0], depth, m_max[2]),
-		        glm::vec3(m_max[0], depth, m_max[2]),
-		        glm::vec3(m_max[0], depth, m_min[2])
-		    },
-		    {
-		        glm::vec3(m_min[0], m_min[1], depth),
-		        glm::vec3(m_min[0], m_max[1], depth),
-		        glm::vec3(m_max[0], m_max[1], depth),
-		        glm::vec3(m_max[0], m_min[1], depth)
-		    }
-		};
+	const glm::vec3 vertices[3][4] = {
+	    {
+	        glm::vec3(0.0f, m_min[1], m_min[2]),
+	        glm::vec3(0.0f, m_max[1], m_min[2]),
+	        glm::vec3(0.0f, m_max[1], m_max[2]),
+	        glm::vec3(0.0f, m_min[1], m_max[2])
+	    },
+	    {
+	        glm::vec3(m_min[0], 0.0f, m_min[2]),
+	        glm::vec3(m_min[0], 0.0f, m_max[2]),
+	        glm::vec3(m_max[0], 0.0f, m_max[2]),
+	        glm::vec3(m_max[0], 0.0f, m_min[2])
+	    },
+	    {
+	        glm::vec3(m_min[0], m_min[1], 0.0f),
+	        glm::vec3(m_min[0], m_max[1], 0.0f),
+	        glm::vec3(m_max[0], m_max[1], 0.0f),
+	        glm::vec3(m_max[0], m_min[1], 0.0f)
+	    }
+	};
 
-		m_texture_slices[count++] = vertices[m_axis][0];
-		m_texture_slices[count++] = vertices[m_axis][1];
-		m_texture_slices[count++] = vertices[m_axis][2];
-		m_texture_slices[count++] = vertices[m_axis][0];
-		m_texture_slices[count++] = vertices[m_axis][2];
-		m_texture_slices[count++] = vertices[m_axis][3];
+	GLushort *indices = new GLushort[m_num_slices * 6];
+	int idx = 0, idx_count = 0;
+
+	for (auto slice(0); slice < m_num_slices; slice++) {
+		glm::vec3 v0 = vertices[m_axis][0];
+		glm::vec3 v1 = vertices[m_axis][1];
+		glm::vec3 v2 = vertices[m_axis][2];
+		glm::vec3 v3 = vertices[m_axis][3];
+
+		v0[m_axis] = depth;
+		v1[m_axis] = depth;
+		v2[m_axis] = depth;
+		v3[m_axis] = depth;
+
+		m_texture_slices[count++] = v0;
+		m_texture_slices[count++] = v1;
+		m_texture_slices[count++] = v2;
+		m_texture_slices[count++] = v3;
+
+		indices[idx_count++] = idx + 0;
+		indices[idx_count++] = idx + 1;
+		indices[idx_count++] = idx + 2;
+		indices[idx_count++] = idx + 0;
+		indices[idx_count++] = idx + 2;
+		indices[idx_count++] = idx + 3;
 
 		depth += slice_size;
+		idx += 4;
 	}
 
-	/* update buffer object */
+	/* update buffer objects */
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, m_texture_slices.size() * sizeof(glm::vec3), &(m_texture_slices[0].x));
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_vbo);
+	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, idx_count * sizeof(GLushort), &indices[0]);
+
+	delete [] indices;
 }
 
 void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool is_rotated)
@@ -408,21 +436,23 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glBindVertexArray(m_vao);
-
 	m_shader.use();
 	{
+		glBindVertexArray(m_vao);
+
 		texture_bind(GL_TEXTURE_3D, m_texture_id, 0);
 		texture_bind(GL_TEXTURE_1D, m_transfer_func_id, 1);
 		texture_bind(GL_TEXTURE_3D, m_index_texture_id, 2);
 
 		glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 		glUniform1i(m_shader("use_lut"), m_use_lut);
-		glDrawArrays(GL_TRIANGLES, 0, m_texture_slices.size());
+		glDrawElements(GL_TRIANGLES, m_num_slices * 6, GL_UNSIGNED_SHORT, nullptr);
 
 		texture_unbind(GL_TEXTURE_3D, 0);
 		texture_unbind(GL_TEXTURE_1D, 1);
 		texture_unbind(GL_TEXTURE_3D, 2);
+
+		glBindVertexArray(0);
 	}
 	m_shader.unUse();
 
@@ -438,7 +468,7 @@ void VolumeShader::changeNumSlicesBy(int x)
 {
 	m_num_slices += x;
 	m_num_slices = std::min(MAX_SLICES, std::max(m_num_slices, 3));
-	m_texture_slices.resize(m_num_slices * 6);
+	m_texture_slices.resize(m_num_slices * 4);
 }
 
 void VolumeShader::toggleUseLUT()

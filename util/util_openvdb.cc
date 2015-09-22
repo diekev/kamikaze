@@ -60,7 +60,7 @@ int evalLeafBBoxAndCount(const openvdb::FloatTree &tree, Coord &min, Coord &max)
 	return leaf_count;
 }
 
-void convert_grid(const openvdb::FloatGrid &grid, float *data, const openvdb::Coord &min, const openvdb::Coord &max, float &scale)
+void convert_grid(const openvdb::FloatGrid &grid, float *data, const Coord &min, const Coord &max, float &scale)
 {
 	Timer(__func__);
 
@@ -75,7 +75,7 @@ void convert_grid(const openvdb::FloatGrid &grid, float *data, const openvdb::Co
 	        [&](const tbb::blocked_range<int> &r)
 	{
 		FloatGrid::ConstAccessor acc(main_acc);
-		math::Coord ijk;
+		Coord ijk;
 		int &x = ijk[0], &y = ijk[1], &z = ijk[2];
 		z = r.begin();
 
