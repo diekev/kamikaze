@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 	glutInitContextProfile(GLUT_FORWARD_COMPATIBLE);
 
 	glutInitWindowSize(WIDTH, HEIGHT);
-	glutCreateWindow("ikirin");
+	glutCreateWindow("Hi no Kirin");
 
 	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
