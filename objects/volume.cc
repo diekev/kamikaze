@@ -374,12 +374,12 @@ void VolumeShader::changeNumSlicesBy(int x)
 
 void VolumeShader::toggleUseLUT()
 {
-	m_use_lut = ((m_use_lut) ? false : true);
+	m_use_lut = !m_use_lut;
 }
 
 void VolumeShader::toggleBBoxDrawing()
 {
-	m_draw_bbox = ((m_draw_bbox) ? false : true);
+	m_draw_bbox = !m_draw_bbox;
 }
 
 void VolumeShader::toggleTopologyDrawing()
