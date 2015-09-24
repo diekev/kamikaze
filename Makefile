@@ -23,6 +23,7 @@ SRC = \
 	main.cc \
 	objects/cube.cc \
 	objects/grid.cc \
+	objects/treetopology.cc \
 	objects/volume.cc \
 	render/camera.cc \
 	render/GLSLShader.cc \

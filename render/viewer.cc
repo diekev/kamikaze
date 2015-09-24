@@ -89,6 +89,9 @@ void Viewer::keyboardEvent(unsigned char key, int /*x*/, int /*y*/)
 		case 'b':
 			m_volume_shader->toggleBBoxDrawing();
 			break;
+		case 't':
+			m_volume_shader->toggleTopologyDrawing();
+			break;
 	}
 
 	if (need_slicing) {

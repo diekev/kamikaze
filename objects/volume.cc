@@ -35,6 +35,7 @@
 #include "util/utils.h"
 
 #include "cube.h"
+#include "treetopology.h"
 #include "volume.h"
 
 VolumeShader::VolumeShader()
@@ -42,6 +43,7 @@ VolumeShader::VolumeShader()
     , m_texture_id(0)
     , m_transfer_func_id(0)
     , m_bbox(nullptr)
+    , m_topology(nullptr)
     , m_min(glm::vec3(0.0f))
     , m_max(glm::vec3(0.0f))
     , m_size(glm::vec3(0.0f))
@@ -51,6 +53,7 @@ VolumeShader::VolumeShader()
     , m_scale(0.0f)
     , m_use_lut(false)
     , m_draw_bbox(false)
+    , m_draw_topology(false)
 {
 	m_texture_slices.resize(m_num_slices * 4);
 }
@@ -131,23 +134,25 @@ bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &
 		const int Z_DIM = extent[2];
 
 		/* Compute grid size */
-		Vec3f min = grid->transform().indexToWorld(bbox_min);
-		Vec3f max = grid->transform().indexToWorld(bbox_max);
+		BBoxd ws_bbox = grid->transform().indexToWorld(bbox);
+		Vec3f min = ws_bbox.min(); // grid->transform().indexToWorld(bbox_min);
+		Vec3f max = ws_bbox.max(); // grid->transform().indexToWorld(bbox_max);
 
-		for (int i(0); i < 3; ++i) {
-			m_min[i] = min[i];
-			m_max[i] = max[i];
-		}
+		m_min = convertOpenVDBVec(min);
+		m_max = convertOpenVDBVec(max);
 
 		m_size = (m_max - m_min);
 		m_inv_size = 1.0f / m_size;
 
 		m_bbox = new Cube(m_min, m_max);
+		m_topology = new TreeTopology(grid);
 
-#if 0
+#if 1
 		printf("Dimensions: %d, %d, %d\n", X_DIM, Y_DIM, Z_DIM);
 		printf("Min: %f, %f, %f\n", min[0], min[1], min[2]);
 		printf("Max: %f, %f, %f\n", max[0], max[1], max[2]);
+		printf("Bbox Min: %d, %d, %d\n", bbox_min[0], bbox_min[1], bbox_min[2]);
+		printf("Bbox Max: %d, %d, %d\n", bbox_max[0], bbox_max[1], bbox_max[2]);
 #endif
 
 		/* Copy data */
@@ -326,6 +331,14 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 		slice(dir);
 	}
 
+	if (m_draw_bbox) {
+		m_bbox->render(MVP);
+	}
+
+	if (m_draw_topology) {
+		m_topology->render(MVP);
+	}
+
 	glEnable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -350,10 +363,6 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
-
-	if (m_draw_bbox) {
-		m_bbox->render(MVP);
-	}
 }
 
 void VolumeShader::changeNumSlicesBy(int x)
@@ -371,4 +380,9 @@ void VolumeShader::toggleUseLUT()
 void VolumeShader::toggleBBoxDrawing()
 {
 	m_draw_bbox = ((m_draw_bbox) ? false : true);
+}
+
+void VolumeShader::toggleTopologyDrawing()
+{
+	m_draw_topology = !m_draw_topology;
 }
