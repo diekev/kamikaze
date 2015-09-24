@@ -24,37 +24,39 @@
 #include <glm/glm.hpp>
 #include <vector>
 
+#include "../render/GLSLShader.h"
+
 const int MAX_SLICES = 512;
 
 class Cube;
 class TreeTopology;
 struct VBOData;
 
-class VolumeShader {
+class Volume {
 	VBOData *m_buffer_data;
 	GLuint m_texture_id, m_transfer_func_id;
 	GLSLShader m_shader;
-	std::vector<glm::vec3> m_texture_slices;
 
 	Cube *m_bbox;
 	TreeTopology *m_topology;
 
 	glm::vec3 m_min, m_max;
 	glm::vec3 m_size, m_inv_size;
+
 	int m_num_slices;
+	std::vector<glm::vec3> m_texture_slices;
+
 	int m_axis;
 	float m_scale; // scale of the values contained in the grid (1 / (max - min))
 	bool m_use_lut, m_draw_bbox, m_draw_topology;
 
-	bool loadVolumeFile(const std::string &filename, std::ostream &os);
 	void loadTransferFunction();
 	void loadVolumeShader();
 
 public:
-	VolumeShader();
-	~VolumeShader();
-
-	bool init(const std::string &filename, std::ostream &os);
+	Volume();
+	Volume(openvdb::FloatGrid::Ptr &grid);
+	~Volume();
 
 	void slice(const glm::vec3 &view_dir);
 	void render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool is_rotated);
