@@ -31,35 +31,6 @@
 
 using openvdb::math::Coord;
 
-int evalLeafBBoxAndCount(const openvdb::FloatTree &tree, Coord &min, Coord &max)
-{
-	typedef openvdb::FloatTree::LeafNodeType LeafType;
-	typedef openvdb::FloatTree::LeafCIter LeafCIterType;
-
-	const int DIM = LeafType::DIM;
-	int leaf_count(0);
-
-	min = Coord(std::numeric_limits<Coord::ValueType>::max());
-	max = Coord(std::numeric_limits<Coord::ValueType>::min());
-
-	for (LeafCIterType leaf_iter = tree.cbeginLeaf(); leaf_iter; ++leaf_iter) {
-		++leaf_count;
-
-		const LeafType &leaf = *leaf_iter.getLeaf();
-		const Coord co = leaf.origin();
-
-		min[0] = std::min(min[0], co[0]);
-		min[1] = std::min(min[1], co[1]);
-		min[2] = std::min(min[2], co[2]);
-
-		max[0] = std::max(max[0], co[0] + DIM);
-		max[1] = std::max(max[1], co[1] + DIM);
-		max[2] = std::max(max[2], co[2] + DIM);
-	}
-
-	return leaf_count;
-}
-
 void convert_grid(const openvdb::FloatGrid &grid, float *data, const Coord &min, const Coord &max, float &scale)
 {
 	Timer(__func__);

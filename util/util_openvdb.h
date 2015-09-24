@@ -23,8 +23,6 @@
 
 #pragma once
 
-int evalLeafBBoxAndCount(const openvdb::FloatTree &tree, openvdb::math::Coord &min, openvdb::math::Coord &max);
-
 void convert_grid(const openvdb::FloatGrid &grid, float *data,
                   const openvdb::Coord &min, const openvdb::Coord &max, float &scale);
 

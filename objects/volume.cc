@@ -61,23 +61,23 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuin
 
 	const int DIM = LeafType::DIM;
 	const int LOG2DIM = LeafType::LOG2DIM;
+	const int NUM_VOXELS = LeafType::NUM_VOXELS;
 
 	/* compute number of leaves per axis there will be in the packed texture */
 
-	Coord bbox_min, bbox_max;
-	int leaf_count = evalLeafBBoxAndCount(grid.tree(), bbox_min, bbox_max);
-	auto bbox_extent = bbox_max - bbox_min;
+	CoordBBox bbox;
+	grid.tree().evalLeafBoundingBox(bbox);
+	auto dim = bbox.dim();
+
+	int leaf_count = grid.tree().leafCount();
+
+	Coord index_volume_res(dim >> LOG2DIM);
+
+	tools::Dense<Vec3s> index_volume(index_volume_res, bbox.min());
+	index_volume.fill(Vec3s(-1.0f));
 
 	Vec3i leaf_per_axis;
-	max_leaf_per_axis(bbox_extent.asPointer(), DIM, leaf_count, leaf_per_axis.asPointer());
-
-	glm::ivec3 index_volume_res(
-	        bbox_extent[0] >> LOG2DIM,
-	        bbox_extent[1] >> LOG2DIM,
-	        bbox_extent[2] >> LOG2DIM);
-
-	tools::Dense<Vec3s> index_volume(bbox_extent >> LOG2DIM, bbox_min);
-	index_volume.fill(Vec3s(-1.0f));
+	max_leaf_per_axis(dim.asPointer(), DIM, leaf_count, leaf_per_axis.asPointer());
 
 	Vec3i packed_volume_res(leaf_per_axis * DIM);
 
@@ -85,7 +85,7 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuin
 
 	Vec3s offset(0);
 	FloatGrid::ConstAccessor acc = grid.getConstAccessor();
-	ValueType *data = new ValueType[DIM * DIM * DIM];
+	ValueType *data = new ValueType[NUM_VOXELS];
 
 	for (LeafCIterType leaf_iter = grid.tree().cbeginLeaf(); leaf_iter; ++leaf_iter) {
 		const LeafType &leaf = *leaf_iter.getLeaf();
@@ -126,7 +126,7 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuin
 		}
 	}
 
-	create_texture_3D(index_texture_id, glm::value_ptr(index_volume_res), 3, &index_volume.data()[0][0]);
+	create_texture_3D(index_texture_id, index_volume_res.asPointer(), 3, &index_volume.data()[0][0]);
 
 	gl_check_errors();
 
