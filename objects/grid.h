@@ -24,10 +24,10 @@
 #pragma once
 
 class GLSLShader;
+struct VBOData;
 
 class Grid {
-	GLuint m_vao;
-	GLuint m_vbo_id, m_index_vbo_id;
+	VBOData *m_buffer_data;
 	size_t m_total_indices;
 	GLSLShader *m_shader;
 

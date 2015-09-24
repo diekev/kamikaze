@@ -23,9 +23,10 @@
 
 #pragma once
 
+struct VBOData;
+
 class Cube {
-	GLuint m_vao;
-	GLuint m_verts_vbo, m_index_vbo;
+	VBOData *m_buffer_data;
 	GLSLShader m_shader;
 
 public:
