@@ -106,3 +106,55 @@ void create_texture_3D(GLuint &texture_id, const int size[3], const int channels
 
 	glGenerateMipmap(GL_TEXTURE_3D);
 }
+
+VBOData *create_vertex_buffers(GLuint attribute, const GLfloat *vertices, size_t vsize,
+                           const GLuint *indices, size_t isize)
+{
+	VBOData *data = new VBOData;
+
+	GLenum draw_type = GL_STATIC_DRAW;
+
+	// TODO: feels a bit hackish
+	if ((vertices == nullptr) && (indices == nullptr)) {
+		draw_type = GL_DYNAMIC_DRAW;
+	}
+
+	glGenVertexArrays(1, &data->vao);
+	glGenBuffers(1, &data->vbo);
+	glGenBuffers(1, &data->index_vbo);
+
+	glBindVertexArray(data->vao);
+
+	glBindBuffer(GL_ARRAY_BUFFER, data->vbo);
+	glBufferData(GL_ARRAY_BUFFER, vsize, vertices, draw_type);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data->index_vbo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, isize, indices, draw_type);
+
+	glEnableVertexAttribArray(attribute);
+	glVertexAttribPointer(attribute, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+	glBindVertexArray(0);
+	gl_check_errors();
+
+	return data;
+}
+
+void update_vertex_buffers(VBOData *data, const GLfloat *vertices, size_t vsize,
+                           const GLuint *indices, size_t isize)
+{
+	glBindBuffer(GL_ARRAY_BUFFER, data->vbo);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, vsize, vertices);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data->index_vbo);
+	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, isize, indices);
+}
+
+void delete_vertex_buffers(VBOData *data)
+{
+	glDeleteVertexArrays(1, &data->vao);
+	glDeleteBuffers(1, &data->index_vbo);
+	glDeleteBuffers(1, &data->vbo);
+
+	delete data;
+}

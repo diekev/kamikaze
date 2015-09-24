@@ -27,10 +27,10 @@
 const int MAX_SLICES = 512;
 
 class Cube;
+struct VBOData;
 
 class VolumeShader {
-	GLuint m_vao;
-	GLuint m_vbo, m_index_vbo;
+	VBOData *m_buffer_data;
 	GLuint m_texture_id, m_transfer_func_id, m_index_texture_id;
 	GLSLShader m_shader;
 	std::vector<glm::vec3> m_texture_slices;
