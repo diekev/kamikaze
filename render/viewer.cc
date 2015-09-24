@@ -3,9 +3,10 @@
 
 #include <glm/glm.hpp>
 
-#include <iostream>
+#define DWREAL_IS_DOUBLE 0
+#include <openvdb/openvdb.h>
 
-#include "GLSLShader.h"
+#include <iostream>
 
 #include "objects/grid.h"
 #include "objects/volume.h"
@@ -18,33 +19,21 @@ Viewer::Viewer()
     , m_bg(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f))
     , m_camera(new Camera())
     , m_grid(new Grid(20, 20))
-    , m_volume_shader(new VolumeShader())
+    , m_volume(nullptr)
 {}
 
 Viewer::~Viewer()
 {
 	delete m_camera;
 	delete m_grid;
-	delete m_volume_shader;
+	delete m_volume;
 }
 
-bool Viewer::init(const char *filename, std::ostream &os)
+void Viewer::init()
 {
-	if (m_volume_shader->init(filename, os)) {
-		glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
-
-		m_camera->updateViewDir();
-		m_volume_shader->slice(m_camera->viewDir());
-
-		return true;
-	}
-
-	os << "Initialisation of the volume data failed!\n";
-	return false;
+	glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
+	m_camera->updateViewDir();
 }
-
-void Viewer::shutDown()
-{}
 
 void Viewer::resize(int w, int h)
 {
@@ -76,23 +65,26 @@ void Viewer::keyboardEvent(unsigned char key, int /*x*/, int /*y*/)
 
 	switch (key) {
 		case '-':
-			m_volume_shader->changeNumSlicesBy(-1);
+			m_volume->changeNumSlicesBy(-1);
 			need_slicing = true;
 			break;
 		case '+':
-			m_volume_shader->changeNumSlicesBy(1);
+			m_volume->changeNumSlicesBy(1);
 			need_slicing = true;
 			break;
 		case 'l':
-			m_volume_shader->toggleUseLUT();
+			m_volume->toggleUseLUT();
 			break;
 		case 'b':
-			m_volume_shader->toggleBBoxDrawing();
+			m_volume->toggleBBoxDrawing();
+			break;
+		case 't':
+			m_volume->toggleTopologyDrawing();
 			break;
 	}
 
 	if (need_slicing) {
-		m_volume_shader->slice(m_camera->viewDir());
+		m_volume->slice(m_camera->viewDir());
 	}
 
 	glutPostRedisplay();
@@ -107,7 +99,15 @@ void Viewer::render()
 	auto MVP = m_camera->MVP();
 
 	m_grid->render(MVP);
-	m_volume_shader->render(view_dir, MVP, m_camera->hasRotated());
+
+	if (m_volume != nullptr) {
+		m_volume->render(view_dir, MVP, m_camera->hasRotated());
+	}
 
 	glutSwapBuffers();
+}
+
+void Viewer::setVolume(Volume *volume)
+{
+	m_volume = volume;
 }

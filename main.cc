@@ -5,7 +5,13 @@
 
 #include <iostream>
 
+#define DWREAL_IS_DOUBLE 0
+#include <openvdb/openvdb.h>
+
+#include "objects/volume.h"
 #include "render/viewer.h"
+#include "util/util_openvdb.h"
+#include "util/utils.h"
 
 namespace {
 
@@ -13,19 +19,62 @@ Viewer *viewer = nullptr;
 
 bool initViewer(const char *filename, std::ostream &os)
 {
+	using namespace openvdb;
+
 	if (viewer == nullptr) {
-		viewer = new Viewer;
+		viewer = new Viewer();
+		viewer->init();
 	}
 
-	return viewer->init(filename, os);
+	openvdb::initialize();
+	openvdb::io::File file(filename);
+
+	if (file.open()) {
+		FloatGrid::Ptr grid;
+
+		if (file.hasGrid(Name("Density"))) {
+			grid = gridPtrCast<FloatGrid>(file.readGrid(Name("Density")));
+		}
+		else if (file.hasGrid(Name("density"))) {
+			grid = gridPtrCast<FloatGrid>(file.readGrid(Name("density")));
+		}
+		else {
+			os << "No density grid found in file: \'" << filename << "\'!\n";
+			return false;
+		}
+
+		if (grid->getGridClass() == GRID_LEVEL_SET) {
+			os << "Grid \'" << grid->getName() << "\'is a level set!\n";
+			return false;
+		}
+
+		auto meta_map = file.getMetadata();
+
+		file.close();
+
+		if ((*meta_map)["creator"]) {
+			auto creator = (*meta_map)["creator"]->str();
+
+			/* If the grid comes from Blender (Z-up), rotate it so it is Y-up */
+			if (creator == "Blender/OpenVDBWriter") {
+				Timer("Transform Blender Grid");
+				grid = transform_grid(*grid, Vec3s(-M_PI_2, 0.0f, 0.0f),
+				                      Vec3s(1.0f), Vec3s(0.0f), Vec3s(0.0f));
+			}
+		}
+
+		Volume *volume = new Volume(grid);
+		viewer->setVolume(volume);
+
+		return true;
+	}
+
+	os << "Unable to open file \'" << filename << "\'\n";
+	return false;
 }
 
 void OnShutDownCB()
 {
-	if (viewer) {
-		viewer->shutDown();
-	}
-
 	delete viewer;
 }
 

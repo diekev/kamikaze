@@ -30,13 +30,14 @@
 #include <openvdb/openvdb.h>
 #include <openvdb/tools/Dense.h>
 
-#include "render/GLSLShader.h"
+#include "volume.h"
+
 #include "util/util_opengl.h"
 #include "util/util_openvdb.h"
 #include "util/utils.h"
 
 #include "cube.h"
-#include "volume.h"
+#include "treetopology.h"
 
 using openvdb::math::Coord;
 
@@ -132,26 +133,64 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuin
 	delete [] data;
 }
 
-VolumeShader::VolumeShader()
+Volume::Volume()
     : m_buffer_data(nullptr)
     , m_texture_id(0)
     , m_transfer_func_id(0)
     , m_index_texture_id(0)
     , m_bbox(nullptr)
+    , m_topology(nullptr)
     , m_min(glm::vec3(0.0f))
     , m_max(glm::vec3(0.0f))
     , m_size(glm::vec3(0.0f))
     , m_inv_size(glm::vec3(0.0f))
     , m_num_slices(256)
+    , m_texture_slices(m_num_slices * 4)
     , m_axis(-1)
     , m_scale(1.0f)
     , m_use_lut(false)
     , m_draw_bbox(false)
+    , m_draw_topology(false)
+{}
+
+Volume::Volume(openvdb::FloatGrid::Ptr &grid)
+    : Volume()
 {
-	m_texture_slices.resize(m_num_slices * 4);
+	using namespace openvdb;
+	using namespace openvdb::math;
+
+	CoordBBox bbox = grid->evalActiveVoxelBoundingBox();
+	Coord bbox_min = bbox.min();
+	Coord bbox_max = bbox.max();
+
+	/* Compute grid size */
+	Vec3f min = grid->transform().indexToWorld(bbox_min);
+	Vec3f max = grid->transform().indexToWorld(bbox_max);
+
+	m_min = convertOpenVDBVec(min);
+	m_max = convertOpenVDBVec(max);
+
+	m_size = (m_max - m_min);
+	m_inv_size = 1.0f / m_size;
+
+	m_bbox = new Cube(m_min, m_max);
+	m_topology = new TreeTopology(grid);
+
+	texture_from_leaf(*grid, m_texture_id, m_index_texture_id);
+
+#if 0
+	printf("Dimensions: %d, %d, %d\n", X_DIM, Y_DIM, Z_DIM);
+	printf("Min: %f, %f, %f\n", min[0], min[1], min[2]);
+	printf("Max: %f, %f, %f\n", max[0], max[1], max[2]);
+	printf("Bbox Min: %d, %d, %d\n", bbox_min[0], bbox_min[1], bbox_min[2]);
+	printf("Bbox Max: %d, %d, %d\n", bbox_max[0], bbox_max[1], bbox_max[2]);
+#endif
+
+	loadVolumeShader();
+	loadTransferFunction();
 }
 
-VolumeShader::~VolumeShader()
+Volume::~Volume()
 {
 	m_shader.deleteShaderProgram();
 
@@ -164,93 +203,7 @@ VolumeShader::~VolumeShader()
 	delete m_bbox;
 }
 
-bool VolumeShader::init(const std::string &filename, std::ostream &os)
-{
-	if (loadVolumeFile(filename, os)) {
-		loadVolumeShader();
-		loadTransferFunction();
-		return true;
-	}
-
-	return false;
-}
-
-bool VolumeShader::loadVolumeFile(const std::string &volume_file, std::ostream &os)
-{
-	using namespace openvdb;
-	using namespace openvdb::math;
-
-	initialize();
-	io::File file(volume_file);
-
-	if (file.open()) {
-		FloatGrid::Ptr grid;
-
-		if (file.hasGrid(Name("Density"))) {
-			grid = gridPtrCast<FloatGrid>(file.readGrid(Name("Density")));
-		}
-		else if (file.hasGrid(Name("density"))) {
-			grid = gridPtrCast<FloatGrid>(file.readGrid(Name("density")));
-		}
-		else {
-			os << "No density grid found in file: \'" << volume_file << "\'!\n";
-			return false;
-		}
-
-		if (grid->getGridClass() == GRID_LEVEL_SET) {
-			os << "Grid \'" << grid->getName() << "\'is a level set!\n";
-			return false;
-		}
-
-		auto meta_map = file.getMetadata();
-
-		file.close();
-
-		if ((*meta_map)["creator"]) {
-			auto creator = (*meta_map)["creator"]->str();
-
-			/* If the grid comes from Blender (Z-up), rotate it so it is Y-up */
-			if (creator == "Blender/OpenVDBWriter") {
-				Timer("Transform Blender Grid");
-				grid = transform_grid(*grid, Vec3s(-M_PI_2, 0.0f, 0.0f),
-				                      Vec3s(1.0f), Vec3s(0.0f), Vec3s(0.0f));
-			}
-		}
-
-		CoordBBox bbox = grid->evalActiveVoxelBoundingBox();
-		Coord bbox_min = bbox.min();
-		Coord bbox_max = bbox.max();
-
-		/* Compute grid size */
-		Vec3f min = grid->transform().indexToWorld(bbox_min);
-		Vec3f max = grid->transform().indexToWorld(bbox_max);
-
-		for (int i(0); i < 3; ++i) {
-			m_min[i] = min[i];
-			m_max[i] = max[i];
-		}
-
-		m_size = (m_max - m_min);
-		m_inv_size = 1.0f / m_size;
-
-		m_bbox = new Cube(m_min, m_max);
-
-		texture_from_leaf(*grid, m_texture_id, m_index_texture_id);
-
-#if 0
-		printf("Dimensions: %d, %d, %d\n", X_DIM, Y_DIM, Z_DIM);
-		printf("Min: %f, %f, %f\n", min[0], min[1], min[2]);
-		printf("Max: %f, %f, %f\n", max[0], max[1], max[2]);
-#endif
-		return true;
-	}
-
-	os << "Unable to open file \'" << volume_file << "\'\n";
-
-	return false;
-}
-
-void VolumeShader::loadVolumeShader()
+void Volume::loadVolumeShader()
 {
 	m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
 	m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
@@ -285,7 +238,7 @@ void VolumeShader::loadVolumeShader()
 	m_buffer_data = create_vertex_buffers(0, nullptr, vsize, nullptr, isize);
 }
 
-void VolumeShader::loadTransferFunction()
+void Volume::loadTransferFunction()
 {
 	/* transfer function (lookup table) color values */
 	const glm::vec3 jet_values[12] = {
@@ -330,7 +283,7 @@ void VolumeShader::loadTransferFunction()
 	create_texture_1D(m_transfer_func_id, 256, &data[0][0]);
 }
 
-void VolumeShader::slice(const glm::vec3 &view_dir)
+void Volume::slice(const glm::vec3 &view_dir)
 {
 	auto axis = axis_dominant_v3_single(glm::value_ptr(view_dir));
 
@@ -407,10 +360,18 @@ void VolumeShader::slice(const glm::vec3 &view_dir)
 	delete [] indices;
 }
 
-void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool is_rotated)
+void Volume::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool is_rotated)
 {
 	if (is_rotated) {
 		slice(dir);
+	}
+
+	if (m_draw_bbox) {
+		m_bbox->render(MVP);
+	}
+
+	if (m_draw_topology) {
+		m_topology->render(MVP);
 	}
 
 	glEnable(GL_BLEND);
@@ -439,25 +400,26 @@ void VolumeShader::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool
 
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
-
-	if (m_draw_bbox) {
-		m_bbox->render(MVP);
-	}
 }
 
-void VolumeShader::changeNumSlicesBy(int x)
+void Volume::changeNumSlicesBy(int x)
 {
 	m_num_slices += x;
 	m_num_slices = std::min(MAX_SLICES, std::max(m_num_slices, 3));
 	m_texture_slices.resize(m_num_slices * 4);
 }
 
-void VolumeShader::toggleUseLUT()
+void Volume::toggleUseLUT()
 {
-	m_use_lut = ((m_use_lut) ? false : true);
+	m_use_lut = !m_use_lut;
 }
 
-void VolumeShader::toggleBBoxDrawing()
+void Volume::toggleBBoxDrawing()
 {
-	m_draw_bbox = ((m_draw_bbox) ? false : true);
+	m_draw_bbox = !m_draw_bbox;
+}
+
+void Volume::toggleTopologyDrawing()
+{
+	m_draw_topology = !m_draw_topology;
 }

@@ -21,48 +21,19 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <glm/glm.hpp>
-#include <vector>
+#pragma once
 
-#include "../render/GLSLShader.h"
-
-const int MAX_SLICES = 512;
-
-class Cube;
-class TreeTopology;
 struct VBOData;
 
-class Volume {
+class TreeTopology {
 	VBOData *m_buffer_data;
-	GLuint m_texture_id, m_transfer_func_id, m_index_texture_id;
+	GLuint m_color_buffer;
 	GLSLShader m_shader;
-
-	Cube *m_bbox;
-	TreeTopology *m_topology;
-
-	glm::vec3 m_min, m_max;
-	glm::vec3 m_size, m_inv_size;
-
-	int m_num_slices;
-	std::vector<glm::vec3> m_texture_slices;
-
-	int m_axis;
-	float m_scale; // scale of the values contained in the grid (1 / (max - min))
-	bool m_use_lut, m_draw_bbox, m_draw_topology;
-
-	void loadTransferFunction();
-	void loadVolumeShader();
+	GLuint m_elements;
 
 public:
-	Volume();
-	Volume(openvdb::FloatGrid::Ptr &grid);
-	~Volume();
+	TreeTopology(openvdb::FloatGrid::ConstPtr grid);
+	~TreeTopology();
 
-	void slice(const glm::vec3 &view_dir);
-	void render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool is_rotated);
-	void changeNumSlicesBy(int x);
-
-	void toggleUseLUT();
-	void toggleBBoxDrawing();
-	void toggleTopologyDrawing();
+	void render(const glm::mat4 &MVP);
 };
