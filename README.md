@@ -1,7 +1,7 @@
 火のキリン
-========
+==========
 
-Experimental software aiming at rendering VDB volumes in real times.
+Experimental software aiming at rendering VDB volumes in real-time.
 
 The following libraries are required:
 
