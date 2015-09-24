@@ -140,6 +140,16 @@ VBOData *create_vertex_buffers(GLuint attribute, const GLfloat *vertices, size_t
 	return data;
 }
 
+void update_vertex_buffers(VBOData *data, const GLfloat *vertices, size_t vsize,
+                           const GLuint *indices, size_t isize)
+{
+	glBindBuffer(GL_ARRAY_BUFFER, data->vbo);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, vsize, vertices);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data->index_vbo);
+	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, isize, indices);
+}
+
 void delete_vertex_buffers(VBOData *data)
 {
 	glDeleteVertexArrays(1, &data->vao);

@@ -40,4 +40,7 @@ void create_texture_3D(GLuint &texture_id, const int size[3], const int channels
 VBOData *create_vertex_buffers(GLuint attribute, const GLfloat *vertices, size_t vsize,
                            const GLuint *indices, size_t isize);
 
+void update_vertex_buffers(VBOData *data, const GLfloat *vertices, size_t vsize,
+                           const GLuint *indices, size_t isize);
+
 void delete_vertex_buffers(VBOData *data);
