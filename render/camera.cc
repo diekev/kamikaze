@@ -38,24 +38,33 @@ Camera::Camera()
     , m_view_rotated(false)
 {}
 
-void Camera::mouseDownEvent(int s, int x, int y)
+void Camera::mouseDownEvent(int button, int s, int x, int y)
 {
 	if (s == GLUT_DOWN) {
 		m_old_x = x;
 		m_old_y = y;
 	}
-
-	if (s == GLUT_UP) {
+	else if (s == GLUT_UP) {
 		m_view_rotated = false;
+	}
+
+	if (button == 3) {
+		m_dist += 1.0f;
+	}
+	else if (button == 4) {
+		m_dist -= 1.0f;
 	}
 }
 
 void Camera::mouseMoveEvent(int state, int x, int y)
 {
-	if (state == 0) {
-		m_dist += (y - m_old_y) / 50.0f;
+	if (state == 3) {
+		m_dist += 1.0f;
 	}
-	else {
+	else if (state == 4) {
+		m_dist -= 1.0f;
+	}
+	else if (state == 0) {
 		m_rX += (y - m_old_y) / 5.0f;
 		m_rY += (x - m_old_x) / 5.0f;
 		m_view_rotated = true;

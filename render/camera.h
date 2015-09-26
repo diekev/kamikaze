@@ -40,6 +40,6 @@ public:
 	glm::vec3 viewDir() const;
 	glm::mat4 MVP() const;
 	void resize(int w, int h);
-	void mouseDownEvent(int s, int x, int y);
+	void mouseDownEvent(int button, int s, int x, int y);
 	bool hasRotated() const;
 };
