@@ -28,25 +28,24 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "render/GLSLShader.h"
-#include "util/util_opengl.h"
 #include "grid.h"
+
+#include "util/util_opengl.h"
 
 Grid::Grid(int x, int y)
     : m_total_indices(x * y)
-    , m_shader(new GLSLShader)
 {
-	m_shader->loadFromFile(GL_VERTEX_SHADER, "shader/flat_shader.vert");
-	m_shader->loadFromFile(GL_FRAGMENT_SHADER, "shader/flat_shader.frag");
+	m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/flat_shader.vert");
+	m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/flat_shader.frag");
 
-	m_shader->createAndLinkProgram();
+	m_shader.createAndLinkProgram();
 
-	m_shader->use();
+	m_shader.use();
 	{
-		m_shader->addAttribute("vertex");
-		m_shader->addUniform("MVP");
+		m_shader.addAttribute("vertex");
+		m_shader.addUniform("MVP");
 	}
-	m_shader->unUse();
+	m_shader.unUse();
 
 	/* setup vertex buffer */
 
@@ -70,12 +69,11 @@ Grid::Grid(int x, int y)
 	const auto &vsize = total_vertices * sizeof(glm::vec3);
 	const auto &isize = m_total_indices * sizeof(GLuint);
 
-	m_buffer_data = create_vertex_buffers((*m_shader)["vertex"], &(vertices[0].x), vsize, &indices[0], isize);
+	m_buffer_data = create_vertex_buffers(m_shader["vertex"], &(vertices[0].x), vsize, &indices[0], isize);
 }
 
 Grid::~Grid()
 {
-	delete m_shader;
 	delete_vertex_buffers(m_buffer_data);
 }
 
@@ -83,16 +81,16 @@ void Grid::render(const glm::mat4 &MVP)
 {
 	glEnable(GL_DEPTH_TEST);
 
-	m_shader->use();
+	m_shader.use();
 	{
 		glBindVertexArray(m_buffer_data->vao);
 
-		glUniformMatrix4fv((*m_shader)("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+		glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 		glDrawElements(GL_LINES, m_total_indices, GL_UNSIGNED_INT, nullptr);
 
 		glBindVertexArray(0);
 	}
-	m_shader->unUse();
+	m_shader.unUse();
 
 	glDisable(GL_DEPTH_TEST);
 }

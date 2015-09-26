@@ -24,8 +24,6 @@
 #include <glm/glm.hpp>
 #include <vector>
 
-#include "../render/GLSLShader.h"
-
 const int MAX_SLICES = 512;
 
 class Cube;
