@@ -21,32 +21,40 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#pragma once
+#include <GL/glew.h>
+#include <glm/glm.hpp>
 
-class Camera {
-	int m_old_x, m_old_y;
-	float m_head, m_pitch;
-	float m_near, m_far, m_distance, m_fov;
-	float m_zoom_speed, m_tumbling_speed, m_strafe_speed;
+#define DWREAL_IS_DOUBLE 0
+#include <openvdb/openvdb.h>
 
-	glm::mat4 m_model_view, m_projection;
-	glm::vec3 m_view_dir;
-	glm::vec3 m_eye;
-	glm::vec3 m_center, m_right, m_forward;
-	glm::vec3 m_up;
+class Cube;
+class TreeTopology;
+class VBOData;
 
-	bool m_need_update;
+class LevelSet {
+	VBOData *m_buffer_data;
+	GLSLShader m_shader;
+	size_t m_elements;
+
+	Cube *m_bbox;
+	TreeTopology *m_topology;
+
+	glm::vec3 m_min, m_max;
+	glm::vec3 m_size, m_inv_size;
+
+	bool m_draw_bbox, m_draw_topology;
+
+	void generate_mesh(openvdb::FloatGrid::ConstPtr grid);
 
 public:
-	Camera();
-	~Camera() = default;
+	LevelSet();
+	LevelSet(openvdb::FloatGrid::Ptr &grid);
+	~LevelSet();
 
-	void updateViewDir();
-	void mouseMoveEvent(int state, int modifier, int x, int y);
-	glm::vec3 viewDir() const;
-	glm::mat4 MV() const;
-	void resize(int w, int h);
-	void mouseDownEvent(int button, int s, int x, int y);
-	void setSpeed(float zoomSpeed = 0.1f, float strafeSpeed = 0.002f, float tumblingSpeed = 0.02f);
-	glm::mat4 P() const;
+	void render(const glm::mat4 &MVP, const glm::mat3 &N);
+
+	void loadShader();
+
+	void toggleBBoxDrawing();
+	void toggleTopologyDrawing();
 };

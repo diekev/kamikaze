@@ -134,7 +134,12 @@ glm::vec3 Camera::viewDir() const
 	return m_view_dir;
 }
 
-glm::mat4 Camera::MVP() const
+glm::mat4 Camera::MV() const
 {
-	return m_projection * m_model_view;
+	return m_model_view;
+}
+
+glm::mat4 Camera::P() const
+{
+	return m_projection;
 }

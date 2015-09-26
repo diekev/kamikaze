@@ -83,12 +83,14 @@ void Viewer::render()
 
 	m_camera->updateViewDir();
 	auto view_dir = m_camera->viewDir();
-	auto MVP = m_camera->MVP();
+	auto MV = m_camera->MV();
+	auto P = m_camera->P();
+	auto MVP = P * MV;
 
 	m_grid->render(MVP);
 
 	if (m_scene != nullptr) {
-		m_scene->render(view_dir, MVP);
+		m_scene->render(view_dir, MV, P);
 	}
 
 	glutSwapBuffers();
