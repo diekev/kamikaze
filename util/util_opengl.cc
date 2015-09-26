@@ -183,7 +183,7 @@ void VBOData::create_index_buffer(const GLuint *indices, const size_t size)
 
 void VBOData::update_index_buffer(const GLuint *indices, const size_t size)
 {
-	glBindBuffer(GL_ARRAY_BUFFER, index_vbo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_vbo);
 	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, size, indices);
 }
 
