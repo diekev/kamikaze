@@ -8,6 +8,8 @@
 #define DWREAL_IS_DOUBLE 0
 #include <openvdb/openvdb.h>
 
+#include "render/GLSLShader.h"
+
 #include "objects/volume.h"
 #include "render/viewer.h"
 #include "util/util_openvdb.h"
