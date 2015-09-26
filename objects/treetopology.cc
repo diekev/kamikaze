@@ -168,7 +168,6 @@ TreeTopology::TreeTopology(openvdb::FloatGrid::ConstPtr grid)
 
 TreeTopology::~TreeTopology()
 {
-	m_shader.deleteShaderProgram();
 	delete_vertex_buffers(m_buffer_data);
 	glDeleteBuffers(1, &m_color_buffer);
 }

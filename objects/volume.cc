@@ -109,8 +109,6 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
 
 Volume::~Volume()
 {
-	m_shader.deleteShaderProgram();
-
 	delete_vertex_buffers(m_buffer_data);
 
 	glDeleteTextures(1, &m_texture_id);

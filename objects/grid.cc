@@ -75,9 +75,7 @@ Grid::Grid(int x, int y)
 
 Grid::~Grid()
 {
-	m_shader->deleteShaderProgram();
 	delete m_shader;
-
 	delete_vertex_buffers(m_buffer_data);
 }
 

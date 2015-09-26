@@ -16,6 +16,8 @@ GLSLShader::GLSLShader()
 
 GLSLShader::~GLSLShader()
 {
+	glDeleteProgram(m_program);
+
 	m_attrib_list.clear();
 	m_uniform_loc_list.clear();
 }
@@ -124,9 +126,4 @@ GLuint GLSLShader::operator[](const std::string &attribute)
 GLuint GLSLShader::operator()(const std::string &uniform)
 {
 	return m_uniform_loc_list[uniform];
-}
-
-void GLSLShader::deleteShaderProgram()
-{
-	glDeleteProgram(m_program);
 }

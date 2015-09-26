@@ -69,7 +69,6 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 
 Cube::~Cube()
 {
-	m_shader.deleteShaderProgram();
 	delete_vertex_buffers(m_buffer_data);
 }
 
