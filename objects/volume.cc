@@ -115,6 +115,7 @@ Volume::~Volume()
 	glDeleteTextures(1, &m_transfer_func_id);
 
 	delete m_bbox;
+	delete m_topology;
 }
 
 void Volume::loadVolumeShader()
