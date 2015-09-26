@@ -113,7 +113,7 @@ void Viewer::render()
 	m_grid->render(MVP);
 
 	if (m_volume != nullptr) {
-		m_volume->render(view_dir, MVP, m_camera->hasRotated());
+		m_volume->render(view_dir, MVP);
 	}
 
 	glutSwapBuffers();

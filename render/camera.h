@@ -30,7 +30,6 @@ class Camera {
 
 	glm::mat4 m_model_view, m_projection;
 	glm::vec3 m_view_dir;
-	bool m_view_rotated;
 
 public:
 	Camera();
@@ -42,5 +41,4 @@ public:
 	glm::mat4 MVP() const;
 	void resize(int w, int h);
 	void mouseDownEvent(int button, int s, int x, int y);
-	bool hasRotated() const;
 };

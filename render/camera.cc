@@ -35,7 +35,6 @@ Camera::Camera()
     , m_rX(4.0f)
     , m_rY(50.0f)
     , m_translate(glm::vec3(0.0f, 0.0f, -2.0f))
-    , m_view_rotated(false)
 {}
 
 void Camera::mouseDownEvent(int button, int s, int x, int y)
@@ -43,9 +42,6 @@ void Camera::mouseDownEvent(int button, int s, int x, int y)
 	if (s == GLUT_DOWN) {
 		m_old_x = x;
 		m_old_y = y;
-	}
-	else if (s == GLUT_UP) {
-		m_view_rotated = false;
 	}
 
 	if (button == 3) {
@@ -62,7 +58,6 @@ void Camera::mouseMoveEvent(int state, int modifier, int x, int y)
 		if (modifier == 0) {
 			m_rX += (y - m_old_y) / 5.0f;
 			m_rY += (x - m_old_x) / 5.0f;
-			m_view_rotated = true;
 		}
 		else if (modifier == GLUT_ACTIVE_SHIFT) {
 			m_translate.x += (x - m_old_x) / 10.0f;
@@ -95,9 +90,4 @@ glm::vec3 Camera::viewDir() const
 glm::mat4 Camera::MVP() const
 {
 	return m_projection * m_model_view;
-}
-
-bool Camera::hasRotated() const
-{
-	return m_view_rotated;
 }

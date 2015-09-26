@@ -29,6 +29,8 @@
 #define DWREAL_IS_DOUBLE 0
 #include <openvdb/openvdb.h>
 
+#include "render/GLSLShader.h"
+
 #include "volume.h"
 
 #include "util/util_opengl.h"
@@ -273,11 +275,9 @@ void Volume::slice(const glm::vec3 &view_dir)
 	delete [] indices;
 }
 
-void Volume::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool is_rotated)
+void Volume::render(const glm::vec3 &dir, const glm::mat4 &MVP)
 {
-	if (is_rotated) {
-		slice(dir);
-	}
+	slice(dir);
 
 	if (m_draw_bbox) {
 		m_bbox->render(MVP);

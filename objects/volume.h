@@ -57,7 +57,7 @@ public:
 	~Volume();
 
 	void slice(const glm::vec3 &view_dir);
-	void render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool is_rotated);
+	void render(const glm::vec3 &dir, const glm::mat4 &MVP);
 	void changeNumSlicesBy(int x);
 
 	void toggleUseLUT();
