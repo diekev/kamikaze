@@ -33,7 +33,8 @@
 #include "util/util_opengl.h"
 
 Grid::Grid(int x, int y)
-    : m_total_indices(x * y)
+    : m_buffer_data(new VBOData())
+    , m_total_indices(x * y)
 {
 	m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/flat_shader.vert");
 	m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/flat_shader.frag");
@@ -69,12 +70,16 @@ Grid::Grid(int x, int y)
 	const auto &vsize = total_vertices * sizeof(glm::vec3);
 	const auto &isize = m_total_indices * sizeof(GLuint);
 
-	m_buffer_data = create_vertex_buffers(m_shader["vertex"], &(vertices[0].x), vsize, &indices[0], isize);
+	m_buffer_data->bind();
+	m_buffer_data->create_vertex_buffer(&(vertices[0].x), vsize);
+	m_buffer_data->create_index_buffer(&indices[0], isize);
+	m_buffer_data->attrib_pointer(m_shader["vertex"]);
+	m_buffer_data->unbind();
 }
 
 Grid::~Grid()
 {
-	delete_vertex_buffers(m_buffer_data);
+	delete m_buffer_data;
 }
 
 void Grid::render(const glm::mat4 &MVP)
@@ -83,12 +88,12 @@ void Grid::render(const glm::mat4 &MVP)
 
 	m_shader.use();
 	{
-		glBindVertexArray(m_buffer_data->vao);
+		m_buffer_data->bind();
 
 		glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 		glDrawElements(GL_LINES, m_total_indices, GL_UNSIGNED_INT, nullptr);
 
-		glBindVertexArray(0);
+		m_buffer_data->unbind();
 	}
 	m_shader.unUse();
 

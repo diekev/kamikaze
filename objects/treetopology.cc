@@ -38,6 +38,7 @@
 #include "treetopology.h"
 
 TreeTopology::TreeTopology(openvdb::FloatGrid::ConstPtr grid)
+    : m_buffer_data(new VBOData)
 {
 	m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/tree_topo.vert");
 	m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/tree_topo.frag");
@@ -148,28 +149,18 @@ TreeTopology::TreeTopology(openvdb::FloatGrid::ConstPtr grid)
 		}
     }
 
-	m_buffer_data = create_vertex_buffers(m_shader["vertex"],
-	                                      &(vertices[0].x), sizeof(glm::vec3) * N,
-	                                      &indices[0], sizeof(GLuint) * m_elements);
-
-	glBindVertexArray(m_buffer_data->vao);
-	glGenBuffers(1, &m_color_buffer);
-
-	glBindBuffer(GL_ARRAY_BUFFER, m_color_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * colors.size(), &colors[0][0], GL_STATIC_DRAW);
-
-	glEnableVertexAttribArray(m_shader["color"]);
-	glVertexAttribPointer(m_shader["color"], 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-
+	m_buffer_data->bind();
+	m_buffer_data->create_vertex_buffer(&(vertices[0].x), sizeof(glm::vec3) * N);
+	m_buffer_data->create_index_buffer(&indices[0], sizeof(GLuint) * m_elements);
+	m_buffer_data->attrib_pointer(m_shader["vertex"]);
+	m_buffer_data->create_color_buffer(&colors[0][0], sizeof(glm::vec3) * colors.size());
+	m_buffer_data->attrib_pointer(m_shader["color"]);
+	m_buffer_data->unbind();
 }
 
 TreeTopology::~TreeTopology()
 {
-	delete_vertex_buffers(m_buffer_data);
-	glDeleteBuffers(1, &m_color_buffer);
+	delete m_buffer_data;
 }
 
 void TreeTopology::render(const glm::mat4 &MVP)
@@ -178,12 +169,12 @@ void TreeTopology::render(const glm::mat4 &MVP)
 
 	m_shader.use();
 	{
-		glBindVertexArray(m_buffer_data->vao);
+		m_buffer_data->bind();
 
 		glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 		glDrawElements(GL_LINES, m_elements, GL_UNSIGNED_INT, nullptr);
 
-		glBindVertexArray(0);
+		m_buffer_data->unbind();
 	}
 	m_shader.unUse();
 

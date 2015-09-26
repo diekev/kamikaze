@@ -25,7 +25,7 @@
 
 #include "render/GLSLShader.h"
 
-struct VBOData;
+class VBOData;
 
 class Grid {
 	VBOData *m_buffer_data;

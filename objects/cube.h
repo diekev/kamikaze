@@ -23,7 +23,7 @@
 
 #pragma once
 
-struct VBOData;
+class VBOData;
 
 class Cube {
 	VBOData *m_buffer_data;

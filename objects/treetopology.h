@@ -23,7 +23,7 @@
 
 #pragma once
 
-struct VBOData;
+class VBOData;
 
 class TreeTopology {
 	VBOData *m_buffer_data;

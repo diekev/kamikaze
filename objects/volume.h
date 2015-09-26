@@ -28,7 +28,7 @@ const int MAX_SLICES = 512;
 
 class Cube;
 class TreeTopology;
-struct VBOData;
+class VBOData;
 
 class Volume {
 	VBOData *m_buffer_data;
