@@ -27,6 +27,7 @@ SRC = \
 	objects/volume.cc \
 	render/camera.cc \
 	render/GLSLShader.cc \
+	render/scene.cc \
 	render/viewer.cc \
 	util/util_opengl.cc \
 	util/util_openvdb.cc \

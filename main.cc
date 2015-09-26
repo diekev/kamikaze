@@ -11,6 +11,7 @@
 #include "render/GLSLShader.h"
 
 #include "objects/volume.h"
+#include "render/scene.h"
 #include "render/viewer.h"
 #include "util/util_openvdb.h"
 #include "util/utils.h"
@@ -27,6 +28,8 @@ bool initViewer(const char *filename, std::ostream &os)
 		viewer = new Viewer();
 		viewer->init();
 	}
+
+	Scene *scene = new Scene;
 
 	openvdb::initialize();
 	openvdb::io::File file(filename);
@@ -45,11 +48,6 @@ bool initViewer(const char *filename, std::ostream &os)
 			return false;
 		}
 
-		if (grid->getGridClass() == GRID_LEVEL_SET) {
-			os << "Grid \'" << grid->getName() << "\'is a level set!\n";
-			return false;
-		}
-
 		auto meta_map = file.getMetadata();
 
 		file.close();
@@ -65,8 +63,16 @@ bool initViewer(const char *filename, std::ostream &os)
 			}
 		}
 
-		Volume *volume = new Volume(grid);
-		viewer->setVolume(volume);
+		if (grid->getGridClass() == GRID_LEVEL_SET) {
+			os << "Grid \'" << grid->getName() << "\'is a level set!\n";
+			return false;
+		}
+		else {
+			Volume *volume = new Volume(grid);
+			scene->add_volume(volume);
+		}
+
+		viewer->setScene(scene);
 
 		return true;
 	}

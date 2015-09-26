@@ -9,9 +9,9 @@
 #include <iostream>
 
 #include "objects/grid.h"
-#include "objects/volume.h"
 
 #include "camera.h"
+#include "scene.h"
 #include "viewer.h"
 
 Viewer::Viewer()
@@ -19,14 +19,14 @@ Viewer::Viewer()
     , m_bg(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f))
     , m_camera(new Camera())
     , m_grid(new Grid(20, 20))
-    , m_volume(nullptr)
+    , m_scene(nullptr)
 {}
 
 Viewer::~Viewer()
 {
 	delete m_camera;
 	delete m_grid;
-	delete m_volume;
+	delete m_scene;
 }
 
 void Viewer::init()
@@ -73,32 +73,7 @@ void Viewer::mouseMoveEvent(int x, int y)
 
 void Viewer::keyboardEvent(unsigned char key, int /*x*/, int /*y*/)
 {
-	bool need_slicing = false;
-
-	switch (key) {
-		case '-':
-			m_volume->changeNumSlicesBy(-1);
-			need_slicing = true;
-			break;
-		case '+':
-			m_volume->changeNumSlicesBy(1);
-			need_slicing = true;
-			break;
-		case 'l':
-			m_volume->toggleUseLUT();
-			break;
-		case 'b':
-			m_volume->toggleBBoxDrawing();
-			break;
-		case 't':
-			m_volume->toggleTopologyDrawing();
-			break;
-	}
-
-	if (need_slicing) {
-		m_volume->slice(m_camera->viewDir());
-	}
-
+	m_scene->keyboardEvent(key);
 	glutPostRedisplay();
 }
 
@@ -112,14 +87,14 @@ void Viewer::render()
 
 	m_grid->render(MVP);
 
-	if (m_volume != nullptr) {
-		m_volume->render(view_dir, MVP);
+	if (m_scene != nullptr) {
+		m_scene->render(view_dir, MVP);
 	}
 
 	glutSwapBuffers();
 }
 
-void Viewer::setVolume(Volume *volume)
+void Viewer::setScene(Scene *scene)
 {
-	m_volume = volume;
+	m_scene = scene;
 }

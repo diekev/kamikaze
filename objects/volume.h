@@ -21,7 +21,12 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
+#include <GL/glew.h>
 #include <glm/glm.hpp>
+
+#define DWREAL_IS_DOUBLE 0
+#include <openvdb/openvdb.h>
+
 #include <vector>
 
 const int MAX_SLICES = 512;
