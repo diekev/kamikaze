@@ -15,7 +15,7 @@
 #include "viewer.h"
 
 Viewer::Viewer()
-    : m_mouse_state(0)
+    : m_mouse_button(0)
     , m_bg(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f))
     , m_camera(new Camera())
     , m_grid(new Grid(20, 20))
@@ -43,19 +43,31 @@ void Viewer::resize(int w, int h)
 
 void Viewer::mouseDownEvent(int button, int s, int x, int y)
 {
+	bool need_redisplay = false;
+
+	m_modifier = glutGetModifiers();
+
 	if (button == GLUT_MIDDLE_BUTTON) {
-		m_mouse_state = 0;
+		m_mouse_button = 0;
+	}
+	else if ((button == 3 || button == 4) && (s != GLUT_UP)) {
+		m_mouse_button = button;
+		need_redisplay = true;
 	}
 	else {
-		m_mouse_state = 1;
+		m_mouse_button = 1;
 	}
 
-	m_camera->mouseDownEvent(s, x, y);
+	m_camera->mouseDownEvent(m_mouse_button, s, x, y);
+
+	if (need_redisplay) {
+		glutPostRedisplay();
+	}
 }
 
 void Viewer::mouseMoveEvent(int x, int y)
 {
-	m_camera->mouseMoveEvent(m_mouse_state, x, y);
+	m_camera->mouseMoveEvent(m_mouse_button, m_modifier, x, y);
 	glutPostRedisplay();
 }
 
@@ -101,7 +113,7 @@ void Viewer::render()
 	m_grid->render(MVP);
 
 	if (m_volume != nullptr) {
-		m_volume->render(view_dir, MVP, m_camera->hasRotated());
+		m_volume->render(view_dir, MVP);
 	}
 
 	glutSwapBuffers();

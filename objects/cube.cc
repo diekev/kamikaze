@@ -31,6 +31,7 @@
 #include "cube.h"
 
 Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
+    : m_buffer_data(new VBOData)
 {
 	m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/flat_shader.vert");
 	m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/flat_shader.frag");
@@ -64,13 +65,16 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 	    2, 6, 3, 7
 	};
 
-	m_buffer_data = create_vertex_buffers(m_shader["vertex"], &vertices[0][0], sizeof(vertices), &indices[0], sizeof(indices));
+	m_buffer_data->bind();
+	m_buffer_data->create_vertex_buffer(&vertices[0][0], sizeof(vertices));
+	m_buffer_data->create_index_buffer(&indices[0], sizeof(indices));
+	m_buffer_data->attrib_pointer(m_shader["vertex"]);
+	m_buffer_data->unbind();
 }
 
 Cube::~Cube()
 {
-	m_shader.deleteShaderProgram();
-	delete_vertex_buffers(m_buffer_data);
+	delete m_buffer_data;
 }
 
 void Cube::render(const glm::mat4 &MVP)
@@ -79,12 +83,12 @@ void Cube::render(const glm::mat4 &MVP)
 
 	m_shader.use();
 	{
-		glBindVertexArray(m_buffer_data->vao);
+		m_buffer_data->bind();
 
 		glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 		glDrawElements(GL_LINES, 24, GL_UNSIGNED_INT, nullptr);
 
-		glBindVertexArray(0);
+		m_buffer_data->unbind();
 	}
 	m_shader.unUse();
 

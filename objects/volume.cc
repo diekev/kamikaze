@@ -30,6 +30,8 @@
 #include <openvdb/openvdb.h>
 #include <openvdb/tools/Dense.h>
 
+#include "render/GLSLShader.h"
+
 #include "volume.h"
 
 #include "util/util_opengl.h"
@@ -134,7 +136,7 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuin
 }
 
 Volume::Volume()
-    : m_buffer_data(nullptr)
+    : m_buffer_data(new VBOData)
     , m_texture_id(0)
     , m_transfer_func_id(0)
     , m_index_texture_id(0)
@@ -192,15 +194,13 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
 
 Volume::~Volume()
 {
-	m_shader.deleteShaderProgram();
-
-	delete_vertex_buffers(m_buffer_data);
-
 	glDeleteTextures(1, &m_texture_id);
 	glDeleteTextures(1, &m_index_texture_id);
 	glDeleteTextures(1, &m_transfer_func_id);
 
+	delete m_buffer_data;
 	delete m_bbox;
+	delete m_topology;
 }
 
 void Volume::loadVolumeShader()
@@ -235,7 +235,11 @@ void Volume::loadVolumeShader()
 	const auto &vsize = MAX_SLICES * 4 * sizeof(glm::vec3);
 	const auto &isize = MAX_SLICES * 6 * sizeof(GLuint);
 
-	m_buffer_data = create_vertex_buffers(0, nullptr, vsize, nullptr, isize);
+	m_buffer_data->bind();
+	m_buffer_data->create_vertex_buffer(nullptr, vsize);
+	m_buffer_data->create_index_buffer(nullptr, isize);
+	m_buffer_data->attrib_pointer(m_shader["vertex"]);
+	m_buffer_data->unbind();
 }
 
 void Volume::loadTransferFunction()
@@ -353,18 +357,15 @@ void Volume::slice(const glm::vec3 &view_dir)
 		idx += 4;
 	}
 
-	update_vertex_buffers(m_buffer_data,
-	                      &(m_texture_slices[0].x), m_texture_slices.size() * sizeof(glm::vec3),
-	                      indices, idx_count * sizeof(GLuint));
+	m_buffer_data->update_vertex_buffer(&(m_texture_slices[0].x), m_texture_slices.size() * sizeof(glm::vec3));
+	m_buffer_data->update_index_buffer(indices, idx_count * sizeof(GLuint));
 
 	delete [] indices;
 }
 
-void Volume::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool is_rotated)
+void Volume::render(const glm::vec3 &dir, const glm::mat4 &MVP)
 {
-	if (is_rotated) {
-		slice(dir);
-	}
+	slice(dir);
 
 	if (m_draw_bbox) {
 		m_bbox->render(MVP);
@@ -380,7 +381,7 @@ void Volume::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool is_ro
 
 	m_shader.use();
 	{
-		glBindVertexArray(m_buffer_data->vao);
+		m_buffer_data->bind();
 
 		texture_bind(GL_TEXTURE_3D, m_texture_id, 0);
 		texture_bind(GL_TEXTURE_1D, m_transfer_func_id, 1);
@@ -394,7 +395,7 @@ void Volume::render(const glm::vec3 &dir, const glm::mat4 &MVP, const bool is_ro
 		texture_unbind(GL_TEXTURE_1D, 1);
 		texture_unbind(GL_TEXTURE_3D, 2);
 
-		glBindVertexArray(0);
+		m_buffer_data->unbind();
 	}
 	m_shader.unUse();
 

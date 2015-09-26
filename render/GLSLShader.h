@@ -29,6 +29,4 @@ public:
 
 	GLuint operator[](const std::string &attribute);
 	GLuint operator()(const std::string &uniform);
-
-	void deleteShaderProgram();
 };

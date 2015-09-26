@@ -8,7 +8,8 @@ class Grid;
 class Volume;
 
 class Viewer {
-	int m_mouse_state;
+	int m_mouse_button;
+	int m_modifier;
 	glm::vec4 m_bg;
 
 	Camera *m_camera;

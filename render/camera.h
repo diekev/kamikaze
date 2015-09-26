@@ -25,21 +25,27 @@
 
 class Camera {
 	int m_old_x, m_old_y;
-	float m_rX, m_rY, m_dist;
+	float m_head, m_pitch;
+	float m_near, m_far, m_distance, m_fov;
+	float m_zoom_speed, m_tumbling_speed, m_strafe_speed;
 
 	glm::mat4 m_model_view, m_projection;
 	glm::vec3 m_view_dir;
-	bool m_view_rotated;
+	glm::vec3 m_eye;
+	glm::vec3 m_center, m_right, m_forward;
+	glm::vec3 m_up;
+
+	bool m_need_update;
 
 public:
 	Camera();
 	~Camera() = default;
 
 	void updateViewDir();
-	void mouseMoveEvent(int state, int x, int y);
+	void mouseMoveEvent(int state, int modifier, int x, int y);
 	glm::vec3 viewDir() const;
 	glm::mat4 MVP() const;
 	void resize(int w, int h);
-	void mouseDownEvent(int s, int x, int y);
-	bool hasRotated() const;
+	void mouseDownEvent(int button, int s, int x, int y);
+	void setSpeed(float zoomSpeed = 0.1f, float strafeSpeed = 0.002f, float tumblingSpeed = 0.02f);
 };
