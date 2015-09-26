@@ -25,7 +25,8 @@
 
 class Camera {
 	int m_old_x, m_old_y;
-	float m_rX, m_rY, m_dist;
+	float m_rX, m_rY;
+	glm::vec3 m_translate;
 
 	glm::mat4 m_model_view, m_projection;
 	glm::vec3 m_view_dir;
@@ -36,7 +37,7 @@ public:
 	~Camera() = default;
 
 	void updateViewDir();
-	void mouseMoveEvent(int state, int x, int y);
+	void mouseMoveEvent(int state, int modifier, int x, int y);
 	glm::vec3 viewDir() const;
 	glm::mat4 MVP() const;
 	void resize(int w, int h);

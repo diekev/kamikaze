@@ -45,6 +45,8 @@ void Viewer::mouseDownEvent(int button, int s, int x, int y)
 {
 	bool need_redisplay = false;
 
+	m_modifier = glutGetModifiers();
+
 	if (button == GLUT_MIDDLE_BUTTON) {
 		m_mouse_button = 0;
 	}
@@ -65,7 +67,7 @@ void Viewer::mouseDownEvent(int button, int s, int x, int y)
 
 void Viewer::mouseMoveEvent(int x, int y)
 {
-	m_camera->mouseMoveEvent(m_mouse_button, x, y);
+	m_camera->mouseMoveEvent(m_mouse_button, m_modifier, x, y);
 	glutPostRedisplay();
 }
 

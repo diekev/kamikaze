@@ -34,7 +34,7 @@ Camera::Camera()
     , m_old_y(0)
     , m_rX(4.0f)
     , m_rY(50.0f)
-    , m_dist(-2.0f)
+    , m_translate(glm::vec3(0.0f, 0.0f, -2.0f))
     , m_view_rotated(false)
 {}
 
@@ -49,25 +49,25 @@ void Camera::mouseDownEvent(int button, int s, int x, int y)
 	}
 
 	if (button == 3) {
-		m_dist += 1.0f;
+		m_translate.z += 1.0f;
 	}
 	else if (button == 4) {
-		m_dist -= 1.0f;
+		m_translate.z -= 1.0f;
 	}
 }
 
-void Camera::mouseMoveEvent(int state, int x, int y)
+void Camera::mouseMoveEvent(int state, int modifier, int x, int y)
 {
-	if (state == 3) {
-		m_dist += 1.0f;
-	}
-	else if (state == 4) {
-		m_dist -= 1.0f;
-	}
-	else if (state == 0) {
-		m_rX += (y - m_old_y) / 5.0f;
-		m_rY += (x - m_old_x) / 5.0f;
-		m_view_rotated = true;
+	if (state == 0) {
+		if (modifier == 0) {
+			m_rX += (y - m_old_y) / 5.0f;
+			m_rY += (x - m_old_x) / 5.0f;
+			m_view_rotated = true;
+		}
+		else if (modifier == GLUT_ACTIVE_SHIFT) {
+			m_translate.x += (x - m_old_x) / 10.0f;
+			m_translate.y += (y - m_old_y) / 10.0f;
+		}
 	}
 
 	m_old_x = x;
@@ -81,7 +81,7 @@ void Camera::resize(int w, int h)
 
 void Camera::updateViewDir()
 {
-	glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, m_dist));
+	glm::mat4 T = glm::translate(glm::mat4(1.0f), m_translate);
 	glm::mat4 R = glm::rotate(T, glm::radians(m_rX), glm::vec3(1.0f, 0.0f, 0.0f));
 	m_model_view = glm::rotate(R, glm::radians(m_rY), glm::vec3(0.0f, 1.0f, 0.0f));
 	m_view_dir = -glm::vec3(m_model_view[0][2], m_model_view[1][2], m_model_view[2][2]);
