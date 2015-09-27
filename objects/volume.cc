@@ -214,7 +214,7 @@ void Volume::slice(const glm::vec3 &view_dir)
 	auto slice_size = m_size[m_axis] / m_num_slices;
 
 	/* always process slices in back to front order! */
-	if (view_dir[m_axis] > 0.0f) {
+	if (view_dir[m_axis] < 0.0f) {
 		depth = m_max[m_axis];
 		slice_size = -slice_size;
 	}
