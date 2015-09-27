@@ -29,6 +29,7 @@ SRC = \
 	render/camera.cc \
 	render/GPUBuffer.cc \
 	render/GPUShader.cc \
+	render/GPUTexture.cc \
 	render/scene.cc \
 	render/viewer.cc \
 	util/util_opengl.cc \

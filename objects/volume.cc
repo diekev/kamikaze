@@ -31,6 +31,7 @@
 #include "volume.h"
 
 #include "render/GPUBuffer.h"
+#include "render/GPUTexture.h"
 
 #include "util/util_opengl.h"
 #include "util/util_openvdb.h"
@@ -41,8 +42,8 @@
 
 Volume::Volume()
     : m_buffer_data(new GPUBuffer)
-    , m_texture_id(0)
-    , m_transfer_func_id(0)
+    , m_volume_texture(nullptr)
+    , m_transfer_texture(nullptr)
     , m_bbox(nullptr)
     , m_topology(nullptr)
     , m_min(glm::vec3(0.0f))
@@ -88,7 +89,7 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
 	m_bbox = new Cube(m_min, m_max);
 	m_topology = new TreeTopology(grid);
 
-#if 1
+#if 0
 	printf("Dimensions: %d, %d, %d\n", X_DIM, Y_DIM, Z_DIM);
 	printf("Min: %f, %f, %f\n", min[0], min[1], min[2]);
 	printf("Max: %f, %f, %f\n", max[0], max[1], max[2]);
@@ -100,18 +101,25 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
 	GLfloat *data = new GLfloat[X_DIM * Y_DIM * Z_DIM];
 
 	convert_grid(*grid, data, bbox_min, bbox_max, m_scale);
-	create_texture_3D(m_texture_id, extent.asPointer(), 1, data);
+
+	m_volume_texture = new GPUTexture(GL_TEXTURE_3D, 0);
+	m_volume_texture->bind();
+	m_volume_texture->setType(GL_FLOAT, GL_RED, GL_RED);
+	m_volume_texture->setMinMagFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
+	m_volume_texture->setWrapping(GL_CLAMP_TO_BORDER);
+	m_volume_texture->create3D(data, extent.asPointer());
+	m_volume_texture->unbind();
 
 	delete [] data;
 
-	loadVolumeShader();
 	loadTransferFunction();
+	loadVolumeShader();
 }
 
 Volume::~Volume()
 {
-	glDeleteTextures(1, &m_texture_id);
-	glDeleteTextures(1, &m_transfer_func_id);
+	delete m_volume_texture;
+	delete m_transfer_texture;
 
 	delete m_buffer_data;
 	delete m_bbox;
@@ -137,7 +145,7 @@ void Volume::loadVolumeShader()
 		m_shader.addUniform("inv_size");
 
 		glUniform1i(m_shader("volume"), 0);
-		glUniform1i(m_shader("lut"), 1);
+		glUniform1i(m_shader("lut"), m_transfer_texture->unit());
 
 		glUniform3fv(m_shader("offset"), 1, &m_min[0]);
 		glUniform3fv(m_shader("inv_size"), 1, &m_inv_size[0]);
@@ -197,7 +205,13 @@ void Volume::loadTransferFunction()
 		}
 	}
 
-	create_texture_1D(m_transfer_func_id, 256, &data[0][0]);
+	m_transfer_texture = new GPUTexture(GL_TEXTURE_1D, 1);
+	m_transfer_texture->bind();
+	m_transfer_texture->setType(GL_FLOAT, GL_RGB, GL_RGB);
+	m_transfer_texture->setMinMagFilter(GL_LINEAR, GL_LINEAR);
+	m_transfer_texture->setWrapping(GL_REPEAT);
+	m_transfer_texture->create(&data[0][0], 256);
+	m_transfer_texture->unbind();
 }
 
 void Volume::slice(const glm::vec3 &view_dir)
@@ -295,17 +309,15 @@ void Volume::render(const glm::vec3 &dir, const glm::mat4 &MVP)
 	m_shader.use();
 	{
 		m_buffer_data->bind();
-
-		texture_bind(GL_TEXTURE_3D, m_texture_id, 0);
-		texture_bind(GL_TEXTURE_1D, m_transfer_func_id, 1);
+		m_volume_texture->bind();
+		m_transfer_texture->bind();
 
 		glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 		glUniform1i(m_shader("use_lut"), m_use_lut);
 		glDrawElements(GL_TRIANGLES, m_num_slices * 6, GL_UNSIGNED_INT, nullptr);
 
-		texture_unbind(GL_TEXTURE_3D, 0);
-		texture_unbind(GL_TEXTURE_1D, 1);
-
+		m_transfer_texture->unbind();
+		m_volume_texture->unbind();
 		m_buffer_data->unbind();
 	}
 	m_shader.unUse();

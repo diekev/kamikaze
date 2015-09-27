@@ -32,12 +32,13 @@
 const int MAX_SLICES = 512;
 
 class Cube;
-class TreeTopology;
 class GPUBuffer;
+class GPUTexture;
+class TreeTopology;
 
 class Volume {
 	GPUBuffer *m_buffer_data;
-	GLuint m_texture_id, m_transfer_func_id;
+	GPUTexture *m_volume_texture, *m_transfer_texture;
 	GPUShader m_shader;
 
 	Cube *m_bbox;
