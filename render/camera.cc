@@ -49,12 +49,12 @@ Camera::Camera()
     , m_need_update(true)
 {}
 
-void Camera::setSpeed(float zoomSpeed, float strafeSpeed, float tumblingSpeed)
+void Camera::setSpeed(const float zoom, const float strafe, const float tumbling)
 {
-	m_zoom_speed = glm::max(0.0001f, m_distance * zoomSpeed);
-    m_strafe_speed = glm::max(0.0001f, m_distance * strafeSpeed);
-    m_tumbling_speed = glm::max(0.2f, m_distance * tumblingSpeed);
-    m_tumbling_speed = glm::min(1.0f, m_distance * tumblingSpeed);
+	m_zoom_speed = glm::max(0.0001f, m_distance * zoom);
+    m_strafe_speed = glm::max(0.0001f, m_distance * strafe);
+    m_tumbling_speed = glm::max(0.2f, m_distance * tumbling);
+    m_tumbling_speed = glm::min(1.0f, m_distance * tumbling);
 }
 
 void Camera::mouseDownEvent(int button, int s, int x, int y)
@@ -116,8 +116,7 @@ void Camera::updateViewDir()
 	m_eye[1] = m_center[1] + m_distance * std::sin(head);
 	m_eye[2] = m_center[2] + m_distance * std::cos(head) * std::sin(pitch);
 
-	m_view = (m_center - m_eye);
-	glm::normalize(m_view);
+	m_view = glm::normalize(m_center - m_eye);
 
 	m_up[1] = (glm::cos(head)) > 0 ? 1.0f : -1.0f;
 	m_right = glm::cross(m_view, m_up);

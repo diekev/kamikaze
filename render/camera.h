@@ -48,5 +48,6 @@ public:
 	glm::mat4 P() const;
 
 	void resize(int w, int h);
-	void setSpeed(float zoomSpeed = 0.1f, float strafeSpeed = 0.002f, float tumblingSpeed = 0.02f);
+	void setSpeed(const float zoom = 0.1f, const float strafe = 0.002f,
+	              const float tumbling = 0.02f);
 };
