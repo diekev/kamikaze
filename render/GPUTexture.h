@@ -44,10 +44,10 @@ public:
 	void setType(GLenum type, GLenum format, GLint internal_format);
 	void setMinMagFilter(GLint min, GLint mag);
 	void setWrapping(GLint wrap);
+	void generateMipMap(GLint base, GLint max);
 
-	void create(const GLvoid *data, const int size);
-	void create2D(const GLvoid *data, const int size[2]);
-	void create3D(const GLvoid *data, const int size[3]);
+	void create(const GLvoid *data, GLint *size);
+	void createSubImage(const GLvoid *data, GLint *size, GLint *offset);
 
 	GLint unit() const;
 };

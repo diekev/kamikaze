@@ -22,7 +22,6 @@
  *
  */
 
-#include <cassert>
 #include <GL/glew.h>
 
 #include "GPUTexture.h"
@@ -63,7 +62,6 @@ void GPUTexture::bind()
 
 void GPUTexture::unbind()
 {
-
 	glActiveTexture(GL_TEXTURE0 + m_texture);
 	glBindTexture(m_target, 0);
 }
@@ -95,26 +93,42 @@ void GPUTexture::setWrapping(GLint wrap)
 	}
 }
 
-void GPUTexture::create(const GLvoid *data, const int size)
+void GPUTexture::generateMipMap(GLint base, GLint max)
 {
-	glTexImage1D(m_target, 0, m_internal_format, size, 0, m_format, m_type, data);
+	glTexParameteri(m_target, GL_TEXTURE_BASE_LEVEL, base);
+	glTexParameteri(m_target, GL_TEXTURE_MAX_LEVEL, max);
+	glGenerateMipmap(m_target);
 }
 
-void GPUTexture::create2D(const GLvoid *data, const int size[2])
+void GPUTexture::create(const GLvoid *data, GLint *size)
 {
-	glTexImage2D(m_target, 0, m_internal_format,
-	             size[0], size[1], 0, m_format, m_type, data);
+	if (m_target == GL_TEXTURE_1D) {
+		glTexImage1D(m_target, 0, m_internal_format, size[0], m_border, m_format,
+		             m_type, data);
+	}
+	else if (m_target == GL_TEXTURE_2D) {
+		glTexImage2D(m_target, 0, m_internal_format, size[0], size[1], m_border,
+		             m_format, m_type, data);
+	}
+	else {
+		glTexImage3D(m_target, 0, m_internal_format, size[0], size[1], size[2],
+		             m_border, m_format, m_type, data);
+	}
 }
 
-void GPUTexture::create3D(const GLvoid *data, const int size[3])
+void GPUTexture::createSubImage(const GLvoid *data, GLint *size, GLint *offset)
 {
-	glTexParameteri(m_target, GL_TEXTURE_BASE_LEVEL, 0);
-	glTexParameteri(m_target, GL_TEXTURE_MAX_LEVEL, 4);
-
-	glTexImage3D(m_target, 0, m_internal_format,
-	             size[0], size[1], size[2], 0, m_format, m_type, data);
-
-	glGenerateMipmap(GL_TEXTURE_3D);
+	if (m_target == GL_TEXTURE_1D) {
+		glTexSubImage1D(m_target, 0, offset[0], size[0], m_format, m_type, data);
+	}
+	else if (m_target == GL_TEXTURE_2D) {
+		glTexSubImage2D(m_target, 0, offset[0], offset[1], size[0], size[1],
+		                m_format, m_type, data);
+	}
+	else {
+		glTexSubImage3D(m_target, 0, offset[0], offset[1], offset[2],
+		                size[0], size[1], size[2], m_format, m_type, data);
+	}
 }
 
 GLint GPUTexture::unit() const

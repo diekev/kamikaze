@@ -107,8 +107,10 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
 	m_volume_texture->setType(GL_FLOAT, GL_RED, GL_RED);
 	m_volume_texture->setMinMagFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 	m_volume_texture->setWrapping(GL_CLAMP_TO_BORDER);
-	m_volume_texture->create3D(data, extent.asPointer());
+	m_volume_texture->create(data, extent.asPointer());
+	m_volume_texture->generateMipMap(0, 4);
 	m_volume_texture->unbind();
+	gl_check_errors();
 
 	delete [] data;
 
@@ -184,7 +186,8 @@ void Volume::loadTransferFunction()
 		glm::vec3(1.0f, 0.0f, 0.0f),
 	};
 
-	float data[256][3];
+	int size = 256;
+	float data[size][3];
 	int indices[12];
 
 	for (int i = 0; i < 12; ++i) {
@@ -210,7 +213,7 @@ void Volume::loadTransferFunction()
 	m_transfer_texture->setType(GL_FLOAT, GL_RGB, GL_RGB);
 	m_transfer_texture->setMinMagFilter(GL_LINEAR, GL_LINEAR);
 	m_transfer_texture->setWrapping(GL_REPEAT);
-	m_transfer_texture->create(&data[0][0], 256);
+	m_transfer_texture->create(&data[0][0], &size);
 	m_transfer_texture->unbind();
 }
 
