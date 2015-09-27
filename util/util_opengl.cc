@@ -25,7 +25,6 @@
 #include <iostream>
 
 #include "util_opengl.h"
-#include "utils.h"
 
 void gl_check_errors()
 {
@@ -75,10 +74,22 @@ void create_texture_1D(GLuint &texture_id, const int size, GLfloat *data)
 	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, size, 0, GL_RGB, GL_FLOAT, data);
 }
 
+void create_texture_2D(GLuint &texture_id, const int size[2], GLubyte *data)
+{
+	glGenTextures(1, &texture_id);
+	glBindTexture(GL_TEXTURE_2D, texture_id);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size[0], size[1],
+				 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+}
+
 void create_texture_3D(GLuint &texture_id, const int size[3], const int channels, GLfloat *data)
 {
-	Timer(__func__);
-
 	GLenum type = GL_FLOAT;
 	GLenum format, internalformat;
 
@@ -105,92 +116,4 @@ void create_texture_3D(GLuint &texture_id, const int size[3], const int channels
 	glTexImage3D(GL_TEXTURE_3D, 0, internalformat, size[0], size[1], size[2], 0, format, type, data);
 
 	glGenerateMipmap(GL_TEXTURE_3D);
-}
-
-VBOData::VBOData()
-{
-	glGenVertexArrays(1, &vao);
-}
-
-VBOData::~VBOData()
-{
-	glDeleteVertexArrays(1, &vao);
-
-	if (glIsBuffer(vbo)) {
-		glDeleteBuffers(1, &vbo);
-	}
-
-	if (glIsBuffer(index_vbo)) {
-		glDeleteBuffers(1, &index_vbo);
-	}
-
-	if (glIsBuffer(color_vbo)) {
-		glDeleteBuffers(1, &color_vbo);
-	}
-}
-
-void VBOData::bind()
-{
-	glBindVertexArray(vao);
-}
-
-void VBOData::unbind()
-{
-	glBindVertexArray(0);
-}
-
-void VBOData::attrib_pointer(GLuint loc)
-{
-	glEnableVertexAttribArray(loc);
-	glVertexAttribPointer(loc, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-}
-
-void VBOData::create_vertex_buffer(const GLfloat *vertices, const size_t size)
-{
-	GLenum draw_type = GL_STATIC_DRAW;
-
-	// TODO: feels a bit hackish
-	if (vertices == nullptr) {
-		draw_type = GL_DYNAMIC_DRAW;
-	}
-
-	glGenBuffers(1, &vbo);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, size, vertices, draw_type);
-}
-
-void VBOData::update_vertex_buffer(const GLfloat *vertices, const size_t size)
-{
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
-}
-
-void VBOData::create_index_buffer(const GLuint *indices, const size_t size)
-{
-	GLenum draw_type = GL_STATIC_DRAW;
-
-	// TODO: feels a bit hackish
-	if (indices == nullptr) {
-		draw_type = GL_DYNAMIC_DRAW;
-	}
-
-	glGenBuffers(1, &index_vbo);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_vbo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, draw_type);
-}
-
-void VBOData::update_index_buffer(const GLuint *indices, const size_t size)
-{
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_vbo);
-	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, size, indices);
-}
-
-void VBOData::create_color_buffer(const GLfloat *colors, const size_t size)
-{
-	glGenBuffers(1, &color_vbo);
-
-	glBindBuffer(GL_ARRAY_BUFFER, color_vbo);
-    glBufferData(GL_ARRAY_BUFFER, size, colors, GL_STATIC_DRAW);
 }

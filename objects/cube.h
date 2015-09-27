@@ -23,11 +23,11 @@
 
 #pragma once
 
-class VBOData;
+class GPUBuffer;
 
 class Cube {
-	VBOData *m_buffer_data;
-	GLSLShader m_shader;
+	GPUBuffer *m_buffer_data;
+	GPUShader m_shader;
 
 public:
 	Cube(const glm::vec3 &min, const glm::vec3 &max);

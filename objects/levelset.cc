@@ -27,17 +27,19 @@
 #define DWREAL_IS_DOUBLE 0
 #include <openvdb/tools/VolumeToMesh.h>
 
-#include "render/GLSLShader.h"
+#include "render/GPUShader.h"
 #include "levelset.h"
 
 #include "cube.h"
 #include "treetopology.h"
 
+#include "render/GPUBuffer.h"
+
 #include "util/util_opengl.h"
 #include "util/utils.h"
 
 LevelSet::LevelSet()
-    : m_buffer_data(new VBOData)
+    : m_buffer_data(new GPUBuffer)
     , m_bbox(nullptr)
     , m_topology(nullptr)
     , m_min(glm::vec3(0.0f))
@@ -177,9 +179,9 @@ void LevelSet::generate_mesh(openvdb::FloatGrid::ConstPtr grid)
 	m_buffer_data->bind();
 	m_buffer_data->create_vertex_buffer(&points[0], points.size() * sizeof(GLfloat));
 	m_buffer_data->create_index_buffer(&indices[0], indices.size() * sizeof(GLuint));
-	m_buffer_data->attrib_pointer(m_shader["vertex"]);
+	m_buffer_data->attrib_pointer(m_shader["vertex"], 3);
 	m_buffer_data->create_color_buffer(&normals[0], normals.size() * sizeof(GLfloat));
-	m_buffer_data->attrib_pointer(m_shader["normal"]);
+	m_buffer_data->attrib_pointer(m_shader["normal"], 3);
 	m_buffer_data->unbind();
 
 	gl_check_errors();

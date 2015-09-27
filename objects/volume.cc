@@ -26,9 +26,11 @@
 
 #include <iostream>
 
-#include "render/GLSLShader.h"
+#include "render/GPUShader.h"
 
 #include "volume.h"
+
+#include "render/GPUBuffer.h"
 
 #include "util/util_opengl.h"
 #include "util/util_openvdb.h"
@@ -38,7 +40,7 @@
 #include "treetopology.h"
 
 Volume::Volume()
-    : m_buffer_data(new VBOData)
+    : m_buffer_data(new GPUBuffer)
     , m_texture_id(0)
     , m_transfer_func_id(0)
     , m_bbox(nullptr)
@@ -149,7 +151,7 @@ void Volume::loadVolumeShader()
 	m_buffer_data->bind();
 	m_buffer_data->create_vertex_buffer(nullptr, vsize);
 	m_buffer_data->create_index_buffer(nullptr, isize);
-	m_buffer_data->attrib_pointer(m_shader["vertex"]);
+	m_buffer_data->attrib_pointer(m_shader["vertex"], 3);
 	m_buffer_data->unbind();
 }
 

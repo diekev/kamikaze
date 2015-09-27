@@ -23,12 +23,12 @@
 
 #pragma once
 
-class VBOData;
+class GPUBuffer;
 
 class TreeTopology {
-	VBOData *m_buffer_data;
+	GPUBuffer *m_buffer_data;
 	GLuint m_color_buffer;
-	GLSLShader m_shader;
+	GPUShader m_shader;
 	GLuint m_elements;
 
 public:

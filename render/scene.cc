@@ -4,7 +4,7 @@
 
 #include "scene.h"
 
-#include "render/GLSLShader.h"
+#include "render/GPUShader.h"
 #include "objects/levelset.h"
 #include "objects/volume.h"
 

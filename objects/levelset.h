@@ -29,11 +29,11 @@
 
 class Cube;
 class TreeTopology;
-class VBOData;
+class GPUBuffer;
 
 class LevelSet {
-	VBOData *m_buffer_data;
-	GLSLShader m_shader;
+	GPUBuffer *m_buffer_data;
+	GPUShader m_shader;
 	size_t m_elements;
 
 	Cube *m_bbox;

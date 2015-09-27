@@ -27,7 +27,8 @@ SRC = \
 	objects/treetopology.cc \
 	objects/volume.cc \
 	render/camera.cc \
-	render/GLSLShader.cc \
+	render/GPUBuffer.cc \
+	render/GPUShader.cc \
 	render/scene.cc \
 	render/viewer.cc \
 	util/util_opengl.cc \

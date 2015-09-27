@@ -12,22 +12,47 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
+ * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * The Original Code is Copyright (C) 2015 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
+ *
  */
 
 #pragma once
 
-void gl_check_errors();
+#include <GL/glew.h>
+#include <map>
+#include <string>
 
-void texture_bind(const GLenum target, const GLuint texture_id, const GLint num);
-void texture_unbind(const GLenum target, const GLint num);
+class GPUShader {
+	enum ShadeType {
+		VERTEX_SHADER,
+		FRAGMENT_SHADER,
+		GEOMETRY_SHADER
+	};
 
-void create_texture_1D(GLuint &texture_id, const int size, GLfloat *data);
-void create_texture_2D(GLuint &texture_id, const int size[2], GLubyte *data);
-void create_texture_3D(GLuint &texture_id, const int size[3], const int channels, GLfloat *data);
+	GLuint m_program;
+	int m_total_shaders;
+	GLuint m_shaders[3];
+	std::map<std::string, GLuint> m_attrib_list;
+	std::map<std::string, GLuint> m_uniform_loc_list;
+
+public:
+	GPUShader();
+	~GPUShader();
+
+	void loadFromString(GLenum whichShader, const std::string &source);
+	void loadFromFile(GLenum whichShader, const std::string &source);
+	void createAndLinkProgram();
+	void use();
+	void unUse();
+	void addAttribute(const std::string &attribute);
+	void addUniform(const std::string &uniform);
+
+	GLuint operator[](const std::string &attribute);
+	GLuint operator()(const std::string &uniform);
+};

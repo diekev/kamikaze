@@ -12,22 +12,37 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
+ * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * The Original Code is Copyright (C) 2015 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
+ *
  */
 
 #pragma once
 
-void gl_check_errors();
+class GPUBuffer {
+	GLuint m_vao;
+	GLuint m_vertex_buffer;
+	GLuint m_index_buffer;
+	GLuint m_color_buffer;
 
-void texture_bind(const GLenum target, const GLuint texture_id, const GLint num);
-void texture_unbind(const GLenum target, const GLint num);
+	void create_buffer(GLuint &id, const GLvoid *data, const size_t size, GLenum target);
 
-void create_texture_1D(GLuint &texture_id, const int size, GLfloat *data);
-void create_texture_2D(GLuint &texture_id, const int size[2], GLubyte *data);
-void create_texture_3D(GLuint &texture_id, const int size[3], const int channels, GLfloat *data);
+public:
+	GPUBuffer();
+	~GPUBuffer();
+
+	void bind();
+	void unbind();
+
+	void attrib_pointer(GLuint index, GLint size);
+	void create_vertex_buffer(const GLvoid *vertices, const size_t size);
+	void update_vertex_buffer(const GLvoid *vertices, const size_t size);
+	void create_index_buffer(const GLvoid *indices, const size_t size);
+	void update_index_buffer(const GLvoid *indices, const size_t size);
+	void create_color_buffer(const GLvoid *colors, const size_t size);
+};
