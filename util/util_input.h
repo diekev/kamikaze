@@ -23,30 +23,22 @@
 
 #pragma once
 
-class Camera {
-	int m_old_x, m_old_y;
-	float m_head, m_pitch;
-	float m_near, m_far, m_distance, m_fov;
-	float m_zoom_speed, m_tumbling_speed, m_strafe_speed;
+enum {
+	MOUSSE_LEFT        = 0,
+	MOUSSE_MIDDLE      = 1,
+	MOUSSE_RIGHT       = 2,
+	MOUSSE_SCROLL_UP   = 3,
+	MOUSSE_SCROLL_DOWN = 4,
+};
 
-	glm::mat4 m_model_view, m_projection;
-	glm::vec3 m_eye, m_view;
-	glm::vec3 m_center, m_right, m_up;
+enum {
+	MOD_KEY_NONE  = 0,
+	MOD_KEY_SHIFT = 1,
+	MOD_KEY_CTRL  = 2,
+	MOD_KEY_ALT   = 3,
+};
 
-	bool m_need_update;
-
-public:
-	Camera();
-	~Camera() = default;
-
-	void mouseMoveEvent(int button, int modifier, int x, int y);
-	void mouseDownEvent(int button, int s, int x, int y);
-
-	void updateViewDir();
-	glm::vec3 viewDir() const;
-	glm::mat4 MV() const;
-	glm::mat4 P() const;
-
-	void resize(int w, int h);
-	void setSpeed(float zoomSpeed = 0.1f, float strafeSpeed = 0.002f, float tumblingSpeed = 0.02f);
+enum {
+	MOUSSE_DOWN = 0,
+	MOUSSE_UP   = 1,
 };

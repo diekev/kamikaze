@@ -14,6 +14,8 @@
 #include "scene.h"
 #include "viewer.h"
 
+#include "util/util_input.h"
+
 Viewer::Viewer()
     : m_mouse_button(0)
     , m_bg(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f))
@@ -48,14 +50,14 @@ void Viewer::mouseDownEvent(int button, int s, int x, int y)
 	m_modifier = glutGetModifiers();
 
 	if (button == GLUT_MIDDLE_BUTTON) {
-		m_mouse_button = 0;
+		m_mouse_button = MOUSSE_MIDDLE;
 	}
 	else if ((button == 3 || button == 4) && (s != GLUT_UP)) {
 		m_mouse_button = button;
 		need_redisplay = true;
 	}
 	else {
-		m_mouse_button = 1;
+		m_mouse_button = -1;
 	}
 
 	m_camera->mouseDownEvent(m_mouse_button, s, x, y);
@@ -82,10 +84,11 @@ void Viewer::render()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	m_camera->updateViewDir();
-	auto view_dir = m_camera->viewDir();
-	auto MV = m_camera->MV();
-	auto P = m_camera->P();
-	auto MVP = P * MV;
+
+	const auto &view_dir = m_camera->viewDir();
+	const auto &MV = m_camera->MV();
+	const auto &P = m_camera->P();
+	const auto &MVP = P * MV;
 
 	m_grid->render(MVP);
 
