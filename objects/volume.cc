@@ -93,14 +93,13 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GPUTexture *texture, GPUT
 	texture->setWrapping(GL_CLAMP_TO_BORDER);
 	texture->create(nullptr, packed_volume_res.asPointer());
 	texture->generateMipMap(0, 4);
-	texture->unbind();
 	gl_check_errors();
 
-	Vec3s offset(0);
+	Vec3i offset(0);
 	FloatGrid::ConstAccessor acc = grid.getConstAccessor();
 	ValueType *data = new ValueType[NUM_VOXELS];
 
-	int leaf_size[3] = { DIM };
+	int leaf_size[3] = { DIM, DIM, DIM };
 
 	for (LeafCIterType leaf_iter = grid.tree().cbeginLeaf(); leaf_iter; ++leaf_iter) {
 		const LeafType &leaf = *leaf_iter.getLeaf();
@@ -118,7 +117,7 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GPUTexture *texture, GPUT
 			}
 		}
 
-		texture->createSubImage(data, leaf_size, (GLint *)offset.asPointer());
+		texture->createSubImage(data, leaf_size, offset.asPointer());
 		gl_check_errors();
 
 		const Coord &co = leaf.origin() >> LOG2DIM;
@@ -129,13 +128,17 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GPUTexture *texture, GPUT
 		if (offset[0] == packed_volume_res[0]) {
 			offset[0] = 0;
 			offset[1] += DIM;
+			assert(offset[1] <= packed_volume_res[1]);
 
 			if (offset[1] == packed_volume_res[1]) {
 				offset[1] = 0;
 				offset[2] += DIM;
+				assert(offset[2] <= packed_volume_res[2]);
 			}
 		}
 	}
+
+	texture->unbind();
 
 	index_texture = new GPUTexture(GL_TEXTURE_3D, 2);
 	index_texture->bind();
