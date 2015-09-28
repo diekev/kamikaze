@@ -5,6 +5,7 @@ const int HEIGHT = 960;
 
 class Camera;
 class Grid;
+class Scene;
 class Volume;
 
 class Viewer {
@@ -14,7 +15,7 @@ class Viewer {
 
 	Camera *m_camera;
 	Grid *m_grid;
-	Volume *m_volume;
+	Scene *m_scene;
 
 public:
 	Viewer();
@@ -27,6 +28,5 @@ public:
 	void keyboardEvent(unsigned char key, int x, int y);
 	void render();
 	void setViewDir();
-
-	void setVolume(Volume *volume);
+	void setScene(Scene *scene);
 };

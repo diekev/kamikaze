@@ -30,9 +30,12 @@
 #include <openvdb/openvdb.h>
 #include <openvdb/tools/Dense.h>
 
-#include "render/GLSLShader.h"
+#include "render/GPUShader.h"
 
 #include "volume.h"
+
+#include "render/GPUBuffer.h"
+#include "render/GPUTexture.h"
 
 #include "util/util_opengl.h"
 #include "util/util_openvdb.h"
@@ -50,7 +53,7 @@ void max_leaf_per_axis(const int dim[3], int voxel_per_leaf, int num_leaf, int r
 	result[2] = num_leaf / (result[0] * result[1]) + 1;
 }
 
-void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuint &index_texture_id)
+void texture_from_leaf(const openvdb::FloatGrid &grid, GPUTexture *texture, GPUTexture *index_texture)
 {
 	Timer(__func__);
 
@@ -83,11 +86,21 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuin
 
 	Vec3i packed_volume_res(leaf_per_axis * DIM);
 
-	create_texture_3D(texture_id, packed_volume_res.asPointer(), 1, nullptr);
+	texture = new GPUTexture(GL_TEXTURE_3D, 0);
+	texture->bind();
+	texture->setType(GL_FLOAT, GL_RED, GL_RED);
+	texture->setMinMagFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
+	texture->setWrapping(GL_CLAMP_TO_BORDER);
+	texture->create(nullptr, packed_volume_res.asPointer());
+	texture->generateMipMap(0, 4);
+	texture->unbind();
+	gl_check_errors();
 
 	Vec3s offset(0);
 	FloatGrid::ConstAccessor acc = grid.getConstAccessor();
 	ValueType *data = new ValueType[NUM_VOXELS];
+
+	int leaf_size[3] = { DIM };
 
 	for (LeafCIterType leaf_iter = grid.tree().cbeginLeaf(); leaf_iter; ++leaf_iter) {
 		const LeafType &leaf = *leaf_iter.getLeaf();
@@ -105,11 +118,7 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuin
 			}
 		}
 
-		glTexSubImage3D(GL_TEXTURE_3D, 0,
-		                offset.x(), offset.y(), offset.z(),
-		                DIM, DIM, DIM,
-		                GL_RED, GL_FLOAT, data);
-
+		texture->createSubImage(data, leaf_size, (GLint *)offset.asPointer());
 		gl_check_errors();
 
 		const Coord &co = leaf.origin() >> LOG2DIM;
@@ -128,18 +137,23 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GLuint &texture_id, GLuin
 		}
 	}
 
-	create_texture_3D(index_texture_id, index_volume_res.asPointer(), 3, &index_volume.data()[0][0]);
-
+	index_texture = new GPUTexture(GL_TEXTURE_3D, 2);
+	index_texture->bind();
+	index_texture->setType(GL_FLOAT, GL_RGB, GL_RGB);
+	index_texture->setMinMagFilter(GL_LINEAR, GL_LINEAR);
+	index_texture->setWrapping(GL_CLAMP_TO_BORDER);
+	index_texture->create(&index_volume.data()[0][0], index_volume_res.asPointer());
+	index_texture->unbind();
 	gl_check_errors();
 
 	delete [] data;
 }
 
 Volume::Volume()
-    : m_buffer_data(new VBOData)
-    , m_texture_id(0)
-    , m_transfer_func_id(0)
-    , m_index_texture_id(0)
+    : m_buffer_data(new GPUBuffer)
+    , m_volume_texture(nullptr)
+    , m_transfer_texture(nullptr)
+    , m_index_texture(0)
     , m_bbox(nullptr)
     , m_topology(nullptr)
     , m_min(glm::vec3(0.0f))
@@ -178,7 +192,7 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
 	m_bbox = new Cube(m_min, m_max);
 	m_topology = new TreeTopology(grid);
 
-	texture_from_leaf(*grid, m_texture_id, m_index_texture_id);
+	texture_from_leaf(*grid, m_volume_texture, m_index_texture);
 
 #if 0
 	printf("Dimensions: %d, %d, %d\n", X_DIM, Y_DIM, Z_DIM);
@@ -188,15 +202,15 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
 	printf("Bbox Max: %d, %d, %d\n", bbox_max[0], bbox_max[1], bbox_max[2]);
 #endif
 
-	loadVolumeShader();
 	loadTransferFunction();
+	loadVolumeShader();
 }
 
 Volume::~Volume()
 {
-	glDeleteTextures(1, &m_texture_id);
-	glDeleteTextures(1, &m_index_texture_id);
-	glDeleteTextures(1, &m_transfer_func_id);
+	delete m_volume_texture;
+	delete m_index_texture;
+	delete m_transfer_texture;
 
 	delete m_buffer_data;
 	delete m_bbox;
@@ -222,9 +236,9 @@ void Volume::loadVolumeShader()
 		m_shader.addUniform("scale");
 		m_shader.addUniform("inv_size");
 
-		glUniform1i(m_shader("volume"), 0);
-		glUniform1i(m_shader("lut"), 1);
-		glUniform1i(m_shader("index_volume"), 2);
+		glUniform1i(m_shader("volume"), m_volume_texture->unit());
+		glUniform1i(m_shader("lut"), m_transfer_texture->unit());
+		glUniform1i(m_shader("index_volume"), m_index_texture->unit());
 
 		glUniform3fv(m_shader("offset"), 1, &m_min[0]);
 		glUniform3fv(m_shader("inv_size"), 1, &m_inv_size[0]);
@@ -238,7 +252,7 @@ void Volume::loadVolumeShader()
 	m_buffer_data->bind();
 	m_buffer_data->create_vertex_buffer(nullptr, vsize);
 	m_buffer_data->create_index_buffer(nullptr, isize);
-	m_buffer_data->attrib_pointer(m_shader["vertex"]);
+	m_buffer_data->attrib_pointer(m_shader["vertex"], 3);
 	m_buffer_data->unbind();
 }
 
@@ -263,7 +277,8 @@ void Volume::loadTransferFunction()
 		glm::vec3(1.0f, 0.0f, 0.0f),
 	};
 
-	float data[256][3];
+	int size = 256;
+	float data[size][3];
 	int indices[12];
 
 	for (int i = 0; i < 12; ++i) {
@@ -284,7 +299,13 @@ void Volume::loadTransferFunction()
 		}
 	}
 
-	create_texture_1D(m_transfer_func_id, 256, &data[0][0]);
+	m_transfer_texture = new GPUTexture(GL_TEXTURE_1D, 1);
+	m_transfer_texture->bind();
+	m_transfer_texture->setType(GL_FLOAT, GL_RGB, GL_RGB);
+	m_transfer_texture->setMinMagFilter(GL_LINEAR, GL_LINEAR);
+	m_transfer_texture->setWrapping(GL_REPEAT);
+	m_transfer_texture->create(&data[0][0], &size);
+	m_transfer_texture->unbind();
 }
 
 void Volume::slice(const glm::vec3 &view_dir)
@@ -301,7 +322,7 @@ void Volume::slice(const glm::vec3 &view_dir)
 	auto slice_size = m_size[m_axis] / m_num_slices;
 
 	/* always process slices in back to front order! */
-	if (view_dir[m_axis] > 0.0f) {
+	if (view_dir[m_axis] < 0.0f) {
 		depth = m_max[m_axis];
 		slice_size = -slice_size;
 	}
@@ -382,19 +403,17 @@ void Volume::render(const glm::vec3 &dir, const glm::mat4 &MVP)
 	m_shader.use();
 	{
 		m_buffer_data->bind();
-
-		texture_bind(GL_TEXTURE_3D, m_texture_id, 0);
-		texture_bind(GL_TEXTURE_1D, m_transfer_func_id, 1);
-		texture_bind(GL_TEXTURE_3D, m_index_texture_id, 2);
+		m_volume_texture->bind();
+		m_transfer_texture->bind();
+		m_index_texture->bind();
 
 		glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 		glUniform1i(m_shader("use_lut"), m_use_lut);
 		glDrawElements(GL_TRIANGLES, m_num_slices * 6, GL_UNSIGNED_INT, nullptr);
 
-		texture_unbind(GL_TEXTURE_3D, 0);
-		texture_unbind(GL_TEXTURE_1D, 1);
-		texture_unbind(GL_TEXTURE_3D, 2);
-
+		m_index_texture->unbind();
+		m_transfer_texture->unbind();
+		m_volume_texture->unbind();
 		m_buffer_data->unbind();
 	}
 	m_shader.unUse();

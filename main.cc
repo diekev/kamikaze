@@ -8,9 +8,11 @@
 #define DWREAL_IS_DOUBLE 0
 #include <openvdb/openvdb.h>
 
-#include "render/GLSLShader.h"
+#include "render/GPUShader.h"
 
+#include "objects/levelset.h"
 #include "objects/volume.h"
+#include "render/scene.h"
 #include "render/viewer.h"
 #include "util/util_openvdb.h"
 #include "util/utils.h"
@@ -28,6 +30,8 @@ bool initViewer(const char *filename, std::ostream &os)
 		viewer->init();
 	}
 
+	Scene *scene = new Scene;
+
 	openvdb::initialize();
 	openvdb::io::File file(filename);
 
@@ -41,13 +45,10 @@ bool initViewer(const char *filename, std::ostream &os)
 			grid = gridPtrCast<FloatGrid>(file.readGrid(Name("density")));
 		}
 		else {
-			os << "No density grid found in file: \'" << filename << "\'!\n";
-			return false;
-		}
-
-		if (grid->getGridClass() == GRID_LEVEL_SET) {
-			os << "Grid \'" << grid->getName() << "\'is a level set!\n";
-			return false;
+			GridPtrVecPtr grids = file.getGrids();
+			grid = gridPtrCast<FloatGrid>((*grids)[0]);
+//			os << "No density grid found in file: \'" << filename << "\'!\n";
+//			return false;
 		}
 
 		auto meta_map = file.getMetadata();
@@ -65,8 +66,16 @@ bool initViewer(const char *filename, std::ostream &os)
 			}
 		}
 
-		Volume *volume = new Volume(grid);
-		viewer->setVolume(volume);
+		if (grid->getGridClass() == GRID_LEVEL_SET) {
+			LevelSet *ls = new LevelSet(grid);
+			scene->add_level_set(ls);
+		}
+		else {
+			Volume *volume = new Volume(grid);
+			scene->add_volume(volume);
+		}
+
+		viewer->setScene(scene);
 
 		return true;
 	}

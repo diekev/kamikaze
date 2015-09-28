@@ -23,31 +23,4 @@
 
 #pragma once
 
-class VBOData {
-	GLuint vao;
-	GLuint vbo;
-	GLuint index_vbo;
-	GLuint color_vbo;
-
-public:
-	VBOData();
-	~VBOData();
-
-	void bind();
-	void unbind();
-
-	void attrib_pointer(GLuint loc);
-	void create_vertex_buffer(const GLfloat *vertices, const size_t size);
-	void update_vertex_buffer(const GLfloat *vertices, const size_t size);
-	void create_index_buffer(const GLuint *indices, const size_t size);
-	void update_index_buffer(const GLuint *indices, const size_t size);
-	void create_color_buffer(const GLfloat *colors, const size_t size);
-};
-
 void gl_check_errors();
-
-void texture_bind(const GLenum target, const GLuint texture_id, const GLint num);
-void texture_unbind(const GLenum target, const GLint num);
-
-void create_texture_1D(GLuint &texture_id, const int size, GLfloat *data);
-void create_texture_3D(GLuint &texture_id, const int size[3], const int channels, GLfloat *data);

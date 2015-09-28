@@ -12,28 +12,42 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
+ * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * The Original Code is Copyright (C) 2015 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
+ *
  */
 
 #pragma once
 
-class GPUBuffer;
-
-class TreeTopology {
-	GPUBuffer *m_buffer_data;
-	GLuint m_color_buffer;
-	GPUShader m_shader;
-	GLuint m_elements;
+class GPUTexture {
+	GLuint m_index;
+	GLint m_internal_format;
+	GLint m_border;
+	GLint m_texture;
+	GLenum m_format;
+	GLenum m_target;
+	GLenum m_type;
 
 public:
-	TreeTopology(openvdb::FloatGrid::ConstPtr grid);
-	~TreeTopology();
+	GPUTexture(GLenum target, GLint texture);
+	~GPUTexture();
 
-	void render(const glm::mat4 &MVP);
+	void free(bool renew);
+	void bind();
+	void unbind();
+
+	void setType(GLenum type, GLenum format, GLint internal_format);
+	void setMinMagFilter(GLint min, GLint mag);
+	void setWrapping(GLint wrap);
+	void generateMipMap(GLint base, GLint max);
+
+	void create(const GLvoid *data, GLint *size);
+	void createSubImage(const GLvoid *data, GLint *size, GLint *offset);
+
+	GLint unit() const;
 };

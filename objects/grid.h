@@ -23,14 +23,14 @@
 
 #pragma once
 
-#include "render/GLSLShader.h"
+#include "render/GPUShader.h"
 
-class VBOData;
+class GPUBuffer;
 
 class Grid {
-	VBOData *m_buffer_data;
+	GPUBuffer *m_buffer_data;
 	size_t m_total_indices;
-	GLSLShader m_shader;
+	GPUShader m_shader;
 
 public:
 	Grid(int x, int y);

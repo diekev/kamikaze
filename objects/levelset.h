@@ -21,19 +21,40 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#pragma once
+#include <GL/glew.h>
+#include <glm/glm.hpp>
 
+#define DWREAL_IS_DOUBLE 0
+#include <openvdb/openvdb.h>
+
+class Cube;
+class TreeTopology;
 class GPUBuffer;
 
-class TreeTopology {
+class LevelSet {
 	GPUBuffer *m_buffer_data;
-	GLuint m_color_buffer;
 	GPUShader m_shader;
-	GLuint m_elements;
+	size_t m_elements;
+
+	Cube *m_bbox;
+	TreeTopology *m_topology;
+
+	glm::vec3 m_min, m_max;
+	glm::vec3 m_size, m_inv_size;
+
+	bool m_draw_bbox, m_draw_topology;
+
+	void generate_mesh(openvdb::FloatGrid::ConstPtr grid);
 
 public:
-	TreeTopology(openvdb::FloatGrid::ConstPtr grid);
-	~TreeTopology();
+	LevelSet();
+	LevelSet(openvdb::FloatGrid::Ptr &grid);
+	~LevelSet();
 
-	void render(const glm::mat4 &MVP);
+	void render(const glm::mat4 &MVP, const glm::mat3 &N);
+
+	void loadShader();
+
+	void toggleBBoxDrawing();
+	void toggleTopologyDrawing();
 };

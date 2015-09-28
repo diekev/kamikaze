@@ -31,14 +31,16 @@
 #define DWREAL_IS_DOUBLE 0
 #include <openvdb/openvdb.h>
 
-#include "render/GLSLShader.h"
+#include "render/GPUShader.h"
+#include "render/GPUBuffer.h"
+
 #include "util/util_opengl.h"
 #include "util/utils.h"
 
 #include "treetopology.h"
 
 TreeTopology::TreeTopology(openvdb::FloatGrid::ConstPtr grid)
-    : m_buffer_data(new VBOData)
+    : m_buffer_data(new GPUBuffer)
 {
 	m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/tree_topo.vert");
 	m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/tree_topo.frag");
@@ -152,9 +154,9 @@ TreeTopology::TreeTopology(openvdb::FloatGrid::ConstPtr grid)
 	m_buffer_data->bind();
 	m_buffer_data->create_vertex_buffer(&(vertices[0].x), sizeof(glm::vec3) * N);
 	m_buffer_data->create_index_buffer(&indices[0], sizeof(GLuint) * m_elements);
-	m_buffer_data->attrib_pointer(m_shader["vertex"]);
+	m_buffer_data->attrib_pointer(m_shader["vertex"], 3);
 	m_buffer_data->create_color_buffer(&colors[0][0], sizeof(glm::vec3) * colors.size());
-	m_buffer_data->attrib_pointer(m_shader["color"]);
+	m_buffer_data->attrib_pointer(m_shader["color"], 3);
 	m_buffer_data->unbind();
 }
 

@@ -20,5 +20,5 @@ void main()
 		color = texture(lut, density).rgb;
 	}
 
-	fragment_color = vec4(color, density * scale);
+	fragment_color = vec4(color, density);
 }

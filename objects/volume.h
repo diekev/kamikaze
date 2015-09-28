@@ -21,19 +21,25 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
+#include <GL/glew.h>
 #include <glm/glm.hpp>
+
+#define DWREAL_IS_DOUBLE 0
+#include <openvdb/openvdb.h>
+
 #include <vector>
 
 const int MAX_SLICES = 512;
 
 class Cube;
+class GPUBuffer;
+class GPUTexture;
 class TreeTopology;
-class VBOData;
 
 class Volume {
-	VBOData *m_buffer_data;
-	GLuint m_texture_id, m_transfer_func_id, m_index_texture_id;
-	GLSLShader m_shader;
+	GPUBuffer *m_buffer_data;
+	GPUTexture *m_volume_texture, *m_transfer_texture, *m_index_texture;
+	GPUShader m_shader;
 
 	Cube *m_bbox;
 	TreeTopology *m_topology;

@@ -12,28 +12,37 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
+ * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * The Original Code is Copyright (C) 2015 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
+ *
  */
 
 #pragma once
 
-class GPUBuffer;
-
-class TreeTopology {
-	GPUBuffer *m_buffer_data;
+class GPUBuffer {
+	GLuint m_vao;
+	GLuint m_vertex_buffer;
+	GLuint m_index_buffer;
 	GLuint m_color_buffer;
-	GPUShader m_shader;
-	GLuint m_elements;
+
+	void create_buffer(GLuint &id, const GLvoid *data, const size_t size, GLenum target);
 
 public:
-	TreeTopology(openvdb::FloatGrid::ConstPtr grid);
-	~TreeTopology();
+	GPUBuffer();
+	~GPUBuffer();
 
-	void render(const glm::mat4 &MVP);
+	void bind();
+	void unbind();
+
+	void attrib_pointer(GLuint index, GLint size);
+	void create_vertex_buffer(const GLvoid *vertices, const size_t size);
+	void update_vertex_buffer(const GLvoid *vertices, const size_t size);
+	void create_index_buffer(const GLvoid *indices, const size_t size);
+	void update_index_buffer(const GLvoid *indices, const size_t size);
+	void create_color_buffer(const GLvoid *colors, const size_t size);
 };

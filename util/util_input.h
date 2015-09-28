@@ -23,17 +23,22 @@
 
 #pragma once
 
-class GPUBuffer;
+enum {
+	MOUSSE_LEFT        = 0,
+	MOUSSE_MIDDLE      = 1,
+	MOUSSE_RIGHT       = 2,
+	MOUSSE_SCROLL_UP   = 3,
+	MOUSSE_SCROLL_DOWN = 4,
+};
 
-class TreeTopology {
-	GPUBuffer *m_buffer_data;
-	GLuint m_color_buffer;
-	GPUShader m_shader;
-	GLuint m_elements;
+enum {
+	MOD_KEY_NONE  = 0,
+	MOD_KEY_SHIFT = 1,
+	MOD_KEY_CTRL  = 2,
+	MOD_KEY_ALT   = 3,
+};
 
-public:
-	TreeTopology(openvdb::FloatGrid::ConstPtr grid);
-	~TreeTopology();
-
-	void render(const glm::mat4 &MVP);
+enum {
+	MOUSSE_DOWN = 0,
+	MOUSSE_UP   = 1,
 };
