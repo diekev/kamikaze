@@ -86,7 +86,6 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GPUTexture *texture, GPUT
 
 	Vec3i packed_volume_res(leaf_per_axis * DIM);
 
-	texture = new GPUTexture(GL_TEXTURE_3D, 0);
 	texture->bind();
 	texture->setType(GL_FLOAT, GL_RED, GL_RED);
 	texture->setMinMagFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
@@ -128,7 +127,6 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GPUTexture *texture, GPUT
 		if (offset[0] == packed_volume_res[0]) {
 			offset[0] = 0;
 			offset[1] += DIM;
-			assert(offset[1] <= packed_volume_res[1]);
 
 			if (offset[1] == packed_volume_res[1]) {
 				offset[1] = 0;
@@ -140,7 +138,6 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GPUTexture *texture, GPUT
 
 	texture->unbind();
 
-	index_texture = new GPUTexture(GL_TEXTURE_3D, 2);
 	index_texture->bind();
 	index_texture->setType(GL_FLOAT, GL_RGB, GL_RGB);
 	index_texture->setMinMagFilter(GL_LINEAR, GL_LINEAR);
@@ -194,6 +191,10 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
 
 	m_bbox = new Cube(m_min, m_max);
 	m_topology = new TreeTopology(grid);
+
+	m_volume_texture = new GPUTexture(GL_TEXTURE_3D, 0);
+	m_transfer_texture = new GPUTexture(GL_TEXTURE_1D, 1);
+	m_index_texture = new GPUTexture(GL_TEXTURE_3D, 2);
 
 	texture_from_leaf(*grid, m_volume_texture, m_index_texture);
 
@@ -302,7 +303,6 @@ void Volume::loadTransferFunction()
 		}
 	}
 
-	m_transfer_texture = new GPUTexture(GL_TEXTURE_1D, 1);
 	m_transfer_texture->bind();
 	m_transfer_texture->setType(GL_FLOAT, GL_RGB, GL_RGB);
 	m_transfer_texture->setMinMagFilter(GL_LINEAR, GL_LINEAR);
