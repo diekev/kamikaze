@@ -46,7 +46,7 @@ void max_leaf_per_axis(const int dim[3], int voxel_per_leaf, int num_leaf, int r
 	result[2] = num_leaf / (result[0] * result[1]) + 1;
 }
 
-void texture_from_leaf(const openvdb::FloatGrid &grid, GPUTexture *texture, GPUTexture *index_texture)
+void texture_from_leaf(const openvdb::FloatGrid &grid, GPUTexture &texture, GPUTexture &index_texture)
 {
 	Timer(__func__);
 
@@ -79,12 +79,12 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GPUTexture *texture, GPUT
 
 	Vec3i packed_volume_res(leaf_per_axis * DIM);
 
-	texture->bind();
-	texture->setType(GL_FLOAT, GL_RED, GL_RED);
-	texture->setMinMagFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
-	texture->setWrapping(GL_CLAMP_TO_BORDER);
-	texture->create(nullptr, packed_volume_res.asPointer());
-	texture->generateMipMap(0, 4);
+	texture.bind();
+	texture.setType(GL_FLOAT, GL_RED, GL_RED);
+	texture.setMinMagFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
+	texture.setWrapping(GL_CLAMP_TO_BORDER);
+	texture.create(nullptr, packed_volume_res.asPointer());
+	texture.generateMipMap(0, 4);
 	gl_check_errors();
 
 	Vec3i offset(0);
@@ -109,7 +109,7 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GPUTexture *texture, GPUT
 			}
 		}
 
-		texture->createSubImage(data, leaf_size, offset.asPointer());
+		texture.createSubImage(data, leaf_size, offset.asPointer());
 		gl_check_errors();
 
 		const Coord &co = leaf.origin() >> LOG2DIM;
@@ -129,14 +129,14 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GPUTexture *texture, GPUT
 		}
 	}
 
-	texture->unbind();
+	texture.unbind();
 
-	index_texture->bind();
-	index_texture->setType(GL_FLOAT, GL_RGB, GL_RGB);
-	index_texture->setMinMagFilter(GL_LINEAR, GL_LINEAR);
-	index_texture->setWrapping(GL_CLAMP_TO_BORDER);
-	index_texture->create(&index_volume.data()[0][0], index_volume_res.asPointer());
-	index_texture->unbind();
+	index_texture.bind();
+	index_texture.setType(GL_FLOAT, GL_RGB, GL_RGB);
+	index_texture.setMinMagFilter(GL_LINEAR, GL_LINEAR);
+	index_texture.setWrapping(GL_CLAMP_TO_BORDER);
+	index_texture.create(&index_volume.data()[0][0], index_volume_res.asPointer());
+	index_texture.unbind();
 	gl_check_errors();
 
 	delete [] data;
@@ -189,7 +189,7 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
 	m_transfer_texture = std::unique_ptr<GPUTexture>(new GPUTexture(GL_TEXTURE_1D, 1));
 	m_index_texture = std::unique_ptr<GPUTexture>(new GPUTexture(GL_TEXTURE_3D, 2));
 
-	texture_from_leaf(*grid, m_volume_texture.get(), m_index_texture.get());
+	texture_from_leaf(*grid, *m_volume_texture, *m_index_texture);
 
 #if 0
 	printf("Dimensions: %d, %d, %d\n", X_DIM, Y_DIM, Z_DIM);
