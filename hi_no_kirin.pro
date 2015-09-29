@@ -1,12 +1,12 @@
-#QT += core gui opengl
+QT += core gui opengl
 
-#greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = hi_no_kirin
 TEMPLATE = app
 
 CONFIG += c++11
-CONFIG -= qt
+CONFIG += no_keywords
 
 QMAKE_CXXFLAGS += -O3 -msse -msse2 -msse3
 
@@ -28,6 +28,7 @@ QMAKE_LFLAGS += -fsanitize=address
 
 SOURCES += \
 	main.cc \
+    mainwindow.cc \
 	objects/cube.cc \
 	objects/grid.cc \
 	objects/levelset.cc \
@@ -44,6 +45,7 @@ SOURCES += \
 	util/utils.cc
 
 HEADERS += \
+    mainwindow.h \
 	objects/cube.h \
 	objects/grid.h \
 	objects/levelset.h \
@@ -55,6 +57,7 @@ HEADERS += \
 	render/GPUTexture.h \
 	render/scene.h \
 	render/viewer.h \
+    util/util_input.h \
 	util/util_opengl.h \
 	util/util_openvdb.h \
 	util/utils.h
@@ -86,3 +89,6 @@ unix {
 
 QMAKE_EXTRA_TARGETS += copy_files
 POST_TARGETDEPS += copy_files
+
+FORMS += \
+    mainwindow.ui

@@ -21,14 +21,18 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
+#pragma once
+
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
 #include <openvdb/openvdb.h>
 
+#include "render/GPUShader.h"
+
 class Cube;
-class TreeTopology;
 class GPUBuffer;
+class TreeTopology;
 
 class LevelSet {
 	GPUBuffer *m_buffer_data;
