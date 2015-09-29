@@ -21,30 +21,29 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "render/GPUShader.h"
+#include "render/GPUProgram.h"
 #include "util/util_opengl.h"
 
 #include "cube.h"
 #include "render/GPUBuffer.h"
 
 Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
-    : m_buffer_data(new GPUBuffer)
+    : m_buffer_data(std::unique_ptr<GPUBuffer>(new GPUBuffer()))
 {
-	m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/flat_shader.vert");
-	m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/flat_shader.frag");
+	m_program.loadFromFile(GL_VERTEX_SHADER, "shader/flat_shader.vert");
+	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shader/flat_shader.frag");
 
-	m_shader.createAndLinkProgram();
+	m_program.createAndLinkProgram();
 
-	m_shader.use();
+	m_program.enable();
 	{
-		m_shader.addAttribute("vertex");
-		m_shader.addUniform("MVP");
+		m_program.addAttribute("vertex");
+		m_program.addUniform("MVP");
 	}
-	m_shader.unUse();
+	m_program.disable();
 
 	const glm::vec3 vertices[8] = {
 	    glm::vec3(min[0], min[1], min[2]),
@@ -67,31 +66,26 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 	};
 
 	m_buffer_data->bind();
-	m_buffer_data->create_vertex_buffer(&vertices[0][0], sizeof(vertices));
-	m_buffer_data->create_index_buffer(&indices[0], sizeof(indices));
-	m_buffer_data->attrib_pointer(m_shader["vertex"], 3);
+	m_buffer_data->generateVertexBuffer(&vertices[0][0], sizeof(vertices));
+	m_buffer_data->generateIndexBuffer(&indices[0], sizeof(indices));
+	m_buffer_data->attribPointer(m_program["vertex"], 3);
 	m_buffer_data->unbind();
-}
-
-Cube::~Cube()
-{
-	delete m_buffer_data;
 }
 
 void Cube::render(const glm::mat4 &MVP)
 {
 	glEnable(GL_DEPTH_TEST);
 
-	m_shader.use();
-	{
+	if (m_program.isValid()) {
+		m_program.enable();
 		m_buffer_data->bind();
 
-		glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 		glDrawElements(GL_LINES, 24, GL_UNSIGNED_SHORT, nullptr);
 
 		m_buffer_data->unbind();
+		m_program.disable();
 	}
-	m_shader.unUse();
 
 	glDisable(GL_DEPTH_TEST);
 }

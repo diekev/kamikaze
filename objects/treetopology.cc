@@ -21,39 +21,31 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <algorithm>
-#include <vector>
-
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
-#define DWREAL_IS_DOUBLE 0
 #include <openvdb/openvdb.h>
 
-#include "render/GPUShader.h"
+#include "treetopology.h"
+
 #include "render/GPUBuffer.h"
 
 #include "util/util_opengl.h"
 #include "util/utils.h"
 
-#include "treetopology.h"
-
 TreeTopology::TreeTopology(openvdb::FloatGrid::ConstPtr grid)
-    : m_buffer_data(new GPUBuffer)
+    : m_buffer_data(std::unique_ptr<GPUBuffer>(new GPUBuffer()))
 {
-	m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/tree_topo.vert");
-	m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/tree_topo.frag");
+	m_program.loadFromFile(GL_VERTEX_SHADER, "shader/tree_topo.vert");
+	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shader/tree_topo.frag");
 
-	m_shader.createAndLinkProgram();
+	m_program.createAndLinkProgram();
 
-	m_shader.use();
+	m_program.enable();
 	{
-		m_shader.addAttribute("vertex");
-		m_shader.addAttribute("color");
-		m_shader.addUniform("MVP");
+		m_program.addAttribute("vertex");
+		m_program.addAttribute("color");
+		m_program.addUniform("MVP");
 	}
-	m_shader.unUse();
+	m_program.disable();
 
 	using openvdb::Index64;
 	using openvdb::math::Vec3d;
@@ -152,33 +144,28 @@ TreeTopology::TreeTopology(openvdb::FloatGrid::ConstPtr grid)
     }
 
 	m_buffer_data->bind();
-	m_buffer_data->create_vertex_buffer(&(vertices[0].x), sizeof(glm::vec3) * N);
-	m_buffer_data->create_index_buffer(&indices[0], sizeof(GLuint) * m_elements);
-	m_buffer_data->attrib_pointer(m_shader["vertex"], 3);
-	m_buffer_data->create_color_buffer(&colors[0][0], sizeof(glm::vec3) * colors.size());
-	m_buffer_data->attrib_pointer(m_shader["color"], 3);
+	m_buffer_data->generateVertexBuffer(&(vertices[0].x), sizeof(glm::vec3) * N);
+	m_buffer_data->generateIndexBuffer(&indices[0], sizeof(GLuint) * m_elements);
+	m_buffer_data->attribPointer(m_program["vertex"], 3);
+	m_buffer_data->generateNormalBuffer(&colors[0][0], sizeof(glm::vec3) * colors.size());
+	m_buffer_data->attribPointer(m_program["color"], 3);
 	m_buffer_data->unbind();
-}
-
-TreeTopology::~TreeTopology()
-{
-	delete m_buffer_data;
 }
 
 void TreeTopology::render(const glm::mat4 &MVP)
 {
 	glEnable(GL_DEPTH_TEST);
 
-	m_shader.use();
-	{
+	if (m_program.isValid()) {
+		m_program.enable();
 		m_buffer_data->bind();
 
-		glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 		glDrawElements(GL_LINES, m_elements, GL_UNSIGNED_INT, nullptr);
 
 		m_buffer_data->unbind();
+		m_program.disable();
 	}
-	m_shader.unUse();
 
 	glEnable(GL_DEPTH_TEST);
 }

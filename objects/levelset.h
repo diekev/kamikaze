@@ -21,23 +21,24 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <GL/glew.h>
-#include <glm/glm.hpp>
+#pragma once
 
-#define DWREAL_IS_DOUBLE 0
+#include <glm/glm.hpp>
 #include <openvdb/openvdb.h>
 
-class Cube;
-class TreeTopology;
-class GPUBuffer;
+#include "render/GPUProgram.h"
+#include "render/GPUBuffer.h"
+
+#include "cube.h"
+#include "treetopology.h"
 
 class LevelSet {
-	GPUBuffer *m_buffer_data;
-	GPUShader m_shader;
+	std::unique_ptr<GPUBuffer> m_buffer_data;
+	GPUProgram m_program;
 	size_t m_elements;
 
-	Cube *m_bbox;
-	TreeTopology *m_topology;
+	std::unique_ptr<Cube> m_bbox;
+	std::unique_ptr<TreeTopology> m_topology;
 
 	glm::vec3 m_min, m_max;
 	glm::vec3 m_size, m_inv_size;
@@ -49,7 +50,7 @@ class LevelSet {
 public:
 	LevelSet();
 	LevelSet(openvdb::FloatGrid::Ptr &grid);
-	~LevelSet();
+	~LevelSet() = default;
 
 	void render(const glm::mat4 &MVP, const glm::mat3 &N);
 

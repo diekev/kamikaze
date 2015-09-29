@@ -21,7 +21,6 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -127,7 +126,7 @@ void Camera::updateViewDir()
 
 glm::vec3 Camera::viewDir() const
 {
-	return -m_view;
+	return m_view;
 }
 
 glm::mat4 Camera::MV() const

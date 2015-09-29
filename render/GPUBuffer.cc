@@ -43,56 +43,48 @@ GPUBuffer::~GPUBuffer()
 		glDeleteBuffers(1, &m_index_buffer);
 	}
 
-	if (glIsBuffer(m_color_buffer)) {
-		glDeleteBuffers(1, &m_color_buffer);
+	if (glIsBuffer(m_normal_buffer)) {
+		glDeleteBuffers(1, &m_normal_buffer);
 	}
 }
 
-void GPUBuffer::bind()
+void GPUBuffer::bind() const
 {
 	glBindVertexArray(m_vao);
 }
 
-void GPUBuffer::unbind()
+void GPUBuffer::unbind() const
 {
 	glBindVertexArray(0);
 }
 
-void GPUBuffer::attrib_pointer(GLuint index, GLint size)
+void GPUBuffer::attribPointer(GLuint index, GLint size) const
 {
 	glEnableVertexAttribArray(index);
 	glVertexAttribPointer(index, size, GL_FLOAT, GL_FALSE, 0, nullptr);
 }
 
-void GPUBuffer::create_vertex_buffer(const GLvoid *vertices, const size_t size)
+void GPUBuffer::generateVertexBuffer(const GLvoid *vertices, const size_t size)
 {
-	create_buffer(m_vertex_buffer, vertices, size, GL_ARRAY_BUFFER);
+	generateBuffer(m_vertex_buffer, vertices, size, GL_ARRAY_BUFFER);
 }
 
-void GPUBuffer::update_vertex_buffer(const GLvoid *vertices, const size_t size)
+void GPUBuffer::generateIndexBuffer(const GLvoid *indices, const size_t size)
 {
-	glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
+	generateBuffer(m_index_buffer, indices, size, GL_ELEMENT_ARRAY_BUFFER);
 }
 
-void GPUBuffer::create_index_buffer(const GLvoid *indices, const size_t size)
+void GPUBuffer::generateNormalBuffer(const GLvoid *colors, const size_t size)
 {
-	create_buffer(m_index_buffer, indices, size, GL_ELEMENT_ARRAY_BUFFER);
+	generateBuffer(m_normal_buffer, colors, size, GL_ARRAY_BUFFER);
 }
 
-void GPUBuffer::update_index_buffer(const GLvoid *indices, const size_t size)
+void GPUBuffer::generateBuffer(GLuint &id, const GLvoid *data, const size_t size, GLenum target) const
 {
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer);
-	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, size, indices);
-}
+	if (glIsBuffer(id)) {
+		glDeleteBuffers(1, &id);
+	}
 
-void GPUBuffer::create_color_buffer(const GLvoid *colors, const size_t size)
-{
-	create_buffer(m_color_buffer, colors, size, GL_ARRAY_BUFFER);
-}
-
-void GPUBuffer::create_buffer(GLuint &id, const GLvoid *data, const size_t size, GLenum target)
-{
 	GLenum draw_type = GL_STATIC_DRAW;
 
 	// TODO: feels a bit hackish
@@ -104,4 +96,20 @@ void GPUBuffer::create_buffer(GLuint &id, const GLvoid *data, const size_t size,
 
 	glBindBuffer(target, id);
 	glBufferData(target, size, data, draw_type);
+}
+
+void GPUBuffer::updateVertexBuffer(const GLvoid *vertices, const size_t size) const
+{
+	if (glIsBuffer(m_vertex_buffer)) {
+		glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
+	}
+}
+
+void GPUBuffer::updateIndexBuffer(const GLvoid *indices, const size_t size) const
+{
+	if (glIsBuffer(m_index_buffer)) {
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer);
+		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, size, indices);
+	}
 }

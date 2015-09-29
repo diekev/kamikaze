@@ -21,28 +21,25 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <GL/glew.h>
 #include <glm/glm.hpp>
-
-#define DWREAL_IS_DOUBLE 0
 #include <openvdb/openvdb.h>
 
-#include <vector>
+#include "render/GPUProgram.h"
+#include "render/GPUTexture.h"
 
 const int MAX_SLICES = 512;
 
 class Cube;
 class GPUBuffer;
-class GPUTexture;
 class TreeTopology;
 
 class Volume {
-	GPUBuffer *m_buffer_data;
-	GPUTexture *m_volume_texture, *m_transfer_texture, *m_index_texture;
-	GPUShader m_shader;
+	std::unique_ptr<GPUBuffer> m_buffer_data;
+	std::unique_ptr<GPUTexture> m_volume_texture, m_transfer_texture, m_index_texture;
+	GPUProgram m_program;
 
-	Cube *m_bbox;
-	TreeTopology *m_topology;
+	std::unique_ptr<Cube> m_bbox;
+	std::unique_ptr<TreeTopology> m_topology;
 
 	glm::vec3 m_min, m_max;
 	glm::vec3 m_size, m_inv_size;
@@ -60,7 +57,7 @@ class Volume {
 public:
 	Volume();
 	Volume(openvdb::FloatGrid::Ptr &grid);
-	~Volume();
+	~Volume() = default;
 
 	void slice(const glm::vec3 &view_dir);
 	void render(const glm::vec3 &dir, const glm::mat4 &MVP);

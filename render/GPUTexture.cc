@@ -54,13 +54,13 @@ void GPUTexture::free(bool renew)
 	}
 }
 
-void GPUTexture::bind()
+void GPUTexture::bind() const
 {
 	glActiveTexture(GL_TEXTURE0 + m_texture);
 	glBindTexture(m_target, m_index);
 }
 
-void GPUTexture::unbind()
+void GPUTexture::unbind() const
 {
 	glActiveTexture(GL_TEXTURE0 + m_texture);
 	glBindTexture(m_target, 0);
@@ -73,13 +73,13 @@ void GPUTexture::setType(GLenum type, GLenum format, GLint internal_format)
 	m_internal_format = internal_format;
 }
 
-void GPUTexture::setMinMagFilter(GLint min, GLint mag)
+void GPUTexture::setMinMagFilter(GLint min, GLint mag) const
 {
 	glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER, min);
 	glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, mag);
 }
 
-void GPUTexture::setWrapping(GLint wrap)
+void GPUTexture::setWrapping(GLint wrap) const
 {
 	glTexParameteri(m_target, GL_TEXTURE_WRAP_S, wrap);
 
@@ -93,14 +93,14 @@ void GPUTexture::setWrapping(GLint wrap)
 	}
 }
 
-void GPUTexture::generateMipMap(GLint base, GLint max)
+void GPUTexture::generateMipMap(GLint base, GLint max) const
 {
 	glTexParameteri(m_target, GL_TEXTURE_BASE_LEVEL, base);
 	glTexParameteri(m_target, GL_TEXTURE_MAX_LEVEL, max);
 	glGenerateMipmap(m_target);
 }
 
-void GPUTexture::create(const GLvoid *data, GLint *size)
+void GPUTexture::create(const GLvoid *data, GLint *size) const
 {
 	if (m_target == GL_TEXTURE_1D) {
 		glTexImage1D(m_target, 0, m_internal_format, size[0], m_border, m_format,
@@ -116,7 +116,7 @@ void GPUTexture::create(const GLvoid *data, GLint *size)
 	}
 }
 
-void GPUTexture::createSubImage(const GLvoid *data, GLint *size, GLint *offset)
+void GPUTexture::createSubImage(const GLvoid *data, GLint *size, GLint *offset) const
 {
 	if (m_target == GL_TEXTURE_1D) {
 		glTexSubImage1D(m_target, 0, offset[0], size[0], m_format, m_type, data);
