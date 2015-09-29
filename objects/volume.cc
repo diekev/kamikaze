@@ -71,8 +71,8 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GPUTexture &texture, GPUT
 
 	Coord index_volume_res(dim >> LOG2DIM);
 
-	tools::Dense<Vec3i> index_volume(index_volume_res, bbox.min() >> LOG2DIM);
-	index_volume.fill(Vec3i(-1));
+	tools::Dense<Vec3s> index_volume(index_volume_res, bbox.min() >> LOG2DIM);
+	index_volume.fill(Vec3s(-1.0f));
 
 	Vec3i leaf_per_axis;
 	max_leaf_per_axis(dim.asPointer(), DIM, leaf_count, leaf_per_axis.asPointer());
@@ -110,10 +110,15 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GPUTexture &texture, GPUT
 		}
 
 		texture.createSubImage(data, leaf_size, offset.asPointer());
+
 		gl_check_errors();
 
 		const Coord &co = leaf.origin() >> LOG2DIM;
-		index_volume.setValue(co, offset);
+		const Vec3s value(float(offset[0]) / packed_volume_res[0],
+		                  float(offset[1]) / packed_volume_res[1],
+                          float(offset[2]) / packed_volume_res[2]);
+
+		index_volume.setValue(co, value);
 
 		offset[0] += DIM;
 
