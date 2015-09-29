@@ -26,7 +26,6 @@
 #include "volume.h"
 
 #include "render/GPUBuffer.h"
-#include "render/GPUTexture.h"
 
 #include "util/util_opengl.h"
 #include "util/util_openvdb.h"
@@ -97,7 +96,7 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
 
 	convert_grid(*grid, data, bbox_min, bbox_max, m_scale);
 
-	m_volume_texture = new GPUTexture(GL_TEXTURE_3D, 0);
+	m_volume_texture = std::unique_ptr<GPUTexture>(new GPUTexture(GL_TEXTURE_3D, 0));
 	m_volume_texture->bind();
 	m_volume_texture->setType(GL_FLOAT, GL_RED, GL_RED);
 	m_volume_texture->setMinMagFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
@@ -111,12 +110,6 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
 
 	loadTransferFunction();
 	loadVolumeShader();
-}
-
-Volume::~Volume()
-{
-	delete m_volume_texture;
-	delete m_transfer_texture;
 }
 
 void Volume::loadVolumeShader()
@@ -199,7 +192,7 @@ void Volume::loadTransferFunction()
 		}
 	}
 
-	m_transfer_texture = new GPUTexture(GL_TEXTURE_1D, 1);
+	m_transfer_texture = std::unique_ptr<GPUTexture>(new GPUTexture(GL_TEXTURE_1D, 1));
 	m_transfer_texture->bind();
 	m_transfer_texture->setType(GL_FLOAT, GL_RGB, GL_RGB);
 	m_transfer_texture->setMinMagFilter(GL_LINEAR, GL_LINEAR);

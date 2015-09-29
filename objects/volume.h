@@ -25,17 +25,17 @@
 #include <openvdb/openvdb.h>
 
 #include "render/GPUProgram.h"
+#include "render/GPUTexture.h"
 
 const int MAX_SLICES = 512;
 
 class Cube;
 class GPUBuffer;
-class GPUTexture;
 class TreeTopology;
 
 class Volume {
 	std::unique_ptr<GPUBuffer> m_buffer_data;
-	GPUTexture *m_volume_texture, *m_transfer_texture;
+	std::unique_ptr<GPUTexture> m_volume_texture, m_transfer_texture;
 	GPUProgram m_program;
 
 	std::unique_ptr<Cube> m_bbox;
@@ -57,7 +57,7 @@ class Volume {
 public:
 	Volume();
 	Volume(openvdb::FloatGrid::Ptr &grid);
-	~Volume();
+	~Volume() = default;
 
 	void slice(const glm::vec3 &view_dir);
 	void render(const glm::vec3 &dir, const glm::mat4 &MVP);
