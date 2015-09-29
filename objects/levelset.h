@@ -24,7 +24,6 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
-#define DWREAL_IS_DOUBLE 0
 #include <openvdb/openvdb.h>
 
 class Cube;

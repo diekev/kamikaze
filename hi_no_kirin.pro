@@ -26,7 +26,7 @@ QMAKE_CXXFLAGS_DEBUG += -g -Wall -Og -Wno-error=unused-function \
 
 QMAKE_LFLAGS += -fsanitize=address
 
-SOURCES +=\
+SOURCES += \
 	main.cc \
 	objects/cube.cc \
 	objects/grid.cc \
@@ -68,6 +68,9 @@ OTHER_FILES += \
 	shader/texture_slicer.vert \
 	shader/tree_topo.frag \
 	shader/tree_topo.vert
+
+DEFINES += DWREAL_IS_DOUBLE=0
+DEFINES += GLM_FORCE_RADIANS
 
 INCLUDEPATH += objects/ render/ util/
 INCLUDEPATH += /opt/lib/openvdb/include /opt/lib/openexr/include

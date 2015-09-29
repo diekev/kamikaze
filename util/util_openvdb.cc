@@ -21,7 +21,6 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#define DWREAL_IS_DOUBLE 0
 #include <openvdb/openvdb.h>
 #include <openvdb/tools/GridTransformer.h>
 #include <openvdb/util/PagedArray.h>

@@ -21,7 +21,6 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#define GLM_FORCE_RADIANS
 #include <glm/gtc/type_ptr.hpp>
 
 #include <iostream>

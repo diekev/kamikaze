@@ -24,11 +24,9 @@
 #include <algorithm>
 #include <vector>
 
-#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#define DWREAL_IS_DOUBLE 0
 #include <openvdb/openvdb.h>
 
 #include "render/GPUShader.h"

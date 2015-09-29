@@ -21,10 +21,8 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#define GLM_FORCE_RADIANS
 #include <glm/gtc/type_ptr.hpp>
 
-#define DWREAL_IS_DOUBLE 0
 #include <openvdb/tools/VolumeToMesh.h>
 
 #include "render/GPUShader.h"

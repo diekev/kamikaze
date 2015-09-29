@@ -26,10 +26,8 @@
 #include <cstdio>
 #include <string>
 
-#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 
-#define DWREAL_IS_DOUBLE 0
 #include <openvdb/openvdb.h>
 
 /* return current time */
