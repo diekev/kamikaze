@@ -23,10 +23,6 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-#include <iostream>
-
-#include "render/GPUShader.h"
-
 #include "volume.h"
 
 #include "render/GPUBuffer.h"
@@ -40,7 +36,7 @@
 #include "treetopology.h"
 
 Volume::Volume()
-    : m_buffer_data(new GPUBuffer)
+    : m_buffer_data(std::unique_ptr<GPUBuffer>(new GPUBuffer))
     , m_volume_texture(nullptr)
     , m_transfer_texture(nullptr)
     , m_bbox(nullptr)
@@ -85,8 +81,8 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
 	m_size = (m_max - m_min);
 	m_inv_size = 1.0f / m_size;
 
-	m_bbox = new Cube(m_min, m_max);
-	m_topology = new TreeTopology(grid);
+	m_bbox = std::unique_ptr<Cube>(new Cube(m_min, m_max));
+	m_topology = std::unique_ptr<TreeTopology>(new TreeTopology(grid));
 
 #if 0
 	printf("Dimensions: %d, %d, %d\n", X_DIM, Y_DIM, Z_DIM);
@@ -121,10 +117,6 @@ Volume::~Volume()
 {
 	delete m_volume_texture;
 	delete m_transfer_texture;
-
-	delete m_buffer_data;
-	delete m_bbox;
-	delete m_topology;
 }
 
 void Volume::loadVolumeShader()
@@ -230,7 +222,7 @@ void Volume::slice(const glm::vec3 &view_dir)
 	auto slice_size = m_size[m_axis] / m_num_slices;
 
 	/* always process slices in back to front order! */
-	if (view_dir[m_axis] < 0.0f) {
+	if (view_dir[m_axis] > 0.0f) {
 		depth = m_max[m_axis];
 		slice_size = -slice_size;
 	}

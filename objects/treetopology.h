@@ -23,17 +23,21 @@
 
 #pragma once
 
+#include <memory>
+
+#include "render/GPUShader.h"
+
 class GPUBuffer;
 
 class TreeTopology {
-	GPUBuffer *m_buffer_data;
-	GLuint m_color_buffer;
+	std::unique_ptr<GPUBuffer> m_buffer_data;
 	GPUShader m_shader;
 	GLuint m_elements;
+	GLuint m_color_buffer;
 
 public:
 	TreeTopology(openvdb::FloatGrid::ConstPtr grid);
-	~TreeTopology();
+	~TreeTopology() = default;
 
 	void render(const glm::mat4 &MVP);
 };

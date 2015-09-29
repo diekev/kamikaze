@@ -21,12 +21,10 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <GL/glew.h>
 #include <glm/glm.hpp>
-
 #include <openvdb/openvdb.h>
 
-#include <vector>
+#include "render/GPUShader.h"
 
 const int MAX_SLICES = 512;
 
@@ -36,12 +34,12 @@ class GPUTexture;
 class TreeTopology;
 
 class Volume {
-	GPUBuffer *m_buffer_data;
+	std::unique_ptr<GPUBuffer> m_buffer_data;
 	GPUTexture *m_volume_texture, *m_transfer_texture;
 	GPUShader m_shader;
 
-	Cube *m_bbox;
-	TreeTopology *m_topology;
+	std::unique_ptr<Cube> m_bbox;
+	std::unique_ptr<TreeTopology> m_topology;
 
 	glm::vec3 m_min, m_max;
 	glm::vec3 m_size, m_inv_size;

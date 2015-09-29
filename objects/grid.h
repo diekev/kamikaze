@@ -23,18 +23,20 @@
 
 #pragma once
 
+#include <memory>
+
 #include "render/GPUShader.h"
 
 class GPUBuffer;
 
 class Grid {
-	GPUBuffer *m_buffer_data;
+	std::unique_ptr<GPUBuffer> m_buffer_data;
 	size_t m_total_indices;
 	GPUShader m_shader;
 
 public:
 	Grid(int x, int y);
-	~Grid();
+	~Grid() = default;
 
 	void render(const glm::mat4 &MVP);
 };

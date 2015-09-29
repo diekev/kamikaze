@@ -32,7 +32,7 @@
 #include "util/util_opengl.h"
 
 Grid::Grid(int x, int y)
-    : m_buffer_data(new GPUBuffer())
+    : m_buffer_data(std::unique_ptr<GPUBuffer>(new GPUBuffer()))
     , m_total_indices(x * y)
 {
 	m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/flat_shader.vert");
@@ -74,11 +74,6 @@ Grid::Grid(int x, int y)
 	m_buffer_data->create_index_buffer(&indices[0], isize);
 	m_buffer_data->attrib_pointer(m_shader["vertex"], 3);
 	m_buffer_data->unbind();
-}
-
-Grid::~Grid()
-{
-	delete m_buffer_data;
 }
 
 void Grid::render(const glm::mat4 &MVP)

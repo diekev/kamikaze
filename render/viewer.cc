@@ -33,6 +33,7 @@
 #include "scene.h"
 #include "viewer.h"
 
+#include "render/GPUBuffer.h"
 #include "objects/grid.h"
 #include "util/util_input.h"
 

@@ -22,22 +22,18 @@
  */
 
 #include <glm/gtc/type_ptr.hpp>
-
 #include <openvdb/tools/VolumeToMesh.h>
 
 #include "render/GPUShader.h"
-#include "levelset.h"
-
-#include "cube.h"
-#include "treetopology.h"
-
 #include "render/GPUBuffer.h"
 
 #include "util/util_opengl.h"
 #include "util/utils.h"
 
+#include "levelset.h"
+
 LevelSet::LevelSet()
-    : m_buffer_data(new GPUBuffer)
+    : m_buffer_data(std::unique_ptr<GPUBuffer>(new GPUBuffer()))
     , m_bbox(nullptr)
     , m_topology(nullptr)
     , m_min(glm::vec3(0.0f))
@@ -66,18 +62,11 @@ LevelSet::LevelSet(openvdb::FloatGrid::Ptr &grid)
 	m_size = (m_max - m_min);
 	m_inv_size = 1.0f / m_size;
 
-	m_bbox = new Cube(m_min, m_max);
-	m_topology = new TreeTopology(grid);
+	m_bbox = std::unique_ptr<Cube>(new Cube(m_min, m_max));
+	m_topology = std::unique_ptr<TreeTopology>(new TreeTopology(grid));
 
 	loadShader();
 	generate_mesh(grid);
-}
-
-LevelSet::~LevelSet()
-{
-	delete m_buffer_data;
-	delete m_bbox;
-	delete m_topology;
 }
 
 void LevelSet::loadShader()

@@ -31,7 +31,7 @@
 #include "render/GPUBuffer.h"
 
 Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
-    : m_buffer_data(new GPUBuffer)
+    : m_buffer_data(std::unique_ptr<GPUBuffer>(new GPUBuffer()))
 {
 	m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/flat_shader.vert");
 	m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/flat_shader.frag");
@@ -70,11 +70,6 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 	m_buffer_data->create_index_buffer(&indices[0], sizeof(indices));
 	m_buffer_data->attrib_pointer(m_shader["vertex"], 3);
 	m_buffer_data->unbind();
-}
-
-Cube::~Cube()
-{
-	delete m_buffer_data;
 }
 
 void Cube::render(const glm::mat4 &MVP)

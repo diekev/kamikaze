@@ -46,16 +46,12 @@ Scene::~Scene()
 
 void Scene::keyboardEvent(int key)
 {
-	bool need_slicing = false;
-
 	switch (key) {
 		case Qt::Key_Minus:
 			m_volume->changeNumSlicesBy(-1);
-			need_slicing = true;
 			break;
 		case Qt::Key_Plus:
 			m_volume->changeNumSlicesBy(1);
-			need_slicing = true;
 			break;
 		case Qt::Key_L:
 			m_volume->toggleUseLUT();
@@ -66,10 +62,6 @@ void Scene::keyboardEvent(int key)
 		case Qt::Key_T:
 			m_volume->toggleTopologyDrawing();
 			break;
-	}
-
-	if (need_slicing) {
-		//m_volume->slice(m_camera->viewDir());
 	}
 }
 
@@ -85,7 +77,7 @@ void Scene::add_level_set(LevelSet *level_set)
 
 void Scene::render(const glm::vec3 &view_dir, const glm::mat4 &MV, const glm::mat4 &P)
 {
-	auto MVP = P * MV;
+	const auto &MVP = P * MV;
 
 	if (m_volume != nullptr) {
 		m_volume->render(view_dir, MVP);

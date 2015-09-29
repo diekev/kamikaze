@@ -21,24 +21,18 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <algorithm>
-#include <vector>
-
-#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
 #include <openvdb/openvdb.h>
 
-#include "render/GPUShader.h"
+#include "treetopology.h"
+
 #include "render/GPUBuffer.h"
 
 #include "util/util_opengl.h"
 #include "util/utils.h"
 
-#include "treetopology.h"
-
 TreeTopology::TreeTopology(openvdb::FloatGrid::ConstPtr grid)
-    : m_buffer_data(new GPUBuffer)
+    : m_buffer_data(std::unique_ptr<GPUBuffer>(new GPUBuffer()))
 {
 	m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/tree_topo.vert");
 	m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/tree_topo.frag");
@@ -156,11 +150,6 @@ TreeTopology::TreeTopology(openvdb::FloatGrid::ConstPtr grid)
 	m_buffer_data->create_color_buffer(&colors[0][0], sizeof(glm::vec3) * colors.size());
 	m_buffer_data->attrib_pointer(m_shader["color"], 3);
 	m_buffer_data->unbind();
-}
-
-TreeTopology::~TreeTopology()
-{
-	delete m_buffer_data;
 }
 
 void TreeTopology::render(const glm::mat4 &MVP)

@@ -126,7 +126,7 @@ void Camera::updateViewDir()
 
 glm::vec3 Camera::viewDir() const
 {
-	return -m_view;
+	return m_view;
 }
 
 glm::mat4 Camera::MV() const

@@ -23,15 +23,17 @@
 
 #pragma once
 
+#include <memory>
+
 class GPUBuffer;
 
 class Cube {
-	GPUBuffer *m_buffer_data;
+	std::unique_ptr<GPUBuffer> m_buffer_data;
 	GPUShader m_shader;
 
 public:
 	Cube(const glm::vec3 &min, const glm::vec3 &max);
-	~Cube();
+	~Cube() = default;
 
 	void render(const glm::mat4 &MVP);
 };
