@@ -36,13 +36,13 @@ SOURCES += \
 	objects/volume.cc \
 	render/camera.cc \
 	render/GPUBuffer.cc \
-	render/GPUShader.cc \
 	render/GPUTexture.cc \
 	render/scene.cc \
 	render/viewer.cc \
 	util/util_opengl.cc \
 	util/util_openvdb.cc \
-	util/utils.cc
+	util/utils.cc \
+    render/GPUProgram.cc
 
 HEADERS += \
     mainwindow.h \
@@ -53,14 +53,14 @@ HEADERS += \
 	objects/volume.h \
 	render/camera.h \
 	render/GPUBuffer.h \
-	render/GPUShader.h \
 	render/GPUTexture.h \
 	render/scene.h \
 	render/viewer.h \
     util/util_input.h \
 	util/util_opengl.h \
 	util/util_openvdb.h \
-	util/utils.h
+	util/utils.h \
+    render/GPUProgram.h
 
 OTHER_FILES += \
 	shader/flat_shader.frag \

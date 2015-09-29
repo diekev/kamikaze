@@ -26,7 +26,7 @@
 #include <glm/glm.hpp>
 #include <openvdb/openvdb.h>
 
-#include "render/GPUShader.h"
+#include "render/GPUProgram.h"
 #include "render/GPUBuffer.h"
 
 #include "cube.h"
@@ -34,7 +34,7 @@
 
 class LevelSet {
 	std::unique_ptr<GPUBuffer> m_buffer_data;
-	GPUShader m_shader;
+	GPUProgram m_program;
 	size_t m_elements;
 
 	std::unique_ptr<Cube> m_bbox;

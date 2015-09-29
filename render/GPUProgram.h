@@ -28,30 +28,30 @@
 #include <map>
 #include <string>
 
-class GPUShader {
-	enum ShadeType {
-		VERTEX_SHADER,
-		FRAGMENT_SHADER,
-		GEOMETRY_SHADER
-	};
+typedef void(* get_ivfunc)(GLuint index, GLenum pname, GLint *param);
+typedef void(* get_logfunc)(GLuint index, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
 
+class GPUProgram {
 	GLuint m_program;
 	int m_total_shaders;
 	GLuint m_shaders[3];
 	std::map<std::string, GLuint> m_attrib_list;
 	std::map<std::string, GLuint> m_uniform_loc_list;
 
+	void logError(GLuint index, const std::string &prefix, get_ivfunc ivfunc, get_logfunc log_func) const;
+
 public:
-	GPUShader();
-	~GPUShader();
+	GPUProgram();
+	~GPUProgram();
 
 	void loadFromString(GLenum whichShader, const std::string &source);
 	void loadFromFile(GLenum whichShader, const std::string &source);
 	void createAndLinkProgram();
-	void use();
-	void unUse();
+	void enable() const;
+	void disable() const;
 	void addAttribute(const std::string &attribute);
 	void addUniform(const std::string &uniform);
+	bool isValid() const;
 
 	GLuint operator[](const std::string &attribute);
 	GLuint operator()(const std::string &uniform);

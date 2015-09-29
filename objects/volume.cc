@@ -121,38 +121,38 @@ Volume::~Volume()
 
 void Volume::loadVolumeShader()
 {
-	m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
-	m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
+	m_program.loadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
+	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
 
-	m_shader.createAndLinkProgram();
+	m_program.createAndLinkProgram();
 
-	m_shader.use();
+	m_program.enable();
 	{
-		m_shader.addAttribute("vertex");
-		m_shader.addUniform("MVP");
-		m_shader.addUniform("offset");
-		m_shader.addUniform("volume");
-		m_shader.addUniform("lut");
-		m_shader.addUniform("use_lut");
-		m_shader.addUniform("scale");
-		m_shader.addUniform("inv_size");
+		m_program.addAttribute("vertex");
+		m_program.addUniform("MVP");
+		m_program.addUniform("offset");
+		m_program.addUniform("volume");
+		m_program.addUniform("lut");
+		m_program.addUniform("use_lut");
+		m_program.addUniform("scale");
+		m_program.addUniform("inv_size");
 
-		glUniform1i(m_shader("volume"), 0);
-		glUniform1i(m_shader("lut"), m_transfer_texture->unit());
+		glUniform1i(m_program("volume"), 0);
+		glUniform1i(m_program("lut"), m_transfer_texture->unit());
 
-		glUniform3fv(m_shader("offset"), 1, &m_min[0]);
-		glUniform3fv(m_shader("inv_size"), 1, &m_inv_size[0]);
-		glUniform1f(m_shader("scale"), m_scale);
+		glUniform3fv(m_program("offset"), 1, &m_min[0]);
+		glUniform3fv(m_program("inv_size"), 1, &m_inv_size[0]);
+		glUniform1f(m_program("scale"), m_scale);
 	}
-	m_shader.unUse();
+	m_program.disable();
 
 	const auto &vsize = MAX_SLICES * 4 * sizeof(glm::vec3);
 	const auto &isize = MAX_SLICES * 6 * sizeof(GLuint);
 
 	m_buffer_data->bind();
-	m_buffer_data->create_vertex_buffer(nullptr, vsize);
-	m_buffer_data->create_index_buffer(nullptr, isize);
-	m_buffer_data->attrib_pointer(m_shader["vertex"], 3);
+	m_buffer_data->generateVertexBuffer(nullptr, vsize);
+	m_buffer_data->generateIndexBuffer(nullptr, isize);
+	m_buffer_data->attribPointer(m_program["vertex"], 3);
 	m_buffer_data->unbind();
 }
 
@@ -278,8 +278,8 @@ void Volume::slice(const glm::vec3 &view_dir)
 		idx += 4;
 	}
 
-	m_buffer_data->update_vertex_buffer(&(m_texture_slices[0].x), m_texture_slices.size() * sizeof(glm::vec3));
-	m_buffer_data->update_index_buffer(indices, idx_count * sizeof(GLuint));
+	m_buffer_data->updateVertexBuffer(&(m_texture_slices[0].x), m_texture_slices.size() * sizeof(glm::vec3));
+	m_buffer_data->updateIndexBuffer(indices, idx_count * sizeof(GLuint));
 
 	delete [] indices;
 }
@@ -300,21 +300,21 @@ void Volume::render(const glm::vec3 &dir, const glm::mat4 &MVP)
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	m_shader.use();
-	{
+	if (m_program.isValid()) {
+		m_program.enable();
 		m_buffer_data->bind();
 		m_volume_texture->bind();
 		m_transfer_texture->bind();
 
-		glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
-		glUniform1i(m_shader("use_lut"), m_use_lut);
+		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+		glUniform1i(m_program("use_lut"), m_use_lut);
 		glDrawElements(GL_TRIANGLES, m_num_slices * 6, GL_UNSIGNED_INT, nullptr);
 
 		m_transfer_texture->unbind();
 		m_volume_texture->unbind();
 		m_buffer_data->unbind();
+		m_program.disable();
 	}
-	m_shader.unUse();
 
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);

@@ -29,7 +29,7 @@ class GPUBuffer;
 
 class Cube {
 	std::unique_ptr<GPUBuffer> m_buffer_data;
-	GPUShader m_shader;
+	GPUProgram m_program;
 
 public:
 	Cube(const glm::vec3 &min, const glm::vec3 &max);

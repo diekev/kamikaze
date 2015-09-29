@@ -29,7 +29,7 @@
 
 #include "scene.h"
 
-#include "render/GPUShader.h"
+#include "render/GPUProgram.h"
 #include "objects/levelset.h"
 #include "objects/volume.h"
 

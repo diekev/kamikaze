@@ -22,55 +22,48 @@
  *
  */
 
+#include <cassert>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
 
-#include "GPUShader.h"
+#include "GPUProgram.h"
 
-GPUShader::GPUShader()
+GPUProgram::GPUProgram()
+    : m_total_shaders(0)
+    , m_shaders{0, 0, 0}
+{}
+
+GPUProgram::~GPUProgram()
 {
-	m_total_shaders = 0;
-	m_shaders[VERTEX_SHADER] = 0;
-	m_shaders[FRAGMENT_SHADER] = 0;
-	m_shaders[GEOMETRY_SHADER] = 0;
+	if (glIsProgram(m_program)) {
+		glDeleteProgram(m_program);
+	}
+
 	m_attrib_list.clear();
 	m_uniform_loc_list.clear();
 }
 
-GPUShader::~GPUShader()
-{
-	glDeleteProgram(m_program);
-
-	m_attrib_list.clear();
-	m_uniform_loc_list.clear();
-}
-
-void GPUShader::loadFromString(GLenum whichShader, const std::string &source)
+void GPUProgram::loadFromString(GLenum whichShader, const std::string &source)
 {
 	GLuint shader = glCreateShader(whichShader);
 	const char *ptmp = source.c_str();
-	glShaderSource(shader, 1, &ptmp, nullptr);
 
-	/* Check whether the shader loads fine or not. */
-	GLint status;
+	glShaderSource(shader, 1, &ptmp, nullptr);
 	glCompileShader(shader);
+
+	GLint status;
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
 
 	if (status == GL_FALSE) {
-		GLint infoLogLength;
-		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
-		GLchar *infoLog = new GLchar[infoLogLength];
-		glGetShaderInfoLog(shader, infoLogLength, nullptr, infoLog);
-
-		std::cerr << "Compile log: " << infoLog << '\n';
-		delete [] infoLog;
+		logError(shader, "Compile log", glGetShaderiv, glGetShaderInfoLog);
 	}
 
 	m_shaders[m_total_shaders++] = shader;
 }
 
-void GPUShader::loadFromFile(GLenum whichShader, const std::string &source)
+void GPUProgram::loadFromFile(GLenum whichShader, const std::string &source)
 {
 	std::ifstream fp(source.c_str());
 
@@ -88,66 +81,90 @@ void GPUShader::loadFromFile(GLenum whichShader, const std::string &source)
 	}
 }
 
-void GPUShader::createAndLinkProgram()
+void GPUProgram::createAndLinkProgram()
 {
 	m_program = glCreateProgram();
 
-	if (m_shaders[VERTEX_SHADER] != 0) {
-		glAttachShader(m_program, m_shaders[VERTEX_SHADER]);
-	}
-	if (m_shaders[FRAGMENT_SHADER] != 0) {
-		glAttachShader(m_program, m_shaders[FRAGMENT_SHADER]);
-	}
-	if (m_shaders[GEOMETRY_SHADER] != 0) {
-		glAttachShader(m_program, m_shaders[GEOMETRY_SHADER]);
+	for (int i = 0; i < 3; ++i) {
+		if (m_shaders[i] != 0) {
+			glAttachShader(m_program, m_shaders[i]);
+		}
 	}
 
-	/* Link and check whether the program links fine or not. */
-	GLint status;
 	glLinkProgram(m_program);
+
+	GLint status;
 	glGetProgramiv(m_program, GL_LINK_STATUS, &status);
 
 	if (status == GL_FALSE) {
-		GLint infoLogLength;
-		glGetProgramiv(m_program, GL_INFO_LOG_LENGTH, &infoLogLength);
-		GLchar *infoLog = new GLchar[infoLogLength];
-		glGetProgramInfoLog(m_program, infoLogLength, nullptr, infoLog);
-
-		std::cerr << "Link log: " << infoLog << '\n';
-		delete [] infoLog;
+		logError(m_program, "Linking log", glGetProgramiv, glGetProgramInfoLog);
 	}
 
-	glDeleteShader(m_shaders[VERTEX_SHADER]);
-	glDeleteShader(m_shaders[FRAGMENT_SHADER]);
-	glDeleteShader(m_shaders[GEOMETRY_SHADER]);
+	for (int i = 0; i < 3; ++i) {
+		if (glIsShader(m_shaders[i])) {
+			glDetachShader(m_program, m_shaders[i]);
+			glDeleteShader(m_shaders[i]);
+		}
+	}
 }
 
-void GPUShader::use()
+void GPUProgram::enable() const
 {
 	glUseProgram(m_program);
 }
 
-void GPUShader::unUse()
+void GPUProgram::disable() const
 {
 	glUseProgram(0);
 }
 
-void GPUShader::addAttribute(const std::string &attribute)
+bool GPUProgram::isValid() const
+{
+	if (glIsProgram(m_program)) {
+		glValidateProgram(m_program);
+
+		GLint status;
+		glGetProgramiv(m_program, GL_VALIDATE_STATUS, &status);
+
+		if (status == GL_FALSE) {
+			logError(m_program, "Validation log", glGetProgramiv, glGetProgramInfoLog);
+			return false;
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+void GPUProgram::addAttribute(const std::string &attribute)
 {
 	m_attrib_list[attribute] = glGetAttribLocation(m_program, attribute.c_str());
 }
 
-void GPUShader::addUniform(const std::string &uniform)
+void GPUProgram::addUniform(const std::string &uniform)
 {
 	m_uniform_loc_list[uniform] = glGetUniformLocation(m_program, uniform.c_str());
 }
 
-GLuint GPUShader::operator[](const std::string &attribute)
+GLuint GPUProgram::operator[](const std::string &attribute)
 {
 	return m_attrib_list[attribute];
 }
 
-GLuint GPUShader::operator()(const std::string &uniform)
+GLuint GPUProgram::operator()(const std::string &uniform)
 {
 	return m_uniform_loc_list[uniform];
+}
+
+void GPUProgram::logError(GLuint index, const std::string &prefix,
+                          get_ivfunc ivfunc, get_logfunc log_func) const
+{
+	GLint log_length;
+	ivfunc(index, GL_INFO_LOG_LENGTH, &log_length);
+
+	auto log = std::unique_ptr<char[]>(new char[log_length]);
+	log_func(index, log_length, &log_length, log.get());
+
+	std::cerr << prefix << ": " << log.get() << '\n';
 }

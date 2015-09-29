@@ -28,21 +28,23 @@ class GPUBuffer {
 	GLuint m_vao;
 	GLuint m_vertex_buffer;
 	GLuint m_index_buffer;
-	GLuint m_color_buffer;
+	GLuint m_normal_buffer;
 
-	void create_buffer(GLuint &id, const GLvoid *data, const size_t size, GLenum target);
+	void generateBuffer(GLuint &id, const GLvoid *data, const size_t size, GLenum target) const;
 
 public:
 	GPUBuffer();
 	~GPUBuffer();
 
-	void bind();
-	void unbind();
+	void bind() const;
+	void unbind() const;
 
-	void attrib_pointer(GLuint index, GLint size);
-	void create_vertex_buffer(const GLvoid *vertices, const size_t size);
-	void update_vertex_buffer(const GLvoid *vertices, const size_t size);
-	void create_index_buffer(const GLvoid *indices, const size_t size);
-	void update_index_buffer(const GLvoid *indices, const size_t size);
-	void create_color_buffer(const GLvoid *colors, const size_t size);
+	void attribPointer(GLuint index, GLint size) const;
+
+	void generateVertexBuffer(const GLvoid *vertices, const size_t size);
+	void generateIndexBuffer(const GLvoid *indices, const size_t size);
+	void generateNormalBuffer(const GLvoid *colors, const size_t size);
+
+	void updateIndexBuffer(const GLvoid *indices, const size_t size) const;
+	void updateVertexBuffer(const GLvoid *vertices, const size_t size) const;
 };

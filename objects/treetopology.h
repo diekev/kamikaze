@@ -25,13 +25,13 @@
 
 #include <memory>
 
-#include "render/GPUShader.h"
+#include "render/GPUProgram.h"
 
 class GPUBuffer;
 
 class TreeTopology {
 	std::unique_ptr<GPUBuffer> m_buffer_data;
-	GPUShader m_shader;
+	GPUProgram m_program;
 	GLuint m_elements;
 	GLuint m_color_buffer;
 

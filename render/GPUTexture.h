@@ -38,16 +38,16 @@ public:
 	~GPUTexture();
 
 	void free(bool renew);
-	void bind();
-	void unbind();
+	void bind() const;
+	void unbind() const;
 
 	void setType(GLenum type, GLenum format, GLint internal_format);
-	void setMinMagFilter(GLint min, GLint mag);
-	void setWrapping(GLint wrap);
-	void generateMipMap(GLint base, GLint max);
+	void setMinMagFilter(GLint min, GLint mag) const;
+	void setWrapping(GLint wrap) const;
+	void generateMipMap(GLint base, GLint max) const;
 
-	void create(const GLvoid *data, GLint *size);
-	void createSubImage(const GLvoid *data, GLint *size, GLint *offset);
+	void create(const GLvoid *data, GLint *size) const;
+	void createSubImage(const GLvoid *data, GLint *size, GLint *offset) const;
 
 	GLint unit() const;
 };

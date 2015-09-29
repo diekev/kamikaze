@@ -25,14 +25,14 @@
 
 #include <memory>
 
-#include "render/GPUShader.h"
+#include "render/GPUProgram.h"
 
 class GPUBuffer;
 
 class Grid {
 	std::unique_ptr<GPUBuffer> m_buffer_data;
 	size_t m_total_indices;
-	GPUShader m_shader;
+	GPUProgram m_program;
 
 public:
 	Grid(int x, int y);

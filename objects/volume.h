@@ -24,7 +24,7 @@
 #include <glm/glm.hpp>
 #include <openvdb/openvdb.h>
 
-#include "render/GPUShader.h"
+#include "render/GPUProgram.h"
 
 const int MAX_SLICES = 512;
 
@@ -36,7 +36,7 @@ class TreeTopology;
 class Volume {
 	std::unique_ptr<GPUBuffer> m_buffer_data;
 	GPUTexture *m_volume_texture, *m_transfer_texture;
-	GPUShader m_shader;
+	GPUProgram m_program;
 
 	std::unique_ptr<Cube> m_bbox;
 	std::unique_ptr<TreeTopology> m_topology;

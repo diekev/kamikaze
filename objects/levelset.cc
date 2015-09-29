@@ -24,9 +24,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <openvdb/tools/VolumeToMesh.h>
 
-#include "render/GPUShader.h"
-#include "render/GPUBuffer.h"
-
 #include "util/util_opengl.h"
 #include "util/utils.h"
 
@@ -71,35 +68,35 @@ LevelSet::LevelSet(openvdb::FloatGrid::Ptr &grid)
 
 void LevelSet::loadShader()
 {
-	m_shader.loadFromFile(GL_VERTEX_SHADER, "shader/object.vert");
-	m_shader.loadFromFile(GL_FRAGMENT_SHADER, "shader/object.frag");
-	m_shader.createAndLinkProgram();
+	m_program.loadFromFile(GL_VERTEX_SHADER, "shader/object.vert");
+	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shader/object.frag");
+	m_program.createAndLinkProgram();
 
-	m_shader.use();
+	m_program.enable();
 	{
-		m_shader.addAttribute("vertex");
-		m_shader.addAttribute("normal");
-		m_shader.addUniform("MVP");
-		m_shader.addUniform("N");
+		m_program.addAttribute("vertex");
+		m_program.addAttribute("normal");
+		m_program.addUniform("MVP");
+		m_program.addUniform("N");
 	}
-	m_shader.unUse();
+	m_program.disable();
 }
 
 void LevelSet::render(const glm::mat4 &MVP, const glm::mat3 &N)
 {
 	glEnable(GL_DEPTH_TEST);
 
-	m_shader.use();
-	{
+	if (m_program.isValid()) {
+		m_program.enable();
 		m_buffer_data->bind();
 
-		glUniformMatrix4fv(m_shader("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
-		glUniformMatrix3fv(m_shader("N"), 1, GL_FALSE, glm::value_ptr(N));
+		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+		glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(N));
 		glDrawElements(GL_QUADS, m_elements, GL_UNSIGNED_INT, nullptr);
 
 		m_buffer_data->unbind();
+		m_program.disable();
 	}
-	m_shader.unUse();
 
 	glDisable(GL_DEPTH_TEST);
 }
@@ -164,11 +161,11 @@ void LevelSet::generate_mesh(openvdb::FloatGrid::ConstPtr grid)
 	}
 
 	m_buffer_data->bind();
-	m_buffer_data->create_vertex_buffer(&points[0], points.size() * sizeof(GLfloat));
-	m_buffer_data->create_index_buffer(&indices[0], indices.size() * sizeof(GLuint));
-	m_buffer_data->attrib_pointer(m_shader["vertex"], 3);
-	m_buffer_data->create_color_buffer(&normals[0], normals.size() * sizeof(GLfloat));
-	m_buffer_data->attrib_pointer(m_shader["normal"], 3);
+	m_buffer_data->generateVertexBuffer(&points[0], points.size() * sizeof(GLfloat));
+	m_buffer_data->generateIndexBuffer(&indices[0], indices.size() * sizeof(GLuint));
+	m_buffer_data->attribPointer(m_program["vertex"], 3);
+	m_buffer_data->generateNormalBuffer(&normals[0], normals.size() * sizeof(GLfloat));
+	m_buffer_data->attribPointer(m_program["normal"], 3);
 	m_buffer_data->unbind();
 
 	gl_check_errors();
