@@ -16,6 +16,9 @@ class MainWindow : public QMainWindow {
 	Scene *m_scene;
 	Viewer *m_viewer;
 
+private Q_SLOTS:
+	void openFile();
+
 protected:
 	bool eventFilter(QObject *obj, QEvent *e);
 

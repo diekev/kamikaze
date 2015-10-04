@@ -22,6 +22,7 @@
  *
  */
 
+#include <QFileDialog>
 #include <QKeyEvent>
 
 #include <openvdb/openvdb.h>
@@ -44,6 +45,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
 	qApp->installEventFilter(this);
 	ui->setupUi(this);
+
+	m_viewer->setScene(m_scene);
 
 	setCentralWidget(m_viewer);
 }
@@ -99,8 +102,6 @@ void MainWindow::openFile(const QString &filename)
 			Volume *volume = new Volume(grid);
 			m_scene->add_volume(volume);
 		}
-
-		m_viewer->setScene(m_scene);
 	}
 	else {
 		std::cerr << "Unable to open file \'" << filename.toStdString() << "\'\n";
@@ -146,4 +147,16 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 	}
 
 	return QObject::eventFilter(obj, e);
+}
+
+void MainWindow::openFile()
+{
+	const auto &filename = QFileDialog::getOpenFileName(
+	                          this, tr("Ouvrir fichier image"),
+		                      QDir::homePath(),
+		                      tr("*.vdb"));
+
+	if (!filename.isEmpty()) {
+		openFile(filename);
+	}
 }
