@@ -36,6 +36,7 @@ class Scene;
 class Viewer : public QGLWidget {
 	int m_mouse_button;
 	int m_modifier;
+	int m_width, m_height;
 	glm::vec4 m_bg;
 
 	Camera *m_camera;
@@ -57,4 +58,5 @@ public:
 	void wheelEvent(QWheelEvent *e);
 
 	void setScene(Scene *scene);
+	void intersectScene(int x, int y);
 };

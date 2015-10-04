@@ -26,6 +26,7 @@
 
 #include "render/GPUProgram.h"
 #include "render/GPUTexture.h"
+#include "util/util_render.h"
 
 const int MAX_SLICES = 512;
 
@@ -66,4 +67,5 @@ public:
 	void toggleUseLUT();
 	void toggleBBoxDrawing();
 	void toggleTopologyDrawing();
+	bool intersect(const Ray &ray, float &min) const;
 };

@@ -60,7 +60,8 @@ HEADERS += \
 	util/util_opengl.h \
 	util/util_openvdb.h \
 	util/utils.h \
-    render/GPUProgram.h
+    render/GPUProgram.h \
+    util/util_render.h
 
 OTHER_FILES += \
 	shader/flat_shader.frag \

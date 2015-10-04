@@ -98,3 +98,24 @@ void Scene::render(const glm::vec3 &view_dir, const glm::mat4 &MV, const glm::ma
 		level_set->render(MVP, glm::inverseTranspose(glm::mat3(MV)));
 	}
 }
+
+void Scene::intersect(const Ray &ray)
+{
+	float min = std::numeric_limits<float>::max();
+	int selected_volume = -1, index = 0;
+
+	for (auto &volume : m_volumes) {
+		if (volume->intersect(ray, min)) {
+			selected_volume = index;
+		}
+
+		++index;
+	}
+
+	if (selected_volume == -1) {
+		std::cout << "No volume selected.\n";
+	}
+	else {
+		std::cout << "Selected volume: " << selected_volume << "\n";
+	}
+}
