@@ -30,14 +30,8 @@
 #include "levelset.h"
 
 LevelSet::LevelSet()
-    : m_buffer_data(std::unique_ptr<GPUBuffer>(new GPUBuffer()))
-    , m_bbox(nullptr)
+    : m_bbox(nullptr)
     , m_topology(nullptr)
-    , m_min(glm::vec3(0.0f))
-    , m_max(glm::vec3(0.0f))
-    , m_size(glm::vec3(0.0f))
-    , m_inv_size(glm::vec3(0.0f))
-    , m_draw_bbox(false)
     , m_draw_topology(false)
 {}
 
@@ -59,6 +53,7 @@ LevelSet::LevelSet(openvdb::FloatGrid::Ptr &grid)
 	m_size = (m_max - m_min);
 	m_inv_size = 1.0f / m_size;
 
+	m_buffer_data = std::unique_ptr<GPUBuffer>(new GPUBuffer());
 	m_bbox = std::unique_ptr<Cube>(new Cube(m_min, m_max));
 	m_topology = std::unique_ptr<TreeTopology>(new TreeTopology(grid));
 
@@ -82,9 +77,13 @@ void LevelSet::loadShader()
 	m_program.disable();
 }
 
-void LevelSet::render(const glm::mat4 &MVP, const glm::mat3 &N)
+void LevelSet::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir)
 {
 	glEnable(GL_DEPTH_TEST);
+
+	if (m_draw_bbox) {
+		m_bbox->render(MVP, N, view_dir);
+	}
 
 	if (m_program.isValid()) {
 		m_program.enable();
@@ -171,14 +170,4 @@ void LevelSet::generate_mesh(openvdb::FloatGrid::ConstPtr grid)
 	gl_check_errors();
 
 	m_elements = indices.size();
-}
-
-void LevelSet::toggleBBoxDrawing()
-{
-	m_draw_bbox = !m_draw_bbox;
-}
-
-void LevelSet::toggleTopologyDrawing()
-{
-	m_draw_topology = !m_draw_topology;
 }

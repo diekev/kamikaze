@@ -28,14 +28,11 @@
 
 #include "util_render.h"
 
-class LevelSet;
-class Volume;
+class Object;
 
 class Scene {
-	std::vector<Volume *> m_volumes;
-	std::vector<LevelSet *> m_level_sets;
-	Volume *m_volume;
-	LevelSet *m_level_set;
+	std::vector<Object *> m_objects;
+	int m_active_object;
 
 public:
 	Scene();
@@ -43,8 +40,7 @@ public:
 
 	void keyboardEvent(int key);
 
-	void add_volume(Volume *volume);
-	void add_level_set(LevelSet *level_set);
+	void add_object(Object *object);
 	void render(const glm::vec3 &view_dir, const glm::mat4 &MV, const glm::mat4 &P);
 	void intersect(const Ray &ray);
 };

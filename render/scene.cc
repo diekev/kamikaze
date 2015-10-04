@@ -34,68 +34,56 @@
 #include "objects/volume.h"
 
 Scene::Scene()
-    : m_volume(nullptr)
-    , m_level_set(nullptr)
+    : m_active_object(-1)
 {}
 
 Scene::~Scene()
 {
-	for (auto &volume : m_volumes) {
-		delete volume;
-	}
-
-	for (auto &level_set : m_level_sets) {
-		delete level_set;
+	for (auto &object : m_objects) {
+		delete object;
 	}
 }
 
 void Scene::keyboardEvent(int key)
 {
-	if (m_volume == nullptr && m_volumes.size() == 0) {
+	if (m_objects.size() == 0) {
 		return;
 	}
 
-	m_volume = m_volumes[0];
+	Object *ob = m_objects[m_active_object];
 
 	switch (key) {
-		case Qt::Key_Minus:
-			m_volume->changeNumSlicesBy(-1);
-			break;
-		case Qt::Key_Plus:
-			m_volume->changeNumSlicesBy(1);
-			break;
-		case Qt::Key_L:
-			m_volume->toggleUseLUT();
-			break;
+//		case Qt::Key_Minus:
+//			m_volume->changeNumSlicesBy(-1);
+//			break;
+//		case Qt::Key_Plus:
+//			m_volume->changeNumSlicesBy(1);
+//			break;
+//		case Qt::Key_L:
+//			m_volume->toggleUseLUT();
+//			break;
 		case Qt::Key_B:
-			m_volume->toggleBBoxDrawing();
+			ob->toggleBBoxDrawing();
 			break;
 		case Qt::Key_T:
-			m_volume->toggleTopologyDrawing();
+			ob->toggleTopologyDrawing();
 			break;
 	}
 }
 
-void Scene::add_volume(Volume *volume)
+void Scene::add_object(Object *object)
 {
-	m_volumes.push_back(volume);
-}
-
-void Scene::add_level_set(LevelSet *level_set)
-{
-	m_level_sets.push_back(level_set);
+	m_objects.push_back(object);
+	m_active_object = m_objects.size() - 1;
 }
 
 void Scene::render(const glm::vec3 &view_dir, const glm::mat4 &MV, const glm::mat4 &P)
 {
 	const auto &MVP = P * MV;
+	const auto &N = glm::inverseTranspose(glm::mat3(MV));
 
-	for (auto &volume : m_volumes) {
-		volume->render(view_dir, MVP);
-	}
-
-	for (auto &level_set : m_level_sets) {
-		level_set->render(MVP, glm::inverseTranspose(glm::mat3(MV)));
+	for (auto &object : m_objects) {
+		object->render(MVP, N, view_dir);
 	}
 }
 
@@ -104,18 +92,15 @@ void Scene::intersect(const Ray &ray)
 	float min = std::numeric_limits<float>::max();
 	int selected_volume = -1, index = 0;
 
-	for (auto &volume : m_volumes) {
-		if (volume->intersect(ray, min)) {
+	for (auto &object : m_objects) {
+		if (object->intersect(ray, min)) {
 			selected_volume = index;
 		}
 
 		++index;
 	}
 
-	if (selected_volume == -1) {
-		std::cout << "No volume selected.\n";
-	}
-	else {
-		std::cout << "Selected volume: " << selected_volume << "\n";
+	if (selected_volume != -1) {
+		m_active_object = selected_volume;
 	}
 }

@@ -42,7 +42,8 @@ SOURCES += \
 	util/util_opengl.cc \
 	util/util_openvdb.cc \
 	util/utils.cc \
-    render/GPUProgram.cc
+    render/GPUProgram.cc \
+    objects/object.cc
 
 HEADERS += \
     mainwindow.h \
@@ -61,7 +62,8 @@ HEADERS += \
 	util/util_openvdb.h \
 	util/utils.h \
     render/GPUProgram.h \
-    util/util_render.h
+    util/util_render.h \
+    objects/object.h
 
 OTHER_FILES += \
 	shader/flat_shader.frag \

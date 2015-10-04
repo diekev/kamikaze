@@ -31,8 +31,9 @@
 #include "render/GPUBuffer.h"
 
 Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
-    : m_buffer_data(std::unique_ptr<GPUBuffer>(new GPUBuffer()))
 {
+	m_buffer_data = std::unique_ptr<GPUBuffer>(new GPUBuffer());
+
 	m_program.loadFromFile(GL_VERTEX_SHADER, "shader/flat_shader.vert");
 	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shader/flat_shader.frag");
 
@@ -72,7 +73,7 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 	m_buffer_data->unbind();
 }
 
-void Cube::render(const glm::mat4 &MVP)
+void Cube::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir)
 {
 	glEnable(GL_DEPTH_TEST);
 
@@ -88,4 +89,7 @@ void Cube::render(const glm::mat4 &MVP)
 	}
 
 	glDisable(GL_DEPTH_TEST);
+
+	(void)N;
+	(void)view_dir;
 }

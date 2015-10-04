@@ -23,12 +23,31 @@
 
 #pragma once
 
-#include "object.h"
+#include <memory>
 
-class Cube : public Object {
+#include "GPUProgram.h"
+#include "GPUBuffer.h"
+
+#include "util/util_render.h"
+
+class Object {
+protected:
+	std::unique_ptr<GPUBuffer> m_buffer_data;
+	GPUProgram m_program;
+	size_t m_elements;
+
+	glm::vec3 m_size, m_inv_size;
+	glm::vec3 m_min, m_max;
+
+	bool m_draw_bbox, m_draw_topology;
+
 public:
-	Cube(const glm::vec3 &min, const glm::vec3 &max);
-	~Cube() = default;
+	Object();
+	~Object() = default;
 
-	virtual void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir);
+	virtual bool intersect(const Ray &ray, float &min) const;
+	virtual void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir) = 0;
+
+	virtual void toggleBBoxDrawing();
+	virtual void toggleTopologyDrawing();
 };

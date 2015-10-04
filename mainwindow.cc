@@ -94,14 +94,14 @@ void MainWindow::openFile(const QString &filename)
 			}
 		}
 
+		Object *ob;
 		if (grid->getGridClass() == GRID_LEVEL_SET) {
-			LevelSet *ls = new LevelSet(grid);
-			m_scene->add_level_set(ls);
+			ob = new LevelSet(grid);
 		}
 		else {
-			Volume *volume = new Volume(grid);
-			m_scene->add_volume(volume);
+			ob = new Volume(grid);
 		}
+		m_scene->add_object(ob);
 	}
 	else {
 		std::cerr << "Unable to open file \'" << filename.toStdString() << "\'\n";

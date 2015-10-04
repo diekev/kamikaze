@@ -21,14 +21,44 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#pragma once
+#include <glm/glm.hpp>
 
 #include "object.h"
 
-class Cube : public Object {
-public:
-	Cube(const glm::vec3 &min, const glm::vec3 &max);
-	~Cube() = default;
+Object::Object()
+	: m_buffer_data(nullptr)
+    , m_size(glm::vec3(0.0f))
+    , m_inv_size(glm::vec3(0.0f))
+    , m_min(glm::vec3(0.0f))
+    , m_max(glm::vec3(0.0f))
+    , m_draw_bbox(false)
+    , m_draw_topology(false)
+{}
 
-	virtual void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir);
-};
+bool Object::intersect(const Ray &ray, float &min) const
+{
+	glm::vec3 inv_dir = 1.0f / ray.dir;
+	glm::vec3 t_min = (m_min - ray.pos) * inv_dir;
+	glm::vec3 t_max = (m_max - ray.pos) * inv_dir;
+	glm::vec3 t1 = glm::min(t_min, t_max);
+	glm::vec3 t2 = glm::max(t_min, t_max);
+	float t_near = glm::max(t1.x, glm::max(t1.y, t1.z));
+	float t_far = glm::min(t2.x, glm::min(t2.y, t2.z));
+
+	if (t_near < t_far && t_near < min) {
+		min = t_near;
+		return true;
+	}
+
+	return false;
+}
+
+void Object::toggleBBoxDrawing()
+{
+	m_draw_bbox = !m_draw_bbox;
+}
+
+void Object::toggleTopologyDrawing()
+{
+	m_draw_topology = !m_draw_topology;
+}
