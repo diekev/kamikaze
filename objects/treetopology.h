@@ -32,8 +32,6 @@ class GPUBuffer;
 class TreeTopology {
 	std::unique_ptr<GPUBuffer> m_buffer_data;
 	GPUProgram m_program;
-	GLuint m_elements;
-	GLuint m_color_buffer;
 
 public:
 	TreeTopology(openvdb::FloatGrid::ConstPtr grid);

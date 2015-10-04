@@ -26,9 +26,6 @@
 
 #include <QGLWidget>
 
-const int WIDTH = 1280;
-const int HEIGHT = 960;
-
 class Camera;
 class Grid;
 class Scene;
