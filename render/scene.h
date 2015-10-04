@@ -30,6 +30,8 @@ class LevelSet;
 class Volume;
 
 class Scene {
+	std::vector<Volume *> m_volumes;
+	std::vector<LevelSet *> m_level_sets;
 	Volume *m_volume;
 	LevelSet *m_level_set;
 

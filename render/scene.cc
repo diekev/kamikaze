@@ -40,12 +40,23 @@ Scene::Scene()
 
 Scene::~Scene()
 {
-	delete m_level_set;
-	delete m_volume;
+	for (auto &volume : m_volumes) {
+		delete volume;
+	}
+
+	for (auto &level_set : m_level_sets) {
+		delete level_set;
+	}
 }
 
 void Scene::keyboardEvent(int key)
 {
+	if (m_volume == nullptr && m_volumes.size() == 0) {
+		return;
+	}
+
+	m_volume = m_volumes[0];
+
 	switch (key) {
 		case Qt::Key_Minus:
 			m_volume->changeNumSlicesBy(-1);
@@ -67,23 +78,23 @@ void Scene::keyboardEvent(int key)
 
 void Scene::add_volume(Volume *volume)
 {
-	m_volume = volume;
+	m_volumes.push_back(volume);
 }
 
 void Scene::add_level_set(LevelSet *level_set)
 {
-	m_level_set = level_set;
+	m_level_sets.push_back(level_set);
 }
 
 void Scene::render(const glm::vec3 &view_dir, const glm::mat4 &MV, const glm::mat4 &P)
 {
 	const auto &MVP = P * MV;
 
-	if (m_volume != nullptr) {
-		m_volume->render(view_dir, MVP);
+	for (auto &volume : m_volumes) {
+		volume->render(view_dir, MVP);
 	}
 
-	if (m_level_set != nullptr) {
-		m_level_set->render(MVP, glm::inverseTranspose(glm::mat3(MV)));
+	for (auto &level_set : m_level_sets) {
+		level_set->render(MVP, glm::inverseTranspose(glm::mat3(MV)));
 	}
 }
