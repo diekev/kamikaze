@@ -32,7 +32,6 @@
 LevelSet::LevelSet()
     : m_bbox(nullptr)
     , m_topology(nullptr)
-    , m_draw_topology(false)
 {}
 
 LevelSet::LevelSet(openvdb::FloatGrid::Ptr &grid)
@@ -83,6 +82,10 @@ void LevelSet::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 
 
 	if (m_draw_bbox) {
 		m_bbox->render(MVP, N, view_dir);
+	}
+
+	if (m_draw_topology) {
+		m_topology->render(MVP);
 	}
 
 	if (m_program.isValid()) {

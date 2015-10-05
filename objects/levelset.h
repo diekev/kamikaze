@@ -33,8 +33,6 @@ class LevelSet : public Object {
 	std::unique_ptr<Cube> m_bbox;
 	std::unique_ptr<TreeTopology> m_topology;
 
-	bool m_draw_topology;
-
 	void generate_mesh(openvdb::FloatGrid::ConstPtr grid);
 
 public:
