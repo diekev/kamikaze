@@ -28,7 +28,6 @@
 #include <openvdb/openvdb.h>
 
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
 
 #include "objects/levelset.h"
 #include "objects/volume.h"
@@ -37,18 +36,19 @@
 #include "util/util_openvdb.h"
 #include "util/utils.h"
 
+#include "ui_mainwindow.h"
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , m_scene(new Scene)
-    , m_viewer(new Viewer(this))
 {
 	qApp->installEventFilter(this);
 	ui->setupUi(this);
+	ui->m_viewport->setScene(m_scene);
 
-	m_viewer->setScene(m_scene);
-
-	setCentralWidget(m_viewer);
+	connect(m_scene, SIGNAL(objectChanged()), this, SLOT(updateObjectTab()));
+	ui->tabWidget->setTabEnabled(0, false);
 }
 
 MainWindow::~MainWindow()
@@ -102,6 +102,8 @@ void MainWindow::openFile(const QString &filename)
 			ob = new Volume(grid);
 		}
 		m_scene->add_object(ob);
+
+		ui->tabWidget->setTabEnabled(0, true);
 	}
 	else {
 		std::cerr << "Unable to open file \'" << filename.toStdString() << "\'\n";
@@ -111,37 +113,37 @@ void MainWindow::openFile(const QString &filename)
 bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 {
 	if (e->type() == QEvent::KeyPress) {
-		if (obj == m_viewer) {
+		if (obj == ui->m_viewport) {
 			QKeyEvent *keyEvent = static_cast<QKeyEvent *>(e);
-			m_viewer->keyPressEvent(keyEvent);
+			ui->m_viewport->keyPressEvent(keyEvent);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::MouseButtonPress) {
-		if (obj == m_viewer) {
+		if (obj == ui->m_viewport) {
 			QMouseEvent *event = static_cast<QMouseEvent *>(e);
-			m_viewer->mousePressEvent(event);
+			ui->m_viewport->mousePressEvent(event);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::MouseMove) {
-		if (obj == m_viewer) {
+		if (obj == ui->m_viewport) {
 			QMouseEvent *event = static_cast<QMouseEvent *>(e);
-			m_viewer->mouseMoveEvent(event);
+			ui->m_viewport->mouseMoveEvent(event);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::MouseButtonRelease) {
-		if (obj == m_viewer) {
+		if (obj == ui->m_viewport) {
 			QMouseEvent *event = static_cast<QMouseEvent *>(e);
-			m_viewer->mouseReleaseEvent(event);
+			ui->m_viewport->mouseReleaseEvent(event);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::Wheel) {
-		if (obj == m_viewer) {
+		if (obj == ui->m_viewport) {
 			QWheelEvent *event = static_cast<QWheelEvent *>(e);
-			m_viewer->wheelEvent(event);
+			ui->m_viewport->wheelEvent(event);
 			return true;
 		}
 	}
@@ -159,4 +161,30 @@ void MainWindow::openFile()
 	if (!filename.isEmpty()) {
 		openFile(filename);
 	}
+}
+
+void MainWindow::updateObject()
+{
+	Object *ob = m_scene->currentObject();
+
+	if (ob == nullptr) {
+		return;
+	}
+
+	ob->drawBBox(ui->m_draw_bbox->isChecked());
+	ob->drawTreeTopology(ui->m_draw_tree->isChecked());
+
+	ui->m_viewport->update();
+}
+
+void MainWindow::updateObjectTab()
+{
+	Object *ob = m_scene->currentObject();
+
+	if (ob == nullptr) {
+		return;
+	}
+
+	ui->m_draw_bbox->setChecked(ob->drawBBox());
+	ui->m_draw_tree->setChecked(ob->drawTreeTopology());
 }

@@ -48,6 +48,8 @@ public:
 	virtual bool intersect(const Ray &ray, float &min) const;
 	virtual void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir) = 0;
 
-	virtual void toggleBBoxDrawing();
-	virtual void toggleTopologyDrawing();
+	virtual void drawBBox(const bool b);
+	virtual bool drawBBox() const { return m_draw_bbox; }
+	virtual void drawTreeTopology(const bool b);
+	virtual bool drawTreeTopology() const { return m_draw_topology; }
 };

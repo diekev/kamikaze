@@ -50,7 +50,7 @@ void Scene::keyboardEvent(int key)
 		return;
 	}
 
-	Object *ob = m_objects[m_active_object];
+//	Object *ob = m_objects[m_active_object];
 
 	switch (key) {
 //		case Qt::Key_Minus:
@@ -62,12 +62,6 @@ void Scene::keyboardEvent(int key)
 //		case Qt::Key_L:
 //			m_volume->toggleUseLUT();
 //			break;
-		case Qt::Key_B:
-			ob->toggleBBoxDrawing();
-			break;
-		case Qt::Key_T:
-			ob->toggleTopologyDrawing();
-			break;
 	}
 }
 
@@ -75,6 +69,7 @@ void Scene::add_object(Object *object)
 {
 	m_objects.push_back(object);
 	m_active_object = m_objects.size() - 1;
+	Q_EMIT objectChanged();
 }
 
 void Scene::render(const glm::vec3 &view_dir, const glm::mat4 &MV, const glm::mat4 &P)
@@ -90,17 +85,27 @@ void Scene::render(const glm::vec3 &view_dir, const glm::mat4 &MV, const glm::ma
 void Scene::intersect(const Ray &ray)
 {
 	float min = std::numeric_limits<float>::max();
-	int selected_volume = -1, index = 0;
+	int selected_object = -1, index = 0;
 
 	for (auto &object : m_objects) {
 		if (object->intersect(ray, min)) {
-			selected_volume = index;
+			selected_object = index;
 		}
 
 		++index;
 	}
 
-	if (selected_volume != -1) {
-		m_active_object = selected_volume;
+	if (selected_object != -1 && selected_object != m_active_object) {
+		m_active_object = selected_object;
+		Q_EMIT objectChanged();
 	}
+}
+
+Object *Scene::currentObject()
+{
+	if (!m_objects.empty()) {
+		return m_objects[m_active_object];
+	}
+
+	return nullptr;
 }

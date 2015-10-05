@@ -53,12 +53,12 @@ bool Object::intersect(const Ray &ray, float &min) const
 	return false;
 }
 
-void Object::toggleBBoxDrawing()
+void Object::drawBBox(const bool b)
 {
-	m_draw_bbox = !m_draw_bbox;
+	m_draw_bbox = b;
 }
 
-void Object::toggleTopologyDrawing()
+void Object::drawTreeTopology(const bool b)
 {
-	m_draw_topology = !m_draw_topology;
+	m_draw_topology = b;
 }
