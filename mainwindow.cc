@@ -26,6 +26,7 @@
 #include <QKeyEvent>
 
 #include <openvdb/openvdb.h>
+#include <openvdb/tools/LevelSetSphere.h>
 
 #include "mainwindow.h"
 
@@ -102,8 +103,6 @@ void MainWindow::openFile(const QString &filename)
 			ob = new Volume(grid);
 		}
 		m_scene->add_object(ob);
-
-		ui->tabWidget->setTabEnabled(0, true);
 	}
 	else {
 		std::cerr << "Unable to open file \'" << filename.toStdString() << "\'\n";
@@ -185,6 +184,26 @@ void MainWindow::updateObjectTab()
 		return;
 	}
 
+	ui->tabWidget->setTabEnabled(0, true);
+
 	ui->m_draw_bbox->setChecked(ob->drawBBox());
 	ui->m_draw_tree->setChecked(ob->drawTreeTopology());
+}
+
+void MainWindow::addCube()
+{
+	float radius = 2.0f;
+	glm::vec3 min(-1.0f), max(1.0f);
+
+	Object *ob = new Cube(min * radius, max * radius);
+	m_scene->add_object(ob);
+}
+
+void MainWindow::addLevelSetSphere()
+{
+	using namespace openvdb;
+	FloatGrid::Ptr sphere = tools::createLevelSetSphere<FloatGrid>(2.0f, Vec3f(0.0f), 0.1f);
+
+	Object *ob = new LevelSet(sphere);
+	m_scene->add_object(ob);
 }

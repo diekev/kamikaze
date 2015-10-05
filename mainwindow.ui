@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>821</width>
+    <width>828</width>
     <height>600</height>
    </rect>
   </property>
@@ -113,7 +113,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>821</width>
+     <width>828</width>
      <height>22</height>
     </rect>
    </property>
@@ -123,12 +123,30 @@
     </property>
     <addaction name="m_open_file_act"/>
    </widget>
+   <widget class="QMenu" name="menuAdd">
+    <property name="title">
+     <string>Add</string>
+    </property>
+    <addaction name="m_add_cube"/>
+    <addaction name="actionLevel_Set_Sphere"/>
+   </widget>
    <addaction name="menuFichier"/>
+   <addaction name="menuAdd"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="m_open_file_act">
    <property name="text">
     <string>Ouvrir</string>
+   </property>
+  </action>
+  <action name="m_add_cube">
+   <property name="text">
+    <string>Cube</string>
+   </property>
+  </action>
+  <action name="actionLevel_Set_Sphere">
+   <property name="text">
+    <string>Level Set Sphere</string>
    </property>
   </action>
  </widget>
@@ -189,9 +207,43 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>m_add_cube</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>addCube()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>413</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionLevel_Set_Sphere</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>addLevelSetSphere()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>413</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openFile()</slot>
   <slot>updateObject()</slot>
+  <slot>addCube()</slot>
+  <slot>addLevelSetSphere()</slot>
  </slots>
 </ui>

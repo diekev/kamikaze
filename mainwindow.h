@@ -18,6 +18,8 @@ private Q_SLOTS:
 	void openFile();
 	void updateObject();
 	void updateObjectTab();
+	void addCube();
+	void addLevelSetSphere();
 
 protected:
 	bool eventFilter(QObject *obj, QEvent *e);
