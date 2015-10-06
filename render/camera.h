@@ -43,8 +43,8 @@ public:
 	void mouseDownEvent(int x, int y);
 	void mouseWheelEvent(int button);
 
-	void updateViewDir();
-	glm::vec3 viewDir() const;
+	void update();
+	glm::vec3 dir() const;
 	glm::mat4 MV() const;
 	glm::mat4 P() const;
 	glm::vec3 pos() const;

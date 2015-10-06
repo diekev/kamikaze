@@ -73,7 +73,7 @@ void Viewer::initializeGL()
 	glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
 
 	m_grid = new Grid(20, 20);
-	m_camera->updateViewDir();
+	m_camera->update();
 }
 
 void Viewer::resizeGL(int w, int h)
@@ -88,9 +88,9 @@ void Viewer::paintGL()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	m_camera->updateViewDir();
+	m_camera->update();
 
-	const auto &view_dir = m_camera->viewDir();
+	const auto &view_dir = m_camera->dir();
 	const auto &MV = m_camera->MV();
 	const auto &P = m_camera->P();
 	const auto &MVP = P * MV;

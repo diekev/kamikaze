@@ -103,7 +103,7 @@ void Camera::resize(int w, int h)
 	m_projection = glm::perspective(glm::radians(m_fov), (float)w/h, m_near, m_far);
 }
 
-void Camera::updateViewDir()
+void Camera::update()
 {
 	if (!m_need_update) {
 		return;
@@ -125,7 +125,7 @@ void Camera::updateViewDir()
 	m_need_update = false;
 }
 
-glm::vec3 Camera::viewDir() const
+glm::vec3 Camera::dir() const
 {
 	return m_view;
 }
