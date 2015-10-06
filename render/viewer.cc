@@ -100,7 +100,7 @@ void Viewer::paintGL()
 	}
 
 	if (m_scene != nullptr) {
-		m_scene->render(view_dir, MV, P);
+		m_scene->render(MV, P, view_dir);
 	}
 }
 

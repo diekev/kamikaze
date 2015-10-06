@@ -65,14 +65,14 @@ void Scene::keyboardEvent(int key)
 	}
 }
 
-void Scene::add_object(Object *object)
+void Scene::addObject(Object *object)
 {
 	m_objects.push_back(object);
 	m_active_object = m_objects.size() - 1;
 	Q_EMIT objectChanged();
 }
 
-void Scene::render(const glm::vec3 &view_dir, const glm::mat4 &MV, const glm::mat4 &P)
+void Scene::render(const glm::mat4 &MV, const glm::mat4 &P, const glm::vec3 &view_dir)
 {
 	const auto &MVP = P * MV;
 	const auto &N = glm::inverseTranspose(glm::mat3(MV));

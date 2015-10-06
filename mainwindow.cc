@@ -102,7 +102,7 @@ void MainWindow::openFile(const QString &filename)
 		else {
 			ob = new Volume(grid);
 		}
-		m_scene->add_object(ob);
+		m_scene->addObject(ob);
 	}
 	else {
 		std::cerr << "Unable to open file \'" << filename.toStdString() << "\'\n";
@@ -196,7 +196,7 @@ void MainWindow::addCube()
 	glm::vec3 min(-1.0f), max(1.0f);
 
 	Object *ob = new Cube(min * radius, max * radius);
-	m_scene->add_object(ob);
+	m_scene->addObject(ob);
 }
 
 void MainWindow::addLevelSetSphere()
@@ -205,5 +205,5 @@ void MainWindow::addLevelSetSphere()
 	FloatGrid::Ptr sphere = tools::createLevelSetSphere<FloatGrid>(2.0f, Vec3f(0.0f), 0.1f);
 
 	Object *ob = new LevelSet(sphere);
-	m_scene->add_object(ob);
+	m_scene->addObject(ob);
 }
