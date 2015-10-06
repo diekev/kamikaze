@@ -23,6 +23,7 @@
  */
 
 #include <QApplication>
+#include <QColorDialog>
 #include <QKeyEvent>
 
 #include <GL/glew.h>
@@ -44,7 +45,8 @@ Viewer::Viewer(QWidget *parent)
     , m_mouse_button(0)
     , m_width(0)
     , m_height(0)
-    , m_bg(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f))
+    , m_draw_grid(true)
+    , m_bg(glm::vec4(0.5f, 0.5f, 0.5f, 1.0f))
     , m_camera(new Camera())
     , m_grid(nullptr)
     , m_scene(nullptr)
@@ -93,7 +95,9 @@ void Viewer::paintGL()
 	const auto &P = m_camera->P();
 	const auto &MVP = P * MV;
 
-	m_grid->render(MVP);
+	if (m_draw_grid) {
+		m_grid->render(MVP);
+	}
 
 	if (m_scene != nullptr) {
 		m_scene->render(view_dir, MV, P);
@@ -195,4 +199,21 @@ void Viewer::intersectScene(int x, int y)
 	ray.dir = glm::normalize(end - start);
 
 	m_scene->intersect(ray);
+}
+
+void Viewer::changeBackground()
+{
+	QColor color = QColorDialog::getColor();
+
+	if (color.isValid()) {
+		m_bg = glm::vec4(color.redF(), color.greenF(), color.blueF(), 1.0f);
+		glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
+		update();
+	}
+}
+
+void Viewer::drawGrid(bool b)
+{
+	m_draw_grid = b;
+	update();
 }

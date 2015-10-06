@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QHBoxLayout" name="horizontalLayout_2">
     <property name="leftMargin">
      <number>0</number>
     </property>
@@ -51,7 +51,7 @@
          </sizepolicy>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="m_object_tab">
          <attribute name="title">
@@ -89,6 +89,52 @@
           </item>
           <item>
            <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab">
+         <attribute name="title">
+          <string>World</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <item>
+           <widget class="QGroupBox" name="groupBox_2">
+            <property name="title">
+             <string>Display</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_4">
+             <item>
+              <widget class="QPushButton" name="pushButton">
+               <property name="text">
+                <string>Change Color</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="m_draw_grid">
+               <property name="text">
+                <string>Draw Grid</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_2">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
             </property>
@@ -155,6 +201,10 @@
    <class>Viewer</class>
    <extends>QOpenGLWidget</extends>
    <header>viewer.h</header>
+   <slots>
+    <slot>changeBackground()</slot>
+    <slot>drawGrid(bool)</slot>
+   </slots>
   </customwidget>
  </customwidgets>
  <resources/>
@@ -235,6 +285,38 @@
     </hint>
     <hint type="destinationlabel">
      <x>413</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>m_viewport</receiver>
+   <slot>changeBackground()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>745</x>
+     <y>116</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>329</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>m_draw_grid</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>m_viewport</receiver>
+   <slot>drawGrid(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>745</x>
+     <y>135</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>329</x>
      <y>299</y>
     </hint>
    </hints>
