@@ -24,8 +24,10 @@
 #include <glm/glm.hpp>
 #include <openvdb/openvdb.h>
 
-#include "render/GPUProgram.h"
+#include "object.h"
+
 #include "render/GPUTexture.h"
+#include "util/util_render.h"
 
 const int MAX_SLICES = 512;
 
@@ -33,23 +35,18 @@ class Cube;
 class GPUBuffer;
 class TreeTopology;
 
-class Volume {
-	std::unique_ptr<GPUBuffer> m_buffer_data;
+class Volume : public Object {
 	std::unique_ptr<GPUTexture> m_volume_texture, m_transfer_texture, m_index_texture;
-	GPUProgram m_program;
 
 	std::unique_ptr<Cube> m_bbox;
 	std::unique_ptr<TreeTopology> m_topology;
-
-	glm::vec3 m_min, m_max;
-	glm::vec3 m_size, m_inv_size;
 
 	int m_num_slices;
 	std::vector<glm::vec3> m_texture_slices;
 
 	int m_axis;
 	float m_scale; // scale of the values contained in the grid (1 / (max - min))
-	bool m_use_lut, m_draw_bbox, m_draw_topology;
+	bool m_use_lut;
 
 	void loadTransferFunction();
 	void loadVolumeShader();
@@ -60,10 +57,8 @@ public:
 	~Volume() = default;
 
 	void slice(const glm::vec3 &view_dir);
-	void render(const glm::vec3 &dir, const glm::mat4 &MVP);
+	void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir);
 	void changeNumSlicesBy(int x);
 
 	void toggleUseLUT();
-	void toggleBBoxDrawing();
-	void toggleTopologyDrawing();
 };

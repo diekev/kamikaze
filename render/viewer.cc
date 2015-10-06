@@ -27,6 +27,7 @@
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
 #include "camera.h"
@@ -36,10 +37,13 @@
 #include "render/GPUBuffer.h"
 #include "objects/grid.h"
 #include "util/util_input.h"
+#include "util/util_render.h"
 
 Viewer::Viewer(QWidget *parent)
     : QGLWidget(parent)
     , m_mouse_button(0)
+    , m_width(0)
+    , m_height(0)
     , m_bg(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f))
     , m_camera(new Camera())
     , m_grid(nullptr)
@@ -74,6 +78,8 @@ void Viewer::resizeGL(int w, int h)
 {
 	glViewport(0, 0, (GLsizei)w, (GLsizei)h);
 	m_camera->resize(w, h);
+	m_width = w;
+	m_height = h;
 }
 
 void Viewer::paintGL()
@@ -121,6 +127,7 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 	}
 	else if (e->buttons() == Qt::LeftButton) {
 		m_mouse_button = MOUSSE_LEFT;
+		intersectScene(x, y);
 	}
 	else if (e->buttons() == Qt::RightButton) {
 		m_mouse_button = MOUSSE_RIGHT;
@@ -171,4 +178,21 @@ void Viewer::wheelEvent(QWheelEvent *e)
 void Viewer::setScene(Scene *scene)
 {
 	m_scene = scene;
+}
+
+void Viewer::intersectScene(int x, int y)
+{
+	const auto &MV = m_camera->MV();
+	const auto &P = m_camera->P();
+
+	glm::vec3 start = glm::unProject(glm::vec3(x, m_height - y, 0), MV, P,
+	                                 glm::vec4(0, 0, m_width, m_height));
+	glm::vec3 end = glm::unProject(glm::vec3(x, m_height - y, 1), MV, P,
+	                               glm::vec4(0, 0, m_width, m_height));
+
+	Ray ray;
+	ray.pos = m_camera->pos();
+	ray.dir = glm::normalize(end - start);
+
+	m_scene->intersect(ray);
 }

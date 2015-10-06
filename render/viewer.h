@@ -26,9 +26,6 @@
 
 #include <QGLWidget>
 
-const int WIDTH = 1280;
-const int HEIGHT = 960;
-
 class Camera;
 class Grid;
 class Scene;
@@ -36,6 +33,7 @@ class Scene;
 class Viewer : public QGLWidget {
 	int m_mouse_button;
 	int m_modifier;
+	int m_width, m_height;
 	glm::vec4 m_bg;
 
 	Camera *m_camera;
@@ -57,4 +55,5 @@ public:
 	void wheelEvent(QWheelEvent *e);
 
 	void setScene(Scene *scene);
+	void intersectScene(int x, int y);
 };

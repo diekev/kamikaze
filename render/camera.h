@@ -46,6 +46,7 @@ public:
 	glm::vec3 viewDir() const;
 	glm::mat4 MV() const;
 	glm::mat4 P() const;
+	glm::vec3 pos() const;
 
 	void resize(int w, int h);
 	void setSpeed(const float zoom = 0.1f, const float strafe = 0.002f,

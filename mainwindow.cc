@@ -22,12 +22,13 @@
  *
  */
 
+#include <QFileDialog>
 #include <QKeyEvent>
 
 #include <openvdb/openvdb.h>
+#include <openvdb/tools/LevelSetSphere.h>
 
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
 
 #include "objects/levelset.h"
 #include "objects/volume.h"
@@ -36,16 +37,19 @@
 #include "util/util_openvdb.h"
 #include "util/utils.h"
 
+#include "ui_mainwindow.h"
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , m_scene(new Scene)
-    , m_viewer(new Viewer(this))
 {
 	qApp->installEventFilter(this);
 	ui->setupUi(this);
+	ui->m_viewport->setScene(m_scene);
 
-	setCentralWidget(m_viewer);
+	connect(m_scene, SIGNAL(objectChanged()), this, SLOT(updateObjectTab()));
+	ui->tabWidget->setTabEnabled(0, false);
 }
 
 MainWindow::~MainWindow()
@@ -91,16 +95,14 @@ void MainWindow::openFile(const QString &filename)
 			}
 		}
 
+		Object *ob;
 		if (grid->getGridClass() == GRID_LEVEL_SET) {
-			LevelSet *ls = new LevelSet(grid);
-			m_scene->add_level_set(ls);
+			ob = new LevelSet(grid);
 		}
 		else {
-			Volume *volume = new Volume(grid);
-			m_scene->add_volume(volume);
+			ob = new Volume(grid);
 		}
-
-		m_viewer->setScene(m_scene);
+		m_scene->add_object(ob);
 	}
 	else {
 		std::cerr << "Unable to open file \'" << filename.toStdString() << "\'\n";
@@ -110,40 +112,98 @@ void MainWindow::openFile(const QString &filename)
 bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 {
 	if (e->type() == QEvent::KeyPress) {
-		if (obj == m_viewer) {
+		if (obj == ui->m_viewport) {
 			QKeyEvent *keyEvent = static_cast<QKeyEvent *>(e);
-			m_viewer->keyPressEvent(keyEvent);
+			ui->m_viewport->keyPressEvent(keyEvent);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::MouseButtonPress) {
-		if (obj == m_viewer) {
+		if (obj == ui->m_viewport) {
 			QMouseEvent *event = static_cast<QMouseEvent *>(e);
-			m_viewer->mousePressEvent(event);
+			ui->m_viewport->mousePressEvent(event);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::MouseMove) {
-		if (obj == m_viewer) {
+		if (obj == ui->m_viewport) {
 			QMouseEvent *event = static_cast<QMouseEvent *>(e);
-			m_viewer->mouseMoveEvent(event);
+			ui->m_viewport->mouseMoveEvent(event);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::MouseButtonRelease) {
-		if (obj == m_viewer) {
+		if (obj == ui->m_viewport) {
 			QMouseEvent *event = static_cast<QMouseEvent *>(e);
-			m_viewer->mouseReleaseEvent(event);
+			ui->m_viewport->mouseReleaseEvent(event);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::Wheel) {
-		if (obj == m_viewer) {
+		if (obj == ui->m_viewport) {
 			QWheelEvent *event = static_cast<QWheelEvent *>(e);
-			m_viewer->wheelEvent(event);
+			ui->m_viewport->wheelEvent(event);
 			return true;
 		}
 	}
 
 	return QObject::eventFilter(obj, e);
+}
+
+void MainWindow::openFile()
+{
+	const auto &filename = QFileDialog::getOpenFileName(
+	                          this, tr("Ouvrir fichier image"),
+		                      QDir::homePath(),
+		                      tr("*.vdb"));
+
+	if (!filename.isEmpty()) {
+		openFile(filename);
+	}
+}
+
+void MainWindow::updateObject()
+{
+	Object *ob = m_scene->currentObject();
+
+	if (ob == nullptr) {
+		return;
+	}
+
+	ob->drawBBox(ui->m_draw_bbox->isChecked());
+	ob->drawTreeTopology(ui->m_draw_tree->isChecked());
+
+	ui->m_viewport->update();
+}
+
+void MainWindow::updateObjectTab()
+{
+	Object *ob = m_scene->currentObject();
+
+	if (ob == nullptr) {
+		return;
+	}
+
+	ui->tabWidget->setTabEnabled(0, true);
+
+	ui->m_draw_bbox->setChecked(ob->drawBBox());
+	ui->m_draw_tree->setChecked(ob->drawTreeTopology());
+}
+
+void MainWindow::addCube()
+{
+	float radius = 2.0f;
+	glm::vec3 min(-1.0f), max(1.0f);
+
+	Object *ob = new Cube(min * radius, max * radius);
+	m_scene->add_object(ob);
+}
+
+void MainWindow::addLevelSetSphere()
+{
+	using namespace openvdb;
+	FloatGrid::Ptr sphere = tools::createLevelSetSphere<FloatGrid>(2.0f, Vec3f(0.0f), 0.1f);
+
+	Object *ob = new LevelSet(sphere);
+	m_scene->add_object(ob);
 }

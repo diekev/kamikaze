@@ -12,43 +12,18 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software  Foundation,
+ * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * The Original Code is Copyright (C) 2015 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
- *
  */
 
 #pragma once
 
-#include <glm/glm.hpp>
-#include <QObject>
-
-#include "util_render.h"
-
-class Object;
-
-class Scene : public QObject {
-	Q_OBJECT
-
-	std::vector<Object *> m_objects;
-	int m_active_object;
-
-Q_SIGNALS:
-	void objectChanged();
-
-public:
-	Scene();
-	~Scene();
-
-	void keyboardEvent(int key);
-
-	Object *currentObject();
-	void add_object(Object *object);
-
-	void render(const glm::vec3 &view_dir, const glm::mat4 &MV, const glm::mat4 &P);
-	void intersect(const Ray &ray);
+struct Ray {
+	glm::vec3 pos;
+	glm::vec3 dir;
 };

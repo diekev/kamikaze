@@ -148,23 +148,16 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GPUTexture &texture, GPUT
 }
 
 Volume::Volume()
-    : m_buffer_data(std::unique_ptr<GPUBuffer>(new GPUBuffer))
-    , m_volume_texture(nullptr)
+    : m_volume_texture(nullptr)
     , m_transfer_texture(nullptr)
     , m_index_texture(nullptr)
     , m_bbox(nullptr)
     , m_topology(nullptr)
-    , m_min(glm::vec3(0.0f))
-    , m_max(glm::vec3(0.0f))
-    , m_size(glm::vec3(0.0f))
-    , m_inv_size(glm::vec3(0.0f))
     , m_num_slices(256)
     , m_texture_slices(m_num_slices * 4)
     , m_axis(-1)
     , m_scale(1.0f)
     , m_use_lut(false)
-    , m_draw_bbox(false)
-    , m_draw_topology(false)
 {}
 
 Volume::Volume(openvdb::FloatGrid::Ptr &grid)
@@ -187,6 +180,7 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
 	m_size = (m_max - m_min);
 	m_inv_size = 1.0f / m_size;
 
+	m_buffer_data = std::unique_ptr<GPUBuffer>(new GPUBuffer);
 	m_bbox = std::unique_ptr<Cube>(new Cube(m_min, m_max));
 	m_topology = std::unique_ptr<TreeTopology>(new TreeTopology(grid));
 
@@ -374,12 +368,12 @@ void Volume::slice(const glm::vec3 &view_dir)
 	delete [] indices;
 }
 
-void Volume::render(const glm::vec3 &dir, const glm::mat4 &MVP)
+void Volume::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir)
 {
 	slice(dir);
 
 	if (m_draw_bbox) {
-		m_bbox->render(MVP);
+		m_bbox->render(MVP, N, dir);
 	}
 
 	if (m_draw_topology) {
@@ -422,14 +416,4 @@ void Volume::changeNumSlicesBy(int x)
 void Volume::toggleUseLUT()
 {
 	m_use_lut = !m_use_lut;
-}
-
-void Volume::toggleBBoxDrawing()
-{
-	m_draw_bbox = !m_draw_bbox;
-}
-
-void Volume::toggleTopologyDrawing()
-{
-	m_draw_topology = !m_draw_topology;
 }

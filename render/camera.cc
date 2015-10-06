@@ -138,3 +138,9 @@ glm::mat4 Camera::P() const
 {
 	return m_projection;
 }
+
+glm::vec3 Camera::pos() const
+{
+	glm::mat4 view_model = glm::inverse(m_model_view);
+	return glm::vec3(view_model[3]);
+}

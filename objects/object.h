@@ -12,43 +12,44 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software  Foundation,
+ * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * The Original Code is Copyright (C) 2015 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
- *
  */
 
 #pragma once
 
-#include <glm/glm.hpp>
-#include <QObject>
+#include <memory>
 
-#include "util_render.h"
+#include "GPUProgram.h"
+#include "GPUBuffer.h"
 
-class Object;
+#include "util/util_render.h"
 
-class Scene : public QObject {
-	Q_OBJECT
+class Object {
+protected:
+	std::unique_ptr<GPUBuffer> m_buffer_data;
+	GPUProgram m_program;
+	size_t m_elements;
 
-	std::vector<Object *> m_objects;
-	int m_active_object;
+	glm::vec3 m_size, m_inv_size;
+	glm::vec3 m_min, m_max;
 
-Q_SIGNALS:
-	void objectChanged();
+	bool m_draw_bbox, m_draw_topology;
 
 public:
-	Scene();
-	~Scene();
+	Object();
+	~Object() = default;
 
-	void keyboardEvent(int key);
+	virtual bool intersect(const Ray &ray, float &min) const;
+	virtual void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir) = 0;
 
-	Object *currentObject();
-	void add_object(Object *object);
-
-	void render(const glm::vec3 &view_dir, const glm::mat4 &MV, const glm::mat4 &P);
-	void intersect(const Ray &ray);
+	virtual void drawBBox(const bool b);
+	virtual bool drawBBox() const { return m_draw_bbox; }
+	virtual void drawTreeTopology(const bool b);
+	virtual bool drawTreeTopology() const { return m_draw_topology; }
 };

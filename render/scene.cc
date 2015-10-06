@@ -34,56 +34,78 @@
 #include "objects/volume.h"
 
 Scene::Scene()
-    : m_volume(nullptr)
-    , m_level_set(nullptr)
+    : m_active_object(-1)
 {}
 
 Scene::~Scene()
 {
-	delete m_level_set;
-	delete m_volume;
+	for (auto &object : m_objects) {
+		delete object;
+	}
 }
 
 void Scene::keyboardEvent(int key)
 {
+	if (m_objects.size() == 0) {
+		return;
+	}
+
+//	Object *ob = m_objects[m_active_object];
+
 	switch (key) {
-		case Qt::Key_Minus:
-			m_volume->changeNumSlicesBy(-1);
-			break;
-		case Qt::Key_Plus:
-			m_volume->changeNumSlicesBy(1);
-			break;
-		case Qt::Key_L:
-			m_volume->toggleUseLUT();
-			break;
-		case Qt::Key_B:
-			m_volume->toggleBBoxDrawing();
-			break;
-		case Qt::Key_T:
-			m_volume->toggleTopologyDrawing();
-			break;
+//		case Qt::Key_Minus:
+//			m_volume->changeNumSlicesBy(-1);
+//			break;
+//		case Qt::Key_Plus:
+//			m_volume->changeNumSlicesBy(1);
+//			break;
+//		case Qt::Key_L:
+//			m_volume->toggleUseLUT();
+//			break;
 	}
 }
 
-void Scene::add_volume(Volume *volume)
+void Scene::add_object(Object *object)
 {
-	m_volume = volume;
-}
-
-void Scene::add_level_set(LevelSet *level_set)
-{
-	m_level_set = level_set;
+	m_objects.push_back(object);
+	m_active_object = m_objects.size() - 1;
+	Q_EMIT objectChanged();
 }
 
 void Scene::render(const glm::vec3 &view_dir, const glm::mat4 &MV, const glm::mat4 &P)
 {
 	const auto &MVP = P * MV;
+	const auto &N = glm::inverseTranspose(glm::mat3(MV));
 
-	if (m_volume != nullptr) {
-		m_volume->render(view_dir, MVP);
+	for (auto &object : m_objects) {
+		object->render(MVP, N, view_dir);
+	}
+}
+
+void Scene::intersect(const Ray &ray)
+{
+	float min = std::numeric_limits<float>::max();
+	int selected_object = -1, index = 0;
+
+	for (auto &object : m_objects) {
+		if (object->intersect(ray, min)) {
+			selected_object = index;
+		}
+
+		++index;
 	}
 
-	if (m_level_set != nullptr) {
-		m_level_set->render(MVP, glm::inverseTranspose(glm::mat3(MV)));
+	if (selected_object != -1 && selected_object != m_active_object) {
+		m_active_object = selected_object;
+		Q_EMIT objectChanged();
 	}
+}
+
+Object *Scene::currentObject()
+{
+	if (!m_objects.empty()) {
+		return m_objects[m_active_object];
+	}
+
+	return nullptr;
 }

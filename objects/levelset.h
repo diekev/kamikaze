@@ -26,24 +26,12 @@
 #include <glm/glm.hpp>
 #include <openvdb/openvdb.h>
 
-#include "render/GPUProgram.h"
-#include "render/GPUBuffer.h"
-
 #include "cube.h"
 #include "treetopology.h"
 
-class LevelSet {
-	std::unique_ptr<GPUBuffer> m_buffer_data;
-	GPUProgram m_program;
-	size_t m_elements;
-
+class LevelSet : public Object {
 	std::unique_ptr<Cube> m_bbox;
 	std::unique_ptr<TreeTopology> m_topology;
-
-	glm::vec3 m_min, m_max;
-	glm::vec3 m_size, m_inv_size;
-
-	bool m_draw_bbox, m_draw_topology;
 
 	void generate_mesh(openvdb::FloatGrid::ConstPtr grid);
 
@@ -52,10 +40,6 @@ public:
 	LevelSet(openvdb::FloatGrid::Ptr &grid);
 	~LevelSet() = default;
 
-	void render(const glm::mat4 &MVP, const glm::mat3 &N);
-
+	void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir);
 	void loadShader();
-
-	void toggleBBoxDrawing();
-	void toggleTopologyDrawing();
 };
