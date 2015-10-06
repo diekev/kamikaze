@@ -24,6 +24,7 @@
 
 #include <QFileDialog>
 #include <QKeyEvent>
+#include <QSplitter>
 
 #include <openvdb/openvdb.h>
 #include <openvdb/tools/LevelSetSphere.h>
@@ -50,6 +51,14 @@ MainWindow::MainWindow(QWidget *parent)
 
 	connect(m_scene, SIGNAL(objectChanged()), this, SLOT(updateObjectTab()));
 	ui->tabWidget->setTabEnabled(0, false);
+
+	/* set default width for the viewport and side panel in the splitter */
+	const int width = ui->splitter->size().width();
+	const int viewport_width = 0.8f * float(width);
+	const int panel_width = width - viewport_width;
+	QList<int> sizes;
+	sizes << viewport_width << panel_width;
+	ui->splitter->setSizes(sizes);
 }
 
 MainWindow::~MainWindow()
