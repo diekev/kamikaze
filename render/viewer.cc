@@ -42,7 +42,7 @@
 
 Viewer::Viewer(QWidget *parent)
     : QGLWidget(parent)
-    , m_mouse_button(0)
+    , m_mouse_button(MOUSE_NONE)
     , m_width(0)
     , m_height(0)
     , m_draw_grid(true)
@@ -127,17 +127,17 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 	}
 
 	if (e->buttons() == Qt::MidButton) {
-		m_mouse_button = MOUSSE_MIDDLE;
+		m_mouse_button = MOUSE_MIDDLE;
 	}
 	else if (e->buttons() == Qt::LeftButton) {
-		m_mouse_button = MOUSSE_LEFT;
+		m_mouse_button = MOUSE_LEFT;
 		intersectScene(x, y);
 	}
 	else if (e->buttons() == Qt::RightButton) {
-		m_mouse_button = MOUSSE_RIGHT;
+		m_mouse_button = MOUSE_RIGHT;
 	}
 	else {
-		m_mouse_button = -1;
+		m_mouse_button = MOUSE_NONE;
 	}
 
 	m_camera->mouseDownEvent(m_mouse_button, 0, x, y);

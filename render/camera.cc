@@ -58,7 +58,7 @@ void Camera::setSpeed(const float zoom, const float strafe, const float tumbling
 
 void Camera::mouseDownEvent(int button, int s, int x, int y)
 {
-	if (s == MOUSSE_DOWN) {
+	if (s == MOUSE_DOWN) {
 		m_old_x = x;
 		m_old_y = y;
 	}
@@ -81,7 +81,7 @@ void Camera::mouseMoveEvent(int button, int modifier, int x, int y)
 	const float dx = (x - m_old_x);
 	const float dy = (y - m_old_y);
 
-	if (button == MOUSSE_MIDDLE) {
+	if (button == MOUSE_MIDDLE) {
 		if (modifier == MOD_KEY_NONE) {
 			m_head += dy * m_tumbling_speed;
 	        m_pitch += dx * m_tumbling_speed;
