@@ -56,13 +56,14 @@ void Camera::setSpeed(const float zoom, const float strafe, const float tumbling
     m_tumbling_speed = glm::min(1.0f, m_distance * tumbling);
 }
 
-void Camera::mouseDownEvent(int button, int s, int x, int y)
+void Camera::mouseDownEvent(int x, int y)
 {
-	if (s == MOUSE_DOWN) {
-		m_old_x = x;
-		m_old_y = y;
-	}
+	m_old_x = x;
+	m_old_y = y;
+}
 
+void Camera::mouseWheelEvent(int button)
+{
 	if (button == MOUSSE_SCROLL_UP) {
 		m_distance += m_zoom_speed;
 	}

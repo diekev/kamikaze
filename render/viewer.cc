@@ -140,13 +140,17 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 		m_mouse_button = MOUSE_NONE;
 	}
 
-	m_camera->mouseDownEvent(m_mouse_button, 0, x, y);
+	m_camera->mouseDownEvent(x, y);
 
 	update();
 }
 
 void Viewer::mouseMoveEvent(QMouseEvent *e)
 {
+	if (m_mouse_button == MOUSE_NONE) {
+		return;
+	}
+
 	const int x = e->pos().x();
 	const int y = e->pos().y();
 
@@ -156,7 +160,7 @@ void Viewer::mouseMoveEvent(QMouseEvent *e)
 
 void Viewer::mouseReleaseEvent(QMouseEvent *e)
 {
-	m_mouse_button = -1;
+	m_mouse_button = MOUSE_NONE;
 	update();
 }
 
@@ -175,7 +179,7 @@ void Viewer::wheelEvent(QWheelEvent *e)
 		m_mouse_button = MOUSSE_SCROLL_UP;
 	}
 
-	m_camera->mouseDownEvent(m_mouse_button, -1, 0, 0);
+	m_camera->mouseWheelEvent(m_mouse_button);
 	update();
 }
 

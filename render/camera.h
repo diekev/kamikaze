@@ -40,7 +40,8 @@ public:
 	~Camera() = default;
 
 	void mouseMoveEvent(int button, int modifier, int x, int y);
-	void mouseDownEvent(int button, int s, int x, int y);
+	void mouseDownEvent(int x, int y);
+	void mouseWheelEvent(int button);
 
 	void updateViewDir();
 	glm::vec3 viewDir() const;
