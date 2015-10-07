@@ -59,6 +59,13 @@ MainWindow::MainWindow(QWidget *parent)
 	QList<int> sizes;
 	sizes << viewport_width << panel_width;
 	ui->splitter->setSizes(sizes);
+
+	/* Object transform */
+	connect(ui->m_move_x, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectX(double)));
+	connect(ui->m_move_y, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectY(double)));
+	connect(ui->m_move_z, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectZ(double)));
+
+	connect(m_scene, SIGNAL(updateViewport()), ui->m_viewport, SLOT(update()));
 }
 
 MainWindow::~MainWindow()
@@ -197,6 +204,11 @@ void MainWindow::updateObjectTab()
 
 	ui->m_draw_bbox->setChecked(ob->drawBBox());
 	ui->m_draw_tree->setChecked(ob->drawTreeTopology());
+
+	const glm::vec3 pos = ob->pos();
+	ui->m_move_x->setValue(pos.x);
+	ui->m_move_y->setValue(pos.y);
+	ui->m_move_z->setValue(pos.z);
 }
 
 void MainWindow::addCube()

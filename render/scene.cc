@@ -109,3 +109,30 @@ Object *Scene::currentObject()
 
 	return nullptr;
 }
+
+void Scene::moveObjectX(double value)
+{
+	Object *ob = m_objects[m_active_object];
+	glm::vec3 pos = ob->pos();
+	pos.x = value;
+	ob->setPos(pos);
+	Q_EMIT updateViewport();
+}
+
+void Scene::moveObjectY(double value)
+{
+	Object *ob = m_objects[m_active_object];
+	glm::vec3 pos = ob->pos();
+	pos.y = value;
+	ob->setPos(pos);
+	Q_EMIT updateViewport();
+}
+
+void Scene::moveObjectZ(double value)
+{
+	Object *ob = m_objects[m_active_object];
+	glm::vec3 pos = ob->pos();
+	pos.z = value;
+	ob->setPos(pos);
+	Q_EMIT updateViewport();
+}

@@ -22,15 +22,18 @@
  */
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "object.h"
 
 Object::Object()
 	: m_buffer_data(nullptr)
+    , m_draw_type(GL_QUADS)
     , m_size(glm::vec3(0.0f))
     , m_inv_size(glm::vec3(0.0f))
     , m_min(glm::vec3(0.0f))
     , m_max(glm::vec3(0.0f))
+    , m_pos(glm::vec3(0.0f))
     , m_draw_bbox(false)
     , m_draw_topology(false)
 {}
@@ -53,6 +56,19 @@ bool Object::intersect(const Ray &ray, float &min) const
 	return false;
 }
 
+void Object::setDrawType(int draw_type)
+{
+	switch (draw_type) {
+		case DRAW_WIRE:
+			m_draw_type = GL_LINES;
+			break;
+		default:
+		case DRAW_QUADS:
+			m_draw_type = GL_QUADS;
+			break;
+	}
+}
+
 void Object::drawBBox(const bool b)
 {
 	m_draw_bbox = b;
@@ -61,4 +77,23 @@ void Object::drawBBox(const bool b)
 void Object::drawTreeTopology(const bool b)
 {
 	m_draw_topology = b;
+}
+
+glm::vec3 Object::pos() const
+{
+	return m_pos;
+}
+
+void Object::setPos(const glm::vec3 &pos)
+{
+	m_pos = pos;
+	updateMatrix();
+}
+
+void Object::updateMatrix()
+{
+	m_matrix = glm::mat4(1.0f);
+	m_matrix = glm::translate(m_matrix, m_pos);
+	m_matrix = glm::scale(m_matrix, m_size);
+	m_inv_matrix = glm::inverse(m_matrix);
 }

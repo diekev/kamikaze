@@ -39,6 +39,12 @@ class Scene : public QObject {
 
 Q_SIGNALS:
 	void objectChanged();
+	void updateViewport();
+
+public Q_SLOTS:
+	void moveObjectX(double value);
+	void moveObjectY(double value);
+	void moveObjectZ(double value);
 
 public:
 	Scene();

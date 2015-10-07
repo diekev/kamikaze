@@ -24,22 +24,33 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include "GPUProgram.h"
 #include "GPUBuffer.h"
 
 #include "util/util_render.h"
 
+enum {
+	DRAW_WIRE = 0,
+	DRAW_QUADS = 1,
+};
+
 class Object {
 protected:
 	std::unique_ptr<GPUBuffer> m_buffer_data;
 	GPUProgram m_program;
 	size_t m_elements;
+	GLenum m_draw_type;
 
+	std::vector<glm::vec3> m_vertices;
 	glm::vec3 m_size, m_inv_size;
-	glm::vec3 m_min, m_max;
+	glm::vec3 m_min, m_max, m_pos;
+	glm::mat4 m_matrix, m_inv_matrix;
 
 	bool m_draw_bbox, m_draw_topology;
+
+	void updateMatrix();
 
 public:
 	Object();
@@ -47,9 +58,13 @@ public:
 
 	virtual bool intersect(const Ray &ray, float &min) const;
 	virtual void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir) = 0;
+	void setDrawType(int draw_type);
 
 	virtual void drawBBox(const bool b);
 	virtual bool drawBBox() const { return m_draw_bbox; }
 	virtual void drawTreeTopology(const bool b);
 	virtual bool drawTreeTopology() const { return m_draw_topology; }
+
+	void setPos(const glm::vec3 &pos);
+	glm::vec3 pos() const;
 };

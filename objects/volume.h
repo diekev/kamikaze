@@ -42,7 +42,6 @@ class Volume : public Object {
 	std::unique_ptr<TreeTopology> m_topology;
 
 	int m_num_slices;
-	std::vector<glm::vec3> m_texture_slices;
 
 	int m_axis;
 	float m_scale; // scale of the values contained in the grid (1 / (max - min))
