@@ -78,6 +78,14 @@ void TimeLineWidget::paintEvent(QPaintEvent *e)
 		line_offset += offset;
 	}
 
+	/* draw vertical lines at an interval of 5 frames */
+	p.setPen(Qt::darkGray);
+	line_offset = offset / 2;
+	for (int i(0); i < increment; ++i) {
+		p.drawLine(line_offset, 0, line_offset, line_height);
+		line_offset += offset;
+	}
+
 	/* draw current frame marker */
 	const int frame_offset = m_current_frame * (size.width() / float(m_end_frame));
 	p.setPen(Qt::green);
