@@ -25,6 +25,7 @@
 #include <QFileDialog>
 #include <QKeyEvent>
 #include <QSplitter>
+#include <QTimer>
 
 #include <openvdb/openvdb.h>
 #include <openvdb/tools/LevelSetSphere.h>
@@ -44,6 +45,8 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , m_scene(new Scene)
+    , m_timer(new QTimer(this))
+    , m_timer_has_started(false)
 {
 	qApp->installEventFilter(this);
 	ui->setupUi(this);
@@ -80,6 +83,7 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(ui->m_rotate_z, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectZ(double)));
 
 	connect(m_scene, SIGNAL(updateViewport()), ui->m_viewport, SLOT(update()));
+	connect(m_timer, SIGNAL(timeout()), this, SLOT(updateFrame()));
 }
 
 MainWindow::~MainWindow()
@@ -249,4 +253,23 @@ void MainWindow::addLevelSetSphere()
 
 	Object *ob = new LevelSet(sphere);
 	m_scene->addObject(ob);
+}
+
+void MainWindow::startAnimation()
+{
+	if (m_timer_has_started) {
+		m_timer_has_started = false;
+		m_timer->stop();
+		ui->m_start_but->setText("Play Animation");
+	}
+	else {
+		m_timer_has_started = true;
+		ui->m_start_but->setText("Pause Animation");
+		m_timer->start(1000 / ui->m_fps->value());
+	}
+}
+
+void MainWindow::updateFrame()
+{
+	ui->m_timeline->incrementFrame();
 }

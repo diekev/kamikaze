@@ -55,7 +55,7 @@
          </size>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="m_object_tab">
          <attribute name="title">
@@ -296,6 +296,78 @@
           </item>
          </layout>
         </widget>
+        <widget class="QWidget" name="m_scene_tab">
+         <attribute name="title">
+          <string>Scene</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_6">
+          <item>
+           <widget class="QPushButton" name="m_start_but">
+            <property name="text">
+             <string>Play Animation</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QGridLayout" name="gridLayout_2">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string>Frames Per Second</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QDoubleSpinBox" name="m_fps">
+              <property name="value">
+               <double>24.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_8">
+              <property name="text">
+               <string>Start Frame</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_9">
+              <property name="text">
+               <string>En Frame</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSpinBox" name="m_star_frame"/>
+            </item>
+            <item row="2" column="1">
+             <widget class="QSpinBox" name="m_end_frame">
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="value">
+               <number>250</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
         <widget class="QWidget" name="tab">
          <attribute name="title">
           <string>World</string>
@@ -344,7 +416,7 @@
         </widget>
        </widget>
       </widget>
-      <widget class="TimeLineWidget" name="widget" native="true"/>
+      <widget class="TimeLineWidget" name="m_timeline" native="true"/>
      </widget>
     </item>
    </layout>
@@ -406,6 +478,10 @@
    <extends>QWidget</extends>
    <header>timelinewidget.h</header>
    <container>1</container>
+   <slots>
+    <slot>setStartFrame(int)</slot>
+    <slot>setEndFrame(int)</slot>
+   </slots>
   </customwidget>
  </customwidgets>
  <resources/>
@@ -522,11 +598,60 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>m_start_but</sender>
+   <signal>pressed()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>startAnimation()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>493</x>
+     <y>81</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>413</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>m_star_frame</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>m_timeline</receiver>
+   <slot>setStartFrame(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>651</x>
+     <y>205</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>413</x>
+     <y>449</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>m_end_frame</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>m_timeline</receiver>
+   <slot>setEndFrame(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>651</x>
+     <y>267</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>413</x>
+     <y>449</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openFile()</slot>
   <slot>updateObject()</slot>
   <slot>addCube()</slot>
   <slot>addLevelSetSphere()</slot>
+  <slot>startAnimation()</slot>
  </slots>
 </ui>

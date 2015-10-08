@@ -7,12 +7,15 @@ class MainWindow;
 }
 
 class Scene;
+class QTimer;
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
 
 	Ui::MainWindow *ui;
 	Scene *m_scene;
+	QTimer *m_timer;
+	bool m_timer_has_started;
 
 private Q_SLOTS:
 	void openFile();
@@ -20,6 +23,8 @@ private Q_SLOTS:
 	void updateObjectTab();
 	void addCube();
 	void addLevelSetSphere();
+	void startAnimation();
+	void updateFrame();
 
 protected:
 	bool eventFilter(QObject *obj, QEvent *e);

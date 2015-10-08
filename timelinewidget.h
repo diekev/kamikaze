@@ -17,11 +17,15 @@ protected:
 Q_SIGNALS:
 	void currentFrameChanged(int frame);
 
+public Q_SLOTS:
+	void setStartFrame(const int start);
+	void setEndFrame(const int end);
+
 public:
 	explicit TimeLineWidget(QWidget *parent = nullptr);
 	~TimeLineWidget();
 
-	void setFrameRange(const int start, const int end);
 	void setCurrentFrame(const int frame);
 	void updateCurrentFrame(const int pos_x);
+	void incrementFrame();
 };
