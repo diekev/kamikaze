@@ -12,30 +12,50 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
+ * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * The Original Code is Copyright (C) 2015 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
+ *
  */
 
 #pragma once
 
-#include <memory>
+#include <QMainWindow>
 
-#include "render/gpu/GPUBuffer.h"
-#include "render/gpu/GPUProgram.h"
+namespace Ui {
+class MainWindow;
+}
 
-class Grid {
-	std::unique_ptr<GPUBuffer> m_buffer_data;
-	size_t m_total_indices;
-	GPUProgram m_program;
+class Scene;
+class QTimer;
+
+class MainWindow : public QMainWindow {
+	Q_OBJECT
+
+	Ui::MainWindow *ui;
+	Scene *m_scene;
+	QTimer *m_timer;
+	bool m_timer_has_started;
+
+private Q_SLOTS:
+	void openFile();
+	void updateObject();
+	void updateObjectTab();
+	void addCube();
+	void addLevelSetSphere();
+	void startAnimation();
+	void updateFrame();
+
+protected:
+	bool eventFilter(QObject *obj, QEvent *e);
 
 public:
-	Grid(int x, int y);
-	~Grid() = default;
+	explicit MainWindow(QWidget *parent = nullptr);
+	~MainWindow();
 
-	void render(const glm::mat4 &MVP);
+	void openFile(const QString &filename);
 };

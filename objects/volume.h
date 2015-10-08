@@ -22,18 +22,14 @@
  */
 
 #include <glm/glm.hpp>
+
 #include <openvdb/openvdb.h>
 
-#include "treetopology.h"
+#include "volumebase.h"
 
-#include "render/GPUTexture.h"
+#include "render/gpu/GPUTexture.h"
+
 #include "util/util_render.h"
-
-const int MAX_SLICES = 512;
-
-class Cube;
-class GPUBuffer;
-class TreeTopology;
 
 class Volume : public VolumeBase {
 	std::unique_ptr<GPUTexture> m_volume_texture, m_transfer_texture, m_index_texture;

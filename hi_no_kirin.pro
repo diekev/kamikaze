@@ -28,42 +28,44 @@ QMAKE_LFLAGS += -fsanitize=address
 
 SOURCES += \
 	main.cc \
-    mainwindow.cc \
 	objects/cube.cc \
 	objects/grid.cc \
 	objects/levelset.cc \
-	objects/treetopology.cc \
+    objects/object.cc \
 	objects/volume.cc \
+    objects/volumebase.cc \
 	render/camera.cc \
-	render/GPUBuffer.cc \
-	render/GPUTexture.cc \
 	render/scene.cc \
 	render/viewer.cc \
+	render/gpu/GPUBuffer.cc \
+	render/gpu/GPUTexture.cc \
+    render/gpu/GPUProgram.cc \
+    ui/mainwindow.cc \
+    ui/timelinewidget.cc \
 	util/util_opengl.cc \
 	util/util_openvdb.cc \
-	util/utils.cc \
-    render/GPUProgram.cc \
-    objects/object.cc
+	util/utils.cc
 
 HEADERS += \
-    mainwindow.h \
 	objects/cube.h \
 	objects/grid.h \
 	objects/levelset.h \
-	objects/treetopology.h \
+    objects/object.h \
 	objects/volume.h \
+    objects/volumebase.h \
 	render/camera.h \
-	render/GPUBuffer.h \
-	render/GPUTexture.h \
 	render/scene.h \
 	render/viewer.h \
+	render/gpu/GPUBuffer.h \
+    render/gpu/GPUProgram.h \
+	render/gpu/GPUTexture.h \
+    ui/mainwindow.h \
+    ui/timelinewidget.h \
     util/util_input.h \
 	util/util_opengl.h \
 	util/util_openvdb.h \
 	util/utils.h \
-    render/GPUProgram.h \
-    util/util_render.h \
-    objects/object.h
+    util/util_render.h
 
 OTHER_FILES += \
 	shader/flat_shader.frag \
@@ -78,7 +80,7 @@ OTHER_FILES += \
 DEFINES += DWREAL_IS_DOUBLE=0
 DEFINES += GLM_FORCE_RADIANS
 
-INCLUDEPATH += objects/ render/ util/
+INCLUDEPATH += objects/ render/ render/gpu/ ui/ util/
 INCLUDEPATH += /opt/lib/openvdb/include /opt/lib/openexr/include
 
 LIBS += -lGL -lglut -lGLEW
@@ -94,4 +96,4 @@ QMAKE_EXTRA_TARGETS += copy_files
 POST_TARGETDEPS += copy_files
 
 FORMS += \
-    mainwindow.ui
+    ui/mainwindow.ui

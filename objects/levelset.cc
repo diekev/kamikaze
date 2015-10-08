@@ -22,12 +22,13 @@
  */
 
 #include <glm/gtc/type_ptr.hpp>
+
 #include <openvdb/tools/VolumeToMesh.h>
 
-#include "util/util_opengl.h"
-#include "util/utils.h"
-
 #include "levelset.h"
+
+#include "util/utils.h"
+#include "util/util_opengl.h"
 
 LevelSet::LevelSet(openvdb::FloatGrid::Ptr &grid)
     : VolumeBase(grid)

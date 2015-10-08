@@ -27,7 +27,7 @@
 #include <QKeyEvent>
 
 #include <GL/glew.h>
-#include <glm/glm.hpp>
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
@@ -35,10 +35,8 @@
 #include "scene.h"
 #include "viewer.h"
 
-#include "render/GPUBuffer.h"
 #include "objects/grid.h"
 #include "util/util_input.h"
-#include "util/util_render.h"
 
 Viewer::Viewer(QWidget *parent)
     : QGLWidget(parent)

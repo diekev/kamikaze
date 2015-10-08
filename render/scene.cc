@@ -24,12 +24,10 @@
 
 #include <QKeyEvent>
 
-#include <glm/glm.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 
 #include "scene.h"
 
-#include "render/GPUProgram.h"
 #include "objects/levelset.h"
 #include "objects/volume.h"
 

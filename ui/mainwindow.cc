@@ -25,18 +25,20 @@
 #include <QFileDialog>
 #include <QKeyEvent>
 #include <QSplitter>
+#include <QTimer>
 
-#include <openvdb/openvdb.h>
 #include <openvdb/tools/LevelSetSphere.h>
 
 #include "mainwindow.h"
 
 #include "objects/levelset.h"
 #include "objects/volume.h"
+
 #include "render/scene.h"
 #include "render/viewer.h"
-#include "util/util_openvdb.h"
+
 #include "util/utils.h"
+#include "util/util_openvdb.h"
 
 #include "ui_mainwindow.h"
 
@@ -44,6 +46,8 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , m_scene(new Scene)
+    , m_timer(new QTimer(this))
+    , m_timer_has_started(false)
 {
 	qApp->installEventFilter(this);
 	ui->setupUi(this);
@@ -52,13 +56,21 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(m_scene, SIGNAL(objectChanged()), this, SLOT(updateObjectTab()));
 	ui->tabWidget->setTabEnabled(0, false);
 
-	/* set default width for the viewport and side panel in the splitter */
+	/* set default widths for the viewport and side panel in the horizontal splitter */
 	const int width = ui->splitter->size().width();
 	const int viewport_width = 0.8f * float(width);
 	const int panel_width = width - viewport_width;
 	QList<int> sizes;
 	sizes << viewport_width << panel_width;
 	ui->splitter->setSizes(sizes);
+
+	/* set default heights for the timeline wigdet and the vertical splitter */
+	const int height = ui->vsplitter->size().height();
+	const int tiemeline_height = 0.1f * float(height);
+	const int hsplister_height= height - tiemeline_height;
+	QList<int> hsizes;
+	hsizes << hsplister_height << tiemeline_height;
+	ui->vsplitter->setSizes(hsizes);
 
 	/* Object transform */
 	connect(ui->m_move_x, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectX(double)));
@@ -72,6 +84,7 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(ui->m_rotate_z, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectZ(double)));
 
 	connect(m_scene, SIGNAL(updateViewport()), ui->m_viewport, SLOT(update()));
+	connect(m_timer, SIGNAL(timeout()), this, SLOT(updateFrame()));
 }
 
 MainWindow::~MainWindow()
@@ -241,4 +254,23 @@ void MainWindow::addLevelSetSphere()
 
 	Object *ob = new LevelSet(sphere);
 	m_scene->addObject(ob);
+}
+
+void MainWindow::startAnimation()
+{
+	if (m_timer_has_started) {
+		m_timer_has_started = false;
+		m_timer->stop();
+		ui->m_start_but->setText("Play Animation");
+	}
+	else {
+		m_timer_has_started = true;
+		ui->m_start_but->setText("Pause Animation");
+		m_timer->start(1000 / ui->m_fps->value());
+	}
+}
+
+void MainWindow::updateFrame()
+{
+	ui->m_timeline->incrementFrame();
 }

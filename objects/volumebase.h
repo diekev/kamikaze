@@ -23,19 +23,35 @@
 
 #pragma once
 
-#include <memory>
+#include <openvdb/openvdb.h>
 
-#include "render/gpu/GPUBuffer.h"
-#include "render/gpu/GPUProgram.h"
+#include "cube.h"
 
-class Grid {
+class GPUBuffer;
+
+class TreeTopology {
 	std::unique_ptr<GPUBuffer> m_buffer_data;
-	size_t m_total_indices;
 	GPUProgram m_program;
+	size_t m_elements;
 
 public:
-	Grid(int x, int y);
-	~Grid() = default;
+	TreeTopology(openvdb::FloatGrid::ConstPtr grid);
+	~TreeTopology() = default;
 
 	void render(const glm::mat4 &MVP);
+};
+
+class VolumeBase : public Object {
+protected:
+	std::unique_ptr<Cube> m_bbox;
+	std::unique_ptr<TreeTopology> m_topology;
+
+	openvdb::FloatGrid::Ptr m_grid;
+	openvdb::Mat4R m_volume_matrix;  /* original volume matrix */
+
+	void updateGridTransform();
+
+public:
+	VolumeBase(openvdb::FloatGrid::Ptr grid);
+	~VolumeBase() = default;
 };
