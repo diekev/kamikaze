@@ -64,6 +64,12 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(ui->m_move_x, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectX(double)));
 	connect(ui->m_move_y, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectY(double)));
 	connect(ui->m_move_z, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectZ(double)));
+	connect(ui->m_scale_x, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectX(double)));
+	connect(ui->m_scale_y, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectY(double)));
+	connect(ui->m_scale_z, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectZ(double)));
+	connect(ui->m_rotate_x, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectX(double)));
+	connect(ui->m_rotate_y, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectY(double)));
+	connect(ui->m_rotate_z, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectZ(double)));
 
 	connect(m_scene, SIGNAL(updateViewport()), ui->m_viewport, SLOT(update()));
 }
@@ -209,6 +215,14 @@ void MainWindow::updateObjectTab()
 	ui->m_move_x->setValue(pos.x);
 	ui->m_move_y->setValue(pos.y);
 	ui->m_move_z->setValue(pos.z);
+	const glm::vec3 scale = ob->scale();
+	ui->m_scale_x->setValue(scale.x);
+	ui->m_scale_y->setValue(scale.y);
+	ui->m_scale_z->setValue(scale.z);
+	const glm::vec3 rotation = ob->rotation();
+	ui->m_rotate_x->setValue(rotation.x);
+	ui->m_rotate_y->setValue(rotation.y);
+	ui->m_rotate_z->setValue(rotation.z);
 }
 
 void MainWindow::addCube()

@@ -136,3 +136,57 @@ void Scene::moveObjectZ(double value)
 	ob->setPos(pos);
 	Q_EMIT updateViewport();
 }
+
+void Scene::scaleObjectX(double value)
+{
+	Object *ob = m_objects[m_active_object];
+	glm::vec3 scale = ob->scale();
+	scale.x = value;
+	ob->setScale(scale);
+	Q_EMIT updateViewport();
+}
+
+void Scene::scaleObjectY(double value)
+{
+	Object *ob = m_objects[m_active_object];
+	glm::vec3 scale = ob->scale();
+	scale.y = value;
+	ob->setScale(scale);
+	Q_EMIT updateViewport();
+}
+
+void Scene::scaleObjectZ(double value)
+{
+	Object *ob = m_objects[m_active_object];
+	glm::vec3 scale = ob->scale();
+	scale.z = value;
+	ob->setScale(scale);
+	Q_EMIT updateViewport();
+}
+
+void Scene::rotateObjectX(double value)
+{
+	Object *ob = m_objects[m_active_object];
+	glm::vec3 rot = ob->rotation();
+	rot.x = value;
+	ob->setRotation(rot);
+	Q_EMIT updateViewport();
+}
+
+void Scene::rotateObjectY(double value)
+{
+	Object *ob = m_objects[m_active_object];
+	glm::vec3 rot = ob->rotation();
+	rot.y = value;
+	ob->setRotation(rot);
+	Q_EMIT updateViewport();
+}
+
+void Scene::rotateObjectZ(double value)
+{
+	Object *ob = m_objects[m_active_object];
+	glm::vec3 rot = ob->rotation();
+	rot.z = value;
+	ob->setRotation(rot);
+	Q_EMIT updateViewport();
+}

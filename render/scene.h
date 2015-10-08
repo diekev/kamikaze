@@ -45,6 +45,12 @@ public Q_SLOTS:
 	void moveObjectX(double value);
 	void moveObjectY(double value);
 	void moveObjectZ(double value);
+	void scaleObjectX(double value);
+	void scaleObjectY(double value);
+	void scaleObjectZ(double value);
+	void rotateObjectX(double value);
+	void rotateObjectY(double value);
+	void rotateObjectZ(double value);
 
 public:
 	Scene();

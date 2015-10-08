@@ -44,7 +44,7 @@ protected:
 	GLenum m_draw_type;
 
 	std::vector<glm::vec3> m_vertices;
-	glm::vec3 m_size, m_inv_size;
+	glm::vec3 m_size, m_inv_size, m_rotation;
 	glm::vec3 m_min, m_max, m_pos;
 	glm::mat4 m_matrix, m_inv_matrix;
 
@@ -65,6 +65,10 @@ public:
 	virtual void drawTreeTopology(const bool b);
 	virtual bool drawTreeTopology() const { return m_draw_topology; }
 
-	void setPos(const glm::vec3 &pos);
 	glm::vec3 pos() const;
+	void setPos(const glm::vec3 &pos);
+	glm::vec3 scale() const;
+	void setScale(const glm::vec3 &scale);
+	glm::vec3 rotation() const;
+	void setRotation(const glm::vec3 &rotation);
 };

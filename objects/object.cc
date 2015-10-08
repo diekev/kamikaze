@@ -31,6 +31,7 @@ Object::Object()
     , m_draw_type(GL_QUADS)
     , m_size(glm::vec3(0.0f))
     , m_inv_size(glm::vec3(0.0f))
+    , m_rotation(glm::vec3(0.0f))
     , m_min(glm::vec3(0.0f))
     , m_max(glm::vec3(0.0f))
     , m_pos(glm::vec3(0.0f))
@@ -90,10 +91,35 @@ void Object::setPos(const glm::vec3 &pos)
 	updateMatrix();
 }
 
+glm::vec3 Object::scale() const
+{
+	return m_size;
+}
+
+void Object::setScale(const glm::vec3 &scale)
+{
+	m_size = scale;
+	updateMatrix();
+}
+
+glm::vec3 Object::rotation() const
+{
+	return m_rotation;
+}
+
+void Object::setRotation(const glm::vec3 &rotation)
+{
+	m_rotation = rotation;
+	updateMatrix();
+}
+
 void Object::updateMatrix()
 {
 	m_matrix = glm::mat4(1.0f);
 	m_matrix = glm::translate(m_matrix, m_pos);
+	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 	m_matrix = glm::scale(m_matrix, m_size);
 	m_inv_matrix = glm::inverse(m_matrix);
 }
