@@ -71,13 +71,26 @@ void TimeLineWidget::paintEvent(QPaintEvent *e)
 	const int line_height = height - fm.height();
 	int line_offset = 0;
 
+	/* draw vertical lines at an interval of 10 frames */
 	for (int i(0); i <= increment; ++i) {
 		p.drawLine(line_offset, 0, line_offset, line_height);
 		p.drawText(line_offset, height, QString::number(i * 10));
 		line_offset += offset;
 	}
 
+	/* draw current frame marker */
 	const int frame_offset = m_current_frame * (size.width() / float(m_end_frame));
 	p.setPen(Qt::green);
 	p.drawLine(frame_offset, 0, frame_offset, line_height);
+
+	/* draw current frame number beside the marker, inside a rectangle */
+	QString cfra_str = QString::number(m_current_frame);
+	QRect cfra_rect = fm.boundingRect(cfra_str);
+
+	p.setBrush(QBrush(Qt::green));
+	p.drawRect(frame_offset, line_height - cfra_rect.height() + 4,
+	           cfra_rect.width() + 4, cfra_rect.height() - 2);
+
+	p.setPen(Qt::black);
+	p.drawText(frame_offset + 2, line_height, cfra_str);
 }
