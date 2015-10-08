@@ -55,9 +55,9 @@ void convert_grid(const openvdb::FloatGrid &grid, float *data, const CoordBBox &
 		/* Subtract min z coord so that 'index' always start at zero or above. */
 		auto index = (z - bbox.min()[2]) * slabsize;
 
-		for (auto e = r.end(); z < e; ++z) {
-			for (y = bbox.min()[1]; y < bbox.max()[1]; ++y) {
-				for (x = bbox.min()[0]; x < bbox.max()[0]; ++x, ++index) {
+		for (auto e = r.end(); z <= e; ++z) {
+			for (y = bbox.min()[1]; y <= bbox.max()[1]; ++y) {
+				for (x = bbox.min()[0]; x <= bbox.max()[0]; ++x, ++index) {
 					auto value = acc.getValue(ijk);
 
 					if (value < min_value) {

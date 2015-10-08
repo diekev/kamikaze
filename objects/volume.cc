@@ -45,6 +45,7 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
 
 	m_draw_type = GL_TRIANGLES;
 	m_elements = m_num_slices * 6;
+	m_inv_size = 1.0f / m_dimensions;
 
 	/* Get resolution & copy data */
 	openvdb::math::CoordBBox bbox = m_grid->evalActiveVoxelBoundingBox();
@@ -199,6 +200,7 @@ void Volume::slice(const glm::vec3 &view_dir)
 	GLuint *indices = new GLuint[m_elements];
 	int idx = 0, idx_count = 0;
 
+	m_vertices.clear();
 	m_vertices.reserve(m_num_slices * 4);
 
 	for (auto slice(0); slice < m_num_slices; slice++) {
