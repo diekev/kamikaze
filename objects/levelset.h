@@ -26,20 +26,15 @@
 #include <glm/glm.hpp>
 #include <openvdb/openvdb.h>
 
-#include "cube.h"
 #include "treetopology.h"
 
-class LevelSet : public Object {
-	std::unique_ptr<Cube> m_bbox;
-	std::unique_ptr<TreeTopology> m_topology;
-
-	void generate_mesh(openvdb::FloatGrid::ConstPtr grid);
+class LevelSet : public VolumeBase {
+	void generateMesh();
+	void loadShader();
 
 public:
-	LevelSet();
 	LevelSet(openvdb::FloatGrid::Ptr &grid);
 	~LevelSet() = default;
 
 	void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir);
-	void loadShader();
 };

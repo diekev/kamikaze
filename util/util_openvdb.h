@@ -24,7 +24,7 @@
 #pragma once
 
 void convert_grid(const openvdb::FloatGrid &grid, float *data,
-                  const openvdb::Coord &min, const openvdb::Coord &max, float &scale);
+                  const openvdb::CoordBBox &bbox, float &scale);
 
 openvdb::FloatGrid::Ptr transform_grid(const openvdb::FloatGrid &grid,
                                        const openvdb::Vec3s &rot,

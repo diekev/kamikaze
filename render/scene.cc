@@ -65,14 +65,14 @@ void Scene::keyboardEvent(int key)
 	}
 }
 
-void Scene::add_object(Object *object)
+void Scene::addObject(Object *object)
 {
 	m_objects.push_back(object);
 	m_active_object = m_objects.size() - 1;
 	Q_EMIT objectChanged();
 }
 
-void Scene::render(const glm::vec3 &view_dir, const glm::mat4 &MV, const glm::mat4 &P)
+void Scene::render(const glm::mat4 &MV, const glm::mat4 &P, const glm::vec3 &view_dir)
 {
 	const auto &MVP = P * MV;
 	const auto &N = glm::inverseTranspose(glm::mat3(MV));
@@ -108,4 +108,85 @@ Object *Scene::currentObject()
 	}
 
 	return nullptr;
+}
+
+void Scene::moveObjectX(double value)
+{
+	Object *ob = m_objects[m_active_object];
+	glm::vec3 pos = ob->pos();
+	pos.x = value;
+	ob->setPos(pos);
+	Q_EMIT updateViewport();
+}
+
+void Scene::moveObjectY(double value)
+{
+	Object *ob = m_objects[m_active_object];
+	glm::vec3 pos = ob->pos();
+	pos.y = value;
+	ob->setPos(pos);
+	Q_EMIT updateViewport();
+}
+
+void Scene::moveObjectZ(double value)
+{
+	Object *ob = m_objects[m_active_object];
+	glm::vec3 pos = ob->pos();
+	pos.z = value;
+	ob->setPos(pos);
+	Q_EMIT updateViewport();
+}
+
+void Scene::scaleObjectX(double value)
+{
+	Object *ob = m_objects[m_active_object];
+	glm::vec3 scale = ob->scale();
+	scale.x = value;
+	ob->setScale(scale);
+	Q_EMIT updateViewport();
+}
+
+void Scene::scaleObjectY(double value)
+{
+	Object *ob = m_objects[m_active_object];
+	glm::vec3 scale = ob->scale();
+	scale.y = value;
+	ob->setScale(scale);
+	Q_EMIT updateViewport();
+}
+
+void Scene::scaleObjectZ(double value)
+{
+	Object *ob = m_objects[m_active_object];
+	glm::vec3 scale = ob->scale();
+	scale.z = value;
+	ob->setScale(scale);
+	Q_EMIT updateViewport();
+}
+
+void Scene::rotateObjectX(double value)
+{
+	Object *ob = m_objects[m_active_object];
+	glm::vec3 rot = ob->rotation();
+	rot.x = value;
+	ob->setRotation(rot);
+	Q_EMIT updateViewport();
+}
+
+void Scene::rotateObjectY(double value)
+{
+	Object *ob = m_objects[m_active_object];
+	glm::vec3 rot = ob->rotation();
+	rot.y = value;
+	ob->setRotation(rot);
+	Q_EMIT updateViewport();
+}
+
+void Scene::rotateObjectZ(double value)
+{
+	Object *ob = m_objects[m_active_object];
+	glm::vec3 rot = ob->rotation();
+	rot.z = value;
+	ob->setRotation(rot);
+	Q_EMIT updateViewport();
 }

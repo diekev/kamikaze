@@ -24,6 +24,7 @@
 
 #include <QFileDialog>
 #include <QKeyEvent>
+#include <QSplitter>
 
 #include <openvdb/openvdb.h>
 #include <openvdb/tools/LevelSetSphere.h>
@@ -50,6 +51,27 @@ MainWindow::MainWindow(QWidget *parent)
 
 	connect(m_scene, SIGNAL(objectChanged()), this, SLOT(updateObjectTab()));
 	ui->tabWidget->setTabEnabled(0, false);
+
+	/* set default width for the viewport and side panel in the splitter */
+	const int width = ui->splitter->size().width();
+	const int viewport_width = 0.8f * float(width);
+	const int panel_width = width - viewport_width;
+	QList<int> sizes;
+	sizes << viewport_width << panel_width;
+	ui->splitter->setSizes(sizes);
+
+	/* Object transform */
+	connect(ui->m_move_x, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectX(double)));
+	connect(ui->m_move_y, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectY(double)));
+	connect(ui->m_move_z, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectZ(double)));
+	connect(ui->m_scale_x, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectX(double)));
+	connect(ui->m_scale_y, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectY(double)));
+	connect(ui->m_scale_z, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectZ(double)));
+	connect(ui->m_rotate_x, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectX(double)));
+	connect(ui->m_rotate_y, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectY(double)));
+	connect(ui->m_rotate_z, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectZ(double)));
+
+	connect(m_scene, SIGNAL(updateViewport()), ui->m_viewport, SLOT(update()));
 }
 
 MainWindow::~MainWindow()
@@ -102,7 +124,7 @@ void MainWindow::openFile(const QString &filename)
 		else {
 			ob = new Volume(grid);
 		}
-		m_scene->add_object(ob);
+		m_scene->addObject(ob);
 	}
 	else {
 		std::cerr << "Unable to open file \'" << filename.toStdString() << "\'\n";
@@ -188,6 +210,19 @@ void MainWindow::updateObjectTab()
 
 	ui->m_draw_bbox->setChecked(ob->drawBBox());
 	ui->m_draw_tree->setChecked(ob->drawTreeTopology());
+
+	const glm::vec3 pos = ob->pos();
+	ui->m_move_x->setValue(pos.x);
+	ui->m_move_y->setValue(pos.y);
+	ui->m_move_z->setValue(pos.z);
+	const glm::vec3 scale = ob->scale();
+	ui->m_scale_x->setValue(scale.x);
+	ui->m_scale_y->setValue(scale.y);
+	ui->m_scale_z->setValue(scale.z);
+	const glm::vec3 rotation = ob->rotation();
+	ui->m_rotate_x->setValue(rotation.x);
+	ui->m_rotate_y->setValue(rotation.y);
+	ui->m_rotate_z->setValue(rotation.z);
 }
 
 void MainWindow::addCube()
@@ -196,7 +231,7 @@ void MainWindow::addCube()
 	glm::vec3 min(-1.0f), max(1.0f);
 
 	Object *ob = new Cube(min * radius, max * radius);
-	m_scene->add_object(ob);
+	m_scene->addObject(ob);
 }
 
 void MainWindow::addLevelSetSphere()
@@ -205,5 +240,5 @@ void MainWindow::addLevelSetSphere()
 	FloatGrid::Ptr sphere = tools::createLevelSetSphere<FloatGrid>(2.0f, Vec3f(0.0f), 0.1f);
 
 	Object *ob = new LevelSet(sphere);
-	m_scene->add_object(ob);
+	m_scene->addObject(ob);
 }

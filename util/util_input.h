@@ -24,9 +24,10 @@
 #pragma once
 
 enum {
-	MOUSSE_LEFT        = 0,
-	MOUSSE_MIDDLE      = 1,
-	MOUSSE_RIGHT       = 2,
+	MOUSE_NONE         = -1,
+	MOUSE_LEFT         = 0,
+	MOUSE_MIDDLE       = 1,
+	MOUSE_RIGHT        = 2,
 	MOUSSE_SCROLL_UP   = 3,
 	MOUSSE_SCROLL_DOWN = 4,
 };
@@ -39,6 +40,6 @@ enum {
 };
 
 enum {
-	MOUSSE_DOWN = 0,
-	MOUSSE_UP   = 1,
+	MOUSE_DOWN = 0,
+	MOUSE_UP   = 1,
 };

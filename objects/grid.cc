@@ -44,6 +44,7 @@ Grid::Grid(int x, int y)
 	{
 		m_program.addAttribute("vertex");
 		m_program.addUniform("MVP");
+		m_program.addUniform("matrix");
 	}
 	m_program.disable();
 
@@ -84,6 +85,7 @@ void Grid::render(const glm::mat4 &MVP)
 		m_program.enable();
 		m_buffer_data->bind();
 
+		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
 		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 		glDrawElements(GL_LINES, m_total_indices, GL_UNSIGNED_SHORT, nullptr);
 

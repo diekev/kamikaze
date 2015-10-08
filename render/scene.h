@@ -39,6 +39,18 @@ class Scene : public QObject {
 
 Q_SIGNALS:
 	void objectChanged();
+	void updateViewport();
+
+public Q_SLOTS:
+	void moveObjectX(double value);
+	void moveObjectY(double value);
+	void moveObjectZ(double value);
+	void scaleObjectX(double value);
+	void scaleObjectY(double value);
+	void scaleObjectZ(double value);
+	void rotateObjectX(double value);
+	void rotateObjectY(double value);
+	void rotateObjectZ(double value);
 
 public:
 	Scene();
@@ -47,8 +59,8 @@ public:
 	void keyboardEvent(int key);
 
 	Object *currentObject();
-	void add_object(Object *object);
+	void addObject(Object *object);
 
-	void render(const glm::vec3 &view_dir, const glm::mat4 &MV, const glm::mat4 &P);
+	void render(const glm::mat4 &MV, const glm::mat4 &P, const glm::vec3 &view_dir);
 	void intersect(const Ray &ray);
 };

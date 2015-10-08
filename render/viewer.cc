@@ -23,6 +23,7 @@
  */
 
 #include <QApplication>
+#include <QColorDialog>
 #include <QKeyEvent>
 
 #include <GL/glew.h>
@@ -41,10 +42,11 @@
 
 Viewer::Viewer(QWidget *parent)
     : QGLWidget(parent)
-    , m_mouse_button(0)
+    , m_mouse_button(MOUSE_NONE)
     , m_width(0)
     , m_height(0)
-    , m_bg(glm::vec4(0.5f, 0.5f, 1.0f, 1.0f))
+    , m_draw_grid(true)
+    , m_bg(glm::vec4(0.5f, 0.5f, 0.5f, 1.0f))
     , m_camera(new Camera())
     , m_grid(nullptr)
     , m_scene(nullptr)
@@ -71,7 +73,7 @@ void Viewer::initializeGL()
 	glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
 
 	m_grid = new Grid(20, 20);
-	m_camera->updateViewDir();
+	m_camera->update();
 }
 
 void Viewer::resizeGL(int w, int h)
@@ -86,17 +88,19 @@ void Viewer::paintGL()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	m_camera->updateViewDir();
+	m_camera->update();
 
-	const auto &view_dir = m_camera->viewDir();
+	const auto &view_dir = m_camera->dir();
 	const auto &MV = m_camera->MV();
 	const auto &P = m_camera->P();
 	const auto &MVP = P * MV;
 
-	m_grid->render(MVP);
+	if (m_draw_grid) {
+		m_grid->render(MVP);
+	}
 
 	if (m_scene != nullptr) {
-		m_scene->render(view_dir, MV, P);
+		m_scene->render(MV, P, view_dir);
 	}
 }
 
@@ -123,26 +127,30 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 	}
 
 	if (e->buttons() == Qt::MidButton) {
-		m_mouse_button = MOUSSE_MIDDLE;
+		m_mouse_button = MOUSE_MIDDLE;
 	}
 	else if (e->buttons() == Qt::LeftButton) {
-		m_mouse_button = MOUSSE_LEFT;
+		m_mouse_button = MOUSE_LEFT;
 		intersectScene(x, y);
 	}
 	else if (e->buttons() == Qt::RightButton) {
-		m_mouse_button = MOUSSE_RIGHT;
+		m_mouse_button = MOUSE_RIGHT;
 	}
 	else {
-		m_mouse_button = -1;
+		m_mouse_button = MOUSE_NONE;
 	}
 
-	m_camera->mouseDownEvent(m_mouse_button, 0, x, y);
+	m_camera->mouseDownEvent(x, y);
 
 	update();
 }
 
 void Viewer::mouseMoveEvent(QMouseEvent *e)
 {
+	if (m_mouse_button == MOUSE_NONE) {
+		return;
+	}
+
 	const int x = e->pos().x();
 	const int y = e->pos().y();
 
@@ -152,7 +160,7 @@ void Viewer::mouseMoveEvent(QMouseEvent *e)
 
 void Viewer::mouseReleaseEvent(QMouseEvent *e)
 {
-	m_mouse_button = -1;
+	m_mouse_button = MOUSE_NONE;
 	update();
 }
 
@@ -171,7 +179,7 @@ void Viewer::wheelEvent(QWheelEvent *e)
 		m_mouse_button = MOUSSE_SCROLL_UP;
 	}
 
-	m_camera->mouseDownEvent(m_mouse_button, -1, 0, 0);
+	m_camera->mouseWheelEvent(m_mouse_button);
 	update();
 }
 
@@ -195,4 +203,21 @@ void Viewer::intersectScene(int x, int y)
 	ray.dir = glm::normalize(end - start);
 
 	m_scene->intersect(ray);
+}
+
+void Viewer::changeBackground()
+{
+	QColor color = QColorDialog::getColor();
+
+	if (color.isValid()) {
+		m_bg = glm::vec4(color.redF(), color.greenF(), color.blueF(), 1.0f);
+		glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
+		update();
+	}
+}
+
+void Viewer::drawGrid(bool b)
+{
+	m_draw_grid = b;
+	update();
 }

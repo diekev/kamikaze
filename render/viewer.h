@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <glm/glm.hpp>
 #include <QGLWidget>
 
 class Camera;
@@ -31,14 +32,21 @@ class Grid;
 class Scene;
 
 class Viewer : public QGLWidget {
+	Q_OBJECT
+
 	int m_mouse_button;
 	int m_modifier;
 	int m_width, m_height;
+	bool m_draw_grid;
 	glm::vec4 m_bg;
 
 	Camera *m_camera;
 	Grid *m_grid;
 	Scene *m_scene;
+
+public Q_SLOTS:
+	void changeBackground();
+	void drawGrid(bool b);
 
 public:
 	Viewer(QWidget *parent);
