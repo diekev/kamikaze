@@ -167,5 +167,5 @@ void TreeTopology::render(const glm::mat4 &MVP)
 		m_program.disable();
 	}
 
-	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST);
 }
