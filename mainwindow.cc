@@ -52,13 +52,21 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(m_scene, SIGNAL(objectChanged()), this, SLOT(updateObjectTab()));
 	ui->tabWidget->setTabEnabled(0, false);
 
-	/* set default width for the viewport and side panel in the splitter */
+	/* set default widths for the viewport and side panel in the horizontal splitter */
 	const int width = ui->splitter->size().width();
 	const int viewport_width = 0.8f * float(width);
 	const int panel_width = width - viewport_width;
 	QList<int> sizes;
 	sizes << viewport_width << panel_width;
 	ui->splitter->setSizes(sizes);
+
+	/* set default heights for the timeline wigdet and the vertical splitter */
+	const int height = ui->vsplitter->size().height();
+	const int tiemeline_height = 0.1f * float(height);
+	const int hsplister_height= height - tiemeline_height;
+	QList<int> hsizes;
+	hsizes << hsplister_height << tiemeline_height;
+	ui->vsplitter->setSizes(hsizes);
 
 	/* Object transform */
 	connect(ui->m_move_x, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectX(double)));

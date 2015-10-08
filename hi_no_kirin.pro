@@ -43,7 +43,8 @@ SOURCES += \
 	util/util_openvdb.cc \
 	util/utils.cc \
     render/GPUProgram.cc \
-    objects/object.cc
+    objects/object.cc \
+    timelinewidget.cc
 
 HEADERS += \
     mainwindow.h \
@@ -63,7 +64,8 @@ HEADERS += \
 	util/utils.h \
     render/GPUProgram.h \
     util/util_render.h \
-    objects/object.h
+    objects/object.h \
+    timelinewidget.h
 
 OTHER_FILES += \
 	shader/flat_shader.frag \
