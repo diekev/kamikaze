@@ -24,9 +24,8 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <openvdb/openvdb.h>
 
-#include "treetopology.h"
+#include "volumebase.h"
 
 class LevelSet : public VolumeBase {
 	void generateMesh();

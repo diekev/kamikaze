@@ -27,17 +27,18 @@
 #include <QSplitter>
 #include <QTimer>
 
-#include <openvdb/openvdb.h>
 #include <openvdb/tools/LevelSetSphere.h>
 
 #include "mainwindow.h"
 
 #include "objects/levelset.h"
 #include "objects/volume.h"
+
 #include "render/scene.h"
 #include "render/viewer.h"
-#include "util/util_openvdb.h"
+
 #include "util/utils.h"
+#include "util/util_openvdb.h"
 
 #include "ui_mainwindow.h"
 

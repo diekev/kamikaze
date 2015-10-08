@@ -25,14 +25,11 @@
 
 #include "volume.h"
 
-#include "render/GPUBuffer.h"
-
 #include "util/util_opengl.h"
 #include "util/util_openvdb.h"
 #include "util/utils.h"
 
-#include "cube.h"
-#include "treetopology.h"
+const int MAX_SLICES = 512;
 
 Volume::Volume(openvdb::FloatGrid::Ptr &grid)
     : VolumeBase(grid)
@@ -47,6 +44,7 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
 	using namespace openvdb::math;
 
 	m_draw_type = GL_TRIANGLES;
+	m_elements = m_num_slices * 6;
 
 	/* Get resolution & copy data */
 	openvdb::math::CoordBBox bbox = m_grid->evalActiveVoxelBoundingBox();
@@ -198,7 +196,7 @@ void Volume::slice(const glm::vec3 &view_dir)
 	    }
 	};
 
-	GLuint *indices = new GLuint[m_num_slices * 6];
+	GLuint *indices = new GLuint[m_elements];
 	int idx = 0, idx_count = 0;
 
 	m_vertices.reserve(m_num_slices * 4);
@@ -266,7 +264,7 @@ void Volume::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &d
 
 		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 		glUniform1i(m_program("use_lut"), m_use_lut);
-		glDrawElements(m_draw_type, m_num_slices * 6, GL_UNSIGNED_INT, nullptr);
+		glDrawElements(m_draw_type, m_elements, GL_UNSIGNED_INT, nullptr);
 
 		m_transfer_texture->unbind();
 		m_volume_texture->unbind();
@@ -283,6 +281,7 @@ void Volume::changeNumSlicesBy(int x)
 	m_num_slices += x;
 	m_num_slices = std::min(MAX_SLICES, std::max(m_num_slices, 3));
 	m_vertices.resize(m_num_slices * 4);
+	m_elements = m_num_slices * 6;
 }
 
 void Volume::toggleUseLUT()

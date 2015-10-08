@@ -24,11 +24,12 @@
 #include <algorithm>
 #include <vector>
 
+#include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "grid.h"
-#include "render/GPUBuffer.h"
+
 #include "util/util_opengl.h"
 
 Grid::Grid(int x, int y)

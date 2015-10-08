@@ -43,7 +43,6 @@ int axis_dominant_v3_single(const float vec[3])
 	return ((x > y) ? ((x > z) ? 0 : 2) : ((y > z) ? 1 : 2));
 }
 
-
 openvdb::math::Vec3d convertGLMVec(const glm::vec3 &vec)
 {
 	return openvdb::math::Vec3d(vec[0], vec[1], vec[2]);

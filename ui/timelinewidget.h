@@ -12,44 +12,44 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
+ * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * The Original Code is Copyright (C) 2015 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
+ *
  */
 
 #pragma once
 
-#include "cube.h"
+#include <QWidget>
 
-class GPUBuffer;
+class TimeLineWidget : public QWidget {
+	Q_OBJECT
 
-class TreeTopology {
-	std::unique_ptr<GPUBuffer> m_buffer_data;
-	GPUProgram m_program;
-	size_t m_elements;
+	int m_start_frame, m_end_frame, m_current_frame;
+	bool m_mouse_pressed;
 
-public:
-	TreeTopology(openvdb::FloatGrid::ConstPtr grid);
-	~TreeTopology() = default;
-
-	void render(const glm::mat4 &MVP);
-};
-
-class VolumeBase : public Object {
 protected:
-	std::unique_ptr<Cube> m_bbox;
-	std::unique_ptr<TreeTopology> m_topology;
+	void mouseMoveEvent(QMouseEvent *e);
+	void mousePressEvent(QMouseEvent *e);
+	void mouseReleaseEvent(QMouseEvent *e);
+	void paintEvent(QPaintEvent *e);
 
-	openvdb::FloatGrid::Ptr m_grid;
-	openvdb::Mat4R m_volume_matrix;  /* original volume matrix */
+Q_SIGNALS:
+	void currentFrameChanged(int frame);
 
-	void updateGridTransform();
+public Q_SLOTS:
+	void setStartFrame(const int start);
+	void setEndFrame(const int end);
 
 public:
-	VolumeBase(openvdb::FloatGrid::Ptr grid);
-	~VolumeBase() = default;
+	explicit TimeLineWidget(QWidget *parent = nullptr);
+	~TimeLineWidget() = default;
+
+	void setCurrentFrame(const int frame);
+	void updateCurrentFrame(const int pos_x);
+	void incrementFrame();
 };

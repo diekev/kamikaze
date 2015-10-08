@@ -22,11 +22,10 @@
  */
 
 #include <glm/gtc/type_ptr.hpp>
-#include <openvdb/openvdb.h>
 
-#include "treetopology.h"
+#include "volumebase.h"
 
-#include "render/GPUBuffer.h"
+#include "render/gpu/GPUBuffer.h"
 
 #include "util/util_opengl.h"
 #include "util/utils.h"

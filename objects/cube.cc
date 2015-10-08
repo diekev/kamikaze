@@ -21,16 +21,15 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
+#include <vector>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <vector>
-
-#include "render/GPUProgram.h"
-#include "util/util_opengl.h"
 
 #include "cube.h"
-#include "render/GPUBuffer.h"
+
+#include "util/util_opengl.h"
 
 Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 {
