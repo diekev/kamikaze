@@ -64,13 +64,12 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 
 	m_min = min;
 	m_max = max;
-	m_size = max - min;
-	m_inv_size = 1.0f / m_size;
+	m_dimensions = max - min;
 
 	updateMatrix();
 
 	for (int i = 0; i < 8; ++i) {
-		m_vertices.push_back(m_inv_size * vertices[i]);
+		m_vertices.push_back(vertices[i] * glm::mat3(m_inv_matrix));
 	}
 
 #if 1
@@ -120,6 +119,11 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 
 void Cube::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir)
 {
+	if (m_need_update) {
+		updateMatrix();
+		m_need_update = false;
+	}
+
 	glEnable(GL_DEPTH_TEST);
 
 	if (m_program.isValid()) {

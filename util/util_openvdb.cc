@@ -28,20 +28,20 @@
 #include "util_openvdb.h"
 #include "utils.h"
 
-using openvdb::math::Coord;
+using openvdb::math::CoordBBox;
 
-void convert_grid(const openvdb::FloatGrid &grid, float *data, const Coord &min, const Coord &max, float &scale)
+void convert_grid(const openvdb::FloatGrid &grid, float *data, const CoordBBox &bbox, float &scale)
 {
 	Timer(__func__);
 
 	using namespace openvdb;
 
 	FloatGrid::ConstAccessor main_acc = grid.getAccessor();
-	auto extent = max - min;
-	auto slabsize = extent[0] * extent[1];
+	const auto &dim = bbox.dim();
+	const auto &slabsize = dim[0] * dim[1];
 	util::PagedArray<float> min_array, max_array;
 
-	tbb::parallel_for(tbb::blocked_range<int>(min[2], max[2]),
+	tbb::parallel_for(tbb::blocked_range<int>(bbox.min()[2], bbox.max()[2]),
 	        [&](const tbb::blocked_range<int> &r)
 	{
 		FloatGrid::ConstAccessor acc(main_acc);
@@ -53,11 +53,11 @@ void convert_grid(const openvdb::FloatGrid &grid, float *data, const Coord &min,
 		auto max_value = std::numeric_limits<float>::min();
 
 		/* Subtract min z coord so that 'index' always start at zero or above. */
-		auto index = (z - min[2]) * slabsize;
+		auto index = (z - bbox.min()[2]) * slabsize;
 
 		for (auto e = r.end(); z < e; ++z) {
-			for (y = min[1]; y < max[1]; ++y) {
-				for (x = min[0]; x < max[0]; ++x, ++index) {
+			for (y = bbox.min()[1]; y < bbox.max()[1]; ++y) {
+				for (x = bbox.min()[0]; x < bbox.max()[0]; ++x, ++index) {
 					auto value = acc.getValue(ijk);
 
 					if (value < min_value) {

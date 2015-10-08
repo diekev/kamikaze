@@ -34,69 +34,32 @@
 #include "cube.h"
 #include "treetopology.h"
 
-Volume::Volume()
-    : m_volume_texture(nullptr)
+Volume::Volume(openvdb::FloatGrid::Ptr &grid)
+    : VolumeBase(grid)
+    , m_volume_texture(nullptr)
     , m_transfer_texture(nullptr)
-    , m_bbox(nullptr)
-    , m_topology(nullptr)
     , m_num_slices(256)
     , m_axis(-1)
-    , m_scale(0.0f)
+    , m_value_scale(0.0f)
     , m_use_lut(false)
-{}
-
-Volume::Volume(openvdb::FloatGrid::Ptr &grid)
-    : Volume()
 {
 	using namespace openvdb;
 	using namespace openvdb::math;
 
-	CoordBBox bbox = grid->evalActiveVoxelBoundingBox();
-	Coord bbox_min = bbox.min();
-	Coord bbox_max = bbox.max();
-
-	/* Get resolution */
-	auto extent = bbox_max - bbox_min;
-	const int X_DIM = extent[0];
-	const int Y_DIM = extent[1];
-	const int Z_DIM = extent[2];
-
-	/* Compute grid size */
-	BBoxd ws_bbox = grid->transform().indexToWorld(bbox);
-	Vec3f min = ws_bbox.min(); // grid->transform().indexToWorld(bbox_min);
-	Vec3f max = ws_bbox.max(); // grid->transform().indexToWorld(bbox_max);
-
-	m_min = convertOpenVDBVec(min);
-	m_max = convertOpenVDBVec(max);
-
-	m_size = (m_max - m_min);
-	m_inv_size = 1.0f / m_size;
-
 	m_draw_type = GL_TRIANGLES;
 
-	m_buffer_data = std::unique_ptr<GPUBuffer>(new GPUBuffer);
-	m_bbox = std::unique_ptr<Cube>(new Cube(m_min, m_max));
-	m_topology = std::unique_ptr<TreeTopology>(new TreeTopology(grid));
+	/* Get resolution & copy data */
+	openvdb::math::CoordBBox bbox = m_grid->evalActiveVoxelBoundingBox();
+	GLfloat *data = new GLfloat[bbox.volume()];
 
-#if 0
-	printf("Dimensions: %d, %d, %d\n", X_DIM, Y_DIM, Z_DIM);
-	printf("Min: %f, %f, %f\n", min[0], min[1], min[2]);
-	printf("Max: %f, %f, %f\n", max[0], max[1], max[2]);
-	printf("Bbox Min: %d, %d, %d\n", bbox_min[0], bbox_min[1], bbox_min[2]);
-	printf("Bbox Max: %d, %d, %d\n", bbox_max[0], bbox_max[1], bbox_max[2]);
-#endif
-
-	/* Copy data */
-	GLfloat *data = new GLfloat[X_DIM * Y_DIM * Z_DIM];
-
-	convert_grid(*grid, data, bbox_min, bbox_max, m_scale);
+	convert_grid(*m_grid, data, bbox, m_value_scale);
 
 	m_volume_texture = std::unique_ptr<GPUTexture>(new GPUTexture(GL_TEXTURE_3D, 0));
 	m_volume_texture->bind();
 	m_volume_texture->setType(GL_FLOAT, GL_RED, GL_RED);
 	m_volume_texture->setMinMagFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 	m_volume_texture->setWrapping(GL_CLAMP_TO_BORDER);
-	m_volume_texture->create(data, extent.asPointer());
+	m_volume_texture->create(data, bbox.dim().asPointer());
 	m_volume_texture->generateMipMap(0, 4);
 	m_volume_texture->unbind();
 	gl_check_errors();
@@ -130,7 +93,7 @@ void Volume::loadVolumeShader()
 
 		glUniform3fv(m_program("offset"), 1, &m_min[0]);
 		glUniform3fv(m_program("inv_size"), 1, &m_inv_size[0]);
-		glUniform1f(m_program("scale"), m_scale);
+		glUniform1f(m_program("scale"), m_value_scale);
 	}
 	m_program.disable();
 
@@ -206,7 +169,7 @@ void Volume::slice(const glm::vec3 &view_dir)
 
 	m_axis = axis;
 	auto depth = m_min[m_axis];
-	auto slice_size = m_size[m_axis] / m_num_slices;
+	auto slice_size = m_dimensions[m_axis] / m_num_slices;
 
 	/* always process slices in back to front order! */
 	if (view_dir[m_axis] > 0.0f) {
@@ -275,6 +238,12 @@ void Volume::slice(const glm::vec3 &view_dir)
 
 void Volume::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir)
 {
+	if (m_need_update) {
+		updateMatrix();
+		updateGridTransform();
+		m_need_update = false;
+	}
+
 	slice(dir);
 
 	if (m_draw_bbox) {

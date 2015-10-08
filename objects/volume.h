@@ -24,7 +24,7 @@
 #include <glm/glm.hpp>
 #include <openvdb/openvdb.h>
 
-#include "object.h"
+#include "treetopology.h"
 
 #include "render/GPUTexture.h"
 #include "util/util_render.h"
@@ -35,23 +35,20 @@ class Cube;
 class GPUBuffer;
 class TreeTopology;
 
-class Volume : public Object {
+class Volume : public VolumeBase {
 	std::unique_ptr<GPUTexture> m_volume_texture, m_transfer_texture;
-
-	std::unique_ptr<Cube> m_bbox;
-	std::unique_ptr<TreeTopology> m_topology;
 
 	int m_num_slices;
 
+	glm::vec3 m_inv_size; // XXX
 	int m_axis;
-	float m_scale; // scale of the values contained in the grid (1 / (max - min))
+	float m_value_scale; // scale of the values contained in the grid (1 / (max - min))
 	bool m_use_lut;
 
 	void loadTransferFunction();
 	void loadVolumeShader();
 
 public:
-	Volume();
 	Volume(openvdb::FloatGrid::Ptr &grid);
 	~Volume() = default;
 

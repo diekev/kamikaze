@@ -65,6 +65,8 @@ glm::vec3 convertOpenVDBVec(const openvdb::math::Vec3<T> &vec)
 	return glm::vec3(vec[0], vec[1], vec[2]);
 }
 
+openvdb::math::Vec3d convertGLMVec(const glm::vec3 &vec);
+
 template <typename T>
 glm::mat4 convertOpenVDBMat4(const openvdb::math::Mat4<T> &mat)
 {

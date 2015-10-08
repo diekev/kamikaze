@@ -29,35 +29,11 @@
 
 #include "levelset.h"
 
-LevelSet::LevelSet()
-    : m_bbox(nullptr)
-    , m_topology(nullptr)
-{}
-
 LevelSet::LevelSet(openvdb::FloatGrid::Ptr &grid)
-    : LevelSet()
+    : VolumeBase(grid)
 {
-	using namespace openvdb;
-	using namespace openvdb::math;
-
-	CoordBBox bbox = grid->evalActiveVoxelBoundingBox();
-
-	BBoxd ws_bbox = grid->transform().indexToWorld(bbox);
-	Vec3f min = ws_bbox.min();
-	Vec3f max = ws_bbox.max();
-
-	m_min = convertOpenVDBVec(min);
-	m_max = convertOpenVDBVec(max);
-	m_size = (m_max - m_min);
-	m_inv_size = 1.0f / m_size;
-	updateMatrix();
-
-	m_buffer_data = std::unique_ptr<GPUBuffer>(new GPUBuffer());
-	m_bbox = std::unique_ptr<Cube>(new Cube(m_min, m_max));
-	m_topology = std::unique_ptr<TreeTopology>(new TreeTopology(grid));
-
 	loadShader();
-	generate_mesh(grid);
+	generateMesh();
 }
 
 void LevelSet::loadShader()
@@ -79,6 +55,12 @@ void LevelSet::loadShader()
 
 void LevelSet::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir)
 {
+	if (m_need_update) {
+		updateMatrix();
+		updateGridTransform();
+		m_need_update = false;
+	}
+
 	glEnable(GL_DEPTH_TEST);
 
 	if (m_draw_bbox) {
@@ -105,7 +87,7 @@ void LevelSet::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 
 	glDisable(GL_DEPTH_TEST);
 }
 
-void LevelSet::generate_mesh(openvdb::FloatGrid::ConstPtr grid)
+void LevelSet::generateMesh()
 {
 	Timer(__func__);
 
@@ -113,7 +95,7 @@ void LevelSet::generate_mesh(openvdb::FloatGrid::ConstPtr grid)
 	using openvdb::Index64;
 
 	openvdb::tools::VolumeToMesh mesher(0.0);
-	mesher(*grid);
+	mesher(*m_grid);
 
 	/* Copy points and generate point normals. */
 

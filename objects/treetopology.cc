@@ -169,3 +169,56 @@ void TreeTopology::render(const glm::mat4 &MVP)
 
 	glDisable(GL_DEPTH_TEST);
 }
+
+VolumeBase::VolumeBase(openvdb::FloatGrid::Ptr grid)
+    : m_bbox(nullptr)
+    , m_topology(nullptr)
+{
+	using namespace openvdb;
+	using namespace openvdb::math;
+
+	m_grid = grid;
+	m_volume_matrix = m_grid->transform().baseMap()->getAffineMap()->getMat4();
+
+	CoordBBox bbox = m_grid->evalActiveVoxelBoundingBox();
+
+	BBoxd ws_bbox = m_grid->transform().indexToWorld(bbox);
+	Vec3f min = ws_bbox.min();
+	Vec3f max = ws_bbox.max();
+
+	m_min = convertOpenVDBVec(min);
+	m_max = convertOpenVDBVec(max);
+	m_dimensions = (m_max - m_min);
+	updateMatrix();
+
+	m_buffer_data = std::unique_ptr<GPUBuffer>(new GPUBuffer());
+	m_bbox = std::unique_ptr<Cube>(new Cube(m_min, m_max));
+	m_topology = std::unique_ptr<TreeTopology>(new TreeTopology(grid));
+}
+
+void VolumeBase::updateGridTransform()
+{
+	typedef openvdb::math::AffineMap AffineMap;
+	typedef openvdb::math::Transform Transform;
+
+	const openvdb::Vec3R pos = convertGLMVec(m_pos);
+	const openvdb::Vec3R scale = convertGLMVec(m_scale);
+
+	openvdb::Mat4R mat(openvdb::Mat4R::identity());
+    mat.preTranslate(pos);
+    mat.preRotate(openvdb::math::X_AXIS, glm::radians(m_rotation[0]));
+    mat.preRotate(openvdb::math::Y_AXIS, glm::radians(m_rotation[1]));
+    mat.preRotate(openvdb::math::Z_AXIS, glm::radians(m_rotation[2]));
+    mat.preScale(scale);
+    mat.preTranslate(-pos);
+    mat.preTranslate(pos);
+
+	openvdb::math::AffineMap map(mat), original_map(m_volume_matrix);
+	AffineMap::Ptr compound(new AffineMap(original_map, map));
+
+	m_grid->setTransform(Transform::Ptr(new Transform(openvdb::math::simplify(compound))));
+
+	if (m_draw_topology) {
+		m_topology.reset(new TreeTopology(m_grid));
+	}
+}

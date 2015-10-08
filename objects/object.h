@@ -44,11 +44,11 @@ protected:
 	GLenum m_draw_type;
 
 	std::vector<glm::vec3> m_vertices;
-	glm::vec3 m_size, m_inv_size, m_rotation;
+	glm::vec3 m_dimensions, m_scale, m_inv_size, m_rotation;
 	glm::vec3 m_min, m_max, m_pos;
 	glm::mat4 m_matrix, m_inv_matrix;
 
-	bool m_draw_bbox, m_draw_topology;
+	bool m_draw_bbox, m_draw_topology, m_need_update;
 
 	void updateMatrix();
 

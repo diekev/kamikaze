@@ -29,7 +29,8 @@
 Object::Object()
 	: m_buffer_data(nullptr)
     , m_draw_type(GL_QUADS)
-    , m_size(glm::vec3(0.0f))
+    , m_dimensions(glm::vec3(0.0f))
+    , m_scale(glm::vec3(1.0f))
     , m_inv_size(glm::vec3(0.0f))
     , m_rotation(glm::vec3(0.0f))
     , m_min(glm::vec3(0.0f))
@@ -37,6 +38,7 @@ Object::Object()
     , m_pos(glm::vec3(0.0f))
     , m_draw_bbox(false)
     , m_draw_topology(false)
+    , m_need_update(false)
 {}
 
 bool Object::intersect(const Ray &ray, float &min) const
@@ -88,18 +90,18 @@ glm::vec3 Object::pos() const
 void Object::setPos(const glm::vec3 &pos)
 {
 	m_pos = pos;
-	updateMatrix();
+	m_need_update = true;
 }
 
 glm::vec3 Object::scale() const
 {
-	return m_size;
+	return m_scale;
 }
 
 void Object::setScale(const glm::vec3 &scale)
 {
-	m_size = scale;
-	updateMatrix();
+	m_scale = scale;
+	m_need_update = true;
 }
 
 glm::vec3 Object::rotation() const
@@ -110,7 +112,7 @@ glm::vec3 Object::rotation() const
 void Object::setRotation(const glm::vec3 &rotation)
 {
 	m_rotation = rotation;
-	updateMatrix();
+	m_need_update = true;
 }
 
 void Object::updateMatrix()
@@ -120,6 +122,6 @@ void Object::updateMatrix()
 	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
 	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
 	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-	m_matrix = glm::scale(m_matrix, m_size);
+	m_matrix = glm::scale(m_matrix, m_scale * m_dimensions);
 	m_inv_matrix = glm::inverse(m_matrix);
 }

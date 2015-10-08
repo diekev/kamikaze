@@ -23,9 +23,7 @@
 
 #pragma once
 
-#include <memory>
-
-#include "render/GPUProgram.h"
+#include "cube.h"
 
 class GPUBuffer;
 
@@ -39,4 +37,19 @@ public:
 	~TreeTopology() = default;
 
 	void render(const glm::mat4 &MVP);
+};
+
+class VolumeBase : public Object {
+protected:
+	std::unique_ptr<Cube> m_bbox;
+	std::unique_ptr<TreeTopology> m_topology;
+
+	openvdb::FloatGrid::Ptr m_grid;
+	openvdb::Mat4R m_volume_matrix;  /* original volume matrix */
+
+	void updateGridTransform();
+
+public:
+	VolumeBase(openvdb::FloatGrid::Ptr grid);
+	~VolumeBase() = default;
 };
