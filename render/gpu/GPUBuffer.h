@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include <memory>
+
 class GPUBuffer {
 	GLuint m_vao;
 	GLuint m_vertex_buffer;
@@ -35,6 +37,10 @@ class GPUBuffer {
 public:
 	GPUBuffer();
 	~GPUBuffer();
+
+	using UPtr = std::unique_ptr<GPUBuffer>;
+
+	static UPtr create();
 
 	void bind() const;
 	void unbind() const;

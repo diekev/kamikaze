@@ -30,7 +30,7 @@
 class GPUBuffer;
 
 class TreeTopology {
-	std::unique_ptr<GPUBuffer> m_buffer_data;
+	GPUBuffer::UPtr m_buffer_data;
 	GPUProgram m_program;
 	size_t m_elements;
 

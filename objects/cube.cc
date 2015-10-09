@@ -33,8 +33,6 @@
 
 Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 {
-	m_buffer_data = std::unique_ptr<GPUBuffer>(new GPUBuffer());
-
 	m_program.loadFromFile(GL_VERTEX_SHADER, "shader/flat_shader.vert");
 	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shader/flat_shader.frag");
 
@@ -105,6 +103,7 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 	m_elements = 36;
 #endif
 
+	m_buffer_data = GPUBuffer::create();
 	m_buffer_data->bind();
 	m_buffer_data->generateVertexBuffer(&m_vertices[0][0], m_vertices.size() * sizeof(glm::vec3));
 	m_buffer_data->generateIndexBuffer(&indices[0], sizeof(indices));

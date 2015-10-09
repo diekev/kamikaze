@@ -48,6 +48,11 @@ GPUBuffer::~GPUBuffer()
 	}
 }
 
+GPUBuffer::UPtr GPUBuffer::create()
+{
+	return UPtr(new GPUBuffer());
+}
+
 void GPUBuffer::bind() const
 {
 	glBindVertexArray(m_vao);

@@ -39,7 +39,7 @@ public:
 	GPUTexture(GLenum target, GLint texture);
 	~GPUTexture();
 
-	typedef std::unique_ptr<GPUTexture> UPtr;
+	using UPtr = std::unique_ptr<GPUTexture>;
 
 	static UPtr create(GLenum target, GLint texture);
 

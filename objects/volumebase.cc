@@ -31,7 +31,7 @@
 #include "util/utils.h"
 
 TreeTopology::TreeTopology(openvdb::FloatGrid::ConstPtr grid)
-    : m_buffer_data(std::unique_ptr<GPUBuffer>(new GPUBuffer()))
+    : m_buffer_data(GPUBuffer::create())
 {
 	m_program.loadFromFile(GL_VERTEX_SHADER, "shader/tree_topo.vert");
 	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shader/tree_topo.frag");
@@ -190,7 +190,7 @@ VolumeBase::VolumeBase(openvdb::FloatGrid::Ptr grid)
 	m_dimensions = (m_max - m_min);
 	updateMatrix();
 
-	m_buffer_data = std::unique_ptr<GPUBuffer>(new GPUBuffer());
+	m_buffer_data = GPUBuffer::create();
 	m_bbox = std::unique_ptr<Cube>(new Cube(m_min, m_max));
 	m_topology = std::unique_ptr<TreeTopology>(new TreeTopology(grid));
 }
