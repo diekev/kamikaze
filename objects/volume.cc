@@ -39,6 +39,7 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
     , m_axis(-1)
     , m_value_scale(0.0f)
     , m_use_lut(false)
+    , m_num_textures(0)
 {
 	using namespace openvdb;
 	using namespace openvdb::math;
@@ -53,12 +54,12 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
 
 	convert_grid(*m_grid, data, bbox, m_value_scale);
 
-	m_volume_texture = std::unique_ptr<GPUTexture>(new GPUTexture(GL_TEXTURE_3D, 0));
+	m_volume_texture = GPUTexture::create(GL_TEXTURE_3D, m_num_textures++);
 	m_volume_texture->bind();
 	m_volume_texture->setType(GL_FLOAT, GL_RED, GL_RED);
 	m_volume_texture->setMinMagFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 	m_volume_texture->setWrapping(GL_CLAMP_TO_BORDER);
-	m_volume_texture->create(data, bbox.dim().asPointer());
+	m_volume_texture->createTexture(data, bbox.dim().asPointer());
 	m_volume_texture->generateMipMap(0, 4);
 	m_volume_texture->unbind();
 	gl_check_errors();
@@ -87,7 +88,7 @@ void Volume::loadVolumeShader()
 		m_program.addUniform("scale");
 		m_program.addUniform("inv_size");
 
-		glUniform1i(m_program("volume"), 0);
+		glUniform1i(m_program("volume"), m_volume_texture->unit());
 		glUniform1i(m_program("lut"), m_transfer_texture->unit());
 
 		glUniform3fv(m_program("offset"), 1, &m_min[0]);
@@ -149,12 +150,12 @@ void Volume::loadTransferFunction()
 		}
 	}
 
-	m_transfer_texture = std::unique_ptr<GPUTexture>(new GPUTexture(GL_TEXTURE_1D, 1));
+	m_transfer_texture = GPUTexture::create(GL_TEXTURE_1D, m_num_textures++);
 	m_transfer_texture->bind();
 	m_transfer_texture->setType(GL_FLOAT, GL_RGB, GL_RGB);
 	m_transfer_texture->setMinMagFilter(GL_LINEAR, GL_LINEAR);
 	m_transfer_texture->setWrapping(GL_REPEAT);
-	m_transfer_texture->create(&data[0][0], &size);
+	m_transfer_texture->createTexture(&data[0][0], &size);
 	m_transfer_texture->unbind();
 }
 

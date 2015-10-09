@@ -32,7 +32,7 @@
 #include "util/util_render.h"
 
 class Volume : public VolumeBase {
-	std::unique_ptr<GPUTexture> m_volume_texture, m_transfer_texture;
+	GPUTexture::UPtr m_volume_texture, m_transfer_texture;
 
 	int m_num_slices;
 
@@ -40,6 +40,7 @@ class Volume : public VolumeBase {
 	int m_axis;
 	float m_value_scale; // scale of the values contained in the grid (1 / (max - min))
 	bool m_use_lut;
+	char m_num_textures;
 
 	void loadTransferFunction();
 	void loadVolumeShader();
