@@ -43,6 +43,11 @@ void TimeLineWidget::setCurrentFrame(const int frame)
 void TimeLineWidget::setStartFrame(const int start)
 {
 	m_start_frame = start;
+
+	if (m_current_frame < m_start_frame) {
+		m_current_frame = m_start_frame;
+	}
+
 	update();
 }
 
@@ -93,18 +98,19 @@ void TimeLineWidget::mouseReleaseEvent(QMouseEvent *e)
 	m_mouse_pressed = false;
 }
 
-void TimeLineWidget::paintEvent(QPaintEvent *e)
+void TimeLineWidget::paintEvent(QPaintEvent * /*e*/)
 {
 	QPainter p(this);
 	p.setPen(Qt::black);
 
 	QSize size = this->size();
 	const int height = size.height();
-	const int offset = size.width() / float(m_end_frame - m_start_frame) * 10;
+	const float frame_width = size.width() / float(m_end_frame - m_start_frame);
+	const float offset = frame_width * 10.0f;
 
 	QFontMetrics fm = fontMetrics();
 	const int line_height = height - fm.height();
-	int line_offset = 0;
+	float line_offset = 0.0f;
 
 	/* draw vertical lines at an interval of 10 frames */
 
@@ -117,7 +123,7 @@ void TimeLineWidget::paintEvent(QPaintEvent *e)
 	/* draw vertical lines at an interval of 5 frames */
 
 	p.setPen(Qt::darkGray);
-	line_offset = offset / 2;
+	line_offset = offset * 0.5f;
 
 	for (int i(m_start_frame + 5); i < m_end_frame; i += 10) {
 		p.drawLine(line_offset, 0, line_offset, line_height);
@@ -126,9 +132,9 @@ void TimeLineWidget::paintEvent(QPaintEvent *e)
 
 	/* draw current frame marker */
 
-	const int frame_offset = m_current_frame * (size.width() / float(m_end_frame));
+	const int curframe_offset = (m_current_frame - m_start_frame) * frame_width;
 	p.setPen(Qt::green);
-	p.drawLine(frame_offset, 0, frame_offset, line_height);
+	p.drawLine(curframe_offset, 0, curframe_offset, line_height);
 
 	/* draw current frame number beside the marker, inside a rectangle */
 
@@ -136,9 +142,9 @@ void TimeLineWidget::paintEvent(QPaintEvent *e)
 	QRect cfra_rect = fm.boundingRect(cfra_str);
 
 	p.setBrush(QBrush(Qt::green));
-	p.drawRect(frame_offset, line_height - cfra_rect.height() + 4,
+	p.drawRect(curframe_offset, line_height - cfra_rect.height() + 4,
 	           cfra_rect.width() + 4, cfra_rect.height() - 2);
 
 	p.setPen(Qt::black);
-	p.drawText(frame_offset + 2, line_height, cfra_str);
+	p.drawText(curframe_offset + 2, line_height, cfra_str);
 }
