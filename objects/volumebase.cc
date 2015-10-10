@@ -156,6 +156,7 @@ TreeTopology::TreeTopology(openvdb::FloatGrid::ConstPtr grid)
 void TreeTopology::render(const glm::mat4 &MVP)
 {
 	glEnable(GL_DEPTH_TEST);
+	glStencilMask(0xff);
 
 	if (m_program.isValid()) {
 		m_program.enable();
@@ -168,6 +169,7 @@ void TreeTopology::render(const glm::mat4 &MVP)
 		m_program.disable();
 	}
 
+	glStencilMask(0x00);
 	glDisable(GL_DEPTH_TEST);
 }
 
