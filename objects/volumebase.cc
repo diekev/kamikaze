@@ -35,8 +35,8 @@
 TreeTopology::TreeTopology(openvdb::FloatGrid::ConstPtr grid)
     : m_buffer_data(GPUBuffer::create())
 {
-	m_program.loadFromFile(GL_VERTEX_SHADER, "shader/tree_topo.vert");
-	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shader/tree_topo.frag");
+	m_program.loadFromFile(GL_VERTEX_SHADER, "shaders/tree_topology.vert");
+	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shaders/tree_topology.frag");
 
 	m_program.createAndLinkProgram();
 

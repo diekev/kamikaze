@@ -40,8 +40,8 @@ LevelSet::LevelSet(openvdb::FloatGrid::Ptr grid)
 
 void LevelSet::loadShader()
 {
-	m_program.loadFromFile(GL_VERTEX_SHADER, "shader/object.vert");
-	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shader/object.frag");
+	m_program.loadFromFile(GL_VERTEX_SHADER, "shaders/object.vert");
+	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shaders/object.frag");
 	m_program.createAndLinkProgram();
 
 	m_program.enable();

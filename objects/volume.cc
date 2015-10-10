@@ -72,8 +72,8 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
 
 void Volume::loadVolumeShader()
 {
-	m_program.loadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
-	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
+	m_program.loadFromFile(GL_VERTEX_SHADER, "shaders/volume.vert");
+	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shaders/volume.frag");
 
 	m_program.createAndLinkProgram();
 
