@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_5">
+   <layout class="QHBoxLayout" name="horizontalLayout_3">
     <item>
      <widget class="QSplitter" name="vsplitter">
       <property name="orientation">
@@ -54,8 +54,14 @@
           <height>1</height>
          </size>
         </property>
+        <property name="tabPosition">
+         <enum>QTabWidget::North</enum>
+        </property>
         <property name="currentIndex">
          <number>0</number>
+        </property>
+        <property name="movable">
+         <bool>true</bool>
         </property>
         <widget class="QWidget" name="m_object_tab">
          <property name="sizePolicy">
@@ -312,6 +318,9 @@
                  <property name="text">
                   <string>Voxel Size</string>
                  </property>
+                 <property name="buddy">
+                  <cstring>m_voxel_size</cstring>
+                 </property>
                 </widget>
                </item>
                <item>
@@ -363,6 +372,9 @@
               <property name="text">
                <string>Frames Per Second</string>
               </property>
+              <property name="buddy">
+               <cstring>m_fps</cstring>
+              </property>
              </widget>
             </item>
             <item row="0" column="1">
@@ -377,12 +389,18 @@
               <property name="text">
                <string>Start Frame</string>
               </property>
+              <property name="buddy">
+               <cstring>m_star_frame</cstring>
+              </property>
              </widget>
             </item>
             <item row="2" column="0">
              <widget class="QLabel" name="label_9">
               <property name="text">
                <string>End Frame</string>
+              </property>
+              <property name="buddy">
+               <cstring>m_end_frame</cstring>
               </property>
              </widget>
             </item>
@@ -532,6 +550,27 @@
    </slots>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>m_move_x</tabstop>
+  <tabstop>m_move_y</tabstop>
+  <tabstop>m_move_z</tabstop>
+  <tabstop>m_rotate_x</tabstop>
+  <tabstop>m_rotate_y</tabstop>
+  <tabstop>m_rotate_z</tabstop>
+  <tabstop>m_scale_x</tabstop>
+  <tabstop>m_scale_y</tabstop>
+  <tabstop>m_scale_z</tabstop>
+  <tabstop>m_draw_bbox</tabstop>
+  <tabstop>m_draw_tree</tabstop>
+  <tabstop>m_voxel_size</tabstop>
+  <tabstop>m_start_but</tabstop>
+  <tabstop>m_fps</tabstop>
+  <tabstop>m_star_frame</tabstop>
+  <tabstop>m_end_frame</tabstop>
+  <tabstop>pushButton</tabstop>
+  <tabstop>m_draw_grid</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
@@ -543,38 +582,6 @@
     <hint type="sourcelabel">
      <x>-1</x>
      <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>399</x>
-     <y>299</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_draw_tree</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>MainWindow</receiver>
-   <slot>updateObject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>744</x>
-     <y>403</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>410</x>
-     <y>299</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_draw_bbox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>MainWindow</receiver>
-   <slot>updateObject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>723</x>
-     <y>313</y>
     </hint>
     <hint type="destinationlabel">
      <x>399</x>
@@ -615,17 +622,33 @@
    </hints>
   </connection>
   <connection>
-   <sender>m_draw_grid</sender>
+   <sender>m_draw_tree</sender>
    <signal>toggled(bool)</signal>
-   <receiver>m_viewport</receiver>
-   <slot>drawGrid(bool)</slot>
+   <receiver>MainWindow</receiver>
+   <slot>updateObject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>745</x>
-     <y>135</y>
+     <x>795</x>
+     <y>299</y>
     </hint>
     <hint type="destinationlabel">
-     <x>329</x>
+     <x>410</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>m_draw_bbox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>updateObject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>795</x>
+     <y>270</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
      <y>299</y>
     </hint>
    </hints>
@@ -641,8 +664,24 @@
      <y>116</y>
     </hint>
     <hint type="destinationlabel">
-     <x>329</x>
-     <y>299</y>
+     <x>204</x>
+     <y>330</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>m_draw_grid</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>m_viewport</receiver>
+   <slot>drawGrid(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>745</x>
+     <y>135</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>204</x>
+     <y>330</y>
     </hint>
    </hints>
   </connection>
@@ -663,34 +702,34 @@
    </hints>
   </connection>
   <connection>
-   <sender>m_star_frame</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>m_timeline</receiver>
-   <slot>setStartFrame(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>651</x>
-     <y>205</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>413</x>
-     <y>449</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>m_end_frame</sender>
    <signal>valueChanged(int)</signal>
    <receiver>m_timeline</receiver>
    <slot>setEndFrame(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>651</x>
-     <y>267</y>
+     <x>806</x>
+     <y>190</y>
     </hint>
     <hint type="destinationlabel">
-     <x>413</x>
-     <y>449</y>
+     <x>422</x>
+     <y>568</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>m_star_frame</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>m_timeline</receiver>
+   <slot>setStartFrame(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>806</x>
+     <y>158</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>422</x>
+     <y>568</y>
     </hint>
    </hints>
   </connection>
