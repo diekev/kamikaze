@@ -156,7 +156,7 @@ void Viewer::mouseMoveEvent(QMouseEvent *e)
 	update();
 }
 
-void Viewer::mouseReleaseEvent(QMouseEvent *e)
+void Viewer::mouseReleaseEvent(QMouseEvent */*e*/)
 {
 	m_mouse_button = MOUSE_NONE;
 	update();

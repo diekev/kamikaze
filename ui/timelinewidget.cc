@@ -93,7 +93,7 @@ void TimeLineWidget::updateCurrentFrame(const int pos_x)
 	update();
 }
 
-void TimeLineWidget::mouseReleaseEvent(QMouseEvent *e)
+void TimeLineWidget::mouseReleaseEvent(QMouseEvent */*e*/)
 {
 	m_mouse_pressed = false;
 }

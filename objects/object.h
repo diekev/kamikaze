@@ -60,7 +60,7 @@ protected:
 
 public:
 	Object();
-	~Object() = default;
+	virtual ~Object() = default;
 
 	virtual int type() const { return OBJECT; }
 
