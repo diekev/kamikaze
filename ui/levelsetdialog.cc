@@ -12,53 +12,46 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software  Foundation,
+ * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * The Original Code is Copyright (C) 2015 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
- *
  */
 
-#pragma once
+#include "levelsetdialog.h"
+#include "ui_levelsetdialog.h"
 
-#include <QMainWindow>
-
-namespace Ui {
-class MainWindow;
+LevelSetDialog::LevelSetDialog(QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::LevelSetDialog)
+{
+	ui->setupUi(this);
 }
 
-class LevelSetDialog;
-class Scene;
-class QTimer;
+LevelSetDialog::~LevelSetDialog()
+{
+	delete ui;
+}
 
-class MainWindow : public QMainWindow {
-	Q_OBJECT
+float LevelSetDialog::voxelSize() const
+{
+	return ui->m_voxel_size->value();
+}
 
-	Ui::MainWindow *ui;
-	Scene *m_scene;
-	QTimer *m_timer;
-	bool m_timer_has_started;
+float LevelSetDialog::halfWidth() const
+{
+	return ui->m_half_width->value();
+}
 
-	LevelSetDialog *m_level_set_dialog;
+float LevelSetDialog::radius() const
+{
+	return ui->m_radius->value();
+}
 
-private Q_SLOTS:
-	void openFile();
-	void updateObject();
-	void updateObjectTab();
-	void addCube();
-	void addLevelSet();
-	void startAnimation();
-	void updateFrame();
-
-protected:
-	bool eventFilter(QObject *obj, QEvent *e);
-
-public:
-	explicit MainWindow(QWidget *parent = nullptr);
-	~MainWindow();
-
-	void openFile(const QString &filename);
-};
+int LevelSetDialog::levelSetType() const
+{
+	return ui->m_combox_box->currentIndex();
+}

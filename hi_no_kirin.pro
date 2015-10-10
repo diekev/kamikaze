@@ -44,7 +44,8 @@ SOURCES += \
     ui/timelinewidget.cc \
 	util/util_opengl.cc \
 	util/util_openvdb.cc \
-	util/utils.cc
+	util/utils.cc \
+    ui/levelsetdialog.cc
 
 HEADERS += \
 	objects/cube.h \
@@ -65,7 +66,8 @@ HEADERS += \
 	util/util_opengl.h \
 	util/util_openvdb.h \
 	util/utils.h \
-    util/util_render.h
+    util/util_render.h \
+    ui/levelsetdialog.h
 
 OTHER_FILES += \
 	shader/flat_shader.frag \
@@ -96,4 +98,5 @@ QMAKE_EXTRA_TARGETS += copy_files
 POST_TARGETDEPS += copy_files
 
 FORMS += \
-    ui/mainwindow.ui
+    ui/mainwindow.ui \
+    ui/levelsetdialog.ui

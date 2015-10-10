@@ -498,7 +498,7 @@
    </property>
    <widget class="QMenu" name="menuFichier">
     <property name="title">
-     <string>Fichier</string>
+     <string>File</string>
     </property>
     <addaction name="m_open_file_act"/>
    </widget>
@@ -515,7 +515,7 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="m_open_file_act">
    <property name="text">
-    <string>Ouvrir</string>
+    <string>Open VDB File</string>
    </property>
   </action>
   <action name="m_add_cube">
@@ -525,7 +525,7 @@
   </action>
   <action name="actionLevel_Set_Sphere">
    <property name="text">
-    <string>Level Set Sphere</string>
+    <string>Level Set</string>
    </property>
   </action>
  </widget>
@@ -609,7 +609,7 @@
    <sender>actionLevel_Set_Sphere</sender>
    <signal>triggered()</signal>
    <receiver>MainWindow</receiver>
-   <slot>addLevelSetSphere()</slot>
+   <slot>addLevelSet()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>
@@ -738,7 +738,7 @@
   <slot>openFile()</slot>
   <slot>updateObject()</slot>
   <slot>addCube()</slot>
-  <slot>addLevelSetSphere()</slot>
+  <slot>addLevelSet()</slot>
   <slot>startAnimation()</slot>
  </slots>
 </ui>

@@ -28,6 +28,7 @@
 #include <QTimer>
 
 #include <openvdb/tools/LevelSetSphere.h>
+#include <openvdb/tools/LevelSetUtil.h>
 
 #include "mainwindow.h"
 
@@ -40,6 +41,8 @@
 #include "util/utils.h"
 #include "util/util_openvdb.h"
 
+#include "levelsetdialog.h"
+
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -48,6 +51,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_scene(new Scene)
     , m_timer(new QTimer(this))
     , m_timer_has_started(false)
+    , m_level_set_dialog(new LevelSetDialog(this))
 {
 	qApp->installEventFilter(this);
 	ui->setupUi(this);
@@ -265,13 +269,34 @@ void MainWindow::addCube()
 	m_scene->addObject(ob);
 }
 
-void MainWindow::addLevelSetSphere()
+void MainWindow::addLevelSet()
 {
-	using namespace openvdb;
-	FloatGrid::Ptr sphere = tools::createLevelSetSphere<FloatGrid>(2.0f, Vec3f(0.0f), 0.1f);
+	m_level_set_dialog->show();
 
-	Object *ob = new LevelSet(sphere);
-	m_scene->addObject(ob);
+	if (m_level_set_dialog->exec()) {
+		using namespace openvdb;
+		using namespace openvdb::math;
+
+		const float voxel_size = m_level_set_dialog->voxelSize();
+		const float half_width = m_level_set_dialog->halfWidth();
+		const float radius = m_level_set_dialog->radius();
+		FloatGrid::Ptr ls;
+
+		if (m_level_set_dialog->levelSetType() == ADD_LEVEL_SET_SPHERE) {
+			ls = tools::createLevelSetSphere<FloatGrid>(radius, Vec3f(0.0f),
+			                                            voxel_size, half_width);
+		}
+		else {
+			Transform xform = *Transform::createLinearTransform(voxel_size);
+			Vec3s min(-1.0f * radius), max(1.0f * radius);
+			BBox<math::Vec3s> bbox(min, max);
+
+			ls = tools::createLevelSetBox<FloatGrid>(bbox, xform, half_width);
+		}
+
+		Object *ob = new LevelSet(ls);
+		m_scene->addObject(ob);
+	}
 }
 
 void MainWindow::startAnimation()
