@@ -62,8 +62,6 @@ void LevelSet::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 
 		m_need_update = false;
 	}
 
-	glEnable(GL_DEPTH_TEST);
-
 	if (m_draw_bbox) {
 		m_bbox->render(MVP, N, view_dir);
 	}
@@ -71,6 +69,8 @@ void LevelSet::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 
 	if (m_draw_topology) {
 		m_topology->render(MVP);
 	}
+
+	glEnable(GL_DEPTH_TEST);
 
 	if (m_program.isValid()) {
 		m_program.enable();
