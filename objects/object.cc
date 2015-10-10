@@ -39,6 +39,7 @@ Object::Object()
     , m_draw_bbox(false)
     , m_draw_topology(false)
     , m_need_update(false)
+    , m_is_active(false)
 {}
 
 bool Object::intersect(const Ray &ray, float &min) const
@@ -117,11 +118,15 @@ void Object::setRotation(const glm::vec3 &rotation)
 
 void Object::updateMatrix()
 {
+	m_min = m_pos - m_dimensions / 2.0f;
+	m_max = m_min + m_dimensions;
+
 	m_matrix = glm::mat4(1.0f);
 	m_matrix = glm::translate(m_matrix, m_pos);
 	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
 	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
 	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 	m_matrix = glm::scale(m_matrix, m_scale * m_dimensions);
+
 	m_inv_matrix = glm::inverse(m_matrix);
 }

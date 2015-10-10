@@ -69,6 +69,8 @@ void Viewer::initializeGL()
 	}
 
 	glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
+	glEnable(GL_STENCIL_TEST);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
 	m_grid = new Grid(20, 20);
 	m_camera->update();
@@ -84,7 +86,9 @@ void Viewer::resizeGL(int w, int h)
 
 void Viewer::paintGL()
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+	glStencilMask(0x00);
 
 	m_camera->update();
 

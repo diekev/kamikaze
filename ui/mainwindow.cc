@@ -294,7 +294,7 @@ void MainWindow::addLevelSet()
 			ls = tools::createLevelSetBox<FloatGrid>(bbox, xform, half_width);
 		}
 
-		Object *ob = new LevelSet(ls);
+		Object *ob = new LevelSet(ls->deepCopy());
 		m_scene->addObject(ob);
 	}
 }

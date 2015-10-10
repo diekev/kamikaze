@@ -21,6 +21,7 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include <openvdb/tools/VolumeToMesh.h>
@@ -30,7 +31,7 @@
 #include "util/utils.h"
 #include "util/util_opengl.h"
 
-LevelSet::LevelSet(openvdb::FloatGrid::Ptr &grid)
+LevelSet::LevelSet(openvdb::FloatGrid::Ptr grid)
     : VolumeBase(grid)
 {
 	loadShader();
@@ -50,6 +51,7 @@ void LevelSet::loadShader()
 		m_program.addUniform("matrix");
 		m_program.addUniform("MVP");
 		m_program.addUniform("N");
+		m_program.addUniform("for_outline");
 	}
 	m_program.disable();
 }
@@ -70,6 +72,11 @@ void LevelSet::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 
 		m_topology->render(MVP);
 	}
 
+	if (m_is_active) {
+		glStencilFunc(GL_ALWAYS, 1, 0xff);
+		glStencilMask(0xff);
+	}
+
 	glEnable(GL_DEPTH_TEST);
 
 	if (m_program.isValid()) {
@@ -79,6 +86,7 @@ void LevelSet::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 
 		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(m_matrix));
 		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 		glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(N));
+		glUniform1i(m_program("for_outline"), false);
 		glDrawElements(GL_TRIANGLES, m_elements, GL_UNSIGNED_INT, nullptr);
 
 		m_buffer_data->unbind();
@@ -86,6 +94,30 @@ void LevelSet::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 
 	}
 
 	glDisable(GL_DEPTH_TEST);
+
+	if (m_is_active) {
+		glStencilFunc(GL_NOTEQUAL, 1, 0xff);
+		glStencilMask(0x00);
+
+		/* scale up the object */
+		glm::mat4 scaled_mat = glm::scale(m_matrix, glm::vec3(1.01f));
+
+		if (m_program.isValid()) {
+			m_program.enable();
+			m_buffer_data->bind();
+
+			glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(scaled_mat));
+			glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+			glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(N));
+			glUniform1i(m_program("for_outline"), true);
+			glDrawElements(GL_TRIANGLES, m_elements, GL_UNSIGNED_INT, nullptr);
+
+			m_buffer_data->unbind();
+			m_program.disable();
+		}
+
+		glStencilMask(0xFF);
+	}
 }
 
 void LevelSet::generateMesh()

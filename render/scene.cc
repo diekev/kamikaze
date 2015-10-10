@@ -70,8 +70,14 @@ void Scene::keyboardEvent(int key)
 
 void Scene::addObject(Object *object)
 {
+	if (m_active_object != -1) {
+		m_objects[m_active_object]->isActive(false);
+	}
+
+	object->isActive(true);
 	m_objects.push_back(object);
 	m_active_object = m_objects.size() - 1;
+
 	Q_EMIT objectChanged();
 }
 
@@ -99,7 +105,9 @@ void Scene::intersect(const Ray &ray)
 	}
 
 	if (selected_object != -1 && selected_object != m_active_object) {
+		m_objects[m_active_object]->isActive(false);
 		m_active_object = selected_object;
+		m_objects[m_active_object]->isActive(true);
 		Q_EMIT objectChanged();
 	}
 }
@@ -196,7 +204,11 @@ void Scene::rotateObjectZ(double value)
 
 void Scene::setVoxelSize(double value)
 {
-	VolumeBase *vb = static_cast<VolumeBase *>(m_objects[m_active_object]);
-	vb->setVoxelSize(value);
-	Q_EMIT updateViewport();
+	Object *ob = m_objects[m_active_object];
+
+	if (ob->type() == VOLUME || ob->type() == LEVEL_SET) {
+		VolumeBase *vb = static_cast<VolumeBase *>(m_objects[m_active_object]);
+		vb->setVoxelSize(value);
+		Q_EMIT updateViewport();
+	}
 }

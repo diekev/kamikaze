@@ -54,7 +54,7 @@ protected:
 	glm::vec3 m_min, m_max, m_pos;
 	glm::mat4 m_matrix, m_inv_matrix;
 
-	bool m_draw_bbox, m_draw_topology, m_need_update;
+	bool m_draw_bbox, m_draw_topology, m_need_update, m_is_active;
 
 	void updateMatrix();
 
@@ -79,4 +79,6 @@ public:
 	void setScale(const glm::vec3 &scale);
 	glm::vec3 rotation() const;
 	void setRotation(const glm::vec3 &rotation);
+
+	void isActive(const bool b) { m_is_active = b; }
 };
