@@ -54,4 +54,6 @@ public:
 	void changeNumSlicesBy(int x);
 
 	void toggleUseLUT();
+
+	int type() const { return VOLUME; }
 };

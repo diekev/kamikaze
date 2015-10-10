@@ -29,13 +29,21 @@
 
 #include "util_render.h"
 
+class Brush;
 class Object;
+
+enum {
+	SCENE_MODE_OBJECT = 0,
+	SCENE_MODE_SCULPT = 1,
+};
 
 class Scene : public QObject {
 	Q_OBJECT
 
 	std::vector<Object *> m_objects;
+	Brush *m_brush;
 	int m_active_object;
+	int m_mode;
 
 Q_SIGNALS:
 	void objectChanged();
@@ -53,6 +61,13 @@ public Q_SLOTS:
 	void rotateObjectZ(double value);
 	void setVoxelSize(double value);
 
+	void setBrushMode(int mode);
+	void setBrushRadius(double value);
+	void setBrushAmount(double value);
+
+public Q_SLOTS:
+	void setMode(int mode);
+
 public:
 	Scene();
 	~Scene();
@@ -64,4 +79,6 @@ public:
 
 	void render(const glm::mat4 &MV, const glm::mat4 &P, const glm::vec3 &view_dir);
 	void intersect(const Ray &ray);
+
+	int mode() const;
 };

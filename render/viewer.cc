@@ -45,7 +45,7 @@ Viewer::Viewer(QWidget *parent)
     , m_height(0)
     , m_draw_grid(true)
     , m_bg(glm::vec4(0.5f, 0.5f, 0.5f, 1.0f))
-    , m_camera(new Camera())
+    , m_camera(new Camera(m_width, m_height))
     , m_grid(nullptr)
     , m_scene(nullptr)
 {
@@ -157,6 +157,11 @@ void Viewer::mouseMoveEvent(QMouseEvent *e)
 	const int y = e->pos().y();
 
 	m_camera->mouseMoveEvent(m_mouse_button, m_modifier, x, y);
+
+	if (m_scene->mode() == SCENE_MODE_SCULPT && m_mouse_button == MOUSE_LEFT) {
+		intersectScene(x, y);
+	}
+
 	update();
 }
 
@@ -175,10 +180,10 @@ void Viewer::keyPressEvent(QKeyEvent *e)
 void Viewer::wheelEvent(QWheelEvent *e)
 {
 	if (e->delta() < 0) {
-		m_mouse_button = MOUSSE_SCROLL_DOWN;
+		m_mouse_button = MOUSE_SCROLL_DOWN;
 	}
 	else {
-		m_mouse_button = MOUSSE_SCROLL_UP;
+		m_mouse_button = MOUSE_SCROLL_UP;
 	}
 
 	m_camera->mouseWheelEvent(m_mouse_button);

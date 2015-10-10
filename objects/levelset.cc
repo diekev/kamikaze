@@ -26,6 +26,7 @@
 
 #include <openvdb/tools/VolumeToMesh.h>
 
+#include "brush.h"
 #include "levelset.h"
 
 #include "util/utils.h"
@@ -33,7 +34,9 @@
 
 LevelSet::LevelSet(openvdb::FloatGrid::Ptr grid)
     : VolumeBase(grid)
+    , m_isector(nullptr)
 {
+	m_isector = std::unique_ptr<isector_t>(new isector_t(*m_grid));
 	loadShader();
 	generateMesh();
 }
@@ -122,8 +125,6 @@ void LevelSet::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 
 
 void LevelSet::generateMesh()
 {
-	Timer(__func__);
-
 	using namespace openvdb;
 	using openvdb::Index64;
 
@@ -181,6 +182,7 @@ void LevelSet::generateMesh()
 		}
 	}
 
+	m_buffer_data.reset(new GPUBuffer());
 	m_buffer_data->bind();
 	m_buffer_data->generateVertexBuffer(&m_vertices[0][0], m_vertices.size() * sizeof(glm::vec3));
 	m_buffer_data->generateIndexBuffer(&indices[0], indices.size() * sizeof(GLuint));
@@ -192,4 +194,58 @@ void LevelSet::generateMesh()
 	gl_check_errors();
 
 	m_elements = indices.size();
+}
+
+bool LevelSet::intersectLS(const Ray &ray, Brush *brush)
+{
+	if (m_topology_changed) {
+		if (m_draw_topology) {
+			m_topology.reset(new TreeTopology(m_grid));
+		}
+
+		m_isector.reset(new isector_t(*m_grid));
+		generateMesh();
+		m_topology_changed = false;
+	}
+
+	using namespace openvdb;
+
+	openvdb::math::Vec3d P(ray.pos.x, ray.pos.y, ray.pos.z);
+	openvdb::math::Vec3d D(ray.dir.x, ray.dir.y, ray.dir.z);
+	D.normalize();
+
+	ray_t vray(P, D, 1e-5, std::numeric_limits<double>::max());
+
+	openvdb::math::Vec3d position;
+
+	if (m_isector->intersectsWS(vray, position)) {
+		const float radius = brush->radius();
+		const float amount = brush->amount();
+
+		FloatGrid::Accessor accessor = m_grid->getAccessor();
+		math::Coord ijk = m_grid->transform().worldToIndexNodeCentered(position);
+		math::Coord co(ijk);
+		int &x = ijk[0], &y = ijk[1], &z = ijk[2];
+
+		float influence;
+		for (x = co[0] - radius; x < co[0] + radius; ++x) {
+			for (y = co[1] - radius; y < co[1] + radius; ++y) {
+				for (z = co[2] - radius; z < co[2] + radius; ++z) {
+					influence = brush->influence(co, ijk);
+
+					if (influence > 0.0f) {
+						//accessor.modifyValue(ijk, addOp);
+						float value = accessor.getValue(ijk);
+						accessor.setValue(ijk, value - amount * influence);
+					}
+				}
+			}
+		}
+
+		m_topology_changed = true;
+
+		return true;
+	}
+
+	return false;
 }

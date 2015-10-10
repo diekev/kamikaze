@@ -22,48 +22,58 @@
  *
  */
 
-#pragma once
+#include "brush.h"
 
-#include <QMainWindow>
+/* Note: since we are dealing with level sets where exterior values are positive
+ * and interior ones are negative, addition and subtraction are swapped.
+ */
 
-namespace Ui {
-class MainWindow;
+void addOp(float &value)
+{
+	value -= 0.1f;
 }
 
-class LevelSetDialog;
-class Scene;
-class QComboBox;
-class QListWidget;
-class QTimer;
+void subOp(float &value)
+{
+	value += 0.1f;
+}
 
-class MainWindow : public QMainWindow {
-	Q_OBJECT
+Brush::Brush()
+    : m_radius(0.0f)
+    , m_inv_radius(0.0f)
+    , m_amount(0.0f)
+    , m_mode(BRUSH_MODE_ADD)
+{}
 
-	Ui::MainWindow *ui;
-	Scene *m_scene;
-	QTimer *m_timer;
-	bool m_timer_has_started;
-	QComboBox *m_scene_mode_box;
-	QListWidget *m_scene_mode_list;
+Brush::Brush(const float radius, const float amount)
+    : m_radius(radius)
+    , m_inv_radius(1.0f / m_radius)
+    , m_amount(amount)
+    , m_mode(BRUSH_MODE_ADD)
+{}
 
-	LevelSetDialog *m_level_set_dialog;
+void Brush::radius(const float rad)
+{
+	m_radius = rad;
+	m_inv_radius = 1.0f / m_radius;
+}
 
-private Q_SLOTS:
-	void openFile();
-	void updateObject();
-	void updateObjectTab();
-	void addCube();
-	void addLevelSet();
-	void startAnimation();
-	void updateFrame();
-	void setSceneMode(int idx);
+float Brush::radius() const
+{
+	return m_radius;
+}
 
-protected:
-	bool eventFilter(QObject *obj, QEvent *e);
+void Brush::amount(const float amnt)
+{
+	m_amount = amnt;
+}
 
-public:
-	explicit MainWindow(QWidget *parent = nullptr);
-	~MainWindow();
+float Brush::amount() const
+{
+	return ((m_mode == BRUSH_MODE_ADD) ? m_amount : -m_amount);
+}
 
-	void openFile(const QString &filename);
-};
+void Brush::mode(const int mode)
+{
+	m_mode = mode;
+}

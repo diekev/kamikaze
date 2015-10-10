@@ -28,11 +28,14 @@
 
 #include "scene.h"
 
+#include "objects/brush.h"
 #include "objects/levelset.h"
 #include "objects/volume.h"
 
 Scene::Scene()
-    : m_active_object(-1)
+    : m_brush(new Brush(5.0f, 0.1f))
+    , m_active_object(-1)
+    , m_mode(SCENE_MODE_OBJECT)
 {}
 
 Scene::~Scene()
@@ -93,23 +96,41 @@ void Scene::render(const glm::mat4 &MV, const glm::mat4 &P, const glm::vec3 &vie
 
 void Scene::intersect(const Ray &ray)
 {
-	float min = std::numeric_limits<float>::max();
-	int selected_object = -1, index = 0;
+	if (m_mode == SCENE_MODE_OBJECT) {
+		float min = std::numeric_limits<float>::max();
+		int selected_object = -1, index = 0;
 
-	for (auto &object : m_objects) {
-		if (object->intersect(ray, min)) {
-			selected_object = index;
+		for (auto &object : m_objects) {
+			if (object->intersect(ray, min)) {
+				selected_object = index;
+			}
+
+			++index;
 		}
 
-		++index;
+		if (selected_object != -1 && selected_object != m_active_object) {
+			m_objects[m_active_object]->isActive(false);
+			m_active_object = selected_object;
+			m_objects[m_active_object]->isActive(true);
+			Q_EMIT objectChanged();
+		}
 	}
+	else {
+		LevelSet *ls = (LevelSet *)m_objects[m_active_object];
+		if (ls->intersectLS(ray, m_brush)) {
+			// TODO: separate intersection from sculpting.
+		}
+	}
+}
 
-	if (selected_object != -1 && selected_object != m_active_object) {
-		m_objects[m_active_object]->isActive(false);
-		m_active_object = selected_object;
-		m_objects[m_active_object]->isActive(true);
-		Q_EMIT objectChanged();
-	}
+int Scene::mode() const
+{
+	return m_mode;
+}
+
+void Scene::setMode(int mode)
+{
+	m_mode = mode;
 }
 
 Object *Scene::currentObject()
@@ -211,4 +232,19 @@ void Scene::setVoxelSize(double value)
 		vb->setVoxelSize(value);
 		Q_EMIT updateViewport();
 	}
+}
+
+void Scene::setBrushMode(int mode)
+{
+	m_brush->mode(mode);
+}
+
+void Scene::setBrushRadius(double value)
+{
+	m_brush->radius(value);
+}
+
+void Scene::setBrushAmount(double value)
+{
+	m_brush->amount(value);
 }

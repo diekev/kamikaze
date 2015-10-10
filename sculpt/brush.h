@@ -12,41 +12,47 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
+ * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * The Original Code is Copyright (C) 2015 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
+ *
  */
 
 #pragma once
 
-#include <glm/glm.hpp>
-
 #include <openvdb/openvdb.h>
-#include <openvdb/tools/RayIntersector.h>
 
-#include "volumebase.h"
+using openvdb::math::Coord;
 
-class Brush;
+enum {
+	BRUSH_MODE_ADD = 0,
+	BRUSH_MODE_SUB = 1,
+};
 
-class LevelSet : public VolumeBase {
-	typedef openvdb::math::Ray<double> ray_t;
-	typedef openvdb::tools::LevelSetRayIntersector<openvdb::FloatGrid> isector_t;
-	std::unique_ptr<isector_t> m_isector;
-
-	void generateMesh();
-	void loadShader();
+class Brush {
+	float m_radius, m_inv_radius;
+	float m_amount;
+	int m_mode;
 
 public:
-	LevelSet(openvdb::FloatGrid::Ptr grid);
-	~LevelSet() = default;
+	Brush();
+	Brush(const float radius, const float amount);
+	~Brush() = default;
 
-	int type() const { return LEVEL_SET; }
+	inline float influence(const Coord &center, const Coord &pos)
+	{
+		return 1.0f - (center - pos).asVec3d().length() * m_inv_radius + 0.001f;
+	}
 
-	void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir);
+	void radius(const float rad);
+	float radius() const;
 
-	bool intersectLS(const Ray &ray, Brush *brush);
+	void amount(const float amnt);
+	float amount() const;
+
+	void mode(const int mode);
 };

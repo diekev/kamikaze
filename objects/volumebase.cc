@@ -183,6 +183,7 @@ VolumeBase::VolumeBase(openvdb::FloatGrid::Ptr grid)
 	m_grid = grid;
 	m_volume_matrix = m_grid->transform().baseMap()->getAffineMap()->getMat4();
 	m_voxel_size = m_grid->transform().voxelSize()[0];
+	m_topology_changed = false;
 
 	CoordBBox bbox = m_grid->evalActiveVoxelBoundingBox();
 
@@ -211,9 +212,11 @@ void VolumeBase::setVoxelSize(const float voxel_size)
 		return;
 	}
 
-	m_voxel_size = voxel_size;
-
-	resampleGridVoxel();
+	if (m_voxel_size != voxel_size) {
+		m_voxel_size = voxel_size;
+		resampleGridVoxel();
+		m_topology_changed = true;
+	}
 }
 
 void VolumeBase::updateGridTransform()
@@ -245,12 +248,29 @@ void VolumeBase::updateGridTransform()
 
 void VolumeBase::resampleGridVoxel()
 {
-	typedef openvdb::math::Transform Transform;
+	using namespace openvdb;
 
-	openvdb::FloatGrid::Ptr output = openvdb::FloatGrid::create(m_grid->background());
-	output->setTransform(Transform::createLinearTransform(m_voxel_size));
+	typedef math::Transform Transform;
 
-	openvdb::tools::resampleToMatch<openvdb::tools::PointSampler>(*m_grid, *output);
+	Transform::Ptr xform = Transform::createLinearTransform(m_voxel_size);
+	FloatGrid::Ptr output;
+
+	if (m_grid->getGridClass() == GRID_LEVEL_SET) {
+		const float halfwidth = m_grid->background() * (1.0f / m_grid->transform().voxelSize()[0]);
+		util::NullInterrupter interrupt;
+
+		output = tools::doLevelSetRebuild(*m_grid, zeroVal<float>(),
+		                                  halfwidth, halfwidth,
+		                                  xform.get(), &interrupt);
+	}
+	else {
+		output = openvdb::FloatGrid::create(m_grid->background());
+		output->setTransform(xform);
+		output->setName(m_grid->getName());
+		output->setGridClass(m_grid->getGridClass());
+
+		tools::resampleToMatch<openvdb::tools::PointSampler>(*m_grid, *output);
+	}
 
 	m_grid.swap(output);
 

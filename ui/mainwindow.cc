@@ -22,8 +22,10 @@
  *
  */
 
+#include <QComboBox>
 #include <QFileDialog>
 #include <QKeyEvent>
+#include <QListWidget>
 #include <QSplitter>
 #include <QTimer>
 
@@ -45,12 +47,26 @@
 
 #include "ui_mainwindow.h"
 
+void disableListItem(QListWidget *list, int index)
+{
+	QListWidgetItem *item = list->item(index);
+	item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
+}
+
+void enableListItem(QListWidget *list, int index)
+{
+	QListWidgetItem *item = list->item(index);
+	item->setFlags(item->flags() | Qt::ItemIsEnabled);
+}
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , m_scene(new Scene)
     , m_timer(new QTimer(this))
     , m_timer_has_started(false)
+    , m_scene_mode_box(new QComboBox(this))
+    , m_scene_mode_list(new QListWidget(m_scene_mode_box))
     , m_level_set_dialog(new LevelSetDialog(this))
 {
 	qApp->installEventFilter(this);
@@ -59,6 +75,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 	connect(m_scene, SIGNAL(objectChanged()), this, SLOT(updateObjectTab()));
 	ui->tabWidget->setTabEnabled(0, false);
+	ui->tabWidget->setTabEnabled(3, false);
 
 	/* set default widths for the viewport and side panel in the horizontal splitter */
 	const int width = ui->splitter->size().width();
@@ -88,8 +105,27 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(ui->m_rotate_z, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectZ(double)));
 	connect(ui->m_voxel_size, SIGNAL(valueChanged(double)), m_scene, SLOT(setVoxelSize(double)));
 
+	/* Brush */
+	connect(ui->m_brush_amount, SIGNAL(valueChanged(double)), m_scene, SLOT(setBrushAmount(double)));
+	connect(ui->m_brush_radius, SIGNAL(valueChanged(double)), m_scene, SLOT(setBrushRadius(double)));
+	connect(ui->m_brush_mode, SIGNAL(currentIndexChanged(int)), m_scene, SLOT(setBrushMode(int)));
+
 	connect(m_scene, SIGNAL(updateViewport()), ui->m_viewport, SLOT(update()));
 	connect(m_timer, SIGNAL(timeout()), this, SLOT(updateFrame()));
+
+	/* Cannot add widget to toolbar in Qt Designer, do a little hack to disable
+	 * items in the box */
+	ui->toolBar->addWidget(m_scene_mode_box);
+
+	m_scene_mode_list->hide();
+	m_scene_mode_box->setModel(m_scene_mode_list->model());
+
+	m_scene_mode_list->addItem("Object Mode");
+	m_scene_mode_list->addItem("Sculpt Mode");
+
+	disableListItem(m_scene_mode_list, 1);
+
+	connect(m_scene_mode_box, SIGNAL(currentIndexChanged(int)), this, SLOT(setSceneMode(int)));
 }
 
 MainWindow::~MainWindow()
@@ -216,6 +252,8 @@ void MainWindow::updateObject()
 	ui->m_viewport->update();
 }
 
+// TODO: some of these trigger updates which could create unnecessary work and
+//       lead to crashes in some cases.
 void MainWindow::updateObjectTab()
 {
 	Object *ob = m_scene->currentObject();
@@ -258,6 +296,13 @@ void MainWindow::updateObjectTab()
 
 	ui->m_voxel_size->setEnabled(is_volume);
 	ui->m_draw_tree->setEnabled(is_volume);
+
+	if (ob->type() == LEVEL_SET) {
+		enableListItem(m_scene_mode_list, 1);
+	}
+	else {
+		disableListItem(m_scene_mode_list, 1);
+	}
 }
 
 void MainWindow::addCube()
@@ -316,4 +361,10 @@ void MainWindow::startAnimation()
 void MainWindow::updateFrame()
 {
 	ui->m_timeline->incrementFrame();
+}
+
+void MainWindow::setSceneMode(int idx)
+{
+	m_scene->setMode(idx);
+	ui->tabWidget->setTabEnabled(3, idx == SCENE_MODE_SCULPT);
 }

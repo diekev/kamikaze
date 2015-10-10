@@ -50,6 +50,7 @@ protected:
 	openvdb::Mat4R m_volume_matrix;  /* original volume matrix */
 
 	float m_voxel_size;
+	bool m_topology_changed;
 
 	void updateGridTransform();
 	void resampleGridVoxel();

@@ -45,7 +45,8 @@ SOURCES += \
 	util/util_opengl.cc \
 	util/util_openvdb.cc \
 	util/utils.cc \
-    ui/levelsetdialog.cc
+    ui/levelsetdialog.cc \
+    sculpt/brush.cc
 
 HEADERS += \
 	objects/cube.h \
@@ -67,7 +68,8 @@ HEADERS += \
 	util/util_openvdb.h \
 	util/utils.h \
     util/util_render.h \
-    ui/levelsetdialog.h
+    ui/levelsetdialog.h \
+    sculpt/brush.h
 
 OTHER_FILES += \
 	render/shaders/flat_shader.frag \
