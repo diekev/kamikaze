@@ -48,9 +48,14 @@ void Scene::keyboardEvent(int key)
 		return;
 	}
 
-//	Object *ob = m_objects[m_active_object];
+	Object *ob = m_objects[m_active_object];
 
 	switch (key) {
+		case Qt::Key_Delete:
+			m_objects.erase(m_objects.begin() + m_active_object);
+			delete ob;
+			m_active_object = -1;
+			break;
 //		case Qt::Key_Minus:
 //			m_volume->changeNumSlicesBy(-1);
 //			break;
