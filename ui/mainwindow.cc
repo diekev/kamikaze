@@ -273,7 +273,7 @@ void MainWindow::addLevelSet()
 {
 	m_level_set_dialog->show();
 
-	if (m_level_set_dialog->exec()) {
+	if (m_level_set_dialog->exec() == QDialog::Accepted) {
 		using namespace openvdb;
 		using namespace openvdb::math;
 
