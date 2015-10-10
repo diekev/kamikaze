@@ -43,7 +43,7 @@
          <bool>true</bool>
         </property>
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
@@ -55,15 +55,27 @@
          </size>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="m_object_tab">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <attribute name="title">
           <string>Object</string>
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
            <widget class="QGroupBox" name="groupBox_3">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="title">
              <string>Transform</string>
             </property>
@@ -255,7 +267,7 @@
           <item>
            <widget class="QGroupBox" name="groupBox">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -277,6 +289,42 @@
                 <string>Topology</string>
                </property>
               </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupBox_4">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="title">
+             <string>Properties</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_7">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout">
+               <item>
+                <widget class="QLabel" name="label_10">
+                 <property name="text">
+                  <string>Voxel Size</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QDoubleSpinBox" name="m_voxel_size">
+                 <property name="minimum">
+                  <double>0.010000000000000</double>
+                 </property>
+                 <property name="singleStep">
+                  <double>0.010000000000000</double>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
             </layout>
            </widget>
@@ -465,15 +513,6 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>Viewer</class>
-   <extends>QOpenGLWidget</extends>
-   <header>viewer.h</header>
-   <slots>
-    <slot>changeBackground()</slot>
-    <slot>drawGrid(bool)</slot>
-   </slots>
-  </customwidget>
-  <customwidget>
    <class>TimeLineWidget</class>
    <extends>QWidget</extends>
    <header>timelinewidget.h</header>
@@ -481,6 +520,15 @@
    <slots>
     <slot>setStartFrame(int)</slot>
     <slot>setEndFrame(int)</slot>
+   </slots>
+  </customwidget>
+  <customwidget>
+   <class>Viewer</class>
+   <extends>QOpenGLWidget</extends>
+   <header>viewer.h</header>
+   <slots>
+    <slot>changeBackground()</slot>
+    <slot>drawGrid(bool)</slot>
    </slots>
   </customwidget>
  </customwidgets>

@@ -49,9 +49,17 @@ protected:
 	openvdb::FloatGrid::Ptr m_grid;
 	openvdb::Mat4R m_volume_matrix;  /* original volume matrix */
 
+	float m_voxel_size;
+
 	void updateGridTransform();
+	void resampleGridVoxel();
 
 public:
 	VolumeBase(openvdb::FloatGrid::Ptr grid);
 	~VolumeBase() = default;
+
+	int type() const { return VOLUME; }
+
+	float voxelSize() const;
+	void setVoxelSize(const float voxel_size);
 };

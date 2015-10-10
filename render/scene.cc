@@ -188,3 +188,10 @@ void Scene::rotateObjectZ(double value)
 	ob->setRotation(rot);
 	Q_EMIT updateViewport();
 }
+
+void Scene::setVoxelSize(double value)
+{
+	VolumeBase *vb = static_cast<VolumeBase *>(m_objects[m_active_object]);
+	vb->setVoxelSize(value);
+	Q_EMIT updateViewport();
+}

@@ -36,6 +36,12 @@ enum {
 	DRAW_QUADS = 1,
 };
 
+enum {
+	OBJECT    = 0,
+	LEVEL_SET = 1,
+	VOLUME    = 2,
+};
+
 class Object {
 protected:
 	GPUBuffer::UPtr m_buffer_data;
@@ -55,6 +61,8 @@ protected:
 public:
 	Object();
 	~Object() = default;
+
+	virtual int type() const { return OBJECT; }
 
 	virtual bool intersect(const Ray &ray, float &min) const;
 	virtual void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir) = 0;

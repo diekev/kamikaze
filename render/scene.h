@@ -51,6 +51,7 @@ public Q_SLOTS:
 	void rotateObjectX(double value);
 	void rotateObjectY(double value);
 	void rotateObjectZ(double value);
+	void setVoxelSize(double value);
 
 public:
 	Scene();

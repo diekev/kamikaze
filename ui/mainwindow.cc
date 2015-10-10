@@ -82,6 +82,7 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(ui->m_rotate_x, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectX(double)));
 	connect(ui->m_rotate_y, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectY(double)));
 	connect(ui->m_rotate_z, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectZ(double)));
+	connect(ui->m_voxel_size, SIGNAL(valueChanged(double)), m_scene, SLOT(setVoxelSize(double)));
 
 	connect(m_scene, SIGNAL(updateViewport()), ui->m_viewport, SLOT(update()));
 	connect(m_timer, SIGNAL(timeout()), this, SLOT(updateFrame()));
@@ -222,20 +223,37 @@ void MainWindow::updateObjectTab()
 	ui->tabWidget->setTabEnabled(0, true);
 
 	ui->m_draw_bbox->setChecked(ob->drawBBox());
-	ui->m_draw_tree->setChecked(ob->drawTreeTopology());
 
 	const glm::vec3 pos = ob->pos();
 	ui->m_move_x->setValue(pos.x);
 	ui->m_move_y->setValue(pos.y);
 	ui->m_move_z->setValue(pos.z);
+
 	const glm::vec3 scale = ob->scale();
 	ui->m_scale_x->setValue(scale.x);
 	ui->m_scale_y->setValue(scale.y);
 	ui->m_scale_z->setValue(scale.z);
+
 	const glm::vec3 rotation = ob->rotation();
 	ui->m_rotate_x->setValue(rotation.x);
 	ui->m_rotate_y->setValue(rotation.y);
 	ui->m_rotate_z->setValue(rotation.z);
+
+	const bool is_volume = (ob->type() == VOLUME || ob->type() == LEVEL_SET);
+
+	if (is_volume) {
+		VolumeBase *vb = static_cast<VolumeBase *>(ob);
+
+		ui->m_voxel_size->setValue(vb->voxelSize());
+		ui->m_draw_tree->setChecked(vb->drawTreeTopology());
+	}
+	else {
+		ui->m_draw_tree->setChecked(false);
+		ui->m_voxel_size->setValue(0.0f);
+	}
+
+	ui->m_voxel_size->setEnabled(is_volume);
+	ui->m_draw_tree->setEnabled(is_volume);
 }
 
 void MainWindow::addCube()

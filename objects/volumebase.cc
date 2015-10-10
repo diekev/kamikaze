@@ -23,6 +23,8 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include <openvdb/tools/GridTransformer.h>
+
 #include "volumebase.h"
 
 #include "render/gpu/GPUBuffer.h"
@@ -178,6 +180,7 @@ VolumeBase::VolumeBase(openvdb::FloatGrid::Ptr grid)
 
 	m_grid = grid;
 	m_volume_matrix = m_grid->transform().baseMap()->getAffineMap()->getMat4();
+	m_voxel_size = m_grid->transform().voxelSize()[0];
 
 	CoordBBox bbox = m_grid->evalActiveVoxelBoundingBox();
 
@@ -193,6 +196,22 @@ VolumeBase::VolumeBase(openvdb::FloatGrid::Ptr grid)
 	m_buffer_data = GPUBuffer::create();
 	m_bbox = std::unique_ptr<Cube>(new Cube(m_min, m_max));
 	m_topology = std::unique_ptr<TreeTopology>(new TreeTopology(grid));
+}
+
+float VolumeBase::voxelSize() const
+{
+	return m_voxel_size;
+}
+
+void VolumeBase::setVoxelSize(const float voxel_size)
+{
+	if (voxel_size == 0.0f) {
+		return;
+	}
+
+	m_voxel_size = voxel_size;
+
+	resampleGridVoxel();
 }
 
 void VolumeBase::updateGridTransform()
@@ -216,6 +235,22 @@ void VolumeBase::updateGridTransform()
 	AffineMap::Ptr compound(new AffineMap(original_map, map));
 
 	m_grid->setTransform(Transform::Ptr(new Transform(openvdb::math::simplify(compound))));
+
+	if (m_draw_topology) {
+		m_topology.reset(new TreeTopology(m_grid));
+	}
+}
+
+void VolumeBase::resampleGridVoxel()
+{
+	typedef openvdb::math::Transform Transform;
+
+	openvdb::FloatGrid::Ptr output = openvdb::FloatGrid::create(m_grid->background());
+	output->setTransform(Transform::createLinearTransform(m_voxel_size));
+
+	openvdb::tools::resampleToMatch<openvdb::tools::PointSampler>(*m_grid, *output);
+
+	m_grid.swap(output);
 
 	if (m_draw_topology) {
 		m_topology.reset(new TreeTopology(m_grid));
