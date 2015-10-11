@@ -35,7 +35,7 @@
 
 Scene::Scene()
     : m_active_object(nullptr)
-    , m_brush(new Brush(5.0f, 0.1f))
+    , m_brush(new Brush(5.0f, 0.5f))
     , m_mode(SCENE_MODE_OBJECT)
 {}
 
@@ -245,9 +245,9 @@ void Scene::setBrushRadius(double value)
 	m_brush->radius(value);
 }
 
-void Scene::setBrushAmount(double value)
+void Scene::setBrushStrength(double value)
 {
-	m_brush->amount(value);
+	m_brush->strength(value);
 }
 
 void Scene::setBrushTool(int tool)

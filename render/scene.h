@@ -65,7 +65,7 @@ public Q_SLOTS:
 
 	void setBrushMode(int mode);
 	void setBrushRadius(double value);
-	void setBrushAmount(double value);
+	void setBrushStrength(double value);
 	void setBrushTool(int tool);
 
 public:

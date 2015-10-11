@@ -96,7 +96,7 @@ MainWindow::MainWindow(QWidget *parent)
 	connectObjectSignals();
 
 	/* Brush */
-	connect(ui->m_brush_amount, SIGNAL(valueChanged(double)), m_scene, SLOT(setBrushAmount(double)));
+	connect(ui->m_brush_strength, SIGNAL(valueChanged(double)), m_scene, SLOT(setBrushStrength(double)));
 	connect(ui->m_brush_radius, SIGNAL(valueChanged(double)), m_scene, SLOT(setBrushRadius(double)));
 	connect(ui->m_brush_mode, SIGNAL(currentIndexChanged(int)), m_scene, SLOT(setBrushMode(int)));
 	connect(ui->m_brush_tool, SIGNAL(currentIndexChanged(int)), m_scene, SLOT(setBrushTool(int)));

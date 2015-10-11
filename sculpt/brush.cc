@@ -41,15 +41,15 @@ void subOp(float &value)
 Brush::Brush()
     : m_radius(0.0f)
     , m_inv_radius(0.0f)
-    , m_amount(0.0f)
+    , m_strength(0.0f)
     , m_mode(BRUSH_MODE_ADD)
     , m_tool(BRUSH_TOOL_DRAW)
 {}
 
-Brush::Brush(const float radius, const float amount)
+Brush::Brush(const float radius, const float strength)
     : m_radius(radius)
     , m_inv_radius(1.0f / m_radius)
-    , m_amount(amount)
+    , m_strength(strength)
     , m_mode(BRUSH_MODE_ADD)
     , m_tool(BRUSH_TOOL_DRAW)
 {}
@@ -65,18 +65,18 @@ float Brush::radius() const
 	return m_radius;
 }
 
-void Brush::amount(const float amnt)
+void Brush::strength(const float s)
 {
-	m_amount = amnt;
+	m_strength = s;
 }
 
-float Brush::amount() const
+float Brush::strength() const
 {
-	if (m_tool != BRUSH_TOOL_DRAW) {
-		return -m_amount;
+	if (m_tool == BRUSH_TOOL_SMOOTH) {
+		return -m_strength * 0.1f;
 	}
 
-	return ((m_mode == BRUSH_MODE_ADD) ? m_amount : -m_amount);
+	return ((m_mode == BRUSH_MODE_ADD) ? m_strength : -m_strength);
 }
 
 void Brush::mode(const int mode)

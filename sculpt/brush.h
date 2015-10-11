@@ -40,13 +40,13 @@ enum {
 
 class Brush {
 	float m_radius, m_inv_radius;
-	float m_amount;
+	float m_strength;
 	int m_mode;
 	int m_tool;
 
 public:
 	Brush();
-	Brush(const float radius, const float amount);
+	Brush(const float radius, const float strength);
 	~Brush() = default;
 
 	inline float influence(const Coord &center, const Coord &pos)
@@ -57,8 +57,8 @@ public:
 	void radius(const float rad);
 	float radius() const;
 
-	void amount(const float amnt);
-	float amount() const;
+	void strength(const float s);
+	float strength() const;
 
 	void mode(const int mode);
 

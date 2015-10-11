@@ -120,7 +120,7 @@ bool LevelSet::intersectLS(const Ray &ray, Brush *brush)
 	m_isector.reset(new isector_t(*m_level_set));
 	if (m_isector->intersectsWS(vray, position)) {
 		const float radius = brush->radius();
-		const float amount = brush->amount();
+		const float strength = brush->strength() * m_level_set->transform().voxelSize()[0];
 
 		FloatGrid::Accessor accessor = m_level_set->getAccessor();
 		math::Coord ijk = m_level_set->transform().worldToIndexNodeCentered(position);
@@ -137,7 +137,7 @@ bool LevelSet::intersectLS(const Ray &ray, Brush *brush)
 						if (influence > 0.0f) {
 							//accessor.modifyValue(ijk, addOp);
 							float value = accessor.getValue(ijk);
-							accessor.setValue(ijk, value - amount * influence);
+							accessor.setValue(ijk, value - strength * influence);
 						}
 					}
 				}
@@ -161,9 +161,9 @@ bool LevelSet::intersectLS(const Ray &ray, Brush *brush)
 
 						if (influence > 0.0f) {
 							stencil.moveTo(ijk);
-							accessor.setValue(ijk, value - amount * influence);
+							accessor.setValue(ijk, value - strength * influence);
 							const float phi = value + dt * stencil.laplacian();
-		                    buffer[index] = phi - amount * influence;
+		                    buffer[index] = phi - strength * influence;
 						}
 						else {
 							buffer[index] = value;
