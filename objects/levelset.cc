@@ -61,24 +61,9 @@ void LevelSet::loadShader()
 	m_program.disable();
 }
 
-void LevelSet::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir)
+void LevelSet::render(const glm::mat4 &MVP, const glm::mat3 &N,
+                      const glm::vec3 &dir, const bool for_outline)
 {
-	if (m_need_update) {
-		updateMatrix();
-		updateGridTransform();
-		m_need_update = false;
-	}
-
-	if (m_draw_bbox) {
-		m_bbox->render(MVP, N, view_dir);
-	}
-
-	if (m_draw_topology) {
-		m_topology->render(MVP);
-	}
-
-	glEnable(GL_DEPTH_TEST);
-
 	if (m_program.isValid()) {
 		m_program.enable();
 		m_buffer_data->bind();
@@ -86,36 +71,14 @@ void LevelSet::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 
 		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(m_matrix));
 		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 		glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(N));
-		glUniform1i(m_program("for_outline"), false);
+		glUniform1i(m_program("for_outline"), for_outline);
 		glDrawElements(GL_TRIANGLES, m_elements, GL_UNSIGNED_INT, nullptr);
 
 		m_buffer_data->unbind();
 		m_program.disable();
 	}
 
-	glDisable(GL_DEPTH_TEST);
-}
-
-void LevelSet::renderScaled(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir)
-{
-	/* scale up the object */
-	glm::mat4 scaled_mat = glm::scale(m_matrix, glm::vec3(1.01f));
-
-	if (m_program.isValid()) {
-		m_program.enable();
-		m_buffer_data->bind();
-
-		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(scaled_mat));
-		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
-		glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(N));
-		glUniform1i(m_program("for_outline"), true);
-		glDrawElements(GL_TRIANGLES, m_elements, GL_UNSIGNED_INT, nullptr);
-
-		m_buffer_data->unbind();
-		m_program.disable();
-	}
-
-	(void)view_dir;
+	(void)dir;
 }
 
 void LevelSet::generateMesh(const bool is_sculpt_mode)

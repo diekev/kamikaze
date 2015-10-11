@@ -47,7 +47,6 @@ Volume::Volume(openvdb::GridBase::Ptr grid)
 
 	m_draw_type = GL_TRIANGLES;
 	m_elements = m_num_slices * 6;
-	m_inv_size = 1.0f / m_dimensions;
 
 	/* Get resolution & copy data */
 	openvdb::math::CoordBBox bbox = m_grid->evalActiveVoxelBoundingBox();
@@ -88,13 +87,10 @@ void Volume::loadVolumeShader()
 		m_program.addUniform("lut");
 		m_program.addUniform("use_lut");
 		m_program.addUniform("scale");
-		m_program.addUniform("inv_size");
+		m_program.addUniform("matrix");
 
 		glUniform1i(m_program("volume"), m_volume_texture->unit());
 		glUniform1i(m_program("lut"), m_transfer_texture->unit());
-
-		glUniform3fv(m_program("offset"), 1, &m_min[0]);
-		glUniform3fv(m_program("inv_size"), 1, &m_inv_size[0]);
 		glUniform1f(m_program("scale"), m_value_scale);
 	}
 	m_program.disable();
@@ -217,10 +213,10 @@ void Volume::slice(const glm::vec3 &view_dir)
 		v2[m_axis] = depth;
 		v3[m_axis] = depth;
 
-		m_vertices.push_back(v0);
-		m_vertices.push_back(v1);
-		m_vertices.push_back(v2);
-		m_vertices.push_back(v3);
+		m_vertices.push_back(v0 * glm::mat3(m_inv_matrix));
+		m_vertices.push_back(v1 * glm::mat3(m_inv_matrix));
+		m_vertices.push_back(v2 * glm::mat3(m_inv_matrix));
+		m_vertices.push_back(v3 * glm::mat3(m_inv_matrix));
 
 		indices[idx_count++] = idx + 0;
 		indices[idx_count++] = idx + 1;
@@ -239,26 +235,12 @@ void Volume::slice(const glm::vec3 &view_dir)
 	delete [] indices;
 }
 
-void Volume::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir)
+void Volume::render(const glm::mat4 &MVP, const glm::mat3 &N,
+                    const glm::vec3 &dir, const bool for_outline)
 {
-	if (m_need_update) {
-		updateMatrix();
-		updateGridTransform();
-		m_need_update = false;
-	}
-
 	slice(dir);
 
-	if (m_draw_bbox) {
-		m_bbox->render(MVP, N, dir);
-	}
-
-	if (m_draw_topology) {
-		m_topology->render(MVP);
-	}
-
 	glEnable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	if (m_program.isValid()) {
@@ -267,7 +249,10 @@ void Volume::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &d
 		m_volume_texture->bind();
 		m_transfer_texture->bind();
 
+		auto min = m_min * glm::mat3(m_inv_matrix);
+		glUniform3fv(m_program("offset"), 1, &min[0]);
 		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(m_matrix));
 		glUniform1i(m_program("use_lut"), m_use_lut);
 		glDrawElements(m_draw_type, m_elements, GL_UNSIGNED_INT, nullptr);
 
@@ -277,32 +262,10 @@ void Volume::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &d
 		m_program.disable();
 	}
 
-	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
-}
 
-void Volume::renderScaled(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir)
-{
-#if 0
-	if (m_program.isValid()) {
-		m_program.enable();
-		m_buffer_data->bind();
-		m_volume_texture->bind();
-		m_transfer_texture->bind();
-
-		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
-		glUniform1i(m_program("use_lut"), m_use_lut);
-		glDrawElements(m_draw_type, m_elements, GL_UNSIGNED_INT, nullptr);
-
-		m_transfer_texture->unbind();
-		m_volume_texture->unbind();
-		m_buffer_data->unbind();
-		m_program.disable();
-	}
-#endif
-	(void)MVP;
 	(void)N;
-	(void)dir;
+	(void)for_outline;
 }
 
 void Volume::changeNumSlicesBy(int x)

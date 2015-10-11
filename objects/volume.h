@@ -36,7 +36,6 @@ class Volume : public VolumeBase {
 
 	int m_num_slices;
 
-	glm::vec3 m_inv_size; // XXX
 	int m_axis;
 	float m_value_scale; // scale of the values contained in the grid (1 / (max - min))
 	bool m_use_lut;
@@ -50,8 +49,9 @@ public:
 	~Volume() = default;
 
 	void slice(const glm::vec3 &view_dir);
-	void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir);
-	void renderScaled(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir);
+	void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir,
+	            const bool for_outline);
+
 	void changeNumSlicesBy(int x);
 
 	void toggleUseLUT();

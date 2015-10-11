@@ -60,7 +60,11 @@ public:
 	~VolumeBase() = default;
 
 	int type() const { return VOLUME; }
+	void update();
 
 	float voxelSize() const;
 	void setVoxelSize(const float voxel_size);
+
+	TreeTopology *topology() const { return m_topology.get(); }
+	Cube *bbox() const { return m_bbox.get(); }
 };

@@ -24,6 +24,7 @@
 
 #include <QKeyEvent>
 
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 
 #include "scene.h"
@@ -82,24 +83,43 @@ void Scene::render(const glm::mat4 &MV, const glm::mat4 &P, const glm::vec3 &vie
 	const auto &MVP = P * MV;
 	const auto &N = glm::inverseTranspose(glm::mat3(MV));
 
-	/* setup stencil mask for outlining active object */
-	glStencilFunc(GL_ALWAYS, 1, 0xff);
-	glStencilMask(0xff);
-
 	for (auto &object : m_objects) {
 		const bool active_object = (object == m_active_object);
 
-		object->render(MVP, N, view_dir);
+		/* update object before drawing */
+		object->update();
+
+		if (object->type() == VOLUME || object->type() == LEVEL_SET) {
+			VolumeBase *vb = static_cast<VolumeBase *>(object);
+
+			if (object->drawBBox()) {
+				vb->bbox()->render(MVP, N, view_dir, false);
+			}
+
+			if (object->drawTreeTopology()) {
+				vb->topology()->render(MVP);
+			}
+		}
+
+		object->render(MVP, N, view_dir, false);
 
 		if (active_object) {
 			glStencilFunc(GL_NOTEQUAL, 1, 0xff);
 			glStencilMask(0x00);
+			glDisable(GL_DEPTH_TEST);
 
-			object->renderScaled(MVP, N, view_dir);
+			/* scale up the object a bit */
+			glm::mat4 obmat = object->matrix();
+			object->matrix() = glm::scale(obmat, glm::vec3(1.01f));
+
+			object->render(MVP, N, view_dir, true);
+
+			object->matrix() = obmat;
 
 			/* restore */
 			glStencilFunc(GL_ALWAYS, 1, 0xff);
 			glStencilMask(0xff);
+			glEnable(GL_DEPTH_TEST);
 		}
 	}
 }

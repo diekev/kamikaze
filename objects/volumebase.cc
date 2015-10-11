@@ -159,9 +159,6 @@ TreeTopology::TreeTopology(openvdb::GridBase::ConstPtr grid)
 
 void TreeTopology::render(const glm::mat4 &MVP)
 {
-	glEnable(GL_DEPTH_TEST);
-	glStencilMask(0xff);
-
 	if (m_program.isValid()) {
 		m_program.enable();
 		m_buffer_data->bind();
@@ -172,9 +169,6 @@ void TreeTopology::render(const glm::mat4 &MVP)
 		m_buffer_data->unbind();
 		m_program.disable();
 	}
-
-	glStencilMask(0x00);
-	glDisable(GL_DEPTH_TEST);
 }
 
 VolumeBase::VolumeBase(openvdb::GridBase::Ptr grid)
@@ -203,6 +197,15 @@ VolumeBase::VolumeBase(openvdb::GridBase::Ptr grid)
 	m_buffer_data = GPUBuffer::create();
 	m_bbox = std::unique_ptr<Cube>(new Cube(m_min, m_max));
 	m_topology = std::unique_ptr<TreeTopology>(new TreeTopology(grid));
+}
+
+void VolumeBase::update()
+{
+	if (m_need_update) {
+		updateMatrix();
+		updateGridTransform();
+		m_need_update = false;
+	}
 }
 
 float VolumeBase::voxelSize() const
@@ -245,9 +248,12 @@ void VolumeBase::updateGridTransform()
 
 	m_grid->setTransform(Transform::Ptr(new Transform(openvdb::math::simplify(compound))));
 
+	// TODO: topology is only updated if drawn
 	if (m_draw_topology) {
 		m_topology.reset(new TreeTopology(m_grid));
 	}
+
+	m_bbox.reset(new Cube(m_min, m_max));
 }
 
 struct ResampleGridOp {

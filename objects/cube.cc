@@ -115,14 +115,13 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 	m_buffer_data->unbind();
 }
 
-void Cube::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir)
+void Cube::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir,
+                  const bool for_outline)
 {
 	if (m_need_update) {
 		updateMatrix();
 		m_need_update = false;
 	}
-
-	glEnable(GL_DEPTH_TEST);
 
 	if (m_program.isValid()) {
 		m_program.enable();
@@ -137,26 +136,6 @@ void Cube::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &vie
 		m_program.disable();
 	}
 
-	glDisable(GL_DEPTH_TEST);
-
-	(void)view_dir;
-}
-
-void Cube::renderScaled(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir)
-{
-	if (m_program.isValid()) {
-		glm::mat4 scaled_mat = glm::scale(m_matrix, glm::vec3(1.01f));
-		m_program.enable();
-		m_buffer_data->bind();
-
-		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(scaled_mat));
-		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
-		glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(N));
-		glDrawElements(GL_LINES, m_elements, GL_UNSIGNED_SHORT, nullptr);
-
-		m_buffer_data->unbind();
-		m_program.disable();
-	}
-
-	(void)view_dir;
+	(void)dir;
+	(void)for_outline;
 }

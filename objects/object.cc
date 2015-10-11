@@ -97,6 +97,14 @@ glm::vec3 Object::rotation() const
 	return m_rotation;
 }
 
+void Object::update()
+{
+	if (m_need_update) {
+		updateMatrix();
+		m_need_update = false;
+	}
+}
+
 void Object::updateMatrix()
 {
 	m_min = m_pos - m_dimensions / 2.0f;

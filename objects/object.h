@@ -65,8 +65,8 @@ public:
 	virtual int type() const { return OBJECT; }
 
 	virtual bool intersect(const Ray &ray, float &min) const;
-	virtual void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir) = 0;
-	virtual void renderScaled(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir) = 0;
+	virtual void render(const glm::mat4 &MVP, const glm::mat3 &N,
+	                    const glm::vec3 &view_dir, const bool for_outline) = 0;
 	void setDrawType(int draw_type);
 
 	virtual void drawBBox(const bool b);
@@ -80,4 +80,10 @@ public:
 	glm::vec3 &scale() { m_need_update = true; return m_scale; }
 	glm::vec3 rotation() const;
 	glm::vec3 &rotation() { m_need_update = true; return m_rotation; }
+
+	/* Return the object's matrix, mainly intended for rendering the active object */
+	glm::mat4 matrix() const { return m_matrix; }
+	glm::mat4 &matrix() { return m_matrix; }
+
+	virtual void update();
 };

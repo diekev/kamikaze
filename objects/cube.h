@@ -30,6 +30,6 @@ public:
 	Cube(const glm::vec3 &min, const glm::vec3 &max);
 	~Cube() = default;
 
-	virtual void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir);
-	virtual void renderScaled(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir);
+	virtual void render(const glm::mat4 &MVP, const glm::mat3 &N,
+	                    const glm::vec3 &dir, const bool for_outline);
 };
