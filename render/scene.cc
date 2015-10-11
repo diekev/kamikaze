@@ -28,9 +28,9 @@
 
 #include "scene.h"
 
-#include "objects/brush.h"
 #include "objects/levelset.h"
 #include "objects/volume.h"
+#include "sculpt/brush.h"
 
 Scene::Scene()
     : m_brush(new Brush(5.0f, 0.1f))
