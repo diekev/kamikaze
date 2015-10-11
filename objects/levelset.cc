@@ -144,16 +144,6 @@ void LevelSet::generateMesh(const bool is_sculpt_mode)
 
 bool LevelSet::intersectLS(const Ray &ray, Brush *brush)
 {
-	if (m_topology_changed) {
-		if (m_draw_topology) {
-			m_topology.reset(new TreeTopology(m_level_set));
-		}
-
-		m_isector.reset(new isector_t(*m_level_set));
-		generateMesh(true);
-		m_topology_changed = false;
-	}
-
 	using namespace openvdb;
 
 	openvdb::math::Vec3d P(ray.pos.x, ray.pos.y, ray.pos.z);
@@ -164,6 +154,7 @@ bool LevelSet::intersectLS(const Ray &ray, Brush *brush)
 
 	openvdb::math::Vec3d position;
 
+	m_isector.reset(new isector_t(*m_level_set));
 	if (m_isector->intersectsWS(vray, position)) {
 		const float radius = brush->radius();
 		const float amount = brush->amount();
@@ -233,7 +224,11 @@ bool LevelSet::intersectLS(const Ray &ray, Brush *brush)
 
 		m_topology_changed = true;
 
-		return true;
+		if (m_draw_topology) {
+			m_topology.reset(new TreeTopology(m_level_set));
+		}
+
+		generateMesh(true);
 	}
 
 	return false;
