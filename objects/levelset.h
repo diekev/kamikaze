@@ -47,6 +47,7 @@ public:
 	int type() const { return LEVEL_SET; }
 
 	void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir);
+	void renderScaled(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir);
 
 	bool intersectLS(const Ray &ray, Brush *brush);
 };

@@ -26,8 +26,9 @@
 
 #include <openvdb/tools/VolumeToMesh.h>
 
-#include "brush.h"
 #include "levelset.h"
+
+#include "sculpt/brush.h"
 
 #include "util/utils.h"
 #include "util/util_opengl.h"
@@ -75,11 +76,6 @@ void LevelSet::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 
 		m_topology->render(MVP);
 	}
 
-	if (m_is_active) {
-		glStencilFunc(GL_ALWAYS, 1, 0xff);
-		glStencilMask(0xff);
-	}
-
 	glEnable(GL_DEPTH_TEST);
 
 	if (m_program.isValid()) {
@@ -97,30 +93,28 @@ void LevelSet::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 
 	}
 
 	glDisable(GL_DEPTH_TEST);
+}
 
-	if (m_is_active) {
-		glStencilFunc(GL_NOTEQUAL, 1, 0xff);
-		glStencilMask(0x00);
+void LevelSet::renderScaled(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir)
+{
+	/* scale up the object */
+	glm::mat4 scaled_mat = glm::scale(m_matrix, glm::vec3(1.01f));
 
-		/* scale up the object */
-		glm::mat4 scaled_mat = glm::scale(m_matrix, glm::vec3(1.01f));
+	if (m_program.isValid()) {
+		m_program.enable();
+		m_buffer_data->bind();
 
-		if (m_program.isValid()) {
-			m_program.enable();
-			m_buffer_data->bind();
+		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(scaled_mat));
+		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+		glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(N));
+		glUniform1i(m_program("for_outline"), true);
+		glDrawElements(GL_TRIANGLES, m_elements, GL_UNSIGNED_INT, nullptr);
 
-			glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(scaled_mat));
-			glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
-			glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(N));
-			glUniform1i(m_program("for_outline"), true);
-			glDrawElements(GL_TRIANGLES, m_elements, GL_UNSIGNED_INT, nullptr);
-
-			m_buffer_data->unbind();
-			m_program.disable();
-		}
-
-		glStencilMask(0xFF);
+		m_buffer_data->unbind();
+		m_program.disable();
 	}
+
+	(void)view_dir;
 }
 
 void LevelSet::generateMesh()

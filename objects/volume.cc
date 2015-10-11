@@ -279,6 +279,30 @@ void Volume::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &d
 	glDisable(GL_BLEND);
 }
 
+void Volume::renderScaled(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir)
+{
+#if 0
+	if (m_program.isValid()) {
+		m_program.enable();
+		m_buffer_data->bind();
+		m_volume_texture->bind();
+		m_transfer_texture->bind();
+
+		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+		glUniform1i(m_program("use_lut"), m_use_lut);
+		glDrawElements(m_draw_type, m_elements, GL_UNSIGNED_INT, nullptr);
+
+		m_transfer_texture->unbind();
+		m_volume_texture->unbind();
+		m_buffer_data->unbind();
+		m_program.disable();
+	}
+#endif
+	(void)MVP;
+	(void)N;
+	(void)dir;
+}
+
 void Volume::changeNumSlicesBy(int x)
 {
 	m_num_slices += x;

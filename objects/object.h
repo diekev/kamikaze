@@ -54,7 +54,7 @@ protected:
 	glm::vec3 m_min, m_max, m_pos;
 	glm::mat4 m_matrix, m_inv_matrix;
 
-	bool m_draw_bbox, m_draw_topology, m_need_update, m_is_active;
+	bool m_draw_bbox, m_draw_topology, m_need_update;
 
 	void updateMatrix();
 
@@ -66,6 +66,7 @@ public:
 
 	virtual bool intersect(const Ray &ray, float &min) const;
 	virtual void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir) = 0;
+	virtual void renderScaled(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir) = 0;
 	void setDrawType(int draw_type);
 
 	virtual void drawBBox(const bool b);
@@ -74,11 +75,9 @@ public:
 	virtual bool drawTreeTopology() const { return m_draw_topology; }
 
 	glm::vec3 pos() const;
-	void setPos(const glm::vec3 &pos);
+	glm::vec3 &pos() { m_need_update = true; return m_pos; }
 	glm::vec3 scale() const;
-	void setScale(const glm::vec3 &scale);
+	glm::vec3 &scale() { m_need_update = true; return m_scale; }
 	glm::vec3 rotation() const;
-	void setRotation(const glm::vec3 &rotation);
-
-	void isActive(const bool b) { m_is_active = b; }
+	glm::vec3 &rotation() { m_need_update = true; return m_rotation; }
 };

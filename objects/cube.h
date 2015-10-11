@@ -31,4 +31,5 @@ public:
 	~Cube() = default;
 
 	virtual void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir);
+	virtual void renderScaled(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir);
 };

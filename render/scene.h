@@ -41,8 +41,8 @@ class Scene : public QObject {
 	Q_OBJECT
 
 	std::vector<Object *> m_objects;
+	Object *m_active_object;
 	Brush *m_brush;
-	int m_active_object;
 	int m_mode;
 
 Q_SIGNALS:

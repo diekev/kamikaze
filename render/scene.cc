@@ -33,8 +33,8 @@
 #include "sculpt/brush.h"
 
 Scene::Scene()
-    : m_brush(new Brush(5.0f, 0.1f))
-    , m_active_object(-1)
+    : m_active_object(nullptr)
+    , m_brush(new Brush(5.0f, 0.1f))
     , m_mode(SCENE_MODE_OBJECT)
 {}
 
@@ -51,13 +51,12 @@ void Scene::keyboardEvent(int key)
 		return;
 	}
 
-	Object *ob = m_objects[m_active_object];
-
 	switch (key) {
 		case Qt::Key_Delete:
-			m_objects.erase(m_objects.begin() + m_active_object);
-			delete ob;
-			m_active_object = -1;
+			auto iter = std::find(m_objects.begin(), m_objects.end(), m_active_object);
+			m_objects.erase(iter);
+			delete m_active_object;
+			m_active_object = nullptr;
 			break;
 //		case Qt::Key_Minus:
 //			m_volume->changeNumSlicesBy(-1);
@@ -73,14 +72,8 @@ void Scene::keyboardEvent(int key)
 
 void Scene::addObject(Object *object)
 {
-	if (m_active_object != -1) {
-		m_objects[m_active_object]->isActive(false);
-	}
-
-	object->isActive(true);
 	m_objects.push_back(object);
-	m_active_object = m_objects.size() - 1;
-
+	m_active_object = object;
 	Q_EMIT objectChanged();
 }
 
@@ -89,8 +82,25 @@ void Scene::render(const glm::mat4 &MV, const glm::mat4 &P, const glm::vec3 &vie
 	const auto &MVP = P * MV;
 	const auto &N = glm::inverseTranspose(glm::mat3(MV));
 
+	/* setup stencil mask for outlining active object */
+	glStencilFunc(GL_ALWAYS, 1, 0xff);
+	glStencilMask(0xff);
+
 	for (auto &object : m_objects) {
+		const bool active_object = (object == m_active_object);
+
 		object->render(MVP, N, view_dir);
+
+		if (active_object) {
+			glStencilFunc(GL_NOTEQUAL, 1, 0xff);
+			glStencilMask(0x00);
+
+			object->renderScaled(MVP, N, view_dir);
+
+			/* restore */
+			glStencilFunc(GL_ALWAYS, 1, 0xff);
+			glStencilMask(0xff);
+		}
 	}
 }
 
@@ -108,15 +118,13 @@ void Scene::intersect(const Ray &ray)
 			++index;
 		}
 
-		if (selected_object != -1 && selected_object != m_active_object) {
-			m_objects[m_active_object]->isActive(false);
-			m_active_object = selected_object;
-			m_objects[m_active_object]->isActive(true);
+		if (selected_object != -1 && m_active_object != m_objects[selected_object]) {
+			m_active_object = m_objects[selected_object];
 			Q_EMIT objectChanged();
 		}
 	}
 	else {
-		LevelSet *ls = (LevelSet *)m_objects[m_active_object];
+		LevelSet *ls = (LevelSet *)m_active_object;
 		if (ls->intersectLS(ray, m_brush)) {
 			// TODO: separate intersection from sculpting.
 		}
@@ -136,7 +144,7 @@ void Scene::setMode(int mode)
 Object *Scene::currentObject()
 {
 	if (!m_objects.empty()) {
-		return m_objects[m_active_object];
+		return m_active_object;
 	}
 
 	return nullptr;
@@ -144,91 +152,62 @@ Object *Scene::currentObject()
 
 void Scene::moveObjectX(double value)
 {
-	Object *ob = m_objects[m_active_object];
-	glm::vec3 pos = ob->pos();
-	pos.x = value;
-	ob->setPos(pos);
+	m_active_object->pos().x = value;
 	Q_EMIT updateViewport();
 }
 
 void Scene::moveObjectY(double value)
 {
-	Object *ob = m_objects[m_active_object];
-	glm::vec3 pos = ob->pos();
-	pos.y = value;
-	ob->setPos(pos);
+	m_active_object->pos().y = value;
 	Q_EMIT updateViewport();
 }
 
 void Scene::moveObjectZ(double value)
 {
-	Object *ob = m_objects[m_active_object];
-	glm::vec3 pos = ob->pos();
-	pos.z = value;
-	ob->setPos(pos);
+	m_active_object->pos().z = value;
 	Q_EMIT updateViewport();
 }
 
 void Scene::scaleObjectX(double value)
 {
-	Object *ob = m_objects[m_active_object];
-	glm::vec3 scale = ob->scale();
-	scale.x = value;
-	ob->setScale(scale);
+	m_active_object->scale().x = value;
 	Q_EMIT updateViewport();
 }
 
 void Scene::scaleObjectY(double value)
 {
-	Object *ob = m_objects[m_active_object];
-	glm::vec3 scale = ob->scale();
-	scale.y = value;
-	ob->setScale(scale);
+	m_active_object->scale().y = value;
 	Q_EMIT updateViewport();
 }
 
 void Scene::scaleObjectZ(double value)
 {
-	Object *ob = m_objects[m_active_object];
-	glm::vec3 scale = ob->scale();
-	scale.z = value;
-	ob->setScale(scale);
+	m_active_object->scale().z = value;
 	Q_EMIT updateViewport();
 }
 
 void Scene::rotateObjectX(double value)
 {
-	Object *ob = m_objects[m_active_object];
-	glm::vec3 rot = ob->rotation();
-	rot.x = value;
-	ob->setRotation(rot);
+	m_active_object->rotation().x = value;
 	Q_EMIT updateViewport();
 }
 
 void Scene::rotateObjectY(double value)
 {
-	Object *ob = m_objects[m_active_object];
-	glm::vec3 rot = ob->rotation();
-	rot.y = value;
-	ob->setRotation(rot);
+	m_active_object->rotation().y = value;
 	Q_EMIT updateViewport();
 }
 
 void Scene::rotateObjectZ(double value)
 {
-	Object *ob = m_objects[m_active_object];
-	glm::vec3 rot = ob->rotation();
-	rot.z = value;
-	ob->setRotation(rot);
+	m_active_object->rotation().z = value;
 	Q_EMIT updateViewport();
 }
 
 void Scene::setVoxelSize(double value)
 {
-	Object *ob = m_objects[m_active_object];
-
-	if (ob->type() == VOLUME || ob->type() == LEVEL_SET) {
-		VolumeBase *vb = static_cast<VolumeBase *>(m_objects[m_active_object]);
+	if (m_active_object->type() == VOLUME || m_active_object->type() == LEVEL_SET) {
+		VolumeBase *vb = static_cast<VolumeBase *>(m_active_object);
 		vb->setVoxelSize(value);
 		Q_EMIT updateViewport();
 	}

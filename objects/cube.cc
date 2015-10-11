@@ -141,3 +141,22 @@ void Cube::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &vie
 
 	(void)view_dir;
 }
+
+void Cube::renderScaled(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir)
+{
+	if (m_program.isValid()) {
+		glm::mat4 scaled_mat = glm::scale(m_matrix, glm::vec3(1.01f));
+		m_program.enable();
+		m_buffer_data->bind();
+
+		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(scaled_mat));
+		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+		glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(N));
+		glDrawElements(GL_LINES, m_elements, GL_UNSIGNED_SHORT, nullptr);
+
+		m_buffer_data->unbind();
+		m_program.disable();
+	}
+
+	(void)view_dir;
+}

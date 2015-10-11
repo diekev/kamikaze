@@ -39,7 +39,6 @@ Object::Object()
     , m_draw_bbox(false)
     , m_draw_topology(false)
     , m_need_update(false)
-    , m_is_active(false)
 {}
 
 bool Object::intersect(const Ray &ray, float &min) const
@@ -88,32 +87,14 @@ glm::vec3 Object::pos() const
 	return m_pos;
 }
 
-void Object::setPos(const glm::vec3 &pos)
-{
-	m_pos = pos;
-	m_need_update = true;
-}
-
 glm::vec3 Object::scale() const
 {
 	return m_scale;
 }
 
-void Object::setScale(const glm::vec3 &scale)
-{
-	m_scale = scale;
-	m_need_update = true;
-}
-
 glm::vec3 Object::rotation() const
 {
 	return m_rotation;
-}
-
-void Object::setRotation(const glm::vec3 &rotation)
-{
-	m_rotation = rotation;
-	m_need_update = true;
 }
 
 void Object::updateMatrix()
