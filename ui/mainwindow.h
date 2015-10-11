@@ -48,6 +48,9 @@ class MainWindow : public QMainWindow {
 
 	LevelSetDialog *m_level_set_dialog;
 
+	void connectObjectSignals();
+	void disconnectObjectSignals();
+
 private Q_SLOTS:
 	void openFile();
 	void updateObject();

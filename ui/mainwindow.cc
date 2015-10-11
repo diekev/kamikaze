@@ -93,17 +93,7 @@ MainWindow::MainWindow(QWidget *parent)
 	hsizes << hsplister_height << tiemeline_height;
 	ui->vsplitter->setSizes(hsizes);
 
-	/* Object transform */
-	connect(ui->m_move_x, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectX(double)));
-	connect(ui->m_move_y, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectY(double)));
-	connect(ui->m_move_z, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectZ(double)));
-	connect(ui->m_scale_x, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectX(double)));
-	connect(ui->m_scale_y, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectY(double)));
-	connect(ui->m_scale_z, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectZ(double)));
-	connect(ui->m_rotate_x, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectX(double)));
-	connect(ui->m_rotate_y, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectY(double)));
-	connect(ui->m_rotate_z, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectZ(double)));
-	connect(ui->m_voxel_size, SIGNAL(valueChanged(double)), m_scene, SLOT(setVoxelSize(double)));
+	connectObjectSignals();
 
 	/* Brush */
 	connect(ui->m_brush_amount, SIGNAL(valueChanged(double)), m_scene, SLOT(setBrushAmount(double)));
@@ -252,8 +242,6 @@ void MainWindow::updateObject()
 	ui->m_viewport->update();
 }
 
-// TODO: some of these trigger updates which could create unnecessary work and
-//       lead to crashes in some cases.
 void MainWindow::updateObjectTab()
 {
 	Object *ob = m_scene->currentObject();
@@ -261,6 +249,10 @@ void MainWindow::updateObjectTab()
 	if (ob == nullptr) {
 		return;
 	}
+
+	/* Disconnect signals to avoid unnecessary updates which could lead to
+	 * crashes in some cases. */
+	disconnectObjectSignals();
 
 	ui->tabWidget->setTabEnabled(0, true);
 
@@ -303,6 +295,9 @@ void MainWindow::updateObjectTab()
 	else {
 		disableListItem(m_scene_mode_list, 1);
 	}
+
+	/* Reconnect signals. */
+	connectObjectSignals();
 }
 
 void MainWindow::addCube()
@@ -367,4 +362,32 @@ void MainWindow::setSceneMode(int idx)
 {
 	m_scene->setMode(idx);
 	ui->tabWidget->setTabEnabled(3, idx == SCENE_MODE_SCULPT);
+}
+
+void MainWindow::connectObjectSignals()
+{
+	connect(ui->m_move_x, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectX(double)));
+	connect(ui->m_move_y, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectY(double)));
+	connect(ui->m_move_z, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectZ(double)));
+	connect(ui->m_scale_x, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectX(double)));
+	connect(ui->m_scale_y, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectY(double)));
+	connect(ui->m_scale_z, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectZ(double)));
+	connect(ui->m_rotate_x, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectX(double)));
+	connect(ui->m_rotate_y, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectY(double)));
+	connect(ui->m_rotate_z, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectZ(double)));
+	connect(ui->m_voxel_size, SIGNAL(valueChanged(double)), m_scene, SLOT(setVoxelSize(double)));
+}
+
+void MainWindow::disconnectObjectSignals()
+{
+	disconnect(ui->m_move_x, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectX(double)));
+	disconnect(ui->m_move_y, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectY(double)));
+	disconnect(ui->m_move_z, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectZ(double)));
+	disconnect(ui->m_scale_x, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectX(double)));
+	disconnect(ui->m_scale_y, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectY(double)));
+	disconnect(ui->m_scale_z, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectZ(double)));
+	disconnect(ui->m_rotate_x, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectX(double)));
+	disconnect(ui->m_rotate_y, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectY(double)));
+	disconnect(ui->m_rotate_z, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectZ(double)));
+	disconnect(ui->m_voxel_size, SIGNAL(valueChanged(double)), m_scene, SLOT(setVoxelSize(double)));
 }
