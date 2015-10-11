@@ -229,3 +229,8 @@ void Scene::setBrushAmount(double value)
 {
 	m_brush->amount(value);
 }
+
+void Scene::setBrushTool(int tool)
+{
+	m_brush->tool(tool);
+}

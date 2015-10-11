@@ -99,6 +99,7 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(ui->m_brush_amount, SIGNAL(valueChanged(double)), m_scene, SLOT(setBrushAmount(double)));
 	connect(ui->m_brush_radius, SIGNAL(valueChanged(double)), m_scene, SLOT(setBrushRadius(double)));
 	connect(ui->m_brush_mode, SIGNAL(currentIndexChanged(int)), m_scene, SLOT(setBrushMode(int)));
+	connect(ui->m_brush_tool, SIGNAL(currentIndexChanged(int)), m_scene, SLOT(setBrushTool(int)));
 
 	connect(m_scene, SIGNAL(updateViewport()), ui->m_viewport, SLOT(update()));
 	connect(m_timer, SIGNAL(timeout()), this, SLOT(updateFrame()));

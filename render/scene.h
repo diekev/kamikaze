@@ -50,6 +50,8 @@ Q_SIGNALS:
 	void updateViewport();
 
 public Q_SLOTS:
+	void setMode(int mode);
+
 	void moveObjectX(double value);
 	void moveObjectY(double value);
 	void moveObjectZ(double value);
@@ -64,9 +66,7 @@ public Q_SLOTS:
 	void setBrushMode(int mode);
 	void setBrushRadius(double value);
 	void setBrushAmount(double value);
-
-public Q_SLOTS:
-	void setMode(int mode);
+	void setBrushTool(int tool);
 
 public:
 	Scene();

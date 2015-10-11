@@ -33,10 +33,16 @@ enum {
 	BRUSH_MODE_SUB = 1,
 };
 
+enum {
+	BRUSH_TOOL_DRAW = 0,
+	BRUSH_TOOL_SMOOTH = 1,
+};
+
 class Brush {
 	float m_radius, m_inv_radius;
 	float m_amount;
 	int m_mode;
+	int m_tool;
 
 public:
 	Brush();
@@ -55,4 +61,7 @@ public:
 	float amount() const;
 
 	void mode(const int mode);
+
+	int tool() const;
+	void tool(const int tool);
 };

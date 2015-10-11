@@ -173,19 +173,62 @@ bool LevelSet::intersectLS(const Ray &ray, Brush *brush)
 		math::Coord co(ijk);
 		int &x = ijk[0], &y = ijk[1], &z = ijk[2];
 
-		float influence;
-		for (x = co[0] - radius; x < co[0] + radius; ++x) {
-			for (y = co[1] - radius; y < co[1] + radius; ++y) {
-				for (z = co[2] - radius; z < co[2] + radius; ++z) {
-					influence = brush->influence(co, ijk);
+		if (brush->tool() == BRUSH_TOOL_DRAW) {
+			float influence;
+			for (x = co[0] - radius; x < co[0] + radius; ++x) {
+				for (y = co[1] - radius; y < co[1] + radius; ++y) {
+					for (z = co[2] - radius; z < co[2] + radius; ++z) {
+						influence = brush->influence(co, ijk);
 
-					if (influence > 0.0f) {
-						//accessor.modifyValue(ijk, addOp);
-						float value = accessor.getValue(ijk);
-						accessor.setValue(ijk, value - amount * influence);
+						if (influence > 0.0f) {
+							//accessor.modifyValue(ijk, addOp);
+							float value = accessor.getValue(ijk);
+							accessor.setValue(ijk, value - amount * influence);
+						}
 					}
 				}
 			}
+		}
+		else {
+			const float dx = m_level_set->transform().voxelSize()[0];
+			const float dt = math::Pow2(dx) / 6.0f;
+		    math::GradStencil<FloatGrid> stencil(*m_level_set, dx);
+
+			int diameter = radius + radius;
+			float *buffer = new float[diameter * diameter * diameter];
+
+			float influence;
+			int index = 0;
+			for (x = co[0] - radius; x < co[0] + radius; ++x) {
+				for (y = co[1] - radius; y < co[1] + radius; ++y) {
+					for (z = co[2] - radius; z < co[2] + radius; ++z, ++index) {
+						float value = accessor.getValue(ijk);
+						influence = brush->influence(co, ijk);
+
+						if (influence > 0.0f) {
+							stencil.moveTo(ijk);
+							accessor.setValue(ijk, value - amount * influence);
+							const float phi = value + dt * stencil.laplacian();
+		                    buffer[index] = phi - amount * influence;
+						}
+						else {
+							buffer[index] = value;
+						}
+					}
+				}
+			}
+
+			index = 0;
+			/* copy buffer back to voxels */
+			for (x = co[0] - radius; x < co[0] + radius; ++x) {
+				for (y = co[1] - radius; y < co[1] + radius; ++y) {
+					for (z = co[2] - radius; z < co[2] + radius; ++z, ++index) {
+						accessor.setValue(ijk, buffer[index]);
+					}
+				}
+			}
+
+			delete [] buffer;
 		}
 
 		m_topology_changed = true;

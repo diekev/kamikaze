@@ -43,6 +43,7 @@ Brush::Brush()
     , m_inv_radius(0.0f)
     , m_amount(0.0f)
     , m_mode(BRUSH_MODE_ADD)
+    , m_tool(BRUSH_TOOL_DRAW)
 {}
 
 Brush::Brush(const float radius, const float amount)
@@ -50,6 +51,7 @@ Brush::Brush(const float radius, const float amount)
     , m_inv_radius(1.0f / m_radius)
     , m_amount(amount)
     , m_mode(BRUSH_MODE_ADD)
+    , m_tool(BRUSH_TOOL_DRAW)
 {}
 
 void Brush::radius(const float rad)
@@ -70,10 +72,24 @@ void Brush::amount(const float amnt)
 
 float Brush::amount() const
 {
+	if (m_tool != BRUSH_TOOL_DRAW) {
+		return -m_amount;
+	}
+
 	return ((m_mode == BRUSH_MODE_ADD) ? m_amount : -m_amount);
 }
 
 void Brush::mode(const int mode)
 {
 	m_mode = mode;
+}
+
+int Brush::tool() const
+{
+	return m_tool;
+}
+
+void Brush::tool(const int tool)
+{
+	m_tool = tool;
 }
