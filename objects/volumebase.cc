@@ -30,9 +30,11 @@
 #include "render/gpu/GPUBuffer.h"
 
 #include "util/util_opengl.h"
+#include "util/util_openvdb.h"
+#include "util/util_openvdb_process.h"
 #include "util/utils.h"
 
-TreeTopology::TreeTopology(openvdb::FloatGrid::ConstPtr grid)
+TreeTopology::TreeTopology(openvdb::GridBase::ConstPtr grid)
     : m_buffer_data(GPUBuffer::create())
 {
 	m_program.loadFromFile(GL_VERTEX_SHADER, "shaders/tree_topology.vert");
@@ -51,7 +53,9 @@ TreeTopology::TreeTopology(openvdb::FloatGrid::ConstPtr grid)
 	using openvdb::Index64;
 	using openvdb::math::Vec3d;
 
-    Index64 nodeCount = grid->tree().leafCount() + grid->tree().nonLeafCount();
+	openvdb::FloatGrid::ConstPtr fgrid = openvdb::gridConstPtrCast<openvdb::FloatGrid>(grid);
+
+    Index64 nodeCount = fgrid->tree().leafCount() + fgrid->tree().nonLeafCount();
     const Index64 N = nodeCount * 8;
 	m_elements = N * 3;
 
@@ -69,14 +73,14 @@ TreeTopology::TreeTopology(openvdb::FloatGrid::ConstPtr grid)
 	    glm::vec3(0.00608299f, 0.279541f, 0.625f)  // leaf nodes
 	};
 
-	for (openvdb::FloatTree::NodeCIter iter = grid->tree().cbeginNode(); iter; ++iter) {
+	for (openvdb::FloatTree::NodeCIter iter = fgrid->tree().cbeginNode(); iter; ++iter) {
         iter.getBoundingBox(bbox);
 
         /* Nodes are rendered as cell-centered */
         Vec3d min(bbox.min().asVec3d() - Vec3d(0.5));
         Vec3d max(bbox.max().asVec3d() + Vec3d(0.5));
-		min = grid->indexToWorld(min);
-		max = grid->indexToWorld(max);
+		min = fgrid->indexToWorld(min);
+		max = fgrid->indexToWorld(max);
 
 		const glm::vec3 corners[8] = {
 		    glm::vec3(min.x(), min.y(), min.z()),
@@ -173,7 +177,7 @@ void TreeTopology::render(const glm::mat4 &MVP)
 	glDisable(GL_DEPTH_TEST);
 }
 
-VolumeBase::VolumeBase(openvdb::FloatGrid::Ptr grid)
+VolumeBase::VolumeBase(openvdb::GridBase::Ptr grid)
     : m_bbox(nullptr)
     , m_topology(nullptr)
 {
@@ -246,33 +250,50 @@ void VolumeBase::updateGridTransform()
 	}
 }
 
+struct ResampleGridOp {
+	const float voxel_size;
+
+	ResampleGridOp(const float vsize)
+	    : voxel_size(vsize)
+	{}
+
+	template <typename GridType>
+	void operator()(typename GridType::Ptr grid)
+	{
+		using namespace openvdb;
+
+		typedef typename GridType::ValueType ValueType;
+		typedef math::Transform Transform;
+
+		Transform::Ptr xform = Transform::createLinearTransform(voxel_size);
+		typename GridType::Ptr output;
+
+		if (grid->getGridClass() == GRID_LEVEL_SET) {
+			const float halfwidth = grid->background() * (1.0f / grid->transform().voxelSize()[0]);
+			util::NullInterrupter interrupt;
+
+			output = tools::doLevelSetRebuild(*grid, zeroVal<ValueType>(),
+			                                  halfwidth, halfwidth,
+			                                  xform.get(), &interrupt);
+		}
+		else {
+			output = GridType::create(grid->background());
+			output->setTransform(xform);
+			output->setName(grid->getName());
+			output->setGridClass(grid->getGridClass());
+
+			tools::resampleToMatch<openvdb::tools::PointSampler>(*grid, *output);
+		}
+
+		grid.swap(output);
+	}
+};
+
 void VolumeBase::resampleGridVoxel()
 {
-	using namespace openvdb;
+	ResampleGridOp op(m_voxel_size);
 
-	typedef math::Transform Transform;
-
-	Transform::Ptr xform = Transform::createLinearTransform(m_voxel_size);
-	FloatGrid::Ptr output;
-
-	if (m_grid->getGridClass() == GRID_LEVEL_SET) {
-		const float halfwidth = m_grid->background() * (1.0f / m_grid->transform().voxelSize()[0]);
-		util::NullInterrupter interrupt;
-
-		output = tools::doLevelSetRebuild(*m_grid, zeroVal<float>(),
-		                                  halfwidth, halfwidth,
-		                                  xform.get(), &interrupt);
-	}
-	else {
-		output = openvdb::FloatGrid::create(m_grid->background());
-		output->setTransform(xform);
-		output->setName(m_grid->getName());
-		output->setGridClass(m_grid->getGridClass());
-
-		tools::resampleToMatch<openvdb::tools::PointSampler>(*m_grid, *output);
-	}
-
-	m_grid.swap(output);
+	process_grid_real(m_grid, get_grid_storage(*m_grid), op);
 
 	if (m_draw_topology) {
 		m_topology.reset(new TreeTopology(m_grid));

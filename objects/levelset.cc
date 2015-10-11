@@ -32,14 +32,15 @@
 
 #include "util/utils.h"
 #include "util/util_opengl.h"
+#include "util/util_openvdb.h"
+#include "util/util_openvdb_process.h"
 
-LevelSet::LevelSet(openvdb::FloatGrid::Ptr grid)
+LevelSet::LevelSet(openvdb::GridBase::Ptr grid)
     : VolumeBase(grid)
     , m_isector(nullptr)
 {
-	m_isector = std::unique_ptr<isector_t>(new isector_t(*m_grid));
 	loadShader();
-	generateMesh();
+	generateMesh(false);
 }
 
 void LevelSet::loadShader()
@@ -117,88 +118,39 @@ void LevelSet::renderScaled(const glm::mat4 &MVP, const glm::mat3 &N, const glm:
 	(void)view_dir;
 }
 
-void LevelSet::generateMesh()
+void LevelSet::generateMesh(const bool is_sculpt_mode)
 {
-	using namespace openvdb;
-	using openvdb::Index64;
+	VolumeMesherOp op;
+	op.inv_mat = m_inv_matrix;
 
-	openvdb::tools::VolumeToMesh mesher(0.0);
-	mesher(*m_grid);
+	if (is_sculpt_mode)
+		op.template operator()<openvdb::FloatGrid>(m_level_set);
+	else
+		process_grid_real(m_grid, get_grid_storage(*m_grid), op);
 
-	/* Copy points and generate point normals. */
-
-	m_vertices.clear();
-	m_vertices.reserve(mesher.pointListSize());
-	std::vector<GLfloat> normals(mesher.pointListSize() * 3);
-
-	for (Index64 n = 0, N = mesher.pointListSize(); n < N; ++n) {
-		const openvdb::Vec3s& p = mesher.pointList()[n];
-		m_vertices.push_back(glm::vec3(p[0], p[1], p[2]) * glm::mat3(m_inv_matrix));
-	}
-
-	/* Copy primitives */
-	openvdb::tools::PolygonPoolList& polygonPoolList = mesher.polygonPoolList();
-	Index64 numQuads = 0;
-	for (Index64 n = 0, N = mesher.polygonPoolListSize(); n < N; ++n) {
-		numQuads += polygonPoolList[n].numQuads();
-	}
-
-	std::vector<GLuint> indices;
-	indices.reserve(numQuads * 6);
-	openvdb::Vec3d normal, e1, e2;
-
-	for (Index64 n = 0, N = mesher.polygonPoolListSize(); n < N; ++n) {
-		const openvdb::tools::PolygonPool& polygons = polygonPoolList[n];
-
-		for (Index64 i = 0, I = polygons.numQuads(); i < I; ++i) {
-			const openvdb::Vec4I& quad = polygons.quad(i);
-			indices.push_back(quad[0]);
-			indices.push_back(quad[1]);
-			indices.push_back(quad[2]);
-			indices.push_back(quad[0]);
-			indices.push_back(quad[2]);
-			indices.push_back(quad[3]);
-
-			e1 = mesher.pointList()[quad[1]];
-			e1 -= mesher.pointList()[quad[0]];
-			e2 = mesher.pointList()[quad[2]];
-			e2 -= mesher.pointList()[quad[1]];
-			normal = e1.cross(e2);
-
-			const double length = normal.length();
-			if (length > 1.0e-7) normal *= (1.0 / length);
-
-			for (int v = 0; v < 4; ++v) {
-				normals[quad[v] * 3]     = static_cast<GLfloat>(-normal[0]);
-				normals[quad[v] * 3 + 1] = static_cast<GLfloat>(-normal[1]);
-				normals[quad[v] * 3 + 2] = static_cast<GLfloat>(-normal[2]);
-			}
-		}
-	}
+	m_elements = op.indices.size();
 
 	m_buffer_data.reset(new GPUBuffer());
 	m_buffer_data->bind();
-	m_buffer_data->generateVertexBuffer(&m_vertices[0][0], m_vertices.size() * sizeof(glm::vec3));
-	m_buffer_data->generateIndexBuffer(&indices[0], indices.size() * sizeof(GLuint));
+	m_buffer_data->generateVertexBuffer(&op.vertices[0][0], op.vertices.size() * sizeof(glm::vec3));
+	m_buffer_data->generateIndexBuffer(&op.indices[0], m_elements * sizeof(GLuint));
 	m_buffer_data->attribPointer(m_program["vertex"], 3);
-	m_buffer_data->generateNormalBuffer(&normals[0], normals.size() * sizeof(GLfloat));
+	m_buffer_data->generateNormalBuffer(&op.normals[0], op.normals.size() * sizeof(GLfloat));
 	m_buffer_data->attribPointer(m_program["normal"], 3);
 	m_buffer_data->unbind();
 
 	gl_check_errors();
-
-	m_elements = indices.size();
 }
 
 bool LevelSet::intersectLS(const Ray &ray, Brush *brush)
 {
 	if (m_topology_changed) {
 		if (m_draw_topology) {
-			m_topology.reset(new TreeTopology(m_grid));
+			m_topology.reset(new TreeTopology(m_level_set));
 		}
 
-		m_isector.reset(new isector_t(*m_grid));
-		generateMesh();
+		m_isector.reset(new isector_t(*m_level_set));
+		generateMesh(true);
 		m_topology_changed = false;
 	}
 
@@ -216,8 +168,8 @@ bool LevelSet::intersectLS(const Ray &ray, Brush *brush)
 		const float radius = brush->radius();
 		const float amount = brush->amount();
 
-		FloatGrid::Accessor accessor = m_grid->getAccessor();
-		math::Coord ijk = m_grid->transform().worldToIndexNodeCentered(position);
+		FloatGrid::Accessor accessor = m_level_set->getAccessor();
+		math::Coord ijk = m_level_set->transform().worldToIndexNodeCentered(position);
 		math::Coord co(ijk);
 		int &x = ijk[0], &y = ijk[1], &z = ijk[2];
 
@@ -242,4 +194,15 @@ bool LevelSet::intersectLS(const Ray &ray, Brush *brush)
 	}
 
 	return false;
+}
+
+void LevelSet::swapGrids(const bool is_scuplt_mode)
+{
+	if (is_scuplt_mode) {
+		m_level_set = openvdb::gridPtrCast<openvdb::FloatGrid>(m_grid);
+		m_topology_changed = true;  /* force update for ray intersection */
+	}
+	else {
+		m_grid = m_level_set;
+	}
 }

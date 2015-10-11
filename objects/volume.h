@@ -46,7 +46,7 @@ class Volume : public VolumeBase {
 	void loadVolumeShader();
 
 public:
-	Volume(openvdb::FloatGrid::Ptr &grid);
+	Volume(openvdb::GridBase::Ptr grid);
 	~Volume() = default;
 
 	void slice(const glm::vec3 &view_dir);

@@ -37,11 +37,13 @@ class LevelSet : public VolumeBase {
 	typedef openvdb::tools::LevelSetRayIntersector<openvdb::FloatGrid> isector_t;
 	std::unique_ptr<isector_t> m_isector;
 
-	void generateMesh();
+	openvdb::FloatGrid::Ptr m_level_set; // For sculpting
+
+	void generateMesh(const bool is_sculpt_mode);
 	void loadShader();
 
 public:
-	LevelSet(openvdb::FloatGrid::Ptr grid);
+	LevelSet(openvdb::GridBase::Ptr grid);
 	~LevelSet() = default;
 
 	int type() const { return LEVEL_SET; }
@@ -50,4 +52,6 @@ public:
 	void renderScaled(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir);
 
 	bool intersectLS(const Ray &ray, Brush *brush);
+
+	void swapGrids(const bool is_scuplt_mode);
 };

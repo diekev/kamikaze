@@ -69,7 +69,8 @@ HEADERS += \
 	util/utils.h \
     util/util_render.h \
     ui/levelsetdialog.h \
-    sculpt/brush.h
+    sculpt/brush.h \
+    util/util_openvdb_process.h
 
 OTHER_FILES += \
 	render/shaders/flat_shader.frag \

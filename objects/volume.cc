@@ -27,11 +27,12 @@
 
 #include "util/util_opengl.h"
 #include "util/util_openvdb.h"
+#include "util/util_openvdb_process.h"
 #include "util/utils.h"
 
 const int MAX_SLICES = 512;
 
-Volume::Volume(openvdb::FloatGrid::Ptr &grid)
+Volume::Volume(openvdb::GridBase::Ptr grid)
     : VolumeBase(grid)
     , m_volume_texture(nullptr)
     , m_transfer_texture(nullptr)
@@ -50,21 +51,22 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
 
 	/* Get resolution & copy data */
 	openvdb::math::CoordBBox bbox = m_grid->evalActiveVoxelBoundingBox();
-	GLfloat *data = new GLfloat[bbox.volume()];
 
-	convert_grid(*m_grid, data, bbox, m_value_scale);
+	SparseToDenseOp op;
+	op.bbox = bbox;
+	op.data = new GLfloat[bbox.volume()];
+
+	process_grid_real(m_grid, get_grid_storage(*m_grid), op);
 
 	m_volume_texture = GPUTexture::create(GL_TEXTURE_3D, m_num_textures++);
 	m_volume_texture->bind();
 	m_volume_texture->setType(GL_FLOAT, GL_RED, GL_RED);
 	m_volume_texture->setMinMagFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 	m_volume_texture->setWrapping(GL_CLAMP_TO_BORDER);
-	m_volume_texture->createTexture(data, bbox.dim().asPointer());
+	m_volume_texture->createTexture(op.data, bbox.dim().asPointer());
 	m_volume_texture->generateMipMap(0, 4);
 	m_volume_texture->unbind();
 	gl_check_errors();
-
-	delete [] data;
 
 	loadTransferFunction();
 	loadVolumeShader();

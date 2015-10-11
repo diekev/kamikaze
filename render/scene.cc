@@ -139,6 +139,8 @@ int Scene::mode() const
 void Scene::setMode(int mode)
 {
 	m_mode = mode;
+	LevelSet *ls = (LevelSet *)m_active_object;
+	ls->swapGrids(mode == SCENE_MODE_SCULPT);
 }
 
 Object *Scene::currentObject()
