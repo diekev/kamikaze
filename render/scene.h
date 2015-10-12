@@ -81,4 +81,5 @@ public:
 	void intersect(const Ray &ray);
 
 	int mode() const;
+	void selectObject(const glm::vec3 &pos);
 };

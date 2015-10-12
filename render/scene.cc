@@ -126,28 +126,31 @@ void Scene::render(const glm::mat4 &MV, const glm::mat4 &P, const glm::vec3 &vie
 
 void Scene::intersect(const Ray &ray)
 {
-	if (m_mode == SCENE_MODE_OBJECT) {
-		float min = std::numeric_limits<float>::max();
-		int selected_object = -1, index = 0;
-
-		for (auto &object : m_objects) {
-			if (object->intersect(ray, min)) {
-				selected_object = index;
-			}
-
-			++index;
-		}
-
-		if (selected_object != -1 && m_active_object != m_objects[selected_object]) {
-			m_active_object = m_objects[selected_object];
-			Q_EMIT objectChanged();
-		}
+	LevelSet *ls = (LevelSet *)m_active_object;
+	if (ls->intersectLS(ray, m_brush)) {
+		// TODO: separate intersection from sculpting.
 	}
-	else {
-		LevelSet *ls = (LevelSet *)m_active_object;
-		if (ls->intersectLS(ray, m_brush)) {
-			// TODO: separate intersection from sculpting.
+}
+
+/* Select the object which is closest to pos. */
+void Scene::selectObject(const glm::vec3 &pos)
+{
+	float min = 1000.0f;
+	int selected_object = -1, index = 0;
+
+	for (auto &object : m_objects) {
+		float dist = glm::distance(object->pos(), pos);
+		if (/*dist < 1.0f &&*/ dist < min) {
+			selected_object = index;
+			min = dist;
 		}
+
+		++index;
+	}
+
+	if (selected_object != -1 && m_active_object != m_objects[selected_object]) {
+		m_active_object = m_objects[selected_object];
+		Q_EMIT objectChanged();
 	}
 }
 
