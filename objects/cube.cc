@@ -118,11 +118,6 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 void Cube::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir,
                   const bool for_outline)
 {
-	if (m_need_update) {
-		updateMatrix();
-		m_need_update = false;
-	}
-
 	if (m_program.isValid()) {
 		m_program.enable();
 		m_buffer_data->bind();
