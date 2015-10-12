@@ -29,6 +29,7 @@
 #include "levelset.h"
 
 #include "sculpt/brush.h"
+#include "sculpt/sculpt.h"
 
 #include "util/utils.h"
 #include "util/util_opengl.h"
@@ -119,69 +120,13 @@ bool LevelSet::intersectLS(const Ray &ray, Brush *brush)
 
 	m_isector.reset(new isector_t(*m_level_set));
 	if (m_isector->intersectsWS(vray, position)) {
-		const float radius = brush->radius();
-		const float strength = brush->strength() * m_voxel_size;
-
-		FloatGrid::Accessor accessor = m_level_set->getAccessor();
 		math::Coord ijk = m_level_set->transform().worldToIndexNodeCentered(position);
-		math::Coord co(ijk);
-		int &x = ijk[0], &y = ijk[1], &z = ijk[2];
 
 		if (brush->tool() == BRUSH_TOOL_DRAW) {
-			float influence;
-			for (x = co[0] - radius; x < co[0] + radius; ++x) {
-				for (y = co[1] - radius; y < co[1] + radius; ++y) {
-					for (z = co[2] - radius; z < co[2] + radius; ++z) {
-						influence = brush->influence(co, ijk);
-
-						if (influence > 0.0f) {
-							//accessor.modifyValue(ijk, addOp);
-							float value = accessor.getValue(ijk);
-							accessor.setValue(ijk, value - strength * influence);
-						}
-					}
-				}
-			}
+			do_sculpt_draw(*m_level_set, brush, ijk, m_voxel_size);
 		}
 		else {
-			const float dt = math::Pow2(m_voxel_size) / 6.0f;
-		    math::GradStencil<FloatGrid> stencil(*m_level_set, m_voxel_size);
-
-			int diameter = radius + radius;
-			float *buffer = new float[diameter * diameter * diameter];
-
-			float influence;
-			int index = 0;
-			for (x = co[0] - radius; x < co[0] + radius; ++x) {
-				for (y = co[1] - radius; y < co[1] + radius; ++y) {
-					for (z = co[2] - radius; z < co[2] + radius; ++z, ++index) {
-						float value = accessor.getValue(ijk);
-						influence = brush->influence(co, ijk);
-
-						if (influence > 0.0f) {
-							stencil.moveTo(ijk);
-							accessor.setValue(ijk, value - strength * influence);
-							const float phi = value + dt * stencil.laplacian();
-		                    buffer[index] = phi - strength * influence;
-						}
-						else {
-							buffer[index] = value;
-						}
-					}
-				}
-			}
-
-			index = 0;
-			/* copy buffer back to voxels */
-			for (x = co[0] - radius; x < co[0] + radius; ++x) {
-				for (y = co[1] - radius; y < co[1] + radius; ++y) {
-					for (z = co[2] - radius; z < co[2] + radius; ++z, ++index) {
-						accessor.setValue(ijk, buffer[index]);
-					}
-				}
-			}
-
-			delete [] buffer;
+			do_sculpt_smooth(*m_level_set, brush, ijk, m_voxel_size);
 		}
 
 		m_topology_changed = true;
