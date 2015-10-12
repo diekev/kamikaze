@@ -48,6 +48,8 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 	}
 	m_program.disable();
 
+	m_draw_type = GL_LINES;
+
 	const glm::vec3 vertices[8] = {
 	    glm::vec3(min[0], min[1], min[2]),
 	    glm::vec3(max[0], min[1], min[2]),
@@ -125,7 +127,7 @@ void Cube::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir
 		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(m_matrix));
 		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 		glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(N));
-		glDrawElements(GL_LINES, m_elements, GL_UNSIGNED_SHORT, nullptr);
+		glDrawElements(m_draw_type, m_elements, GL_UNSIGNED_SHORT, nullptr);
 
 		m_buffer_data->unbind();
 		m_program.disable();

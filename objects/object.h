@@ -33,7 +33,7 @@
 
 enum {
 	DRAW_WIRE = 0,
-	DRAW_QUADS = 1,
+	DRAW_SOLID = 1,
 };
 
 enum {

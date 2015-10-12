@@ -28,7 +28,7 @@
 
 Object::Object()
 	: m_buffer_data(nullptr)
-    , m_draw_type(GL_QUADS)
+    , m_draw_type(GL_TRIANGLES)
     , m_dimensions(glm::vec3(0.0f))
     , m_scale(glm::vec3(1.0f))
     , m_inv_size(glm::vec3(0.0f))
@@ -66,8 +66,8 @@ void Object::setDrawType(int draw_type)
 			m_draw_type = GL_LINES;
 			break;
 		default:
-		case DRAW_QUADS:
-			m_draw_type = GL_QUADS;
+		case DRAW_SOLID:
+			m_draw_type = GL_TRIANGLES;
 			break;
 	}
 }

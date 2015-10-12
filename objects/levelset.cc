@@ -72,7 +72,7 @@ void LevelSet::render(const glm::mat4 &MVP, const glm::mat3 &N,
 		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 		glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(N));
 		glUniform1i(m_program("for_outline"), for_outline);
-		glDrawElements(GL_TRIANGLES, m_elements, GL_UNSIGNED_INT, nullptr);
+		glDrawElements(m_draw_type, m_elements, GL_UNSIGNED_INT, nullptr);
 
 		m_buffer_data->unbind();
 		m_program.disable();
@@ -120,7 +120,7 @@ bool LevelSet::intersectLS(const Ray &ray, Brush *brush)
 	m_isector.reset(new isector_t(*m_level_set));
 	if (m_isector->intersectsWS(vray, position)) {
 		const float radius = brush->radius();
-		const float strength = brush->strength() * m_level_set->transform().voxelSize()[0];
+		const float strength = brush->strength() * m_voxel_size;
 
 		FloatGrid::Accessor accessor = m_level_set->getAccessor();
 		math::Coord ijk = m_level_set->transform().worldToIndexNodeCentered(position);
@@ -144,9 +144,8 @@ bool LevelSet::intersectLS(const Ray &ray, Brush *brush)
 			}
 		}
 		else {
-			const float dx = m_level_set->transform().voxelSize()[0];
-			const float dt = math::Pow2(dx) / 6.0f;
-		    math::GradStencil<FloatGrid> stencil(*m_level_set, dx);
+			const float dt = math::Pow2(m_voxel_size) / 6.0f;
+		    math::GradStencil<FloatGrid> stencil(*m_level_set, m_voxel_size);
 
 			int diameter = radius + radius;
 			float *buffer = new float[diameter * diameter * diameter];

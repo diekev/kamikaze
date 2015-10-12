@@ -45,7 +45,6 @@ Volume::Volume(openvdb::GridBase::Ptr grid)
 	using namespace openvdb;
 	using namespace openvdb::math;
 
-	m_draw_type = GL_TRIANGLES;
 	m_elements = m_num_slices * 6;
 
 	/* Get resolution & copy data */

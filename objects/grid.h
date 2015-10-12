@@ -30,7 +30,7 @@
 
 class Grid {
 	std::unique_ptr<GPUBuffer> m_buffer_data;
-	size_t m_total_indices;
+	size_t m_elements;
 	GPUProgram m_program;
 
 public:
