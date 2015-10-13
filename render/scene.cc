@@ -179,55 +179,46 @@ Object *Scene::currentObject()
 void Scene::moveObjectX(double value)
 {
 	m_active_object->pos().x = value;
-	Q_EMIT updateViewport();
 }
 
 void Scene::moveObjectY(double value)
 {
 	m_active_object->pos().y = value;
-	Q_EMIT updateViewport();
 }
 
 void Scene::moveObjectZ(double value)
 {
 	m_active_object->pos().z = value;
-	Q_EMIT updateViewport();
 }
 
 void Scene::scaleObjectX(double value)
 {
 	m_active_object->scale().x = value;
-	Q_EMIT updateViewport();
 }
 
 void Scene::scaleObjectY(double value)
 {
 	m_active_object->scale().y = value;
-	Q_EMIT updateViewport();
 }
 
 void Scene::scaleObjectZ(double value)
 {
 	m_active_object->scale().z = value;
-	Q_EMIT updateViewport();
 }
 
 void Scene::rotateObjectX(double value)
 {
 	m_active_object->rotation().x = value;
-	Q_EMIT updateViewport();
 }
 
 void Scene::rotateObjectY(double value)
 {
 	m_active_object->rotation().y = value;
-	Q_EMIT updateViewport();
 }
 
 void Scene::rotateObjectZ(double value)
 {
 	m_active_object->rotation().z = value;
-	Q_EMIT updateViewport();
 }
 
 void Scene::setVoxelSize(double value)
@@ -235,7 +226,6 @@ void Scene::setVoxelSize(double value)
 	if (m_active_object->type() == VOLUME || m_active_object->type() == LEVEL_SET) {
 		VolumeBase *vb = static_cast<VolumeBase *>(m_active_object);
 		vb->setVoxelSize(value);
-		Q_EMIT updateViewport();
 	}
 }
 

@@ -101,7 +101,6 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(ui->m_brush_mode, SIGNAL(currentIndexChanged(int)), m_scene, SLOT(setBrushMode(int)));
 	connect(ui->m_brush_tool, SIGNAL(currentIndexChanged(int)), m_scene, SLOT(setBrushTool(int)));
 
-	connect(m_scene, SIGNAL(updateViewport()), ui->m_viewport, SLOT(update()));
 	connect(m_timer, SIGNAL(timeout()), this, SLOT(updateFrame()));
 
 	/* Cannot add widget to toolbar in Qt Designer, do a little hack to disable
@@ -240,8 +239,6 @@ void MainWindow::updateObject() const
 
 	ob->drawBBox(ui->m_draw_bbox->isChecked());
 	ob->drawTreeTopology(ui->m_draw_tree->isChecked());
-
-	ui->m_viewport->update();
 }
 
 void MainWindow::updateObjectTab() const

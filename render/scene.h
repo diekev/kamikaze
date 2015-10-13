@@ -49,7 +49,6 @@ class Scene : public QObject {
 
 Q_SIGNALS:
 	void objectChanged();
-	void updateViewport();
 
 public Q_SLOTS:
 	void setMode(int mode);

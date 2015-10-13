@@ -25,6 +25,7 @@
 #include <QApplication>
 #include <QColorDialog>
 #include <QKeyEvent>
+#include <QTimer>
 
 #include <GL/glew.h>
 
@@ -48,8 +49,10 @@ Viewer::Viewer(QWidget *parent)
     , m_camera(new Camera(m_width, m_height))
     , m_grid(nullptr)
     , m_scene(nullptr)
+    , m_timer(new QTimer(this))
 {
 	setFocusPolicy(Qt::FocusPolicy::StrongFocus);
+	connect(m_timer, SIGNAL(timeout()), this, SLOT(updateGL()));
 }
 
 Viewer::~Viewer()
@@ -76,6 +79,8 @@ void Viewer::initializeGL()
 
 	m_grid = new Grid(20, 20);
 	m_camera->update();
+
+	m_timer->start(1000 / 24);
 }
 
 void Viewer::resizeGL(int w, int h)
@@ -153,8 +158,6 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 	}
 
 	m_camera->mouseDownEvent(x, y);
-
-	update();
 }
 
 void Viewer::mouseMoveEvent(QMouseEvent *e)
@@ -171,8 +174,6 @@ void Viewer::mouseMoveEvent(QMouseEvent *e)
 	if (m_scene->mode() == SCENE_MODE_SCULPT && m_mouse_button == MOUSE_LEFT) {
 		intersectScene(x, y);
 	}
-
-	update();
 }
 
 void Viewer::mouseReleaseEvent(QMouseEvent */*e*/)
@@ -184,7 +185,6 @@ void Viewer::mouseReleaseEvent(QMouseEvent */*e*/)
 void Viewer::keyPressEvent(QKeyEvent *e)
 {
 	m_scene->keyboardEvent(e->key());
-	update();
 }
 
 void Viewer::wheelEvent(QWheelEvent *e)
@@ -197,7 +197,6 @@ void Viewer::wheelEvent(QWheelEvent *e)
 	}
 
 	m_camera->mouseWheelEvent(m_mouse_button);
-	update();
 }
 
 void Viewer::setScene(Scene *scene)
@@ -240,12 +239,10 @@ void Viewer::changeBackground()
 	if (color.isValid()) {
 		m_bg = glm::vec4(color.redF(), color.greenF(), color.blueF(), 1.0f);
 		glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
-		update();
 	}
 }
 
 void Viewer::drawGrid(bool b)
 {
 	m_draw_grid = b;
-	update();
 }
