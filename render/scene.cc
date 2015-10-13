@@ -23,6 +23,7 @@
  */
 
 #include <QKeyEvent>
+#include <QListWidget>
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
@@ -261,4 +262,25 @@ void Scene::setBrushStrength(double value)
 void Scene::setBrushTool(int tool)
 {
 	m_brush->tool(tool);
+}
+
+void Scene::objectNameList(QListWidget *widget) const
+{
+	widget->clear();
+
+	for (auto &object : m_objects) {
+		widget->addItem(object->name());
+	}
+}
+
+void Scene::setCurrentObject(QListWidgetItem *item)
+{
+	for (auto &object : m_objects) {
+		if (object->name() == item->text()) {
+			m_active_object = object;
+			break;
+		}
+	}
+
+	Q_EMIT objectChanged();
 }

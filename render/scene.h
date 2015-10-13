@@ -31,6 +31,8 @@
 
 class Brush;
 class Object;
+class QListWidget;
+class QListWidgetItem;
 
 enum {
 	SCENE_MODE_OBJECT = 0,
@@ -69,6 +71,8 @@ public Q_SLOTS:
 	void setBrushStrength(double value);
 	void setBrushTool(int tool);
 
+	void setCurrentObject(QListWidgetItem *item);
+
 public:
 	Scene();
 	~Scene();
@@ -83,4 +87,5 @@ public:
 
 	int mode() const;
 	void selectObject(const glm::vec3 &pos);
+	void objectNameList(QListWidget *widget) const;
 };

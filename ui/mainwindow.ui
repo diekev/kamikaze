@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>828</width>
-    <height>600</height>
+    <width>984</width>
+    <height>673</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -58,7 +58,7 @@
          <enum>QTabWidget::North</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>4</number>
         </property>
         <property name="movable">
          <bool>true</bool>
@@ -608,6 +608,16 @@
           </item>
          </layout>
         </widget>
+        <widget class="QWidget" name="tab_3">
+         <attribute name="title">
+          <string>Outliner</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_9">
+          <item>
+           <widget class="QListWidget" name="m_outliner"/>
+          </item>
+         </layout>
+        </widget>
        </widget>
       </widget>
       <widget class="TimeLineWidget" name="m_timeline" native="true"/>
@@ -620,7 +630,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>828</width>
+     <width>984</width>
      <height>22</height>
     </rect>
    </property>

@@ -300,6 +300,8 @@ void MainWindow::updateObjectTab() const
 		disableListItem(m_scene_mode_list, 1);
 	}
 
+	m_scene->objectNameList(ui->m_outliner);
+
 	/* Reconnect signals. */
 	connectObjectSignals();
 }
@@ -387,6 +389,8 @@ void MainWindow::connectObjectSignals() const
 	connect(ui->m_rotate_z, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectZ(double)));
 	connect(ui->m_voxel_size, SIGNAL(valueChanged(double)), m_scene, SLOT(setVoxelSize(double)));
 	connect(ui->m_object_name, SIGNAL(textChanged(QString)), m_scene, SLOT(setObjectName(QString)));
+	connect(ui->m_outliner, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)),
+	        m_scene, SLOT(setCurrentObject(QListWidgetItem*)));
 }
 
 void MainWindow::disconnectObjectSignals() const
@@ -402,4 +406,6 @@ void MainWindow::disconnectObjectSignals() const
 	disconnect(ui->m_rotate_z, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectZ(double)));
 	disconnect(ui->m_voxel_size, SIGNAL(valueChanged(double)), m_scene, SLOT(setVoxelSize(double)));
 	disconnect(ui->m_object_name, SIGNAL(textChanged(QString)), m_scene, SLOT(setObjectName(QString)));
+	disconnect(ui->m_outliner, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)),
+	           m_scene, SLOT(setCurrentObject(QListWidgetItem*)));
 }
