@@ -124,7 +124,7 @@ MainWindow::~MainWindow()
 	delete ui;
 }
 
-void MainWindow::openFile(const QString &filename)
+void MainWindow::openFile(const QString &filename) const
 {
 	using namespace openvdb;
 
@@ -230,7 +230,7 @@ void MainWindow::openFile()
 	}
 }
 
-void MainWindow::updateObject()
+void MainWindow::updateObject() const
 {
 	Object *ob = m_scene->currentObject();
 
@@ -244,7 +244,7 @@ void MainWindow::updateObject()
 	ui->m_viewport->update();
 }
 
-void MainWindow::updateObjectTab()
+void MainWindow::updateObjectTab() const
 {
 	Object *ob = m_scene->currentObject();
 
@@ -304,7 +304,7 @@ void MainWindow::updateObjectTab()
 	connectObjectSignals();
 }
 
-void MainWindow::addCube()
+void MainWindow::addCube() const
 {
 	float radius = 2.0f;
 	glm::vec3 min(-1.0f), max(1.0f);
@@ -314,7 +314,7 @@ void MainWindow::addCube()
 	m_scene->addObject(ob);
 }
 
-void MainWindow::addLevelSet()
+void MainWindow::addLevelSet() const
 {
 	m_level_set_dialog->show();
 
@@ -363,18 +363,18 @@ void MainWindow::startAnimation()
 	}
 }
 
-void MainWindow::updateFrame()
+void MainWindow::updateFrame() const
 {
 	ui->m_timeline->incrementFrame();
 }
 
-void MainWindow::setSceneMode(int idx)
+void MainWindow::setSceneMode(int idx) const
 {
 	m_scene->setMode(idx);
 	ui->tabWidget->setTabEnabled(3, idx == SCENE_MODE_SCULPT);
 }
 
-void MainWindow::connectObjectSignals()
+void MainWindow::connectObjectSignals() const
 {
 	connect(ui->m_move_x, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectX(double)));
 	connect(ui->m_move_y, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectY(double)));
@@ -389,7 +389,7 @@ void MainWindow::connectObjectSignals()
 	connect(ui->m_object_name, SIGNAL(textChanged(QString)), m_scene, SLOT(setObjectName(QString)));
 }
 
-void MainWindow::disconnectObjectSignals()
+void MainWindow::disconnectObjectSignals() const
 {
 	disconnect(ui->m_move_x, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectX(double)));
 	disconnect(ui->m_move_y, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectY(double)));

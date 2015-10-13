@@ -48,18 +48,18 @@ class MainWindow : public QMainWindow {
 
 	LevelSetDialog *m_level_set_dialog;
 
-	void connectObjectSignals();
-	void disconnectObjectSignals();
+	void connectObjectSignals() const;
+	void disconnectObjectSignals() const;
 
 private Q_SLOTS:
 	void openFile();
-	void updateObject();
-	void updateObjectTab();
-	void addCube();
-	void addLevelSet();
+	void updateObject() const;
+	void updateObjectTab() const;
+	void addCube() const;
+	void addLevelSet() const;
 	void startAnimation();
-	void updateFrame();
-	void setSceneMode(int idx);
+	void updateFrame() const;
+	void setSceneMode(int idx) const;
 
 protected:
 	bool eventFilter(QObject *obj, QEvent *e);
@@ -68,5 +68,5 @@ public:
 	explicit MainWindow(QWidget *parent = nullptr);
 	~MainWindow();
 
-	void openFile(const QString &filename);
+	void openFile(const QString &filename) const;
 };
