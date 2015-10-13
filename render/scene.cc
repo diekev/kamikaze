@@ -238,6 +238,11 @@ void Scene::setVoxelSize(double value)
 	}
 }
 
+void Scene::setObjectName(const QString &name)
+{
+	m_active_object->name(name);
+}
+
 void Scene::setBrushMode(int mode)
 {
 	m_brush->mode(mode);

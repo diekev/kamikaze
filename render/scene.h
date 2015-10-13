@@ -62,6 +62,7 @@ public Q_SLOTS:
 	void rotateObjectY(double value);
 	void rotateObjectZ(double value);
 	void setVoxelSize(double value);
+	void setObjectName(const QString &name);
 
 	void setBrushMode(int mode);
 	void setBrushRadius(double value);

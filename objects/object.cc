@@ -36,6 +36,7 @@ Object::Object()
     , m_min(glm::vec3(0.0f))
     , m_max(glm::vec3(0.0f))
     , m_pos(glm::vec3(0.0f))
+    , m_name("")
     , m_draw_bbox(false)
     , m_draw_topology(false)
     , m_need_update(false)
@@ -118,4 +119,14 @@ void Object::updateMatrix()
 	m_matrix = glm::scale(m_matrix, m_scale * m_dimensions);
 
 	m_inv_matrix = glm::inverse(m_matrix);
+}
+
+QString Object::name() const
+{
+	return m_name;
+}
+
+void Object::name(const QString &name)
+{
+	m_name = name;
 }

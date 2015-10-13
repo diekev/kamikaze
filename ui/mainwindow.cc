@@ -169,6 +169,7 @@ void MainWindow::openFile(const QString &filename)
 		else {
 			ob = new Volume(grid);
 		}
+		ob->name(grid->getName().c_str());
 		m_scene->addObject(ob);
 	}
 	else {
@@ -257,6 +258,8 @@ void MainWindow::updateObjectTab()
 
 	ui->tabWidget->setTabEnabled(0, true);
 
+	ui->m_object_name->setText(ob->name());
+
 	ui->m_draw_bbox->setChecked(ob->drawBBox());
 
 	const glm::vec3 pos = ob->pos();
@@ -307,6 +310,7 @@ void MainWindow::addCube()
 	glm::vec3 min(-1.0f), max(1.0f);
 
 	Object *ob = new Cube(min * radius, max * radius);
+	ob->name("Cube");
 	m_scene->addObject(ob);
 }
 
@@ -318,6 +322,8 @@ void MainWindow::addLevelSet()
 		using namespace openvdb;
 		using namespace openvdb::math;
 
+		QString name;
+
 		const float voxel_size = m_level_set_dialog->voxelSize();
 		const float half_width = m_level_set_dialog->halfWidth();
 		const float radius = m_level_set_dialog->radius();
@@ -326,6 +332,7 @@ void MainWindow::addLevelSet()
 		if (m_level_set_dialog->levelSetType() == ADD_LEVEL_SET_SPHERE) {
 			ls = tools::createLevelSetSphere<FloatGrid>(radius, Vec3f(0.0f),
 			                                            voxel_size, half_width);
+			name = "Sphere";
 		}
 		else {
 			Transform xform = *Transform::createLinearTransform(voxel_size);
@@ -333,9 +340,11 @@ void MainWindow::addLevelSet()
 			BBox<math::Vec3s> bbox(min, max);
 
 			ls = tools::createLevelSetBox<FloatGrid>(bbox, xform, half_width);
+			name = "Cube";
 		}
 
 		Object *ob = new LevelSet(ls->deepCopy());
+		ob->name(name);
 		m_scene->addObject(ob);
 	}
 }
@@ -377,6 +386,7 @@ void MainWindow::connectObjectSignals()
 	connect(ui->m_rotate_y, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectY(double)));
 	connect(ui->m_rotate_z, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectZ(double)));
 	connect(ui->m_voxel_size, SIGNAL(valueChanged(double)), m_scene, SLOT(setVoxelSize(double)));
+	connect(ui->m_object_name, SIGNAL(textChanged(QString)), m_scene, SLOT(setObjectName(QString)));
 }
 
 void MainWindow::disconnectObjectSignals()
@@ -391,4 +401,5 @@ void MainWindow::disconnectObjectSignals()
 	disconnect(ui->m_rotate_y, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectY(double)));
 	disconnect(ui->m_rotate_z, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectZ(double)));
 	disconnect(ui->m_voxel_size, SIGNAL(valueChanged(double)), m_scene, SLOT(setVoxelSize(double)));
+	disconnect(ui->m_object_name, SIGNAL(textChanged(QString)), m_scene, SLOT(setObjectName(QString)));
 }

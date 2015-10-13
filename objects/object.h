@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <QString>
+
 #include <memory>
 #include <vector>
 
@@ -53,6 +55,8 @@ protected:
 	glm::vec3 m_dimensions, m_scale, m_inv_size, m_rotation;
 	glm::vec3 m_min, m_max, m_pos;
 	glm::mat4 m_matrix, m_inv_matrix;
+
+	QString m_name;
 
 	bool m_draw_bbox, m_draw_topology, m_need_update;
 
@@ -86,4 +90,7 @@ public:
 	glm::mat4 &matrix() { return m_matrix; }
 
 	virtual void update();
+
+	QString name() const;
+	void name(const QString &name);
 };
