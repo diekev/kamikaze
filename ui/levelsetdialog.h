@@ -47,4 +47,5 @@ public:
 	float halfWidth() const;
 	float radius() const;
 	int levelSetType() const;
+	QString name() const;
 };

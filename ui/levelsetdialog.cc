@@ -55,3 +55,8 @@ int LevelSetDialog::levelSetType() const
 {
 	return ui->m_combox_box->currentIndex();
 }
+
+QString LevelSetDialog::name() const
+{
+	return ui->m_name_edit->text();
+}

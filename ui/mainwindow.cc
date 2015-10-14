@@ -314,17 +314,15 @@ void MainWindow::addLevelSet() const
 		using namespace openvdb;
 		using namespace openvdb::math;
 
-		QString name;
-
 		const float voxel_size = m_level_set_dialog->voxelSize();
 		const float half_width = m_level_set_dialog->halfWidth();
 		const float radius = m_level_set_dialog->radius();
+		const auto name = m_level_set_dialog->name();
 		FloatGrid::Ptr ls;
 
 		if (m_level_set_dialog->levelSetType() == ADD_LEVEL_SET_SPHERE) {
 			ls = tools::createLevelSetSphere<FloatGrid>(radius, Vec3f(0.0f),
 			                                            voxel_size, half_width);
-			name = "Sphere";
 		}
 		else {
 			Transform xform = *Transform::createLinearTransform(voxel_size);
@@ -332,7 +330,6 @@ void MainWindow::addLevelSet() const
 			BBox<math::Vec3s> bbox(min, max);
 
 			ls = tools::createLevelSetBox<FloatGrid>(bbox, xform, half_width);
-			name = "Cube";
 		}
 
 		Object *ob = new LevelSet(ls->deepCopy());
