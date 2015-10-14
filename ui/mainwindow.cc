@@ -93,6 +93,10 @@ MainWindow::MainWindow(QWidget *parent)
 	hsizes << hsplister_height << tiemeline_height;
 	ui->vsplitter->setSizes(hsizes);
 
+	/* Object */
+	ui->m_move_object->setMinMax(-9999.99f, 9999.99f);
+	ui->m_scale_object->setMinMax(-99.99f, 99.99f);
+	ui->m_rotate_object->setMinMax(-360.0f, 360.0f);
 	connectObjectSignals();
 
 	/* Brush */
@@ -259,20 +263,9 @@ void MainWindow::updateObjectTab() const
 
 	ui->m_draw_bbox->setChecked(ob->drawBBox());
 
-	const glm::vec3 pos = ob->pos();
-	ui->m_move_x->setValue(pos.x);
-	ui->m_move_y->setValue(pos.y);
-	ui->m_move_z->setValue(pos.z);
-
-	const glm::vec3 scale = ob->scale();
-	ui->m_scale_x->setValue(scale.x);
-	ui->m_scale_y->setValue(scale.y);
-	ui->m_scale_z->setValue(scale.z);
-
-	const glm::vec3 rotation = ob->rotation();
-	ui->m_rotate_x->setValue(rotation.x);
-	ui->m_rotate_y->setValue(rotation.y);
-	ui->m_rotate_z->setValue(rotation.z);
+	ui->m_move_object->setValue(&ob->pos()[0]);
+	ui->m_scale_object->setValue(&ob->scale()[0]);
+	ui->m_rotate_object->setValue(&ob->rotation()[0]);
 
 	const bool is_volume = (ob->type() == VOLUME || ob->type() == LEVEL_SET);
 
@@ -375,15 +368,9 @@ void MainWindow::setSceneMode(int idx) const
 
 void MainWindow::connectObjectSignals() const
 {
-	connect(ui->m_move_x, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectX(double)));
-	connect(ui->m_move_y, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectY(double)));
-	connect(ui->m_move_z, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectZ(double)));
-	connect(ui->m_scale_x, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectX(double)));
-	connect(ui->m_scale_y, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectY(double)));
-	connect(ui->m_scale_z, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectZ(double)));
-	connect(ui->m_rotate_x, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectX(double)));
-	connect(ui->m_rotate_y, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectY(double)));
-	connect(ui->m_rotate_z, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectZ(double)));
+	connect(ui->m_move_object, SIGNAL(valueChanged(double, int)), m_scene, SLOT(moveObject(double, int)));
+	connect(ui->m_scale_object, SIGNAL(valueChanged(double, int)), m_scene, SLOT(scaleObject(double, int)));
+	connect(ui->m_rotate_object, SIGNAL(valueChanged(double, int)), m_scene, SLOT(rotateObject(double, int)));
 	connect(ui->m_voxel_size, SIGNAL(valueChanged(double)), m_scene, SLOT(setVoxelSize(double)));
 	connect(ui->m_object_name, SIGNAL(textChanged(QString)), m_scene, SLOT(setObjectName(QString)));
 	connect(ui->m_outliner, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)),
@@ -392,15 +379,9 @@ void MainWindow::connectObjectSignals() const
 
 void MainWindow::disconnectObjectSignals() const
 {
-	disconnect(ui->m_move_x, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectX(double)));
-	disconnect(ui->m_move_y, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectY(double)));
-	disconnect(ui->m_move_z, SIGNAL(valueChanged(double)), m_scene, SLOT(moveObjectZ(double)));
-	disconnect(ui->m_scale_x, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectX(double)));
-	disconnect(ui->m_scale_y, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectY(double)));
-	disconnect(ui->m_scale_z, SIGNAL(valueChanged(double)), m_scene, SLOT(scaleObjectZ(double)));
-	disconnect(ui->m_rotate_x, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectX(double)));
-	disconnect(ui->m_rotate_y, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectY(double)));
-	disconnect(ui->m_rotate_z, SIGNAL(valueChanged(double)), m_scene, SLOT(rotateObjectZ(double)));
+	disconnect(ui->m_move_object, SIGNAL(valueChanged(double, int)), m_scene, SLOT(moveObject(double, int)));
+	disconnect(ui->m_scale_object, SIGNAL(valueChanged(double, int)), m_scene, SLOT(scaleObject(double, int)));
+	disconnect(ui->m_rotate_object, SIGNAL(valueChanged(double, int)), m_scene, SLOT(rotateObject(double, int)));
 	disconnect(ui->m_voxel_size, SIGNAL(valueChanged(double)), m_scene, SLOT(setVoxelSize(double)));
 	disconnect(ui->m_object_name, SIGNAL(textChanged(QString)), m_scene, SLOT(setObjectName(QString)));
 	disconnect(ui->m_outliner, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)),

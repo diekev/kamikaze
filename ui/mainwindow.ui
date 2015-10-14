@@ -43,7 +43,7 @@
          <bool>true</bool>
         </property>
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
@@ -58,7 +58,7 @@
          <enum>QTabWidget::North</enum>
         </property>
         <property name="currentIndex">
-         <number>4</number>
+         <number>3</number>
         </property>
         <property name="movable">
          <bool>true</bool>
@@ -108,176 +108,35 @@
                <property name="verticalSpacing">
                 <number>0</number>
                </property>
-               <item row="1" column="3">
-                <widget class="QDoubleSpinBox" name="m_scale_x">
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                 </property>
-                 <property name="prefix">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QDoubleSpinBox" name="m_move_x">
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                 </property>
-                 <property name="prefix">
-                  <string/>
-                 </property>
-                 <property name="minimum">
-                  <double>-99999.000000000000000</double>
-                 </property>
-                 <property name="singleStep">
-                  <double>0.010000000000000</double>
-                 </property>
-                 <property name="value">
-                  <double>0.000000000000000</double>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="1">
-                <widget class="QDoubleSpinBox" name="m_move_z">
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                 </property>
-                 <property name="prefix">
-                  <string/>
-                 </property>
-                 <property name="minimum">
-                  <double>-99999.000000000000000</double>
-                 </property>
-                 <property name="singleStep">
-                  <double>0.010000000000000</double>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="1">
-                <widget class="QDoubleSpinBox" name="m_move_y">
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                 </property>
-                 <property name="prefix">
-                  <string/>
-                 </property>
-                 <property name="minimum">
-                  <double>-99999.000000000000000</double>
-                 </property>
-                 <property name="singleStep">
-                  <double>0.010000000000000</double>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="2">
-                <widget class="QDoubleSpinBox" name="m_rotate_x">
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                 </property>
-                 <property name="prefix">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="2">
-                <widget class="QDoubleSpinBox" name="m_rotate_y">
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                 </property>
-                 <property name="prefix">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="2">
-                <widget class="QDoubleSpinBox" name="m_rotate_z">
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                 </property>
-                 <property name="prefix">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="2">
+               <item row="0" column="1">
                 <widget class="QLabel" name="label_2">
                  <property name="text">
                   <string>Rotate</string>
                  </property>
                 </widget>
                </item>
-               <item row="0" column="1">
-                <widget class="QLabel" name="label">
-                 <property name="text">
-                  <string>Translate</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="3">
-                <widget class="QDoubleSpinBox" name="m_scale_z">
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                 </property>
-                 <property name="prefix">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="3">
+               <item row="0" column="2">
                 <widget class="QLabel" name="label_3">
                  <property name="text">
                   <string>Scale</string>
                  </property>
                 </widget>
                </item>
-               <item row="2" column="3">
-                <widget class="QDoubleSpinBox" name="m_scale_y">
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                 </property>
-                 <property name="prefix">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
                <item row="1" column="0">
-                <widget class="QLabel" name="label_4">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
+                <widget class="XYZSpinBox" name="m_move_object" native="true"/>
+               </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="label">
                  <property name="text">
-                  <string>X</string>
+                  <string>Translate</string>
                  </property>
                 </widget>
                </item>
-               <item row="2" column="0">
-                <widget class="QLabel" name="label_5">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Y</string>
-                 </property>
-                </widget>
+               <item row="1" column="2">
+                <widget class="XYZSpinBox" name="m_scale_object" native="true"/>
                </item>
-               <item row="3" column="0">
-                <widget class="QLabel" name="label_6">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Z</string>
-                 </property>
-                </widget>
+               <item row="1" column="1">
+                <widget class="XYZSpinBox" name="m_rotate_object" native="true"/>
                </item>
               </layout>
              </item>
@@ -698,18 +557,15 @@
     <slot>drawGrid(bool)</slot>
    </slots>
   </customwidget>
+  <customwidget>
+   <class>XYZSpinBox</class>
+   <extends>QWidget</extends>
+   <header>xyzspinbox.h</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
  <tabstops>
   <tabstop>tabWidget</tabstop>
-  <tabstop>m_move_x</tabstop>
-  <tabstop>m_move_y</tabstop>
-  <tabstop>m_move_z</tabstop>
-  <tabstop>m_rotate_x</tabstop>
-  <tabstop>m_rotate_y</tabstop>
-  <tabstop>m_rotate_z</tabstop>
-  <tabstop>m_scale_x</tabstop>
-  <tabstop>m_scale_y</tabstop>
-  <tabstop>m_scale_z</tabstop>
   <tabstop>m_draw_bbox</tabstop>
   <tabstop>m_draw_tree</tabstop>
   <tabstop>m_voxel_size</tabstop>

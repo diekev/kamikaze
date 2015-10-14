@@ -53,15 +53,9 @@ Q_SIGNALS:
 public Q_SLOTS:
 	void setMode(int mode);
 
-	void moveObjectX(double value);
-	void moveObjectY(double value);
-	void moveObjectZ(double value);
-	void scaleObjectX(double value);
-	void scaleObjectY(double value);
-	void scaleObjectZ(double value);
-	void rotateObjectX(double value);
-	void rotateObjectY(double value);
-	void rotateObjectZ(double value);
+	void moveObject(double value, int axis);
+	void scaleObject(double value, int axis);
+	void rotateObject(double value, int axis);
 	void setVoxelSize(double value);
 	void setObjectName(const QString &name);
 

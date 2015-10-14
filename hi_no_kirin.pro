@@ -47,7 +47,8 @@ SOURCES += \
 	util/utils.cc \
     ui/levelsetdialog.cc \
     sculpt/brush.cc \
-    sculpt/sculpt.cc
+    sculpt/sculpt.cc \
+    ui/xyzspinbox.cc
 
 HEADERS += \
 	objects/cube.h \
@@ -72,7 +73,8 @@ HEADERS += \
     ui/levelsetdialog.h \
     sculpt/brush.h \
     util/util_openvdb_process.h \
-    sculpt/sculpt.h
+    sculpt/sculpt.h \
+    ui/xyzspinbox.h
 
 OTHER_FILES += \
 	render/shaders/flat_shader.frag \

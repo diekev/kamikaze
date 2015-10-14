@@ -217,49 +217,19 @@ Object *Scene::currentObject()
 	return nullptr;
 }
 
-void Scene::moveObjectX(double value)
+void Scene::moveObject(double value, int axis)
 {
-	m_active_object->pos().x = value;
+	m_active_object->pos()[axis] = value;
 }
 
-void Scene::moveObjectY(double value)
+void Scene::scaleObject(double value, int axis)
 {
-	m_active_object->pos().y = value;
+	m_active_object->scale()[axis] = value;
 }
 
-void Scene::moveObjectZ(double value)
+void Scene::rotateObject(double value, int axis)
 {
-	m_active_object->pos().z = value;
-}
-
-void Scene::scaleObjectX(double value)
-{
-	m_active_object->scale().x = value;
-}
-
-void Scene::scaleObjectY(double value)
-{
-	m_active_object->scale().y = value;
-}
-
-void Scene::scaleObjectZ(double value)
-{
-	m_active_object->scale().z = value;
-}
-
-void Scene::rotateObjectX(double value)
-{
-	m_active_object->rotation().x = value;
-}
-
-void Scene::rotateObjectY(double value)
-{
-	m_active_object->rotation().y = value;
-}
-
-void Scene::rotateObjectZ(double value)
-{
-	m_active_object->rotation().z = value;
+	m_active_object->rotation()[axis] = value;
 }
 
 void Scene::setVoxelSize(double value)
