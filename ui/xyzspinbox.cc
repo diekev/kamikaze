@@ -35,8 +35,8 @@ XYZSpinBox::XYZSpinBox(QWidget *parent)
     , m_layout(new QVBoxLayout(this))
 {
 	connect(m_x, SIGNAL(valueChanged(double)), this, SLOT(xValueChanged(double)));
-	connect(m_y, SIGNAL(valueChanged(double)), this, SLOT(xValueChanged(double)));
-	connect(m_z, SIGNAL(valueChanged(double)), this, SLOT(xValueChanged(double)));
+	connect(m_y, SIGNAL(valueChanged(double)), this, SLOT(yValueChanged(double)));
+	connect(m_z, SIGNAL(valueChanged(double)), this, SLOT(zValueChanged(double)));
 
 	m_x->setAlignment(Qt::AlignRight);
 	m_y->setAlignment(Qt::AlignRight);
