@@ -71,25 +71,24 @@ void TimeLineWidget::incrementFrame()
 void TimeLineWidget::mouseMoveEvent(QMouseEvent *e)
 {
 	if (m_mouse_pressed) {
-		const int pos_x = e->pos().x();
-		updateCurrentFrame(pos_x);
+		updateCurrentFrame(e->pos().x());
 	}
 }
 
 void TimeLineWidget::mousePressEvent(QMouseEvent *e)
 {
 	m_mouse_pressed = true;
-	const int pos_x = e->pos().x();
-	updateCurrentFrame(pos_x);
+	updateCurrentFrame(e->pos().x());
 }
 
 void TimeLineWidget::updateCurrentFrame(const int pos_x)
 {
 	const int width = this->size().width();
-
 	const float relative_frame = pos_x / float(width);
+
 	m_current_frame = m_end_frame * relative_frame;
 	Q_EMIT currentFrameChanged(m_current_frame);
+
 	update();
 }
 

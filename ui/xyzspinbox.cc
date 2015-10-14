@@ -27,6 +27,12 @@
 
 #include "xyzspinbox.h"
 
+enum {
+	AXIS_X = 0,
+	AXIS_Y = 1,
+	AXIS_Z = 2,
+};
+
 XYZSpinBox::XYZSpinBox(QWidget *parent)
     : QWidget(parent)
     , m_x(new QDoubleSpinBox(this))
@@ -53,36 +59,33 @@ XYZSpinBox::XYZSpinBox(QWidget *parent)
 	m_layout->setSpacing(0);
 }
 
-XYZSpinBox::~XYZSpinBox()
-{}
-
 void XYZSpinBox::xValueChanged(double value)
 {
-	Q_EMIT valueChanged(value, 0);
+	Q_EMIT valueChanged(value, AXIS_X);
 }
 
 void XYZSpinBox::yValueChanged(double value)
 {
-	Q_EMIT valueChanged(value, 1);
+	Q_EMIT valueChanged(value, AXIS_Y);
 }
 
 void XYZSpinBox::zValueChanged(double value)
 {
-	Q_EMIT valueChanged(value, 2);
+	Q_EMIT valueChanged(value, AXIS_Z);
 }
 
 void XYZSpinBox::setValue(float *value)
 {
-	m_x->setValue(value[0]);
-	m_y->setValue(value[1]);
-	m_z->setValue(value[2]);
+	m_x->setValue(value[AXIS_X]);
+	m_y->setValue(value[AXIS_Y]);
+	m_z->setValue(value[AXIS_Z]);
 }
 
 void XYZSpinBox::getValue(float *value) const
 {
-	value[0] = m_x->value();
-	value[1] = m_y->value();
-	value[2] = m_z->value();
+	value[AXIS_X] = m_x->value();
+	value[AXIS_Y] = m_y->value();
+	value[AXIS_Z] = m_z->value();
 }
 
 void XYZSpinBox::setMinMax(float min, float max) const

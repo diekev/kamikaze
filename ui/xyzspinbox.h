@@ -29,7 +29,7 @@
 class QDoubleSpinBox;
 class QVBoxLayout;
 
-class XYZSpinBox : public QWidget {
+class XYZSpinBox final : public QWidget {
 	Q_OBJECT
 
 	QDoubleSpinBox *m_x, *m_y, *m_z;
@@ -44,8 +44,8 @@ Q_SIGNALS:
 	void valueChanged(double value, int axis);
 
 public:
-	explicit XYZSpinBox(QWidget *parent = 0);
-	~XYZSpinBox();
+	explicit XYZSpinBox(QWidget *parent = nullptr);
+	~XYZSpinBox() = default;
 
 	void setValue(float *value);
 	void getValue(float *value) const;
