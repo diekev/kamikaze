@@ -72,10 +72,51 @@ void Scene::keyboardEvent(int key)
 	}
 }
 
+bool Scene::isNameUnique(const QString &name) const
+{
+	for (const auto &object : m_objects) {
+		if (object->name() == name) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool Scene::ensureUniqueName(QString &name) const
+{
+	if (isNameUnique(name)) {
+		return false;
+	}
+
+	QString temp;
+	int number = 0;
+
+	do {
+		++number;
+
+		QString num = QString::number(number);
+		for (int i = 0, e = 4 - num.size(); i < e; ++i) {
+			num = num.prepend(QChar('0'));
+		}
+
+		temp = name + "." + num;
+	} while (!isNameUnique(temp));
+
+	name = temp;
+	return true;
+}
+
 void Scene::addObject(Object *object)
 {
+	QString name = object->name();
+	if (ensureUniqueName(name)) {
+		object->name(name);
+	}
+
 	m_objects.push_back(object);
 	m_active_object = object;
+
 	Q_EMIT objectChanged();
 }
 
@@ -231,7 +272,19 @@ void Scene::setVoxelSize(double value)
 
 void Scene::setObjectName(const QString &name)
 {
-	m_active_object->name(name);
+	/* Need to make a copy of the string, since the slot signature has to match
+     * the signal signature (const QString &) */
+	QString copy(name);
+
+	bool name_changed = ensureUniqueName(copy);
+
+	if (name_changed) {
+		m_active_object->name(copy);
+		Q_EMIT objectChanged(); // XXX - hack to update the tab and outliner
+	}
+	else {
+		m_active_object->name(name);
+	}
 }
 
 void Scene::setBrushMode(int mode)

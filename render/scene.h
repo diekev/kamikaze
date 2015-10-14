@@ -87,4 +87,6 @@ public:
 	int mode() const;
 	void selectObject(const glm::vec3 &pos);
 	void objectNameList(QListWidget *widget) const;
+	bool ensureUniqueName(QString &name) const;
+	bool isNameUnique(const QString &name) const;
 };
