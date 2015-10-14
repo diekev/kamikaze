@@ -48,7 +48,10 @@ SOURCES += \
     ui/levelsetdialog.cc \
     sculpt/brush.cc \
     sculpt/sculpt.cc \
-    ui/xyzspinbox.cc
+    ui/xyzspinbox.cc \
+	smoke/forces.cc \
+	smoke/pressure.cc \
+    smoke/smokesimulation.cc
 
 HEADERS += \
 	objects/cube.h \
@@ -74,7 +77,13 @@ HEADERS += \
     sculpt/brush.h \
     util/util_openvdb_process.h \
     sculpt/sculpt.h \
-    ui/xyzspinbox.h
+    ui/xyzspinbox.h \
+	smoke/advection.h \
+	smoke/forces.h \
+	smoke/globals.h \
+	smoke/types.h \
+    smoke/smokesimulation.h \
+    smoke/util_smoke.h
 
 OTHER_FILES += \
 	render/shaders/flat_shader.frag \
