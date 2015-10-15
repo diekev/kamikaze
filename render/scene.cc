@@ -33,10 +33,12 @@
 #include "objects/levelset.h"
 #include "objects/volume.h"
 #include "sculpt/brush.h"
+#include "smoke/smokesimulation.h"
 
 Scene::Scene()
     : m_active_object(nullptr)
     , m_brush(new Brush(5.0f, 0.5f))
+    , m_smoke_simulation(new SmokeSimulation)
     , m_mode(SCENE_MODE_OBJECT)
 {}
 
@@ -45,6 +47,9 @@ Scene::~Scene()
 	for (auto &object : m_objects) {
 		delete object;
 	}
+
+	delete m_brush;
+	delete m_smoke_simulation;
 }
 
 void Scene::keyboardEvent(int key)
@@ -296,4 +301,19 @@ void Scene::setCurrentObject(QListWidgetItem *item)
 	}
 
 	Q_EMIT objectChanged();
+}
+
+void Scene::setSimulationDt(double value)
+{
+	m_smoke_simulation->timeStep(value);
+}
+
+void Scene::setSimulationCache(const QString &path)
+{
+	m_smoke_simulation->cachePath(path.toStdString());
+}
+
+void Scene::setSimulationAdvection(int index)
+{
+	m_smoke_simulation->advectionScheme(index);
 }

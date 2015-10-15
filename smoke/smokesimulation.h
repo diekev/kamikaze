@@ -33,6 +33,8 @@ class SmokeSimulation {
 	float m_max_vel;
 	openvdb::math::Transform m_xform;
 
+	std::string m_cache_path;
+
 	/* Simulation fields. */
 	openvdb::VectorGrid::Ptr velocity;
 	openvdb::ScalarGrid::Ptr density;
@@ -58,4 +60,8 @@ public:
 
 	/* Perform one simulation step. */
 	void step();
+
+	void timeStep(const float value) { m_dt = value; }
+	void advectionScheme(const int scheme) { m_advection_scheme = scheme; }
+	void cachePath(const std::string &path) { m_cache_path = path; }
 };

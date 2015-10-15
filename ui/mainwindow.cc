@@ -120,6 +120,11 @@ MainWindow::MainWindow(QWidget *parent)
 	disableListItem(m_scene_mode_list, 1);
 
 	connect(m_scene_mode_box, SIGNAL(currentIndexChanged(int)), this, SLOT(setSceneMode(int)));
+
+	/* Smoke Simulation. */
+	connect(ui->m_time_step, SIGNAL(valueChanged(double)), m_scene, SLOT(setSimulationDt(double)));
+	connect(ui->m_cache_path, SIGNAL(textChanged(QString)), m_scene, SLOT(setSimulationCache(QString)));
+	connect(ui->m_advection, SIGNAL(currentIndexChanged(int)), m_scene, SLOT(setSimulationAdvection(int)));
 }
 
 MainWindow::~MainWindow()

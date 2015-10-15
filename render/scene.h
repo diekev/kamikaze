@@ -33,6 +33,7 @@ class Brush;
 class Object;
 class QListWidget;
 class QListWidgetItem;
+class SmokeSimulation;
 
 enum {
 	SCENE_MODE_OBJECT = 0,
@@ -45,6 +46,7 @@ class Scene : public QObject {
 	std::vector<Object *> m_objects;
 	Object *m_active_object;
 	Brush *m_brush;
+	SmokeSimulation *m_smoke_simulation;
 	int m_mode;
 
 Q_SIGNALS:
@@ -65,6 +67,10 @@ public Q_SLOTS:
 	void setBrushTool(int tool);
 
 	void setCurrentObject(QListWidgetItem *item);
+
+	void setSimulationDt(double value);
+	void setSimulationCache(const QString &path);
+	void setSimulationAdvection(int index);
 
 public:
 	Scene();
