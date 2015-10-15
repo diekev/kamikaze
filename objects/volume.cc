@@ -267,15 +267,14 @@ void Volume::render(const glm::mat4 &MVP, const glm::mat3 &N,
 	(void)for_outline;
 }
 
-void Volume::changeNumSlicesBy(int x)
+void Volume::numSlices(int x)
 {
-	m_num_slices += x;
-	m_num_slices = std::min(MAX_SLICES, std::max(m_num_slices, 3));
+	m_num_slices = std::min(MAX_SLICES, std::max(x, 3));
 	m_vertices.resize(m_num_slices * 4);
 	m_elements = m_num_slices * 6;
 }
 
-void Volume::toggleUseLUT()
+void Volume::useLUT(bool b)
 {
-	m_use_lut = !m_use_lut;
+	m_use_lut = b;
 }

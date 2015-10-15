@@ -58,7 +58,7 @@
          <enum>QTabWidget::North</enum>
         </property>
         <property name="currentIndex">
-         <number>5</number>
+         <number>0</number>
         </property>
         <property name="movable">
          <bool>true</bool>
@@ -154,18 +154,42 @@
             <property name="title">
              <string>Drawing</string>
             </property>
-            <layout class="QVBoxLayout" name="verticalLayout_3">
-             <item>
+            <layout class="QGridLayout" name="gridLayout_8">
+             <item row="0" column="0">
               <widget class="QCheckBox" name="m_draw_bbox">
                <property name="text">
                 <string>Bounding Box</string>
                </property>
               </widget>
              </item>
-             <item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="label_16">
+               <property name="text">
+                <string>Number of Slices</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
               <widget class="QCheckBox" name="m_draw_tree">
                <property name="text">
                 <string>Topology</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QCheckBox" name="m_use_lut">
+               <property name="text">
+                <string>Use LUT</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QSpinBox" name="m_num_slices">
+               <property name="maximum">
+                <number>512</number>
+               </property>
+               <property name="value">
+                <number>256</number>
                </property>
               </widget>
              </item>

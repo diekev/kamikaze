@@ -272,9 +272,11 @@ void MainWindow::updateObjectTab() const
 	ui->m_scale_object->setValue(&ob->scale()[0]);
 	ui->m_rotate_object->setValue(&ob->rotation()[0]);
 
-	const bool is_volume = (ob->type() == VOLUME || ob->type() == LEVEL_SET);
+	const bool is_volume = ob->type() == VOLUME;
+	const bool is_level_set = ob->type() == LEVEL_SET;
+	const bool is_volume_base = is_volume || is_level_set;
 
-	if (is_volume) {
+	if (is_volume_base) {
 		VolumeBase *vb = static_cast<VolumeBase *>(ob);
 
 		ui->m_voxel_size->setValue(vb->voxelSize());
@@ -285,10 +287,12 @@ void MainWindow::updateObjectTab() const
 		ui->m_voxel_size->setValue(0.0f);
 	}
 
-	ui->m_voxel_size->setEnabled(is_volume);
-	ui->m_draw_tree->setEnabled(is_volume);
+	ui->m_voxel_size->setEnabled(is_volume_base);
+	ui->m_draw_tree->setEnabled(is_volume_base);
+	ui->m_use_lut->setEnabled(is_volume);
+	ui->m_num_slices->setEnabled(is_volume);
 
-	if (ob->type() == LEVEL_SET) {
+	if (is_level_set) {
 		enableListItem(m_scene_mode_list, 1);
 	}
 	else {
@@ -377,6 +381,8 @@ void MainWindow::connectObjectSignals() const
 	connect(ui->m_object_name, SIGNAL(textChanged(QString)), m_scene, SLOT(setObjectName(QString)));
 	connect(ui->m_outliner, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)),
 	        m_scene, SLOT(setCurrentObject(QListWidgetItem*)));
+	connect(ui->m_use_lut, SIGNAL(clicked(bool)), m_scene, SLOT(setVolumeLUT(bool)));
+	connect(ui->m_num_slices, SIGNAL(valueChanged(int)), m_scene, SLOT(setVolumeSlices(int)));
 }
 
 void MainWindow::disconnectObjectSignals() const
@@ -388,4 +394,6 @@ void MainWindow::disconnectObjectSignals() const
 	disconnect(ui->m_object_name, SIGNAL(textChanged(QString)), m_scene, SLOT(setObjectName(QString)));
 	disconnect(ui->m_outliner, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)),
 	           m_scene, SLOT(setCurrentObject(QListWidgetItem*)));
+	disconnect(ui->m_use_lut, SIGNAL(clicked(bool)), m_scene, SLOT(setVolumeLUT(bool)));
+	disconnect(ui->m_num_slices, SIGNAL(valueChanged(int)), m_scene, SLOT(setVolumeSlices(int)));
 }

@@ -65,15 +65,6 @@ void Scene::keyboardEvent(int key)
 			delete m_active_object;
 			m_active_object = nullptr;
 			break;
-//		case Qt::Key_Minus:
-//			m_volume->changeNumSlicesBy(-1);
-//			break;
-//		case Qt::Key_Plus:
-//			m_volume->changeNumSlicesBy(1);
-//			break;
-//		case Qt::Key_L:
-//			m_volume->toggleUseLUT();
-//			break;
 	}
 }
 
@@ -316,4 +307,16 @@ void Scene::setSimulationCache(const QString &path)
 void Scene::setSimulationAdvection(int index)
 {
 	m_smoke_simulation->advectionScheme(index);
+}
+
+void Scene::setVolumeSlices(int slices)
+{
+	Volume *volume = static_cast<Volume *>(m_active_object);
+	volume->numSlices(slices);
+}
+
+void Scene::setVolumeLUT(bool b)
+{
+	Volume *volume = static_cast<Volume *>(m_active_object);
+	volume->useLUT(b);
 }

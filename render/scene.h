@@ -72,6 +72,9 @@ public Q_SLOTS:
 	void setSimulationCache(const QString &path);
 	void setSimulationAdvection(int index);
 
+	void setVolumeSlices(int slices);
+	void setVolumeLUT(bool b);
+
 public:
 	Scene();
 	~Scene();

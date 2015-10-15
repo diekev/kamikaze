@@ -52,9 +52,8 @@ public:
 	void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir,
 	            const bool for_outline);
 
-	void changeNumSlicesBy(int x);
-
-	void toggleUseLUT();
+	void numSlices(int x);
+	void useLUT(bool b);
 
 	int type() const { return VOLUME; }
 };
