@@ -44,7 +44,14 @@ SOURCES += \
     ui/timelinewidget.cc \
 	util/util_opengl.cc \
 	util/util_openvdb.cc \
-	util/utils.cc
+	util/utils.cc \
+    ui/levelsetdialog.cc \
+    sculpt/brush.cc \
+    sculpt/sculpt.cc \
+    ui/xyzspinbox.cc \
+	smoke/forces.cc \
+	smoke/pressure.cc \
+    smoke/smokesimulation.cc
 
 HEADERS += \
 	objects/cube.h \
@@ -65,17 +72,28 @@ HEADERS += \
 	util/util_opengl.h \
 	util/util_openvdb.h \
 	util/utils.h \
-    util/util_render.h
+    util/util_render.h \
+    ui/levelsetdialog.h \
+    sculpt/brush.h \
+    util/util_openvdb_process.h \
+    sculpt/sculpt.h \
+    ui/xyzspinbox.h \
+	smoke/advection.h \
+	smoke/forces.h \
+	smoke/globals.h \
+	smoke/types.h \
+    smoke/smokesimulation.h \
+    smoke/util_smoke.h
 
 OTHER_FILES += \
-	shader/flat_shader.frag \
-	shader/flat_shader.vert \
-	shader/object.frag \
-	shader/object.vert \
-	shader/texture_slicer.frag \
-	shader/texture_slicer.vert \
-	shader/tree_topo.frag \
-	shader/tree_topo.vert
+	render/shaders/flat_shader.frag \
+	render/shaders/flat_shader.vert \
+	render/shaders/object.frag \
+	render/shaders/object.vert \
+    render/shaders/volume.frag \
+    render/shaders/volume.vert \
+    render/shaders/tree_topology.frag \
+    render/shaders/tree_topology.vert
 
 DEFINES += DWREAL_IS_DOUBLE=0
 DEFINES += GLM_FORCE_RADIANS
@@ -89,11 +107,12 @@ LIBS += -L/opt/lib/openexr/lib -lHalf
 LIBS += -L/opt/lib/blosc/lib -lblosc -lz
 
 unix {
-	copy_files.commands = cp -r ../shader/ .
+	copy_files.commands = cp -r ../render/shaders/ .
 }
 
 QMAKE_EXTRA_TARGETS += copy_files
 POST_TARGETDEPS += copy_files
 
 FORMS += \
-    ui/mainwindow.ui
+    ui/mainwindow.ui \
+    ui/levelsetdialog.ui

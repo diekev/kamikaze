@@ -34,10 +34,10 @@
 
 Grid::Grid(int x, int y)
     : m_buffer_data(std::unique_ptr<GPUBuffer>(new GPUBuffer()))
-    , m_total_indices(x * y)
+    , m_elements(x * y)
 {
-	m_program.loadFromFile(GL_VERTEX_SHADER, "shader/flat_shader.vert");
-	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shader/flat_shader.frag");
+	m_program.loadFromFile(GL_VERTEX_SHADER, "shaders/flat_shader.vert");
+	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shaders/flat_shader.frag");
 
 	m_program.createAndLinkProgram();
 
@@ -51,11 +51,10 @@ Grid::Grid(int x, int y)
 
 	/* setup vertex buffer */
 
-	auto total_vertices = ((x + 1) + (y + 1)) * 2;
-	std::vector<glm::vec3> vertices;
-	vertices.resize(total_vertices);
+	const auto total_vertices = ((x + 1) + (y + 1)) * 2;
+	std::vector<glm::vec3> vertices(total_vertices);
 
-	int half_x = x >> 1, half_y = y >> 1;
+	const int half_x = (x / 2), half_y = (y / 2);
 	auto count(0);
 	for (int i = -half_y; i <= half_y; ++i) {
 		vertices[count++] = glm::vec3(i, 0.0f, -half_y);
@@ -64,12 +63,11 @@ Grid::Grid(int x, int y)
 		vertices[count++] = glm::vec3( half_x, 0.0f, i);
 	}
 
-	std::vector<GLushort> indices;
-	indices.resize(m_total_indices);
+	std::vector<GLushort> indices(m_elements);
 	std::iota(indices.begin(), indices.end(), 0);
 
 	const auto &vsize = total_vertices * sizeof(glm::vec3);
-	const auto &isize = m_total_indices * sizeof(GLushort);
+	const auto &isize = m_elements * sizeof(GLushort);
 
 	m_buffer_data->bind();
 	m_buffer_data->generateVertexBuffer(&(vertices[0].x), vsize);
@@ -80,19 +78,15 @@ Grid::Grid(int x, int y)
 
 void Grid::render(const glm::mat4 &MVP)
 {
-	glEnable(GL_DEPTH_TEST);
-
 	if (m_program.isValid()) {
 		m_program.enable();
 		m_buffer_data->bind();
 
 		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
 		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
-		glDrawElements(GL_LINES, m_total_indices, GL_UNSIGNED_SHORT, nullptr);
+		glDrawElements(GL_LINES, m_elements, GL_UNSIGNED_SHORT, nullptr);
 
 		m_buffer_data->unbind();
 		m_program.disable();
 	}
-
-	glDisable(GL_DEPTH_TEST);
 }

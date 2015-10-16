@@ -26,6 +26,7 @@
 
 #include <GL/glew.h>
 #include <map>
+#include <memory>
 #include <string>
 
 typedef void(* get_ivfunc)(GLuint index, GLenum pname, GLint *param);
@@ -43,6 +44,10 @@ class GPUProgram {
 public:
 	GPUProgram();
 	~GPUProgram();
+
+	using UPtr = std::unique_ptr<GPUProgram>;
+
+	static UPtr create();
 
 	void loadFromString(GLenum whichShader, const std::string &source);
 	void loadFromFile(GLenum whichShader, const std::string &source);

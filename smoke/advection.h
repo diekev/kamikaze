@@ -21,39 +21,34 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <glm/glm.hpp>
+#pragma once
 
-#include <openvdb/openvdb.h>
+#include <openvdb/tools/VolumeAdvect.h>
 
-#include "volumebase.h"
-
-#include "render/gpu/GPUTexture.h"
-
-#include "util/util_render.h"
-
-class Volume : public VolumeBase {
-	GPUTexture::UPtr m_volume_texture, m_transfer_texture, m_index_texture;
-
-	int m_num_slices;
-
-	int m_axis;
-	float m_value_scale; // scale of the values contained in the grid (1 / (max - min))
-	bool m_use_lut;
-	char m_num_textures;
-
-	void loadTransferFunction();
-	void loadVolumeShader();
-
-public:
-	Volume(openvdb::GridBase::Ptr grid);
-	~Volume() = default;
-
-	void slice(const glm::vec3 &view_dir);
-	void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir,
-	            const bool for_outline);
-
-	void numSlices(int x);
-	void useLUT(bool b);
-
-	int type() const { return VOLUME; }
+enum {
+	ADVECT_SEMI = 0,
+	ADVECT_MID,
+	ADVECT_RK3,
+	ADVECT_RK4,
+	ADVECT_MAC,
+	ADVECT_BFECC
 };
+
+openvdb::tools::Scheme::SemiLagrangian advection_scheme(int scheme)
+{
+	switch (scheme) {
+		default:
+		case ADVECT_SEMI:
+			return openvdb::tools::Scheme::SEMI;
+		case ADVECT_MID:
+			return openvdb::tools::Scheme::MID;
+		case ADVECT_RK3:
+			return openvdb::tools::Scheme::RK3;
+		case ADVECT_RK4:
+			return openvdb::tools::Scheme::RK4;
+		case ADVECT_MAC:
+			return openvdb::tools::Scheme::MAC;
+		case ADVECT_BFECC:
+			return openvdb::tools::Scheme::BFECC;
+	}
+}

@@ -21,65 +21,8 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <openvdb/openvdb.h>
-#include <openvdb/tools/GridTransformer.h>
-#include <openvdb/util/PagedArray.h>
-
 #include "util_openvdb.h"
 #include "utils.h"
-
-using openvdb::math::CoordBBox;
-
-void convert_grid(const openvdb::FloatGrid &grid, float *data, const CoordBBox &bbox, float &scale)
-{
-	Timer(__func__);
-
-	using namespace openvdb;
-
-	FloatGrid::ConstAccessor main_acc = grid.getAccessor();
-	const auto &dim = bbox.dim();
-	const auto &slabsize = dim[0] * dim[1];
-	util::PagedArray<float> min_array, max_array;
-
-	tbb::parallel_for(tbb::blocked_range<int>(bbox.min()[2], bbox.max()[2]),
-	        [&](const tbb::blocked_range<int> &r)
-	{
-		FloatGrid::ConstAccessor acc(main_acc);
-		Coord ijk;
-		int &x = ijk[0], &y = ijk[1], &z = ijk[2];
-		z = r.begin();
-
-		auto min_value = std::numeric_limits<float>::max();
-		auto max_value = std::numeric_limits<float>::min();
-
-		/* Subtract min z coord so that 'index' always start at zero or above. */
-		auto index = (z - bbox.min()[2]) * slabsize;
-
-		for (auto e = r.end(); z < e; ++z) {
-			for (y = bbox.min()[1]; y < bbox.max()[1]; ++y) {
-				for (x = bbox.min()[0]; x < bbox.max()[0]; ++x, ++index) {
-					auto value = acc.getValue(ijk);
-
-					if (value < min_value) {
-						min_value = value;
-					}
-					else if (value > max_value) {
-						max_value = value;
-					}
-
-					data[index] = value;
-				}
-			}
-		}
-
-		min_array.push_back(min_value);
-		max_array.push_back(max_value);
-	});
-
-	auto min_value = std::min_element(min_array.begin(), min_array.end());
-	auto max_value = std::max_element(max_array.begin(), max_array.end());
-	scale = 1.0f / (*max_value - *min_value);
-}
 
 openvdb::FloatGrid::Ptr transform_grid(const openvdb::FloatGrid &grid,
                                        const openvdb::Vec3s &rot,

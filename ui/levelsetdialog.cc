@@ -21,39 +21,42 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <glm/glm.hpp>
+#include "levelsetdialog.h"
+#include "ui_levelsetdialog.h"
 
-#include <openvdb/openvdb.h>
+LevelSetDialog::LevelSetDialog(QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::LevelSetDialog)
+{
+	ui->setupUi(this);
+}
 
-#include "volumebase.h"
+LevelSetDialog::~LevelSetDialog()
+{
+	delete ui;
+}
 
-#include "render/gpu/GPUTexture.h"
+float LevelSetDialog::voxelSize() const
+{
+	return ui->m_voxel_size->value();
+}
 
-#include "util/util_render.h"
+float LevelSetDialog::halfWidth() const
+{
+	return ui->m_half_width->value();
+}
 
-class Volume : public VolumeBase {
-	GPUTexture::UPtr m_volume_texture, m_transfer_texture, m_index_texture;
+float LevelSetDialog::radius() const
+{
+	return ui->m_radius->value();
+}
 
-	int m_num_slices;
+int LevelSetDialog::levelSetType() const
+{
+	return ui->m_combox_box->currentIndex();
+}
 
-	int m_axis;
-	float m_value_scale; // scale of the values contained in the grid (1 / (max - min))
-	bool m_use_lut;
-	char m_num_textures;
-
-	void loadTransferFunction();
-	void loadVolumeShader();
-
-public:
-	Volume(openvdb::GridBase::Ptr grid);
-	~Volume() = default;
-
-	void slice(const glm::vec3 &view_dir);
-	void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir,
-	            const bool for_outline);
-
-	void numSlices(int x);
-	void useLUT(bool b);
-
-	int type() const { return VOLUME; }
-};
+QString LevelSetDialog::name() const
+{
+	return ui->m_name_edit->text();
+}

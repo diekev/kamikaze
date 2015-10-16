@@ -25,6 +25,7 @@
 #include <QApplication>
 #include <QColorDialog>
 #include <QKeyEvent>
+#include <QTimer>
 
 #include <GL/glew.h>
 
@@ -45,11 +46,13 @@ Viewer::Viewer(QWidget *parent)
     , m_height(0)
     , m_draw_grid(true)
     , m_bg(glm::vec4(0.5f, 0.5f, 0.5f, 1.0f))
-    , m_camera(new Camera())
+    , m_camera(new Camera(m_width, m_height))
     , m_grid(nullptr)
     , m_scene(nullptr)
+    , m_timer(new QTimer(this))
 {
 	setFocusPolicy(Qt::FocusPolicy::StrongFocus);
+	connect(m_timer, SIGNAL(timeout()), this, SLOT(updateGL()));
 }
 
 Viewer::~Viewer()
@@ -70,8 +73,14 @@ void Viewer::initializeGL()
 
 	glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
 
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_STENCIL_TEST);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
 	m_grid = new Grid(20, 20);
 	m_camera->update();
+
+	m_timer->start(1000 / 24);
 }
 
 void Viewer::resizeGL(int w, int h)
@@ -84,7 +93,11 @@ void Viewer::resizeGL(int w, int h)
 
 void Viewer::paintGL()
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+	/* setup stencil mask for outlining active object */
+	glStencilFunc(GL_ALWAYS, 1, 0xff);
+	glStencilMask(0xff);
 
 	m_camera->update();
 
@@ -129,7 +142,13 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 	}
 	else if (e->buttons() == Qt::LeftButton) {
 		m_mouse_button = MOUSE_LEFT;
-		intersectScene(x, y);
+
+		if (m_scene->mode() == SCENE_MODE_SCULPT){
+			intersectScene(x, y);
+		}
+		else {
+			selectObject(x, y);
+		}
 	}
 	else if (e->buttons() == Qt::RightButton) {
 		m_mouse_button = MOUSE_RIGHT;
@@ -139,8 +158,6 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 	}
 
 	m_camera->mouseDownEvent(x, y);
-
-	update();
 }
 
 void Viewer::mouseMoveEvent(QMouseEvent *e)
@@ -153,10 +170,13 @@ void Viewer::mouseMoveEvent(QMouseEvent *e)
 	const int y = e->pos().y();
 
 	m_camera->mouseMoveEvent(m_mouse_button, m_modifier, x, y);
-	update();
+
+	if (m_scene->mode() == SCENE_MODE_SCULPT && m_mouse_button == MOUSE_LEFT) {
+		intersectScene(x, y);
+	}
 }
 
-void Viewer::mouseReleaseEvent(QMouseEvent *e)
+void Viewer::mouseReleaseEvent(QMouseEvent */*e*/)
 {
 	m_mouse_button = MOUSE_NONE;
 	update();
@@ -165,20 +185,18 @@ void Viewer::mouseReleaseEvent(QMouseEvent *e)
 void Viewer::keyPressEvent(QKeyEvent *e)
 {
 	m_scene->keyboardEvent(e->key());
-	update();
 }
 
 void Viewer::wheelEvent(QWheelEvent *e)
 {
 	if (e->delta() < 0) {
-		m_mouse_button = MOUSSE_SCROLL_DOWN;
+		m_mouse_button = MOUSE_SCROLL_DOWN;
 	}
 	else {
-		m_mouse_button = MOUSSE_SCROLL_UP;
+		m_mouse_button = MOUSE_SCROLL_UP;
 	}
 
 	m_camera->mouseWheelEvent(m_mouse_button);
-	update();
 }
 
 void Viewer::setScene(Scene *scene)
@@ -186,21 +204,32 @@ void Viewer::setScene(Scene *scene)
 	m_scene = scene;
 }
 
-void Viewer::intersectScene(int x, int y)
+void Viewer::intersectScene(int x, int y) const
 {
-	const auto &MV = m_camera->MV();
-	const auto &P = m_camera->P();
-
-	glm::vec3 start = glm::unProject(glm::vec3(x, m_height - y, 0), MV, P,
-	                                 glm::vec4(0, 0, m_width, m_height));
-	glm::vec3 end = glm::unProject(glm::vec3(x, m_height - y, 1), MV, P,
-	                               glm::vec4(0, 0, m_width, m_height));
+	const glm::vec3 start = unproject(glm::vec3(x, m_height - y, 0.0f));
+	const glm::vec3 end = unproject(glm::vec3(x, m_height - y, 1.0f));
 
 	Ray ray;
 	ray.pos = m_camera->pos();
 	ray.dir = glm::normalize(end - start);
 
 	m_scene->intersect(ray);
+}
+
+void Viewer::selectObject(int x, int y) const
+{
+	float z;
+	glReadPixels(x, m_height - y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &z);
+
+	const glm::vec3 pos = unproject(glm::vec3(x, m_height - y, z));
+	m_scene->selectObject(pos);
+}
+
+glm::vec3 Viewer::unproject(const glm::vec3 &pos) const
+{
+	const auto &MV = m_camera->MV();
+	const auto &P = m_camera->P();
+	return glm::unProject(pos, MV, P, glm::vec4(0, 0, m_width, m_height));
 }
 
 void Viewer::changeBackground()
@@ -210,12 +239,10 @@ void Viewer::changeBackground()
 	if (color.isValid()) {
 		m_bg = glm::vec4(color.redF(), color.greenF(), color.blueF(), 1.0f);
 		glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
-		update();
 	}
 }
 
 void Viewer::drawGrid(bool b)
 {
 	m_draw_grid = b;
-	update();
 }

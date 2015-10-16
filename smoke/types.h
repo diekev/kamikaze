@@ -23,35 +23,24 @@
 
 #pragma once
 
-#include <glm/glm.hpp>
-
 #include <openvdb/openvdb.h>
-#include <openvdb/tools/RayIntersector.h>
+#include <openvdb/tools/Interpolation.h>
 
-#include "volumebase.h"
+using openvdb::ScalarGrid;
+using openvdb::VectorGrid;
 
-class Brush;
+using openvdb::math::Vec3s;
 
-class LevelSet : public VolumeBase {
-	typedef openvdb::math::Ray<double> ray_t;
-	typedef openvdb::tools::LevelSetRayIntersector<openvdb::FloatGrid> isector_t;
-	std::unique_ptr<isector_t> m_isector;
+/* ******************************** Accessors ******************************** */
 
-	openvdb::FloatGrid::Ptr m_level_set; // For sculpting
+using ScalarAccessor = ScalarGrid::Accessor;
+using VectorAccessor = VectorGrid::Accessor;
+using ConstScalarAccessor = ScalarGrid::ConstAccessor;
+using ConstVectorAccessor = VectorGrid::ConstAccessor;
 
-	void generateMesh(const bool is_sculpt_mode);
-	void loadShader();
+/* ********************************* Samplers ******************************** */
 
-public:
-	LevelSet(openvdb::GridBase::Ptr grid);
-	~LevelSet() = default;
-
-	int type() const { return LEVEL_SET; }
-
-	void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir,
-	            const bool for_outline);
-
-	bool intersectLS(const Ray &ray, Brush *brush);
-
-	void swapGrids(const bool is_scuplt_mode);
-};
+using PointScalarSampler  = openvdb::tools::GridSampler<ConstScalarAccessor, openvdb::tools::PointSampler>;
+using PointVectorSampler  = openvdb::tools::GridSampler<ConstVectorAccessor, openvdb::tools::StaggeredPointSampler>;
+using LinearScalarSampler = openvdb::tools::GridSampler<ConstScalarAccessor, openvdb::tools::BoxSampler>;
+using LinearVectorSampler = openvdb::tools::GridSampler<ConstVectorAccessor, openvdb::tools::StaggeredBoxSampler>;

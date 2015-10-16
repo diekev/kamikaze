@@ -25,6 +25,8 @@
 
 class Camera {
 	int m_old_x, m_old_y;
+	int m_width, m_height;
+	float m_aspect;
 	float m_head, m_pitch;
 	float m_near, m_far, m_distance, m_fov;
 	float m_zoom_speed, m_tumbling_speed, m_strafe_speed;
@@ -36,7 +38,7 @@ class Camera {
 	bool m_need_update;
 
 public:
-	Camera();
+	Camera(int w, int h);
 	~Camera() = default;
 
 	void mouseMoveEvent(int button, int modifier, int x, int y);
@@ -47,6 +49,7 @@ public:
 	glm::vec3 dir() const;
 	glm::mat4 MV() const;
 	glm::mat4 P() const;
+
 	glm::vec3 pos() const;
 
 	void resize(int w, int h);

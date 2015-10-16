@@ -26,7 +26,7 @@
 
 #include <QWidget>
 
-class TimeLineWidget : public QWidget {
+class TimeLineWidget final : public QWidget {
 	Q_OBJECT
 
 	int m_start_frame, m_end_frame, m_current_frame;

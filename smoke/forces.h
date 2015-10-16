@@ -21,39 +21,22 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <glm/glm.hpp>
+#pragma once
 
-#include <openvdb/openvdb.h>
+#include "types.h"
+#include "globals.h"
 
-#include "volumebase.h"
+void add_buoyancy(const float dt,
+                  VectorGrid::Ptr &velocity,
+                  ScalarGrid::Ptr &density,
+                  ScalarGrid::Ptr &temperature,
+                  const openvdb::Int32Grid::Ptr &flags);
 
-#include "render/gpu/GPUTexture.h"
+Vec3s accumulate_forces(const std::vector<Vec3s> &forces);
 
-#include "util/util_render.h"
+void set_neumann_boundary(VectorGrid &velocity, const openvdb::Int32Grid::Ptr &flags);
 
-class Volume : public VolumeBase {
-	GPUTexture::UPtr m_volume_texture, m_transfer_texture, m_index_texture;
+openvdb::Int32Grid::Ptr build_flag_grid(const ScalarGrid::Ptr &inflow, const openvdb::BoolGrid::Ptr &collision);
 
-	int m_num_slices;
-
-	int m_axis;
-	float m_value_scale; // scale of the values contained in the grid (1 / (max - min))
-	bool m_use_lut;
-	char m_num_textures;
-
-	void loadTransferFunction();
-	void loadVolumeShader();
-
-public:
-	Volume(openvdb::GridBase::Ptr grid);
-	~Volume() = default;
-
-	void slice(const glm::vec3 &view_dir);
-	void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir,
-	            const bool for_outline);
-
-	void numSlices(int x);
-	void useLUT(bool b);
-
-	int type() const { return VOLUME; }
-};
+void solve_pressure(const float dt, VectorGrid &velocity,
+                    ScalarGrid &pressure, const openvdb::Int32Grid &flags);

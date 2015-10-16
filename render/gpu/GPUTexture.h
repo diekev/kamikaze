@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include <memory>
+
 class GPUTexture {
 	GLuint m_index;
 	GLint m_internal_format;
@@ -37,6 +39,10 @@ public:
 	GPUTexture(GLenum target, GLint texture);
 	~GPUTexture();
 
+	using UPtr = std::unique_ptr<GPUTexture>;
+
+	static UPtr create(GLenum target, GLint texture);
+
 	void free(bool renew);
 	void bind() const;
 	void unbind() const;
@@ -46,7 +52,7 @@ public:
 	void setWrapping(GLint wrap) const;
 	void generateMipMap(GLint base, GLint max) const;
 
-	void create(const GLvoid *data, GLint *size) const;
+	void createTexture(const GLvoid *data, GLint *size) const;
 	void createSubImage(const GLvoid *data, GLint *size, GLint *offset) const;
 
 	GLint unit() const;

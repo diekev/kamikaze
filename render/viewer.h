@@ -43,6 +43,10 @@ class Viewer : public QGLWidget {
 	Camera *m_camera;
 	Grid *m_grid;
 	Scene *m_scene;
+	QTimer *m_timer;
+
+	/* Get the world space position of the given point. */
+	glm::vec3 unproject(const glm::vec3 &pos) const;
 
 public Q_SLOTS:
 	void changeBackground();
@@ -63,5 +67,10 @@ public:
 	void wheelEvent(QWheelEvent *e);
 
 	void setScene(Scene *scene);
-	void intersectScene(int x, int y);
+
+	/* Cast a ray in the scene at mouse pos (x, y). */
+	void intersectScene(int x, int y) const;
+
+	/* Select the object at screen pos (x, y). */
+	void selectObject(int x, int y) const;
 };

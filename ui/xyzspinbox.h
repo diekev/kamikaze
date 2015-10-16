@@ -12,30 +12,42 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
+ * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * The Original Code is Copyright (C) 2015 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
+ *
  */
 
 #pragma once
 
-#include <memory>
+#include <QWidget>
 
-#include "render/gpu/GPUBuffer.h"
-#include "render/gpu/GPUProgram.h"
+class QDoubleSpinBox;
+class QVBoxLayout;
 
-class Grid {
-	std::unique_ptr<GPUBuffer> m_buffer_data;
-	size_t m_elements;
-	GPUProgram m_program;
+class XYZSpinBox final : public QWidget {
+	Q_OBJECT
+
+	QDoubleSpinBox *m_x, *m_y, *m_z;
+	QVBoxLayout *m_layout;
+
+private Q_SLOTS:
+	void xValueChanged(double value);
+	void yValueChanged(double value);
+	void zValueChanged(double value);
+
+Q_SIGNALS:
+	void valueChanged(double value, int axis);
 
 public:
-	Grid(int x, int y);
-	~Grid() = default;
+	explicit XYZSpinBox(QWidget *parent = nullptr);
+	~XYZSpinBox() = default;
 
-	void render(const glm::mat4 &MVP);
+	void setValue(float *value);
+	void getValue(float *value) const;
+	void setMinMax(float min, float max) const;
 };

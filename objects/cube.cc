@@ -33,10 +33,8 @@
 
 Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 {
-	m_buffer_data = std::unique_ptr<GPUBuffer>(new GPUBuffer());
-
-	m_program.loadFromFile(GL_VERTEX_SHADER, "shader/flat_shader.vert");
-	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shader/flat_shader.frag");
+	m_program.loadFromFile(GL_VERTEX_SHADER, "shaders/flat_shader.vert");
+	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shaders/flat_shader.frag");
 
 	m_program.createAndLinkProgram();
 
@@ -49,6 +47,8 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 //		m_program.addUniform("N");
 	}
 	m_program.disable();
+
+	m_draw_type = GL_LINES;
 
 	const glm::vec3 vertices[8] = {
 	    glm::vec3(min[0], min[1], min[2]),
@@ -105,6 +105,7 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 	m_elements = 36;
 #endif
 
+	m_buffer_data = GPUBuffer::create();
 	m_buffer_data->bind();
 	m_buffer_data->generateVertexBuffer(&m_vertices[0][0], m_vertices.size() * sizeof(glm::vec3));
 	m_buffer_data->generateIndexBuffer(&indices[0], sizeof(indices));
@@ -116,15 +117,9 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 	m_buffer_data->unbind();
 }
 
-void Cube::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir)
+void Cube::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir,
+                  const bool for_outline)
 {
-	if (m_need_update) {
-		updateMatrix();
-		m_need_update = false;
-	}
-
-	glEnable(GL_DEPTH_TEST);
-
 	if (m_program.isValid()) {
 		m_program.enable();
 		m_buffer_data->bind();
@@ -132,13 +127,12 @@ void Cube::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &vie
 		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(m_matrix));
 		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
 		glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(N));
-		glDrawElements(GL_LINES, m_elements, GL_UNSIGNED_SHORT, nullptr);
+		glDrawElements(m_draw_type, m_elements, GL_UNSIGNED_SHORT, nullptr);
 
 		m_buffer_data->unbind();
 		m_program.disable();
 	}
 
-	glDisable(GL_DEPTH_TEST);
-
-	(void)view_dir;
+	(void)dir;
+	(void)for_outline;
 }

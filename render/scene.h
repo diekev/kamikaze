@@ -29,28 +29,51 @@
 
 #include "util_render.h"
 
+class Brush;
 class Object;
+class QListWidget;
+class QListWidgetItem;
+class SmokeSimulation;
+
+enum {
+	SCENE_MODE_OBJECT = 0,
+	SCENE_MODE_SCULPT = 1,
+};
 
 class Scene : public QObject {
 	Q_OBJECT
 
 	std::vector<Object *> m_objects;
-	int m_active_object;
+	Object *m_active_object;
+	Brush *m_brush;
+	SmokeSimulation *m_smoke_simulation;
+	int m_mode;
 
 Q_SIGNALS:
 	void objectChanged();
-	void updateViewport();
 
 public Q_SLOTS:
-	void moveObjectX(double value);
-	void moveObjectY(double value);
-	void moveObjectZ(double value);
-	void scaleObjectX(double value);
-	void scaleObjectY(double value);
-	void scaleObjectZ(double value);
-	void rotateObjectX(double value);
-	void rotateObjectY(double value);
-	void rotateObjectZ(double value);
+	void setMode(int mode);
+
+	void moveObject(double value, int axis);
+	void scaleObject(double value, int axis);
+	void rotateObject(double value, int axis);
+	void setVoxelSize(double value);
+	void setObjectName(const QString &name);
+
+	void setBrushMode(int mode);
+	void setBrushRadius(double value);
+	void setBrushStrength(double value);
+	void setBrushTool(int tool);
+
+	void setCurrentObject(QListWidgetItem *item);
+
+	void setSimulationDt(double value);
+	void setSimulationCache(const QString &path);
+	void setSimulationAdvection(int index);
+
+	void setVolumeSlices(int slices);
+	void setVolumeLUT(bool b);
 
 public:
 	Scene();
@@ -63,4 +86,10 @@ public:
 
 	void render(const glm::mat4 &MV, const glm::mat4 &P, const glm::vec3 &view_dir);
 	void intersect(const Ray &ray);
+
+	int mode() const;
+	void selectObject(const glm::vec3 &pos);
+	void objectNameList(QListWidget *widget) const;
+	bool ensureUniqueName(QString &name) const;
+	bool isNameUnique(const QString &name) const;
 };

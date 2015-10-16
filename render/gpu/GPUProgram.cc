@@ -45,6 +45,11 @@ GPUProgram::~GPUProgram()
 	m_uniform_loc_list.clear();
 }
 
+GPUProgram::UPtr GPUProgram::create()
+{
+	return UPtr(new GPUProgram());
+}
+
 void GPUProgram::loadFromString(GLenum whichShader, const std::string &source)
 {
 	GLuint shader = glCreateShader(whichShader);

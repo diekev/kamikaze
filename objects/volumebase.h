@@ -30,12 +30,12 @@
 class GPUBuffer;
 
 class TreeTopology {
-	std::unique_ptr<GPUBuffer> m_buffer_data;
+	GPUBuffer::UPtr m_buffer_data;
 	GPUProgram m_program;
 	size_t m_elements;
 
 public:
-	TreeTopology(openvdb::FloatGrid::ConstPtr grid);
+	TreeTopology(openvdb::GridBase::ConstPtr grid);
 	~TreeTopology() = default;
 
 	void render(const glm::mat4 &MVP);
@@ -46,12 +46,25 @@ protected:
 	std::unique_ptr<Cube> m_bbox;
 	std::unique_ptr<TreeTopology> m_topology;
 
-	openvdb::FloatGrid::Ptr m_grid;
+	openvdb::GridBase::Ptr m_grid;
 	openvdb::Mat4R m_volume_matrix;  /* original volume matrix */
 
+	float m_voxel_size;
+	bool m_topology_changed;
+
 	void updateGridTransform();
+	void resampleGridVoxel();
 
 public:
-	VolumeBase(openvdb::FloatGrid::Ptr grid);
+	VolumeBase(openvdb::GridBase::Ptr grid);
 	~VolumeBase() = default;
+
+	int type() const { return VOLUME; }
+	void update();
+
+	float voxelSize() const;
+	void setVoxelSize(const float voxel_size);
+
+	TreeTopology *topology() const { return m_topology.get(); }
+	Cube *bbox() const { return m_bbox.get(); }
 };

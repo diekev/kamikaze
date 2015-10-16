@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <QString>
+
 #include <memory>
 #include <vector>
 
@@ -33,12 +35,18 @@
 
 enum {
 	DRAW_WIRE = 0,
-	DRAW_QUADS = 1,
+	DRAW_SOLID = 1,
+};
+
+enum {
+	OBJECT    = 0,
+	LEVEL_SET = 1,
+	VOLUME    = 2,
 };
 
 class Object {
 protected:
-	std::unique_ptr<GPUBuffer> m_buffer_data;
+	GPUBuffer::UPtr m_buffer_data;
 	GPUProgram m_program;
 	size_t m_elements;
 	GLenum m_draw_type;
@@ -48,16 +56,21 @@ protected:
 	glm::vec3 m_min, m_max, m_pos;
 	glm::mat4 m_matrix, m_inv_matrix;
 
+	QString m_name;
+
 	bool m_draw_bbox, m_draw_topology, m_need_update;
 
 	void updateMatrix();
 
 public:
 	Object();
-	~Object() = default;
+	virtual ~Object() = default;
+
+	virtual int type() const { return OBJECT; }
 
 	virtual bool intersect(const Ray &ray, float &min) const;
-	virtual void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &view_dir) = 0;
+	virtual void render(const glm::mat4 &MVP, const glm::mat3 &N,
+	                    const glm::vec3 &view_dir, const bool for_outline) = 0;
 	void setDrawType(int draw_type);
 
 	virtual void drawBBox(const bool b);
@@ -66,9 +79,18 @@ public:
 	virtual bool drawTreeTopology() const { return m_draw_topology; }
 
 	glm::vec3 pos() const;
-	void setPos(const glm::vec3 &pos);
+	glm::vec3 &pos() { m_need_update = true; return m_pos; }
 	glm::vec3 scale() const;
-	void setScale(const glm::vec3 &scale);
+	glm::vec3 &scale() { m_need_update = true; return m_scale; }
 	glm::vec3 rotation() const;
-	void setRotation(const glm::vec3 &rotation);
+	glm::vec3 &rotation() { m_need_update = true; return m_rotation; }
+
+	/* Return the object's matrix, mainly intended for rendering the active object */
+	glm::mat4 matrix() const { return m_matrix; }
+	glm::mat4 &matrix() { return m_matrix; }
+
+	virtual void update();
+
+	QString name() const;
+	void name(const QString &name);
 };

@@ -28,8 +28,8 @@ enum {
 	MOUSE_LEFT         = 0,
 	MOUSE_MIDDLE       = 1,
 	MOUSE_RIGHT        = 2,
-	MOUSSE_SCROLL_UP   = 3,
-	MOUSSE_SCROLL_DOWN = 4,
+	MOUSE_SCROLL_UP    = 3,
+	MOUSE_SCROLL_DOWN  = 4,
 };
 
 enum {

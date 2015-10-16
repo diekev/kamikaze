@@ -43,6 +43,11 @@ GPUTexture::~GPUTexture()
 	free(false);
 }
 
+GPUTexture::UPtr GPUTexture::create(GLenum target, GLint texture)
+{
+	return UPtr(new GPUTexture(target, texture));
+}
+
 void GPUTexture::free(bool renew)
 {
 	if (glIsTexture(m_index)) {
@@ -100,7 +105,7 @@ void GPUTexture::generateMipMap(GLint base, GLint max) const
 	glGenerateMipmap(m_target);
 }
 
-void GPUTexture::create(const GLvoid *data, GLint *size) const
+void GPUTexture::createTexture(const GLvoid *data, GLint *size) const
 {
 	if (m_target == GL_TEXTURE_1D) {
 		glTexImage1D(m_target, 0, m_internal_format, size[0], m_border, m_format,

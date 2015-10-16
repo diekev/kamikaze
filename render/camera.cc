@@ -28,9 +28,12 @@
 
 #include "util/util_input.h"
 
-Camera::Camera()
+Camera::Camera(int w, int h)
     : m_old_x(0)
     , m_old_y(0)
+    , m_width(w)
+    , m_height(h)
+    , m_aspect(float(w) / h)
     , m_head(30.0f)
     , m_pitch(45.0f)
     , m_near(0.1f)
@@ -64,10 +67,10 @@ void Camera::mouseDownEvent(int x, int y)
 
 void Camera::mouseWheelEvent(int button)
 {
-	if (button == MOUSSE_SCROLL_UP) {
+	if (button == MOUSE_SCROLL_UP) {
 		m_distance += m_zoom_speed;
 	}
-	else if (button == MOUSSE_SCROLL_DOWN) {
+	else if (button == MOUSE_SCROLL_DOWN) {
 		const float temp = m_distance - m_zoom_speed;
 		m_distance = glm::max(0.0f, temp);
 	}
@@ -100,7 +103,12 @@ void Camera::mouseMoveEvent(int button, int modifier, int x, int y)
 
 void Camera::resize(int w, int h)
 {
-	m_projection = glm::perspective(glm::radians(m_fov), (float)w/h, m_near, m_far);
+	m_width = w;
+	m_height = h;
+	m_aspect = float(w) / h;
+
+	m_projection = glm::perspective(glm::radians(m_fov), m_aspect, m_near, m_far);
+	m_need_update = true;
 }
 
 void Camera::update()

@@ -30,6 +30,7 @@
 
 #include "util/util_opengl.h"
 #include "util/util_openvdb.h"
+#include "util/util_openvdb_process.h"
 #include "util/utils.h"
 
 const int MAX_SLICES = 512;
@@ -144,7 +145,7 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GPUTexture &texture, GPUT
 	delete [] data;
 }
 
-Volume::Volume(openvdb::FloatGrid::Ptr &grid)
+Volume::Volume(openvdb::GridBase::Ptr grid)
     : VolumeBase(grid)
     , m_volume_texture(nullptr)
     , m_transfer_texture(nullptr)
@@ -153,16 +154,16 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
     , m_axis(-1)
     , m_value_scale(1.0f)
     , m_use_lut(false)
+    , m_num_textures(0)
 {
 	using namespace openvdb;
 	using namespace openvdb::math;
 
-	m_draw_type = GL_TRIANGLES;
 	m_elements = m_num_slices * 6;
 
-	m_volume_texture = std::unique_ptr<GPUTexture>(new GPUTexture(GL_TEXTURE_3D, 0));
-	m_transfer_texture = std::unique_ptr<GPUTexture>(new GPUTexture(GL_TEXTURE_1D, 1));
-	m_index_texture = std::unique_ptr<GPUTexture>(new GPUTexture(GL_TEXTURE_3D, 2));
+	m_volume_texture = GPUTexture::create(GL_TEXTURE_3D, m_num_textures++);
+	m_transfer_texture = GPUTexture::create(GL_TEXTURE_1D, m_num_textures++);
+	m_index_texture = GPUTexture::create(GL_TEXTURE_3D, m_num_textures++);
 
 	texture_from_leaf(*grid, *m_volume_texture, *m_index_texture);
 
@@ -172,8 +173,8 @@ Volume::Volume(openvdb::FloatGrid::Ptr &grid)
 
 void Volume::loadVolumeShader()
 {
-	m_program.loadFromFile(GL_VERTEX_SHADER, "shader/texture_slicer.vert");
-	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shader/texture_slicer.frag");
+	m_program.loadFromFile(GL_VERTEX_SHADER, "shaders/volume.vert");
+	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shaders/volume.frag");
 
 	m_program.createAndLinkProgram();
 
@@ -187,9 +188,9 @@ void Volume::loadVolumeShader()
 		m_program.addUniform("index_volume");
 		m_program.addUniform("use_lut");
 		m_program.addUniform("scale");
-		m_program.addUniform("inv_size");
+		m_program.addUniform("matrix");
 
-		glUniform1i(m_program("volume"), 0);
+		glUniform1i(m_program("volume"), m_volume_texture->unit());
 		glUniform1i(m_program("lut"), m_transfer_texture->unit());
 		glUniform1i(m_program("index_volume"), m_index_texture->unit());
 
@@ -256,7 +257,7 @@ void Volume::loadTransferFunction()
 	m_transfer_texture->setType(GL_FLOAT, GL_RGB, GL_RGB);
 	m_transfer_texture->setMinMagFilter(GL_LINEAR, GL_LINEAR);
 	m_transfer_texture->setWrapping(GL_REPEAT);
-	m_transfer_texture->create(&data[0][0], &size);
+	m_transfer_texture->createTexture(&data[0][0], &size);
 	m_transfer_texture->unbind();
 }
 
@@ -302,6 +303,7 @@ void Volume::slice(const glm::vec3 &view_dir)
 	GLuint *indices = new GLuint[m_elements];
 	int idx = 0, idx_count = 0;
 
+	m_vertices.clear();
 	m_vertices.reserve(m_num_slices * 4);
 
 	for (auto slice(0); slice < m_num_slices; slice++) {
@@ -315,10 +317,10 @@ void Volume::slice(const glm::vec3 &view_dir)
 		v2[m_axis] = depth;
 		v3[m_axis] = depth;
 
-		m_vertices.push_back(v0);
-		m_vertices.push_back(v1);
-		m_vertices.push_back(v2);
-		m_vertices.push_back(v3);
+		m_vertices.push_back(v0 * glm::mat3(m_inv_matrix));
+		m_vertices.push_back(v1 * glm::mat3(m_inv_matrix));
+		m_vertices.push_back(v2 * glm::mat3(m_inv_matrix));
+		m_vertices.push_back(v3 * glm::mat3(m_inv_matrix));
 
 		indices[idx_count++] = idx + 0;
 		indices[idx_count++] = idx + 1;
@@ -337,26 +339,12 @@ void Volume::slice(const glm::vec3 &view_dir)
 	delete [] indices;
 }
 
-void Volume::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir)
+void Volume::render(const glm::mat4 &MVP, const glm::mat3 &N,
+                    const glm::vec3 &dir, const bool for_outline)
 {
-	if (m_need_update) {
-		updateMatrix();
-		updateGridTransform();
-		m_need_update = false;
-	}
-
 	slice(dir);
 
-	if (m_draw_bbox) {
-		m_bbox->render(MVP, N, dir);
-	}
-
-	if (m_draw_topology) {
-		m_topology->render(MVP);
-	}
-
 	glEnable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	if (m_program.isValid()) {
@@ -366,7 +354,10 @@ void Volume::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &d
 		m_transfer_texture->bind();
 		m_index_texture->bind();
 
+		auto min = m_min * glm::mat3(m_inv_matrix);
+		glUniform3fv(m_program("offset"), 1, &min[0]);
 		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(m_matrix));
 		glUniform1i(m_program("use_lut"), m_use_lut);
 		glDrawElements(m_draw_type, m_elements, GL_UNSIGNED_INT, nullptr);
 
@@ -377,19 +368,20 @@ void Volume::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &d
 		m_program.disable();
 	}
 
-	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
+
+	(void)N;
+	(void)for_outline;
 }
 
-void Volume::changeNumSlicesBy(int x)
+void Volume::numSlices(int x)
 {
-	m_num_slices += x;
-	m_num_slices = std::min(MAX_SLICES, std::max(m_num_slices, 3));
+	m_num_slices = std::min(MAX_SLICES, std::max(x, 3));
 	m_vertices.resize(m_num_slices * 4);
 	m_elements = m_num_slices * 6;
 }
 
-void Volume::toggleUseLUT()
+void Volume::useLUT(bool b)
 {
-	m_use_lut = !m_use_lut;
+	m_use_lut = b;
 }

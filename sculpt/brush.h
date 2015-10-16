@@ -12,48 +12,56 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
+ * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  * The Original Code is Copyright (C) 2015 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
+ *
  */
 
-#include <glm/glm.hpp>
+#pragma once
 
 #include <openvdb/openvdb.h>
 
-#include "volumebase.h"
+using openvdb::math::Coord;
 
-#include "render/gpu/GPUTexture.h"
+enum {
+	BRUSH_MODE_ADD = 0,
+	BRUSH_MODE_SUB = 1,
+};
 
-#include "util/util_render.h"
+enum {
+	BRUSH_TOOL_DRAW = 0,
+	BRUSH_TOOL_SMOOTH = 1,
+};
 
-class Volume : public VolumeBase {
-	GPUTexture::UPtr m_volume_texture, m_transfer_texture, m_index_texture;
-
-	int m_num_slices;
-
-	int m_axis;
-	float m_value_scale; // scale of the values contained in the grid (1 / (max - min))
-	bool m_use_lut;
-	char m_num_textures;
-
-	void loadTransferFunction();
-	void loadVolumeShader();
+class Brush {
+	float m_radius, m_inv_radius;
+	float m_strength;
+	int m_mode;
+	int m_tool;
 
 public:
-	Volume(openvdb::GridBase::Ptr grid);
-	~Volume() = default;
+	Brush();
+	Brush(const float radius, const float strength);
+	~Brush() = default;
 
-	void slice(const glm::vec3 &view_dir);
-	void render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir,
-	            const bool for_outline);
+	inline float influence(const Coord &center, const Coord &pos)
+	{
+		return 1.0f - (center - pos).asVec3d().length() * m_inv_radius + 0.001f;
+	}
 
-	void numSlices(int x);
-	void useLUT(bool b);
+	void radius(const float rad);
+	float radius() const;
 
-	int type() const { return VOLUME; }
+	void strength(const float s);
+	float strength() const;
+
+	void mode(const int mode);
+
+	int tool() const;
+	void tool(const int tool);
 };
