@@ -36,8 +36,8 @@ Grid::Grid(int x, int y)
     : m_buffer_data(std::unique_ptr<GPUBuffer>(new GPUBuffer()))
     , m_elements(x * y)
 {
-	m_program.loadFromFile(GL_VERTEX_SHADER, "shaders/flat_shader.vert");
-	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shaders/flat_shader.frag");
+	m_program.loadFromFile(VERTEX_SHADER, "shaders/flat_shader.vert");
+	m_program.loadFromFile(FRAGMENT_SHADER, "shaders/flat_shader.frag");
 
 	m_program.createAndLinkProgram();
 

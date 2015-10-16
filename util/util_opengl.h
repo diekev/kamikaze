@@ -24,3 +24,9 @@
 #pragma once
 
 void gl_check_errors();
+
+typedef void(* get_ivfunc)(GLuint index, GLenum pname, GLint *param);
+typedef void(* get_logfunc)(GLuint index, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
+
+bool check_status(GLuint index, GLenum pname, const std::string &prefix,
+                  get_ivfunc ivfunc, get_logfunc log_func);

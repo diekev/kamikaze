@@ -25,21 +25,21 @@
 #pragma once
 
 #include <GL/glew.h>
-#include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
-typedef void(* get_ivfunc)(GLuint index, GLenum pname, GLint *param);
-typedef void(* get_logfunc)(GLuint index, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
+enum {
+	VERTEX_SHADER = 0,
+	FRAGMENT_SHADER = 1,
+	GEOMETRY_SHADER = 2,
+};
 
 class GPUProgram {
 	GLuint m_program;
-	int m_total_shaders;
 	GLuint m_shaders[3];
-	std::map<std::string, GLuint> m_attrib_list;
-	std::map<std::string, GLuint> m_uniform_loc_list;
-
-	void logError(GLuint index, const std::string &prefix, get_ivfunc ivfunc, get_logfunc log_func) const;
+	std::unordered_map<std::string, GLuint> m_attributes;
+	std::unordered_map<std::string, GLuint> m_uniforms;
 
 public:
 	GPUProgram();
@@ -49,8 +49,8 @@ public:
 
 	static UPtr create();
 
-	void loadFromString(GLenum whichShader, const std::string &source);
-	void loadFromFile(GLenum whichShader, const std::string &source);
+	void loadFromString(int shader_type, const std::string &source);
+	void loadFromFile(int shader_type, const std::string &source);
 	void createAndLinkProgram();
 	void enable() const;
 	void disable() const;

@@ -145,8 +145,8 @@ struct TreeTopologyOp {
 TreeTopology::TreeTopology(openvdb::GridBase::ConstPtr grid)
     : m_buffer_data(GPUBuffer::create())
 {
-	m_program.loadFromFile(GL_VERTEX_SHADER, "shaders/tree_topology.vert");
-	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shaders/tree_topology.frag");
+	m_program.loadFromFile(VERTEX_SHADER, "shaders/tree_topology.vert");
+	m_program.loadFromFile(FRAGMENT_SHADER, "shaders/tree_topology.frag");
 
 	m_program.createAndLinkProgram();
 

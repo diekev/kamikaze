@@ -72,8 +72,8 @@ Volume::Volume(openvdb::GridBase::Ptr grid)
 
 void Volume::loadVolumeShader()
 {
-	m_program.loadFromFile(GL_VERTEX_SHADER, "shaders/volume.vert");
-	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shaders/volume.frag");
+	m_program.loadFromFile(VERTEX_SHADER, "shaders/volume.vert");
+	m_program.loadFromFile(FRAGMENT_SHADER, "shaders/volume.frag");
 
 	m_program.createAndLinkProgram();
 

@@ -21,8 +21,10 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
+#include <cassert>
 #include <GL/glew.h>
 #include <iostream>
+#include <memory>
 
 #include "util_opengl.h"
 
@@ -53,4 +55,30 @@ void gl_check_errors()
 			std::cerr << "invalid framebuffer operation\n";
 			break;
 	}
+
+	/* Cause a crash if an error was caught. */
+	assert(error == GL_NO_ERROR);
+}
+
+/* Utility function to check whether a program or shader was linked properly or
+ * not. Prints an error message if linking failed. */
+bool check_status(GLuint index, GLenum pname, const std::string &prefix,
+                  get_ivfunc ivfunc, get_logfunc log_func)
+{
+	GLint status;
+	ivfunc(index, pname, &status);
+
+	if (status == GL_TRUE) {
+		return true;
+	}
+
+	GLint log_length;
+	ivfunc(index, GL_INFO_LOG_LENGTH, &log_length);
+
+	auto log = std::unique_ptr<char[]>(new char[log_length]);
+	log_func(index, log_length, &log_length, log.get());
+
+	std::cerr << prefix << ": " << log.get() << '\n';
+
+	return false;
 }

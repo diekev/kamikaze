@@ -30,9 +30,10 @@
 
 #include "GPUProgram.h"
 
+#include "util/util_opengl.h"
+
 GPUProgram::GPUProgram()
-    : m_total_shaders(0)
-    , m_shaders{0, 0, 0}
+    : m_shaders{0, 0, 0}
 {}
 
 GPUProgram::~GPUProgram()
@@ -41,8 +42,8 @@ GPUProgram::~GPUProgram()
 		glDeleteProgram(m_program);
 	}
 
-	m_attrib_list.clear();
-	m_uniform_loc_list.clear();
+	m_attributes.clear();
+	m_uniforms.clear();
 }
 
 GPUProgram::UPtr GPUProgram::create()
@@ -50,40 +51,54 @@ GPUProgram::UPtr GPUProgram::create()
 	return UPtr(new GPUProgram());
 }
 
-void GPUProgram::loadFromString(GLenum whichShader, const std::string &source)
+void GPUProgram::loadFromString(int shader_type, const std::string &source)
 {
-	GLuint shader = glCreateShader(whichShader);
+	GLenum type;
+
+	switch (shader_type) {
+		case VERTEX_SHADER:
+			type = GL_VERTEX_SHADER;
+			break;
+		case FRAGMENT_SHADER:
+			type = GL_FRAGMENT_SHADER;
+			break;
+		case GEOMETRY_SHADER:
+			type = GL_GEOMETRY_SHADER;
+			break;
+		default:
+			assert(0);
+			break;
+	}
+
+	GLuint shader = glCreateShader(type);
 	const char *ptmp = source.c_str();
 
 	glShaderSource(shader, 1, &ptmp, nullptr);
 	glCompileShader(shader);
 
-	GLint status;
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+	const bool ok = check_status(shader, GL_COMPILE_STATUS, "Compile log",
+	                             glGetShaderiv, glGetShaderInfoLog);
 
-	if (status == GL_FALSE) {
-		logError(shader, "Compile log", glGetShaderiv, glGetShaderInfoLog);
+	if (ok) {
+		m_shaders[shader_type] = shader;
 	}
-
-	m_shaders[m_total_shaders++] = shader;
 }
 
-void GPUProgram::loadFromFile(GLenum whichShader, const std::string &source)
+void GPUProgram::loadFromFile(int shader_type, const std::string &source)
 {
 	std::ifstream fp(source.c_str());
 
-	if (fp) {
-		std::stringstream shader_data;
-		shader_data << fp.rdbuf();
-
-		fp.close();
-
-		const std::string &shader = shader_data.str();
-		loadFromString(whichShader, shader);
-	}
-	else {
+	if (!fp) {
 		std::cerr << "Error loading shader: " << source << '\n';
+		return;
 	}
+
+	std::stringstream shader_data;
+	shader_data << fp.rdbuf();
+	fp.close();
+
+	const std::string &shader = shader_data.str();
+	loadFromString(shader_type, shader);
 }
 
 void GPUProgram::createAndLinkProgram()
@@ -91,19 +106,15 @@ void GPUProgram::createAndLinkProgram()
 	m_program = glCreateProgram();
 
 	for (int i = 0; i < 3; ++i) {
-		if (m_shaders[i] != 0) {
+		if (glIsShader(m_shaders[i])) {
 			glAttachShader(m_program, m_shaders[i]);
 		}
 	}
 
 	glLinkProgram(m_program);
 
-	GLint status;
-	glGetProgramiv(m_program, GL_LINK_STATUS, &status);
-
-	if (status == GL_FALSE) {
-		logError(m_program, "Linking log", glGetProgramiv, glGetProgramInfoLog);
-	}
+	check_status(m_program, GL_LINK_STATUS, "Linking log",
+	             glGetProgramiv, glGetProgramInfoLog);
 
 	for (int i = 0; i < 3; ++i) {
 		if (glIsShader(m_shaders[i])) {
@@ -128,15 +139,8 @@ bool GPUProgram::isValid() const
 	if (glIsProgram(m_program)) {
 		glValidateProgram(m_program);
 
-		GLint status;
-		glGetProgramiv(m_program, GL_VALIDATE_STATUS, &status);
-
-		if (status == GL_FALSE) {
-			logError(m_program, "Validation log", glGetProgramiv, glGetProgramInfoLog);
-			return false;
-		}
-
-		return true;
+		return check_status(m_program, GL_VALIDATE_STATUS, "Validation log",
+		                    glGetProgramiv, glGetProgramInfoLog);
 	}
 
 	return false;
@@ -144,32 +148,20 @@ bool GPUProgram::isValid() const
 
 void GPUProgram::addAttribute(const std::string &attribute)
 {
-	m_attrib_list[attribute] = glGetAttribLocation(m_program, attribute.c_str());
+	m_attributes[attribute] = glGetAttribLocation(m_program, attribute.c_str());
 }
 
 void GPUProgram::addUniform(const std::string &uniform)
 {
-	m_uniform_loc_list[uniform] = glGetUniformLocation(m_program, uniform.c_str());
+	m_uniforms[uniform] = glGetUniformLocation(m_program, uniform.c_str());
 }
 
 GLuint GPUProgram::operator[](const std::string &attribute)
 {
-	return m_attrib_list[attribute];
+	return m_attributes[attribute];
 }
 
 GLuint GPUProgram::operator()(const std::string &uniform)
 {
-	return m_uniform_loc_list[uniform];
-}
-
-void GPUProgram::logError(GLuint index, const std::string &prefix,
-                          get_ivfunc ivfunc, get_logfunc log_func) const
-{
-	GLint log_length;
-	ivfunc(index, GL_INFO_LOG_LENGTH, &log_length);
-
-	auto log = std::unique_ptr<char[]>(new char[log_length]);
-	log_func(index, log_length, &log_length, log.get());
-
-	std::cerr << prefix << ": " << log.get() << '\n';
+	return m_uniforms[uniform];
 }
