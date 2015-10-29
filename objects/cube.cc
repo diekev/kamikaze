@@ -29,12 +29,10 @@
 
 #include "cube.h"
 
-#include "util/util_opengl.h"
-
 Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 {
-	m_program.loadFromFile(VERTEX_SHADER, "shaders/flat_shader.vert");
-	m_program.loadFromFile(FRAGMENT_SHADER, "shaders/flat_shader.frag");
+	m_program.loadFromFile(gpu::VERTEX_SHADER, "shaders/flat_shader.vert");
+	m_program.loadFromFile(gpu::FRAGMENT_SHADER, "shaders/flat_shader.frag");
 
 	m_program.createAndLinkProgram();
 
@@ -105,7 +103,7 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 	m_elements = 36;
 #endif
 
-	m_buffer_data = GPUBuffer::create();
+	m_buffer_data = gpu::BufferObject::create();
 	m_buffer_data->bind();
 	m_buffer_data->generateVertexBuffer(&m_vertices[0][0], m_vertices.size() * sizeof(glm::vec3));
 	m_buffer_data->generateIndexBuffer(&indices[0], sizeof(indices));

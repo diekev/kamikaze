@@ -23,15 +23,13 @@
 
 #pragma once
 
-#include <memory>
-
-#include "render/gpu/GPUBuffer.h"
-#include "render/gpu/GPUProgram.h"
+#include <ego/bufferobject.h>
+#include <ego/program.h>
 
 class Grid {
-	std::unique_ptr<GPUBuffer> m_buffer_data;
+	gpu::BufferObject::Ptr m_buffer_data;
 	size_t m_elements;
-	GPUProgram m_program;
+	gpu::Program m_program;
 
 public:
 	Grid(int x, int y);

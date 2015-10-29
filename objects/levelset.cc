@@ -21,6 +21,8 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
+#include <ego/utils.h>
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -32,7 +34,6 @@
 #include "sculpt/sculpt.h"
 
 #include "util/utils.h"
-#include "util/util_opengl.h"
 #include "util/util_openvdb.h"
 #include "util/util_openvdb_process.h"
 
@@ -46,8 +47,8 @@ LevelSet::LevelSet(openvdb::GridBase::Ptr grid)
 
 void LevelSet::loadShader()
 {
-	m_program.loadFromFile(VERTEX_SHADER, "shaders/object.vert");
-	m_program.loadFromFile(FRAGMENT_SHADER, "shaders/object.frag");
+	m_program.loadFromFile(gpu::VERTEX_SHADER, "shaders/object.vert");
+	m_program.loadFromFile(gpu::FRAGMENT_SHADER, "shaders/object.frag");
 	m_program.createAndLinkProgram();
 
 	m_program.enable();
@@ -94,7 +95,7 @@ void LevelSet::generateMesh(const bool is_sculpt_mode)
 
 	m_elements = op.indices.size();
 
-	m_buffer_data.reset(new GPUBuffer());
+	m_buffer_data.reset(new gpu::BufferObject());
 	m_buffer_data->bind();
 	m_buffer_data->generateVertexBuffer(&op.vertices[0][0], op.vertices.size() * sizeof(glm::vec3));
 	m_buffer_data->generateIndexBuffer(&op.indices[0], m_elements * sizeof(GLuint));
@@ -103,7 +104,7 @@ void LevelSet::generateMesh(const bool is_sculpt_mode)
 	m_buffer_data->attribPointer(m_program["normal"], 3);
 	m_buffer_data->unbind();
 
-	gl_check_errors();
+	GPU_check_errors("Unable to create level set buffer");
 }
 
 bool LevelSet::intersectLS(const Ray &ray, Brush *brush)

@@ -27,12 +27,12 @@
 
 #include "volumebase.h"
 
-#include "render/gpu/GPUTexture.h"
+#include <ego/texture.h>
 
 #include "util/util_render.h"
 
 class Volume : public VolumeBase {
-	GPUTexture::UPtr m_volume_texture, m_transfer_texture;
+	gpu::Texture::Ptr m_volume_texture, m_transfer_texture;
 
 	int m_num_slices;
 

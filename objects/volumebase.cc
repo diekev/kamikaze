@@ -21,15 +21,12 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
+#include <ego/utils.h>
 #include <glm/gtc/type_ptr.hpp>
-
 #include <openvdb/tools/GridTransformer.h>
 
 #include "volumebase.h"
 
-#include "render/gpu/GPUBuffer.h"
-
-#include "util/util_opengl.h"
 #include "util/util_openvdb.h"
 #include "util/util_openvdb_process.h"
 #include "util/utils.h"
@@ -143,10 +140,10 @@ struct TreeTopologyOp {
 };
 
 TreeTopology::TreeTopology(openvdb::GridBase::ConstPtr grid)
-    : m_buffer_data(GPUBuffer::create())
+    : m_buffer_data(gpu::BufferObject::create())
 {
-	m_program.loadFromFile(VERTEX_SHADER, "shaders/tree_topology.vert");
-	m_program.loadFromFile(FRAGMENT_SHADER, "shaders/tree_topology.frag");
+	m_program.loadFromFile(gpu::VERTEX_SHADER, "shaders/tree_topology.vert");
+	m_program.loadFromFile(gpu::FRAGMENT_SHADER, "shaders/tree_topology.frag");
 
 	m_program.createAndLinkProgram();
 
@@ -209,7 +206,7 @@ VolumeBase::VolumeBase(openvdb::GridBase::Ptr grid)
 	m_dimensions = (m_max - m_min);
 	updateMatrix();
 
-	m_buffer_data = GPUBuffer::create();
+	m_buffer_data = gpu::BufferObject::create();
 	m_bbox = std::unique_ptr<Cube>(new Cube(m_min, m_max));
 	m_topology = std::unique_ptr<TreeTopology>(new TreeTopology(grid));
 }

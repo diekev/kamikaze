@@ -21,11 +21,11 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
+#include <ego/utils.h>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "volume.h"
 
-#include "util/util_opengl.h"
 #include "util/util_openvdb.h"
 #include "util/util_openvdb_process.h"
 #include "util/utils.h"
@@ -56,7 +56,7 @@ Volume::Volume(openvdb::GridBase::Ptr grid)
 
 	process_grid_real(m_grid, get_grid_storage(*m_grid), op);
 
-	m_volume_texture = GPUTexture::create(GL_TEXTURE_3D, m_num_textures++);
+	m_volume_texture = gpu::Texture::create(GL_TEXTURE_3D, m_num_textures++);
 	m_volume_texture->bind();
 	m_volume_texture->setType(GL_FLOAT, GL_RED, GL_RED);
 	m_volume_texture->setMinMagFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
@@ -64,7 +64,8 @@ Volume::Volume(openvdb::GridBase::Ptr grid)
 	m_volume_texture->createTexture(op.data, bbox.dim().asPointer());
 	m_volume_texture->generateMipMap(0, 4);
 	m_volume_texture->unbind();
-	gl_check_errors();
+
+	GPU_check_errors("Unable to create 3D texture");
 
 	loadTransferFunction();
 	loadVolumeShader();
@@ -72,8 +73,8 @@ Volume::Volume(openvdb::GridBase::Ptr grid)
 
 void Volume::loadVolumeShader()
 {
-	m_program.loadFromFile(VERTEX_SHADER, "shaders/volume.vert");
-	m_program.loadFromFile(FRAGMENT_SHADER, "shaders/volume.frag");
+	m_program.loadFromFile(gpu::VERTEX_SHADER, "shaders/volume.vert");
+	m_program.loadFromFile(gpu::FRAGMENT_SHADER, "shaders/volume.frag");
 
 	m_program.createAndLinkProgram();
 
@@ -147,7 +148,7 @@ void Volume::loadTransferFunction()
 		}
 	}
 
-	m_transfer_texture = GPUTexture::create(GL_TEXTURE_1D, m_num_textures++);
+	m_transfer_texture = gpu::Texture::create(GL_TEXTURE_1D, m_num_textures++);
 	m_transfer_texture->bind();
 	m_transfer_texture->setType(GL_FLOAT, GL_RGB, GL_RGB);
 	m_transfer_texture->setMinMagFilter(GL_LINEAR, GL_LINEAR);

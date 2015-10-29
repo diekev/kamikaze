@@ -37,12 +37,8 @@ SOURCES += \
 	render/camera.cc \
 	render/scene.cc \
 	render/viewer.cc \
-	render/gpu/GPUBuffer.cc \
-	render/gpu/GPUTexture.cc \
-    render/gpu/GPUProgram.cc \
     ui/mainwindow.cc \
     ui/timelinewidget.cc \
-	util/util_opengl.cc \
 	util/util_openvdb.cc \
 	util/utils.cc \
     ui/levelsetdialog.cc \
@@ -63,13 +59,9 @@ HEADERS += \
 	render/camera.h \
 	render/scene.h \
 	render/viewer.h \
-	render/gpu/GPUBuffer.h \
-    render/gpu/GPUProgram.h \
-	render/gpu/GPUTexture.h \
     ui/mainwindow.h \
     ui/timelinewidget.h \
     util/util_input.h \
-	util/util_opengl.h \
 	util/util_openvdb.h \
 	util/utils.h \
     util/util_render.h \
@@ -98,13 +90,15 @@ OTHER_FILES += \
 DEFINES += DWREAL_IS_DOUBLE=0
 DEFINES += GLM_FORCE_RADIANS
 
-INCLUDEPATH += objects/ render/ render/gpu/ ui/ util/
+INCLUDEPATH += objects/ render/ ui/ util/
 INCLUDEPATH += /opt/lib/openvdb/include /opt/lib/openexr/include
+INCLUDEPATH += /opt/lib/ego/include
 
 LIBS += -lGL -lglut -lGLEW
 LIBS += -L/opt/lib/openvdb/lib -lopenvdb -ltbb
 LIBS += -L/opt/lib/openexr/lib -lHalf
 LIBS += -L/opt/lib/blosc/lib -lblosc -lz
+LIBS += -L/opt/lib/ego/lib -lego
 
 unix {
 	copy_files.commands = cp -r ../render/shaders/ .
