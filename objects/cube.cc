@@ -23,6 +23,7 @@
 
 #include <vector>
 
+#include <ego/utils.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -31,8 +32,8 @@
 
 Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 {
-	m_program.loadFromFile(gpu::VERTEX_SHADER, "shaders/flat_shader.vert");
-	m_program.loadFromFile(gpu::FRAGMENT_SHADER, "shaders/flat_shader.frag");
+	m_program.load(ego::VERTEX_SHADER, str_from_file("shaders/flat_shader.vert"));
+	m_program.load(ego::FRAGMENT_SHADER, str_from_file("shaders/flat_shader.frag"));
 
 	m_program.createAndLinkProgram();
 
@@ -103,7 +104,7 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 	m_elements = 36;
 #endif
 
-	m_buffer_data = gpu::BufferObject::create();
+	m_buffer_data = ego::BufferObject::create();
 	m_buffer_data->bind();
 	m_buffer_data->generateVertexBuffer(&m_vertices[0][0], m_vertices.size() * sizeof(glm::vec3));
 	m_buffer_data->generateIndexBuffer(&indices[0], sizeof(indices));

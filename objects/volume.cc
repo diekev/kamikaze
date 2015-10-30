@@ -56,7 +56,7 @@ Volume::Volume(openvdb::GridBase::Ptr grid)
 
 	process_grid_real(m_grid, get_grid_storage(*m_grid), op);
 
-	m_volume_texture = gpu::Texture::create(GL_TEXTURE_3D, m_num_textures++);
+	m_volume_texture = ego::Texture::create(GL_TEXTURE_3D, m_num_textures++);
 	m_volume_texture->bind();
 	m_volume_texture->setType(GL_FLOAT, GL_RED, GL_RED);
 	m_volume_texture->setMinMagFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
@@ -73,8 +73,8 @@ Volume::Volume(openvdb::GridBase::Ptr grid)
 
 void Volume::loadVolumeShader()
 {
-	m_program.loadFromFile(gpu::VERTEX_SHADER, "shaders/volume.vert");
-	m_program.loadFromFile(gpu::FRAGMENT_SHADER, "shaders/volume.frag");
+	m_program.load(ego::VERTEX_SHADER, str_from_file("shaders/volume.vert"));
+	m_program.load(ego::FRAGMENT_SHADER, str_from_file("shaders/volume.frag"));
 
 	m_program.createAndLinkProgram();
 
@@ -148,7 +148,7 @@ void Volume::loadTransferFunction()
 		}
 	}
 
-	m_transfer_texture = gpu::Texture::create(GL_TEXTURE_1D, m_num_textures++);
+	m_transfer_texture = ego::Texture::create(GL_TEXTURE_1D, m_num_textures++);
 	m_transfer_texture->bind();
 	m_transfer_texture->setType(GL_FLOAT, GL_RGB, GL_RGB);
 	m_transfer_texture->setMinMagFilter(GL_LINEAR, GL_LINEAR);

@@ -27,9 +27,9 @@
 #include <ego/program.h>
 
 class Grid {
-	gpu::BufferObject::Ptr m_buffer_data;
+	ego::BufferObject::Ptr m_buffer_data;
 	size_t m_elements;
-	gpu::Program m_program;
+	ego::Program m_program;
 
 public:
 	Grid(int x, int y);

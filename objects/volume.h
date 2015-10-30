@@ -32,7 +32,7 @@
 #include "util/util_render.h"
 
 class Volume : public VolumeBase {
-	gpu::Texture::Ptr m_volume_texture, m_transfer_texture;
+	ego::Texture::Ptr m_volume_texture, m_transfer_texture;
 
 	int m_num_slices;
 

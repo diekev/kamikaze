@@ -47,8 +47,8 @@ LevelSet::LevelSet(openvdb::GridBase::Ptr grid)
 
 void LevelSet::loadShader()
 {
-	m_program.loadFromFile(gpu::VERTEX_SHADER, "shaders/object.vert");
-	m_program.loadFromFile(gpu::FRAGMENT_SHADER, "shaders/object.frag");
+	m_program.load(ego::VERTEX_SHADER, str_from_file("shaders/object.vert"));
+	m_program.load(ego::FRAGMENT_SHADER, str_from_file("shaders/object.frag"));
 	m_program.createAndLinkProgram();
 
 	m_program.enable();
@@ -95,7 +95,7 @@ void LevelSet::generateMesh(const bool is_sculpt_mode)
 
 	m_elements = op.indices.size();
 
-	m_buffer_data.reset(new gpu::BufferObject());
+	m_buffer_data.reset(new ego::BufferObject());
 	m_buffer_data->bind();
 	m_buffer_data->generateVertexBuffer(&op.vertices[0][0], op.vertices.size() * sizeof(glm::vec3));
 	m_buffer_data->generateIndexBuffer(&op.indices[0], m_elements * sizeof(GLuint));

@@ -24,18 +24,18 @@
 #include <algorithm>
 #include <vector>
 
-#include <GL/glew.h>
+#include <ego/utils.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "grid.h"
 
 Grid::Grid(int x, int y)
-    : m_buffer_data(gpu::BufferObject::create())
+    : m_buffer_data(ego::BufferObject::create())
     , m_elements(x * y)
 {
-	m_program.loadFromFile(gpu::VERTEX_SHADER, "shaders/flat_shader.vert");
-	m_program.loadFromFile(gpu::FRAGMENT_SHADER, "shaders/flat_shader.frag");
+	m_program.load(ego::VERTEX_SHADER, str_from_file("shaders/flat_shader.vert"));
+	m_program.load(ego::FRAGMENT_SHADER, str_from_file("shaders/flat_shader.frag"));
 
 	m_program.createAndLinkProgram();
 

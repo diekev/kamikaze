@@ -140,10 +140,10 @@ struct TreeTopologyOp {
 };
 
 TreeTopology::TreeTopology(openvdb::GridBase::ConstPtr grid)
-    : m_buffer_data(gpu::BufferObject::create())
+    : m_buffer_data(ego::BufferObject::create())
 {
-	m_program.loadFromFile(gpu::VERTEX_SHADER, "shaders/tree_topology.vert");
-	m_program.loadFromFile(gpu::FRAGMENT_SHADER, "shaders/tree_topology.frag");
+	m_program.load(ego::VERTEX_SHADER, str_from_file("shaders/tree_topology.vert"));
+	m_program.load(ego::FRAGMENT_SHADER, str_from_file("shaders/tree_topology.frag"));
 
 	m_program.createAndLinkProgram();
 
@@ -206,7 +206,7 @@ VolumeBase::VolumeBase(openvdb::GridBase::Ptr grid)
 	m_dimensions = (m_max - m_min);
 	updateMatrix();
 
-	m_buffer_data = gpu::BufferObject::create();
+	m_buffer_data = ego::BufferObject::create();
 	m_bbox = std::unique_ptr<Cube>(new Cube(m_min, m_max));
 	m_topology = std::unique_ptr<TreeTopology>(new TreeTopology(grid));
 }

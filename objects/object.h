@@ -45,8 +45,8 @@ enum {
 
 class Object {
 protected:
-	gpu::BufferObject::Ptr m_buffer_data;
-	gpu::Program m_program;
+	ego::BufferObject::Ptr m_buffer_data;
+	ego::Program m_program;
 	size_t m_elements;
 	GLenum m_draw_type;
 
