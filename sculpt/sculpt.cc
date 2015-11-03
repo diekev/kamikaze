@@ -21,10 +21,11 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
+#include "sculpt.h"
+
 #include <openvdb/math/Stencils.h>
 
 #include "brush.h"
-#include "sculpt.h"
 
 /* Modifiy level set by adding or subtracting values based on the brush's strength */
 void do_sculpt_draw(openvdb::FloatGrid &level_set, Brush *brush,

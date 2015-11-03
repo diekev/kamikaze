@@ -22,13 +22,13 @@
  *
  */
 
-#include <QKeyEvent>
-#include <QListWidget>
+#include "scene.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 
-#include "scene.h"
+#include <QKeyEvent>
+#include <QListWidget>
 
 #include "objects/levelset.h"
 #include "objects/volume.h"

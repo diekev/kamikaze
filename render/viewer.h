@@ -25,6 +25,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <GL/glew.h>  /* needs to be included before QGLWidget (includes gl.h) */
 #include <QGLWidget>
 
 class Camera;

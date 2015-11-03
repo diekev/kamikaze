@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <glm/gtc/type_ptr.hpp>
+
 class Camera {
 	int m_old_x, m_old_y;
 	int m_width, m_height;

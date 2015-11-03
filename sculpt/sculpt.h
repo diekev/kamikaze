@@ -23,6 +23,10 @@
 
 #pragma once
 
+#include <openvdb/openvdb.h>
+
+class Brush;
+
 void do_sculpt_draw(openvdb::FloatGrid &level_set, Brush *brush,
                     openvdb::math::Coord &ijk, const float voxel_size);
 

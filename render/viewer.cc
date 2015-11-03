@@ -22,19 +22,17 @@
  *
  */
 
+#include "viewer.h"
+
+#include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 #include <QApplication>
 #include <QColorDialog>
 #include <QKeyEvent>
 #include <QTimer>
 
-#include <GL/glew.h>
-
-#include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
-
 #include "camera.h"
 #include "scene.h"
-#include "viewer.h"
 
 #include "objects/grid.h"
 #include "util/util_input.h"
