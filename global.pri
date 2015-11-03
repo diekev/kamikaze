@@ -41,3 +41,5 @@ QMAKE_CXXFLAGS_DEBUG += -g -Wall -Og -Wno-error=unused-function \
 CONFIG(debug, release|debug) {
 	QMAKE_LFLAGS += -fsanitize=address
 }
+
+DEFINES += DWREAL_IS_DOUBLE=0
