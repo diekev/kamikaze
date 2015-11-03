@@ -19,18 +19,35 @@
 #
 # ***** END GPL LICENSE BLOCK *****
 
-TEMPLATE = subdirs
+QT += core gui opengl
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-include(global.pri)
+TARGET = ui
+TEMPLATE = lib
 
-CONFIG += ordered
+CONFIG += staticlib
 
-SUBDIRS += \
-	objects/objects.pro \
-	sculpt/sculpt.pro \
-	smoke/smoke.pro \
-	ui/ui.pro \
-	render/render.pro \
-	util/util.pro \
-	app/app.pro
+include(../global.pri)
 
+INCLUDEPATH += $$PWD/../
+INCLUDEPATH += $$PWD/../render
+INCLUDEPATH += $$PWD/../util
+INCLUDEPATH += /opt/lib/ego/include
+INCLUDEPATH += /opt/lib/openvdb/include
+INCLUDEPATH += /opt/lib/openexr/include
+
+SOURCES += \
+    mainwindow.cc \
+    levelsetdialog.cc \
+    timelinewidget.cc \
+    xyzspinbox.cc
+
+HEADERS += \
+    mainwindow.h \
+    levelsetdialog.h \
+    timelinewidget.h \
+    xyzspinbox.h
+
+FORMS += \
+    mainwindow.ui \
+    levelsetdialog.ui
