@@ -21,14 +21,10 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <vector>
-
-#include <ego/utils.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 #include "cube.h"
+
+#include <ego/utils.h>
 
 Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 {

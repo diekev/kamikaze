@@ -25,6 +25,7 @@
 
 #include <ego/bufferobject.h>
 #include <ego/program.h>
+#include <glm/gtc/type_ptr.hpp>
 
 class Grid {
 	ego::BufferObject::Ptr m_buffer_data;

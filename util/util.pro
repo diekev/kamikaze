@@ -29,6 +29,8 @@ include(../global.pri)
 INCLUDEPATH += /opt/lib/openvdb/include
 INCLUDEPATH += /opt/lib/openexr/include
 
+DEFINES += GLM_FORCE_RADIANS
+
 SOURCES += \
 	utils.cc \
 	util_openvdb.cc

@@ -25,10 +25,7 @@
 
 #include <ego/bufferobject.h>
 #include <ego/program.h>
-
 #include <QString>
-
-#include <vector>
 
 #include "util/util_render.h"
 

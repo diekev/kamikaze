@@ -21,15 +21,14 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <ego/utils.h>
-#include <glm/gtc/type_ptr.hpp>
-#include <openvdb/tools/GridTransformer.h>
-
 #include "volumebase.h"
 
+#include <ego/utils.h>
+#include <openvdb/tools/GridTransformer.h>
+
+#include "util/utils.h"
 #include "util/util_openvdb.h"
 #include "util/util_openvdb_process.h"
-#include "util/utils.h"
 
 struct TreeTopologyOp {
 	std::vector<glm::vec3> vertices;

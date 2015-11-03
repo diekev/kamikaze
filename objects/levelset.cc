@@ -21,14 +21,11 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <ego/utils.h>
-
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-#include <openvdb/tools/VolumeToMesh.h>
-
 #include "levelset.h"
+
+#include <ego/utils.h>
+#include <glm/gtc/matrix_transform.hpp>
+#include <openvdb/tools/VolumeToMesh.h>
 
 #include "sculpt/brush.h"
 #include "sculpt/sculpt.h"

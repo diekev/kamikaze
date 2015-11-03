@@ -21,10 +21,9 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <ego/utils.h>
-#include <glm/gtc/type_ptr.hpp>
-
 #include "volume.h"
+
+#include <ego/utils.h>
 
 #include "util/util_openvdb.h"
 #include "util/util_openvdb_process.h"

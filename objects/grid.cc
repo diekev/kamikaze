@@ -21,14 +21,10 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <algorithm>
-#include <vector>
-
-#include <ego/utils.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #include "grid.h"
+
+#include <algorithm>
+#include <ego/utils.h>
 
 Grid::Grid(int x, int y)
     : m_buffer_data(ego::BufferObject::create())

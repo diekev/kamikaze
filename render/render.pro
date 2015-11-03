@@ -48,7 +48,6 @@ HEADERS += \
 	scene.h \
 	viewer.h
 
-
 OTHER_FILES += \
 	shaders/flat_shader.frag \
 	shaders/flat_shader.vert \

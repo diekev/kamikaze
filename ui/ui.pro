@@ -29,6 +29,8 @@ CONFIG += staticlib
 
 include(../global.pri)
 
+DEFINES += GLM_FORCE_RADIANS
+
 INCLUDEPATH += $$PWD/../
 INCLUDEPATH += $$PWD/../render
 INCLUDEPATH += $$PWD/../util
