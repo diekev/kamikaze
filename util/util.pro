@@ -19,18 +19,25 @@
 #
 # ***** END GPL LICENSE BLOCK *****
 
-TEMPLATE = subdirs
+TARGET = utils
+TEMPLATE = lib
 
-include(global.pri)
+CONFIG += staticlib
 
-CONFIG += ordered
+include(../global.pri)
 
-SUBDIRS += \
-	objects/objects.pro \
-	sculpt/sculpt.pro \
-	smoke/smoke.pro \
-	ui/ui.pro \
-	render/render.pro \
-	util/util.pro \
-	app/app.pro
+INCLUDEPATH += /opt/lib/openvdb/include
+INCLUDEPATH += /opt/lib/openexr/include
 
+DEFINES += GLM_FORCE_RADIANS
+
+SOURCES += \
+	utils.cc \
+	util_openvdb.cc
+
+HEADERS += \
+	utils.h \
+    util_input.h \
+	util_openvdb.h \
+    util_openvdb_process.h \
+    util_render.h

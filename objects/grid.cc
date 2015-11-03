@@ -21,23 +21,17 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <algorithm>
-#include <vector>
-
-#include <GL/glew.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #include "grid.h"
 
-#include "util/util_opengl.h"
+#include <algorithm>
+#include <ego/utils.h>
 
 Grid::Grid(int x, int y)
-    : m_buffer_data(std::unique_ptr<GPUBuffer>(new GPUBuffer()))
+    : m_buffer_data(ego::BufferObject::create())
     , m_elements(x * y)
 {
-	m_program.loadFromFile(GL_VERTEX_SHADER, "shaders/flat_shader.vert");
-	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shaders/flat_shader.frag");
+	m_program.load(ego::VERTEX_SHADER, str_from_file("shaders/flat_shader.vert"));
+	m_program.load(ego::FRAGMENT_SHADER, str_from_file("shaders/flat_shader.frag"));
 
 	m_program.createAndLinkProgram();
 

@@ -19,18 +19,20 @@
 #
 # ***** END GPL LICENSE BLOCK *****
 
-TEMPLATE = subdirs
+TARGET = sculpt
+TEMPLATE = lib
 
-include(global.pri)
+CONFIG += staticlib
 
-CONFIG += ordered
+include(../global.pri)
 
-SUBDIRS += \
-	objects/objects.pro \
-	sculpt/sculpt.pro \
-	smoke/smoke.pro \
-	ui/ui.pro \
-	render/render.pro \
-	util/util.pro \
-	app/app.pro
+INCLUDEPATH += /opt/lib/openvdb/include
+INCLUDEPATH += /opt/lib/openexr/include
 
+SOURCES += \
+    brush.cc \
+    sculpt.cc
+
+HEADERS += \
+    brush.h \
+    sculpt.h

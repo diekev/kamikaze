@@ -19,18 +19,32 @@
 #
 # ***** END GPL LICENSE BLOCK *****
 
-TEMPLATE = subdirs
+TARGET = objects
+TEMPLATE = lib
 
-include(global.pri)
+CONFIG += staticlib
 
-CONFIG += ordered
+include(../global.pri)
 
-SUBDIRS += \
-	objects/objects.pro \
-	sculpt/sculpt.pro \
-	smoke/smoke.pro \
-	ui/ui.pro \
-	render/render.pro \
-	util/util.pro \
-	app/app.pro
+INCLUDEPATH += $$PWD/../
+INCLUDEPATH += /opt/lib/ego/include
+INCLUDEPATH += /opt/lib/openvdb/include
+INCLUDEPATH += /opt/lib/openexr/include
 
+DEFINES += GLM_FORCE_RADIANS
+
+SOURCES += \
+	cube.cc \
+	grid.cc \
+	levelset.cc \
+    object.cc \
+	volume.cc \
+    volumebase.cc
+
+HEADERS += \
+	cube.h \
+	grid.h \
+	levelset.h \
+    object.h \
+	volume.h \
+    volumebase.h

@@ -21,14 +21,11 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <glm/gtc/type_ptr.hpp>
-
-#include <openvdb/openvdb.h>
-#include <openvdb/tools/Dense.h>
-
 #include "volume.h"
 
-#include "util/util_opengl.h"
+#include <ego/utils.h>
+#include <openvdb/tools/Dense.h>
+
 #include "util/util_openvdb.h"
 #include "util/util_openvdb_process.h"
 #include "util/utils.h"
@@ -83,7 +80,7 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GPUTexture &texture, GPUT
 	texture.setWrapping(GL_CLAMP_TO_BORDER);
 	texture.create(nullptr, packed_volume_res.asPointer());
 	texture.generateMipMap(0, 4);
-	gl_check_errors();
+	GPU_check_errors("Volume atlas: unable to create texture");
 
 	Vec3i offset(0);
 	FloatGrid::ConstAccessor acc = grid.getConstAccessor();
@@ -109,7 +106,7 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GPUTexture &texture, GPUT
 
 		texture.createSubImage(data, leaf_size, offset.asPointer());
 
-		gl_check_errors();
+		GPU_check_errors("Volume atlas: unable to create subimage");
 
 		const Coord &co = leaf.origin() >> LOG2DIM;
 		const Vec3s value(float(offset[0]) / packed_volume_res[0],
@@ -140,7 +137,7 @@ void texture_from_leaf(const openvdb::FloatGrid &grid, GPUTexture &texture, GPUT
 	index_texture.setWrapping(GL_CLAMP_TO_BORDER);
 	index_texture.create(&index_volume.data()[0][0], index_volume_res.asPointer());
 	index_texture.unbind();
-	gl_check_errors();
+	GPU_check_errors("Volume atlas: unable to create index texture");
 
 	delete [] data;
 }
@@ -161,9 +158,9 @@ Volume::Volume(openvdb::GridBase::Ptr grid)
 
 	m_elements = m_num_slices * 6;
 
-	m_volume_texture = GPUTexture::create(GL_TEXTURE_3D, m_num_textures++);
-	m_transfer_texture = GPUTexture::create(GL_TEXTURE_1D, m_num_textures++);
-	m_index_texture = GPUTexture::create(GL_TEXTURE_3D, m_num_textures++);
+	m_volume_texture = ego::Texture::create(GL_TEXTURE_3D, m_num_textures++);
+	m_transfer_texture = ego::Texture::create(GL_TEXTURE_1D, m_num_textures++);
+	m_index_texture = ego::Texture::create(GL_TEXTURE_3D, m_num_textures++);
 
 	texture_from_leaf(*grid, *m_volume_texture, *m_index_texture);
 
@@ -173,8 +170,8 @@ Volume::Volume(openvdb::GridBase::Ptr grid)
 
 void Volume::loadVolumeShader()
 {
-	m_program.loadFromFile(GL_VERTEX_SHADER, "shaders/volume.vert");
-	m_program.loadFromFile(GL_FRAGMENT_SHADER, "shaders/volume.frag");
+	m_program.load(ego::VERTEX_SHADER, str_from_file("shaders/volume.vert"));
+	m_program.load(ego::FRAGMENT_SHADER, str_from_file("shaders/volume.frag"));
 
 	m_program.createAndLinkProgram();
 

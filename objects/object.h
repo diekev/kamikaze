@@ -23,13 +23,9 @@
 
 #pragma once
 
+#include <ego/bufferobject.h>
+#include <ego/program.h>
 #include <QString>
-
-#include <memory>
-#include <vector>
-
-#include "GPUProgram.h"
-#include "GPUBuffer.h"
 
 #include "util/util_render.h"
 
@@ -46,8 +42,8 @@ enum {
 
 class Object {
 protected:
-	GPUBuffer::UPtr m_buffer_data;
-	GPUProgram m_program;
+	ego::BufferObject::Ptr m_buffer_data;
+	ego::Program m_program;
 	size_t m_elements;
 	GLenum m_draw_type;
 

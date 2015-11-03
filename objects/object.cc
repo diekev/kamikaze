@@ -21,10 +21,9 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
 #include "object.h"
+
+#include <glm/gtc/matrix_transform.hpp>
 
 Object::Object()
 	: m_buffer_data(nullptr)

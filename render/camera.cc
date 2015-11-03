@@ -21,10 +21,9 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #include "camera.h"
+
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "util/util_input.h"
 

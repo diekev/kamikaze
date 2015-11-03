@@ -19,18 +19,41 @@
 #
 # ***** END GPL LICENSE BLOCK *****
 
-TEMPLATE = subdirs
+QT += core gui opengl
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-include(global.pri)
+TARGET = render
+TEMPLATE = lib
 
-CONFIG += ordered
+CONFIG += staticlib
+CONFIG += no_keywords
 
-SUBDIRS += \
-	objects/objects.pro \
-	sculpt/sculpt.pro \
-	smoke/smoke.pro \
-	ui/ui.pro \
-	render/render.pro \
-	util/util.pro \
-	app/app.pro
+include(../global.pri)
 
+INCLUDEPATH += $$PWD/../
+INCLUDEPATH += $$PWD/../util
+INCLUDEPATH += /opt/lib/ego/include
+INCLUDEPATH += /opt/lib/openvdb/include
+INCLUDEPATH += /opt/lib/openexr/include
+
+DEFINES += GLM_FORCE_RADIANS
+
+SOURCES += \
+	camera.cc \
+	scene.cc \
+	viewer.cc
+
+HEADERS += \
+	camera.h \
+	scene.h \
+	viewer.h
+
+OTHER_FILES += \
+	shaders/flat_shader.frag \
+	shaders/flat_shader.vert \
+	shaders/object.frag \
+	shaders/object.vert \
+    shaders/volume.frag \
+    shaders/volume.vert \
+    shaders/tree_topology.frag \
+    shaders/tree_topology.vert

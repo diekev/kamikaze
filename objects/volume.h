@@ -21,18 +21,14 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include <glm/glm.hpp>
+#pragma once
 
-#include <openvdb/openvdb.h>
+#include <ego/texture.h>
 
 #include "volumebase.h"
 
-#include "render/gpu/GPUTexture.h"
-
-#include "util/util_render.h"
-
 class Volume : public VolumeBase {
-	GPUTexture::UPtr m_volume_texture, m_transfer_texture, m_index_texture;
+	ego::Texture::Ptr m_volume_texture, m_transfer_texture, m_index_texture;
 
 	int m_num_slices;
 

@@ -21,10 +21,10 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
+#include "utils.h"
+
 #include <cmath>
 #include <sys/time.h>
-
-#include "utils.h"
 
 double time_dt()
 {

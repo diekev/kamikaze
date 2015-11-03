@@ -27,11 +27,9 @@
 
 #include "cube.h"
 
-class GPUBuffer;
-
 class TreeTopology {
-	GPUBuffer::UPtr m_buffer_data;
-	GPUProgram m_program;
+	ego::BufferObject::Ptr m_buffer_data;
+	ego::Program m_program;
 	size_t m_elements;
 
 public:

@@ -19,18 +19,34 @@
 #
 # ***** END GPL LICENSE BLOCK *****
 
-TEMPLATE = subdirs
+QT += core opengl
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-include(global.pri)
+TARGET = hi_no_kirin
+TEMPLATE = app
 
-CONFIG += ordered
+include(../global.pri)
 
-SUBDIRS += \
-	objects/objects.pro \
-	sculpt/sculpt.pro \
-	smoke/smoke.pro \
-	ui/ui.pro \
-	render/render.pro \
-	util/util.pro \
-	app/app.pro
+INCLUDEPATH += $$PWD/../
 
+SOURCES += main.cc
+
+LIBS += $$OUT_PWD/../ui/libui.a
+LIBS += $$OUT_PWD/../render/librender.a
+LIBS += $$OUT_PWD/../objects/libobjects.a
+LIBS += $$OUT_PWD/../util/libutils.a
+LIBS += $$OUT_PWD/../sculpt/libsculpt.a
+LIBS += $$OUT_PWD/../smoke/libsmoke.a
+
+LIBS += -L/opt/lib/openvdb/lib -lopenvdb -ltbb
+LIBS += -L/opt/lib/openexr/lib -lHalf
+LIBS += -L/opt/lib/blosc/lib -lblosc -lz
+LIBS += -L/opt/lib/ego/lib -lego
+LIBS += -lGL -lglut -lGLEW
+
+unix {
+	copy_files.commands = cp -r $$PWD/../render/shaders/ .
+}
+
+QMAKE_EXTRA_TARGETS += copy_files
+POST_TARGETDEPS += copy_files

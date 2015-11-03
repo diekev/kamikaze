@@ -39,11 +39,7 @@ void subOp(float &value)
 }
 
 Brush::Brush()
-    : m_radius(0.0f)
-    , m_inv_radius(0.0f)
-    , m_strength(0.0f)
-    , m_mode(BRUSH_MODE_ADD)
-    , m_tool(BRUSH_TOOL_DRAW)
+    : Brush(0.0f, 0.0f)
 {}
 
 Brush::Brush(const float radius, const float strength)

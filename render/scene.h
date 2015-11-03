@@ -24,7 +24,6 @@
 
 #pragma once
 
-#include <glm/glm.hpp>
 #include <QObject>
 
 #include "util_render.h"
