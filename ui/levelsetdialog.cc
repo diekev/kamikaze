@@ -22,6 +22,7 @@
  */
 
 #include "levelsetdialog.h"
+
 #include "ui_levelsetdialog.h"
 
 LevelSetDialog::LevelSetDialog(QWidget *parent) :

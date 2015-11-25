@@ -22,6 +22,8 @@
  *
  */
 
+#include "mainwindow.h"
+
 #include <QComboBox>
 #include <QFileDialog>
 #include <QKeyEvent>
@@ -31,8 +33,6 @@
 
 #include <openvdb/tools/LevelSetSphere.h>
 #include <openvdb/tools/LevelSetUtil.h>
-
-#include "mainwindow.h"
 
 #include "objects/levelset.h"
 #include "objects/volume.h"
