@@ -28,7 +28,8 @@
 #include "volumebase.h"
 
 class Volume : public VolumeBase {
-	ego::Texture::Ptr m_volume_texture, m_transfer_texture;
+	ego::Texture3D::Ptr m_volume_texture;
+	ego::Texture1D::Ptr m_transfer_texture;
 
 	int m_num_slices;
 
