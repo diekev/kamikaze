@@ -54,7 +54,7 @@ public Q_SLOTS:
 	void drawGrid(bool b);
 
 public:
-	Viewer(QWidget *parent);
+	explicit Viewer(QWidget *parent = nullptr);
 	~Viewer();
 
 	void initializeGL();

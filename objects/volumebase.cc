@@ -270,7 +270,7 @@ void VolumeBase::updateGridTransform()
 struct ResampleGridOp {
 	const float voxel_size;
 
-	ResampleGridOp(const float vsize)
+	explicit ResampleGridOp(const float vsize)
 	    : voxel_size(vsize)
 	{}
 

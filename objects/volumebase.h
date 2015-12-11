@@ -33,7 +33,7 @@ class TreeTopology {
 	size_t m_elements;
 
 public:
-	TreeTopology(openvdb::GridBase::ConstPtr grid);
+	explicit TreeTopology(openvdb::GridBase::ConstPtr grid);
 	~TreeTopology() = default;
 
 	void render(const glm::mat4 &MVP);
@@ -54,7 +54,7 @@ protected:
 	void resampleGridVoxel();
 
 public:
-	VolumeBase(openvdb::GridBase::Ptr grid);
+	explicit VolumeBase(openvdb::GridBase::Ptr grid);
 	~VolumeBase() = default;
 
 	int type() const { return VOLUME; }
