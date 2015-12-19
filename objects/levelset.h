@@ -43,7 +43,7 @@ class LevelSet : public VolumeBase {
 	void loadShader();
 
 public:
-	LevelSet(openvdb::GridBase::Ptr grid);
+	explicit LevelSet(openvdb::GridBase::Ptr grid);
 	~LevelSet() = default;
 
 	int type() const { return LEVEL_SET; }

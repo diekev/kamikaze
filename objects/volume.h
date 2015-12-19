@@ -28,7 +28,8 @@
 #include "volumebase.h"
 
 class Volume : public VolumeBase {
-	ego::Texture::Ptr m_volume_texture, m_transfer_texture, m_index_texture;
+	ego::Texture3D::Ptr m_volume_texture, m_index_texture;
+	ego::Texture1D::Ptr m_transfer_texture;
 
 	int m_num_slices;
 
@@ -41,7 +42,7 @@ class Volume : public VolumeBase {
 	void loadVolumeShader();
 
 public:
-	Volume(openvdb::GridBase::Ptr grid);
+	explicit Volume(openvdb::GridBase::Ptr grid);
 	~Volume() = default;
 
 	void slice(const glm::vec3 &view_dir);

@@ -164,7 +164,7 @@ void Scene::render(const glm::mat4 &MV, const glm::mat4 &P, const glm::vec3 &vie
 
 void Scene::intersect(const Ray &ray)
 {
-	LevelSet *ls = (LevelSet *)m_active_object;
+	LevelSet *ls = static_cast<LevelSet *>(m_active_object);
 	if (ls->intersectLS(ray, m_brush)) {
 		// TODO: separate intersection from sculpting.
 	}
@@ -200,7 +200,7 @@ int Scene::mode() const
 void Scene::setMode(int mode)
 {
 	m_mode = mode;
-	LevelSet *ls = (LevelSet *)m_active_object;
+	LevelSet *ls = static_cast<LevelSet *>(m_active_object);
 	ls->swapGrids(mode == SCENE_MODE_SCULPT);
 }
 

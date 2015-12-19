@@ -158,9 +158,9 @@ Volume::Volume(openvdb::GridBase::Ptr grid)
 
 	m_elements = m_num_slices * 6;
 
-	m_volume_texture = ego::Texture::create(GL_TEXTURE_3D, m_num_textures++);
-	m_transfer_texture = ego::Texture::create(GL_TEXTURE_1D, m_num_textures++);
-	m_index_texture = ego::Texture::create(GL_TEXTURE_3D, m_num_textures++);
+	m_volume_texture = ego::Texture3D::create(m_num_textures++);
+	m_transfer_texture = ego::Texture1D::create(m_num_textures++);
+	m_index_texture = ego::Texture3D::create(m_num_textures++);
 
 	texture_from_leaf(*grid, *m_volume_texture, *m_index_texture);
 
@@ -254,7 +254,7 @@ void Volume::loadTransferFunction()
 	m_transfer_texture->setType(GL_FLOAT, GL_RGB, GL_RGB);
 	m_transfer_texture->setMinMagFilter(GL_LINEAR, GL_LINEAR);
 	m_transfer_texture->setWrapping(GL_REPEAT);
-	m_transfer_texture->createTexture(&data[0][0], &size);
+	m_transfer_texture->fill(&data[0][0], &size);
 	m_transfer_texture->unbind();
 }
 

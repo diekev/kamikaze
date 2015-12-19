@@ -22,10 +22,10 @@
  *
  */
 
+#include "xyzspinbox.h"
+
 #include <QDoubleSpinBox>
 #include <QVBoxLayout>
-
-#include "xyzspinbox.h"
 
 enum {
 	AXIS_X = 0,

@@ -19,27 +19,8 @@
 #
 # ***** END GPL LICENSE BLOCK *****
 
-CONFIG += c++11
 CONFIG += no_keywords
 
-QMAKE_CXXFLAGS += -O3 -msse -msse2 -msse3
-
-QMAKE_CXXFLAGS_DEBUG += -g -Wall -Og -Wno-error=unused-function \
-	-Wextra -Wno-missing-field-initializers -Wno-sign-compare -Wno-type-limits  \
-	-Wno-unknown-pragmas -Wno-unused-parameter -Wno-ignored-qualifiers          \
-	-Wmissing-format-attribute -Wno-delete-non-virtual-dtor                     \
-	-Wsizeof-pointer-memaccess -Wformat=2 -Wno-format-nonliteral -Wno-format-y2k\
-	-fstrict-overflow -Wstrict-overflow=2 -Wno-div-by-zero -Wwrite-strings      \
-	-Wlogical-op -Wundef -DDEBUG_THREADS -Wnonnull -Wstrict-aliasing=2          \
-	-fno-omit-frame-pointer -Wno-error=unused-result -Wno-error=clobbered       \
-	-fstack-protector-all --param=ssp-buffer-size=4 -Wno-maybe-uninitialized    \
-	-Wunused-macros -Wmissing-include-dirs -Wuninitialized -Winit-self          \
-	-Wtype-limits -fno-common -fno-nonansi-builtins -Wformat-extra-args         \
-	-Wno-error=unused-local-typedefs -DWARN_PEDANTIC -Winit-self -Wdate-time    \
-	-Warray-bounds -Werror -fdiagnostics-color=always -fsanitize=address
-
-CONFIG(debug, release|debug) {
-	QMAKE_LFLAGS += -fsanitize=address
-}
+include(../../repos/seppuku/rcfiles/build_flags.pri)
 
 DEFINES += DWREAL_IS_DOUBLE=0

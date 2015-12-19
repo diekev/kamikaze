@@ -22,10 +22,10 @@
  *
  */
 
+#include "timelinewidget.h"
+
 #include <QMouseEvent>
 #include <QPainter>
-
-#include "timelinewidget.h"
 
 TimeLineWidget::TimeLineWidget(QWidget *parent)
     : QWidget(parent)
