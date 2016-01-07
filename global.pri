@@ -23,4 +23,6 @@ CONFIG += no_keywords
 
 include(../../repos/seppuku/rcfiles/build_flags.pri)
 
+QMAKE_CXXFLAGS -= -Weffc++
+
 DEFINES += DWREAL_IS_DOUBLE=0

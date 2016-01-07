@@ -42,7 +42,7 @@ LIBS += -L/opt/lib/openvdb/lib -lopenvdb -ltbb
 LIBS += -L/opt/lib/openexr/lib -lHalf
 LIBS += -L/opt/lib/blosc/lib -lblosc -lz
 LIBS += -L/opt/lib/ego/lib -lego
-LIBS += -lGL -lglut -lGLEW
+LIBS += -lGL -lGLEW
 
 unix {
 	copy_files.commands = cp -r $$PWD/../render/shaders/ .
