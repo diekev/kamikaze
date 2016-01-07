@@ -58,7 +58,7 @@
          <enum>QTabWidget::North</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <property name="movable">
          <bool>true</bool>
@@ -636,7 +636,13 @@
         </widget>
        </widget>
       </widget>
-      <widget class="TimeLineWidget" name="m_timeline" native="true"/>
+     </widget>
+    </item>
+    <item>
+     <widget class="QSlider" name="m_timeline">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
      </widget>
     </item>
    </layout>
@@ -695,16 +701,6 @@
   </action>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>TimeLineWidget</class>
-   <extends>QWidget</extends>
-   <header>timelinewidget.h</header>
-   <container>1</container>
-   <slots>
-    <slot>setStartFrame(int)</slot>
-    <slot>setEndFrame(int)</slot>
-   </slots>
-  </customwidget>
   <customwidget>
    <class>Viewer</class>
    <extends>QOpenGLWidget</extends>
@@ -864,34 +860,34 @@
    </hints>
   </connection>
   <connection>
-   <sender>m_end_frame</sender>
+   <sender>m_star_frame</sender>
    <signal>valueChanged(int)</signal>
-   <receiver>m_timeline</receiver>
-   <slot>setEndFrame(int)</slot>
+   <receiver>MainWindow</receiver>
+   <slot>setStartFrame(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>806</x>
-     <y>190</y>
+     <x>793</x>
+     <y>162</y>
     </hint>
     <hint type="destinationlabel">
-     <x>422</x>
-     <y>568</y>
+     <x>491</x>
+     <y>336</y>
     </hint>
    </hints>
   </connection>
   <connection>
-   <sender>m_star_frame</sender>
+   <sender>m_end_frame</sender>
    <signal>valueChanged(int)</signal>
-   <receiver>m_timeline</receiver>
-   <slot>setStartFrame(int)</slot>
+   <receiver>MainWindow</receiver>
+   <slot>setEndFrame(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>806</x>
-     <y>158</y>
+     <x>793</x>
+     <y>194</y>
     </hint>
     <hint type="destinationlabel">
-     <x>422</x>
-     <y>568</y>
+     <x>491</x>
+     <y>336</y>
     </hint>
    </hints>
   </connection>
@@ -902,5 +898,7 @@
   <slot>addCube()</slot>
   <slot>addLevelSet()</slot>
   <slot>startAnimation()</slot>
+  <slot>setStartFrame(int)</slot>
+  <slot>setEndFrame(int)</slot>
  </slots>
 </ui>

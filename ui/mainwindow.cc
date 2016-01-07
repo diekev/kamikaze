@@ -125,6 +125,9 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(ui->m_time_step, SIGNAL(valueChanged(double)), m_scene, SLOT(setSimulationDt(double)));
 	connect(ui->m_cache_path, SIGNAL(textChanged(QString)), m_scene, SLOT(setSimulationCache(QString)));
 	connect(ui->m_advection, SIGNAL(currentIndexChanged(int)), m_scene, SLOT(setSimulationAdvection(int)));
+
+	/* Timeline */
+	ui->m_timeline->setMaximum(250);
 }
 
 MainWindow::~MainWindow()
@@ -363,7 +366,23 @@ void MainWindow::startAnimation()
 
 void MainWindow::updateFrame() const
 {
-	ui->m_timeline->incrementFrame();
+	auto value = ui->m_timeline->value() + 1;
+
+	if (value == ui->m_timeline->maximum()) {
+		value = 0;
+	}
+
+	ui->m_timeline->setValue(value);
+}
+
+void MainWindow::setStartFrame(int value) const
+{
+	ui->m_timeline->setMinimum(value);
+}
+
+void MainWindow::setEndFrame(int value) const
+{
+	ui->m_timeline->setMaximum(value);
 }
 
 void MainWindow::setSceneMode(int idx) const

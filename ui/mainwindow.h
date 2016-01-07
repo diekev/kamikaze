@@ -59,6 +59,8 @@ private Q_SLOTS:
 	void addLevelSet() const;
 	void startAnimation();
 	void updateFrame() const;
+	void setStartFrame(int value) const;
+	void setEndFrame(int value) const;
 	void setSceneMode(int idx) const;
 
 protected:
