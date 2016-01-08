@@ -137,55 +137,55 @@ MainWindow::~MainWindow()
 
 void MainWindow::openFile(const QString &filename) const
 {
-	using namespace openvdb;
+	using openvdb::FloatGrid;
+	using openvdb::Vec3s;
 
-	initialize();
-	io::File file(filename.toStdString());
+	openvdb::initialize();
+	openvdb::io::File file(filename.toStdString());
 
-	if (file.open()) {
-		FloatGrid::Ptr grid;
+	if (!file.open()) {
+		std::cerr << "Unable to open file \'" << filename.toStdString() << "\'\n";
+		return;
+	}
 
-		if (file.hasGrid(Name("Density"))) {
-			grid = gridPtrCast<FloatGrid>(file.readGrid(Name("Density")));
-		}
-		else if (file.hasGrid(Name("density"))) {
-			grid = gridPtrCast<FloatGrid>(file.readGrid(Name("density")));
-		}
-		else {
-			GridPtrVecPtr grids = file.getGrids();
-			grid = gridPtrCast<FloatGrid>((*grids)[0]);
-//			os << "No density grid found in file: \'" << filename << "\'!\n";
-//			return false;
-		}
+	FloatGrid::Ptr grid;
 
-		auto meta_map = file.getMetadata();
-
-		file.close();
-
-		if ((*meta_map)["creator"]) {
-			auto creator = (*meta_map)["creator"]->str();
-
-			/* If the grid comes from Blender (Z-up), rotate it so it is Y-up */
-			if (creator == "Blender/OpenVDBWriter") {
-				Timer("Transform Blender Grid");
-				grid = transform_grid(*grid, Vec3s(-M_PI_2, 0.0f, 0.0f),
-				                      Vec3s(1.0f), Vec3s(0.0f), Vec3s(0.0f));
-			}
-		}
-
-		Object *ob;
-		if (grid->getGridClass() == GRID_LEVEL_SET) {
-			ob = new LevelSet(grid);
-		}
-		else {
-			ob = new Volume(grid);
-		}
-		ob->name(grid->getName().c_str());
-		m_scene->addObject(ob);
+	if (file.hasGrid(openvdb::Name("Density"))) {
+		grid = openvdb::gridPtrCast<FloatGrid>(file.readGrid(openvdb::Name("Density")));
+	}
+	else if (file.hasGrid(openvdb::Name("density"))) {
+		grid = openvdb::gridPtrCast<FloatGrid>(file.readGrid(openvdb::Name("density")));
 	}
 	else {
-		std::cerr << "Unable to open file \'" << filename.toStdString() << "\'\n";
+		openvdb::GridPtrVecPtr grids = file.getGrids();
+		grid = openvdb::gridPtrCast<FloatGrid>((*grids)[0]);
 	}
+
+	auto meta_map = file.getMetadata();
+
+	file.close();
+
+	if ((*meta_map)["creator"]) {
+		auto creator = (*meta_map)["creator"]->str();
+
+		/* If the grid comes from Blender (Z-up), rotate it so it is Y-up */
+		if (creator == "Blender/OpenVDBWriter") {
+			Timer("Transform Blender Grid");
+			grid = transform_grid(*grid, Vec3s(-M_PI_2, 0.0f, 0.0f),
+			                      Vec3s(1.0f), Vec3s(0.0f), Vec3s(0.0f));
+		}
+	}
+
+	Object *ob;
+	if (grid->getGridClass() == openvdb::GRID_LEVEL_SET) {
+		ob = new LevelSet(grid);
+	}
+	else {
+		ob = new Volume(grid);
+	}
+
+	ob->name(grid->getName().c_str());
+	m_scene->addObject(ob);
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *e)

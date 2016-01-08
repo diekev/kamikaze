@@ -48,6 +48,16 @@ class MainWindow : public QMainWindow {
 
 	LevelSetDialog *m_level_set_dialog;
 
+public:
+	explicit MainWindow(QWidget *parent = nullptr);
+	~MainWindow();
+
+	void openFile(const QString &filename) const;
+
+protected:
+	bool eventFilter(QObject *obj, QEvent *e);
+
+private:
 	void connectObjectSignals() const;
 	void disconnectObjectSignals() const;
 
@@ -62,13 +72,4 @@ private Q_SLOTS:
 	void setStartFrame(int value) const;
 	void setEndFrame(int value) const;
 	void setSceneMode(int idx) const;
-
-protected:
-	bool eventFilter(QObject *obj, QEvent *e);
-
-public:
-	explicit MainWindow(QWidget *parent = nullptr);
-	~MainWindow();
-
-	void openFile(const QString &filename) const;
 };
