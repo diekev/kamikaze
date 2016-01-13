@@ -88,8 +88,8 @@ void Volume::loadVolumeShader()
 		m_program.addUniform("scale");
 		m_program.addUniform("matrix");
 
-		glUniform1i(m_program("volume"), m_volume_texture->unit());
-		glUniform1i(m_program("lut"), m_transfer_texture->unit());
+		glUniform1i(m_program("volume"), m_volume_texture->number());
+		glUniform1i(m_program("lut"), m_transfer_texture->number());
 		glUniform1f(m_program("scale"), m_value_scale);
 	}
 	m_program.disable();
