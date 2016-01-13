@@ -169,7 +169,7 @@ void MainWindow::openFile(const QString &filename) const
 		auto creator = (*meta_map)["creator"]->str();
 
 		/* If the grid comes from Blender (Z-up), rotate it so it is Y-up */
-		if (creator == "Blender/OpenVDBWriter") {
+		if (creator == "Blender/Smoke") {
 			Timer("Transform Blender Grid");
 			grid = transform_grid(*grid, Vec3s(-M_PI_2, 0.0f, 0.0f),
 			                      Vec3s(1.0f), Vec3s(0.0f), Vec3s(0.0f));
