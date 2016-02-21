@@ -24,6 +24,7 @@
 #include "volumebase.h"
 
 #include <ego/utils.h>
+#include <GL/glew.h>
 #include <openvdb/tools/GridTransformer.h>
 
 #include "util/utils.h"
@@ -141,8 +142,8 @@ struct TreeTopologyOp {
 TreeTopology::TreeTopology(openvdb::GridBase::ConstPtr grid)
     : m_buffer_data(ego::BufferObject::create())
 {
-	m_program.load(ego::VERTEX_SHADER, str_from_file("shaders/tree_topology.vert"));
-	m_program.load(ego::FRAGMENT_SHADER, str_from_file("shaders/tree_topology.frag"));
+	m_program.load(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/tree_topology.vert"));
+	m_program.load(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/tree_topology.frag"));
 
 	m_program.createAndLinkProgram();
 

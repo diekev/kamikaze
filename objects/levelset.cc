@@ -24,6 +24,7 @@
 #include "levelset.h"
 
 #include <ego/utils.h>
+#include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <openvdb/tools/VolumeToMesh.h>
 
@@ -44,8 +45,8 @@ LevelSet::LevelSet(openvdb::GridBase::Ptr grid)
 
 void LevelSet::loadShader()
 {
-	m_program.load(ego::VERTEX_SHADER, str_from_file("shaders/object.vert"));
-	m_program.load(ego::FRAGMENT_SHADER, str_from_file("shaders/object.frag"));
+	m_program.load(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/object.vert"));
+	m_program.load(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/object.frag"));
 	m_program.createAndLinkProgram();
 
 	m_program.enable();
@@ -101,7 +102,7 @@ void LevelSet::generateMesh(const bool is_sculpt_mode)
 	m_buffer_data->attribPointer(m_program["normal"], 3);
 	m_buffer_data->unbind();
 
-	GPU_check_errors("Unable to create level set buffer");
+	ego::util::GPU_check_errors("Unable to create level set buffer");
 }
 
 bool LevelSet::intersectLS(const Ray &ray, Brush *brush)

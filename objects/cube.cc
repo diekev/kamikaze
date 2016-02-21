@@ -25,11 +25,12 @@
 #include "cube.h"
 
 #include <ego/utils.h>
+#include <GL/glew.h>
 
 Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 {
-	m_program.load(ego::VERTEX_SHADER, str_from_file("shaders/flat_shader.vert"));
-	m_program.load(ego::FRAGMENT_SHADER, str_from_file("shaders/flat_shader.frag"));
+	m_program.load(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/flat_shader.vert"));
+	m_program.load(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/flat_shader.frag"));
 
 	m_program.createAndLinkProgram();
 

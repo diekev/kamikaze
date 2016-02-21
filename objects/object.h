@@ -45,7 +45,7 @@ protected:
 	ego::BufferObject::Ptr m_buffer_data;
 	ego::Program m_program;
 	size_t m_elements;
-	GLenum m_draw_type;
+	unsigned int m_draw_type;
 
 	std::vector<glm::vec3> m_vertices;
 	glm::vec3 m_dimensions, m_scale, m_inv_size, m_rotation;

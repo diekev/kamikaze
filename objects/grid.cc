@@ -25,13 +25,14 @@
 
 #include <algorithm>
 #include <ego/utils.h>
+#include <GL/glew.h>
 
 Grid::Grid(int x, int y)
     : m_buffer_data(ego::BufferObject::create())
     , m_elements(x * y)
 {
-	m_program.load(ego::VERTEX_SHADER, str_from_file("shaders/flat_shader.vert"));
-	m_program.load(ego::FRAGMENT_SHADER, str_from_file("shaders/flat_shader.frag"));
+	m_program.load(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/flat_shader.vert"));
+	m_program.load(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/flat_shader.frag"));
 
 	m_program.createAndLinkProgram();
 
@@ -57,7 +58,7 @@ Grid::Grid(int x, int y)
 		vertices[count++] = glm::vec3( half_x, 0.0f, i);
 	}
 
-	std::vector<GLushort> indices(m_elements);
+	std::vector<unsigned short> indices(m_elements);
 	std::iota(indices.begin(), indices.end(), 0);
 
 	const auto &vsize = total_vertices * sizeof(glm::vec3);

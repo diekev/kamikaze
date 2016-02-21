@@ -23,6 +23,7 @@
 
 #include "volume.h"
 
+#include <GL/glew.h>
 #include <ego/utils.h>
 
 #include "util/util_openvdb.h"
@@ -64,7 +65,7 @@ Volume::Volume(openvdb::GridBase::Ptr grid)
 	m_volume_texture->generateMipMap(0, 4);
 	m_volume_texture->unbind();
 
-	GPU_check_errors("Unable to create 3D texture");
+	ego::util::GPU_check_errors("Unable to create 3D texture");
 
 	loadTransferFunction();
 	loadVolumeShader();
@@ -72,8 +73,8 @@ Volume::Volume(openvdb::GridBase::Ptr grid)
 
 void Volume::loadVolumeShader()
 {
-	m_program.load(ego::VERTEX_SHADER, str_from_file("shaders/volume.vert"));
-	m_program.load(ego::FRAGMENT_SHADER, str_from_file("shaders/volume.frag"));
+	m_program.load(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/volume.vert"));
+	m_program.load(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/volume.frag"));
 
 	m_program.createAndLinkProgram();
 
