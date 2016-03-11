@@ -41,7 +41,7 @@ LIBS += $$OUT_PWD/../smoke/libsmoke.a
 LIBS += -L/opt/lib/openvdb/lib -lopenvdb -ltbb
 LIBS += -L/opt/lib/openexr/lib -lHalf
 LIBS += -L/opt/lib/blosc/lib -lblosc -lz
-LIBS += -L/opt/lib/ego/lib -lego
+LIBS += /opt/lib/ego/lib/libego.a
 LIBS += -lGL -lGLEW
 
 unix {
