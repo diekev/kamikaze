@@ -90,7 +90,7 @@ MainWindow::MainWindow(QWidget *parent)
 	const int tiemeline_height = 0.1f * float(height);
 	const int hsplister_height= height - tiemeline_height;
 	QList<int> hsizes;
-	hsizes << hsplister_height << tiemeline_height;
+	hsizes << tiemeline_height << hsplister_height;
 	ui->vsplitter->setSizes(hsizes);
 
 	/* Object */
@@ -355,13 +355,23 @@ void MainWindow::startAnimation()
 	if (m_timer_has_started) {
 		m_timer_has_started = false;
 		m_timer->stop();
-		ui->m_start_but->setText("Play Animation");
+		ui->m_start_but->setText("Play");
 	}
 	else {
 		m_timer_has_started = true;
-		ui->m_start_but->setText("Pause Animation");
+		ui->m_start_but->setText("Pause");
 		m_timer->start(1000 / ui->m_fps->value());
 	}
+}
+
+void MainWindow::goToStartFrame() const
+{
+	ui->m_timeline->setValue(ui->m_timeline->minimum());
+}
+
+void MainWindow::goToEndFrame() const
+{
+	ui->m_timeline->setValue(ui->m_timeline->maximum());
 }
 
 void MainWindow::updateFrame() const

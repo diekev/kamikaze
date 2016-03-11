@@ -72,4 +72,6 @@ private Q_SLOTS:
 	void setStartFrame(int value) const;
 	void setEndFrame(int value) const;
 	void setSceneMode(int idx) const;
+	void goToStartFrame() const;
+	void goToEndFrame() const;
 };
