@@ -48,8 +48,22 @@ class Scene : public QObject {
 	SmokeSimulation *m_smoke_simulation;
 	int m_mode;
 
-Q_SIGNALS:
-	void objectChanged();
+public:
+	Scene();
+	~Scene();
+
+	void keyboardEvent(int key);
+
+	Object *currentObject();
+	void addObject(Object *object);
+	void removeObject(Object *ob);
+
+	void render(const glm::mat4 &MV, const glm::mat4 &P, const glm::vec3 &view_dir);
+	void intersect(const Ray &ray);
+
+	int mode() const;
+	void selectObject(const glm::vec3 &pos);
+	void objectNameList(QListWidget *widget) const;
 
 public Q_SLOTS:
 	void setMode(int mode);
@@ -74,23 +88,9 @@ public Q_SLOTS:
 	void setVolumeSlices(int slices);
 	void setVolumeLUT(bool b);
 
-public:
-	Scene();
-	~Scene();
-
-	void keyboardEvent(int key);
-
-	Object *currentObject();
-	void addObject(Object *object);
-
-	void render(const glm::mat4 &MV, const glm::mat4 &P, const glm::vec3 &view_dir);
-	void intersect(const Ray &ray);
-
-	int mode() const;
-	void selectObject(const glm::vec3 &pos);
-	void objectNameList(QListWidget *widget) const;
+private:
 	bool ensureUniqueName(QString &name) const;
-	bool isNameUnique(const QString &name) const;
 
-	void removeObject(Object *ob);
+Q_SIGNALS:
+	void objectChanged();
 };

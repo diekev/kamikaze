@@ -35,6 +35,8 @@
 #include "sculpt/brush.h"
 #include "smoke/smokesimulation.h"
 
+#include "util/util_string.h"
+
 Scene::Scene()
     : m_active_object(nullptr)
     , m_brush(new Brush(5.0f, 0.5f))
@@ -68,17 +70,6 @@ void Scene::keyboardEvent(int key)
 	}
 }
 
-bool Scene::isNameUnique(const QString &name) const
-{
-	for (const auto &object : m_objects) {
-		if (object->name() == name) {
-			return false;
-		}
-	}
-
-	return true;
-}
-
 void Scene::removeObject(Object *ob)
 {
 	auto iter = std::find(m_objects.begin(), m_objects.end(), ob);
@@ -92,30 +83,6 @@ void Scene::removeObject(Object *ob)
 	}
 
 	Q_EMIT objectChanged();
-}
-
-bool Scene::ensureUniqueName(QString &name) const
-{
-	if (isNameUnique(name)) {
-		return false;
-	}
-
-	QString temp;
-	int number = 0;
-
-	do {
-		++number;
-
-		QString num = QString::number(number);
-		for (int i = 0, e = 4 - num.size(); i < e; ++i) {
-			num = num.prepend(QChar('0'));
-		}
-
-		temp = name + "." + num;
-	} while (!isNameUnique(temp));
-
-	name = temp;
-	return true;
 }
 
 void Scene::addObject(Object *object)
@@ -295,6 +262,20 @@ void Scene::objectNameList(QListWidget *widget) const
 	for (auto &object : m_objects) {
 		widget->addItem(object->name());
 	}
+}
+
+bool Scene::ensureUniqueName(QString &name) const
+{
+	return ensure_unique_name(name, [&](const QString &str)
+		{
+			for (const auto &object : m_objects) {
+				if (object->name() == str) {
+					return false;
+				}
+			}
+
+			return true;
+		});
 }
 
 void Scene::setCurrentObject(QListWidgetItem *item)

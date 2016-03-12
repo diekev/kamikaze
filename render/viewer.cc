@@ -141,7 +141,7 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 	else if (e->buttons() == Qt::LeftButton) {
 		m_mouse_button = MOUSE_LEFT;
 
-		if (m_scene->mode() == SCENE_MODE_SCULPT){
+		if (m_scene->mode() == SCENE_MODE_SCULPT) {
 			intersectScene(x, y);
 		}
 		else {

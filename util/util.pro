@@ -40,4 +40,6 @@ HEADERS += \
     util_input.h \
 	util_openvdb.h \
     util_openvdb_process.h \
-    util_render.h
+    util_render.h \
+    util_string.h \
+    util_memory.h

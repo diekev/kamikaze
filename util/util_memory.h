@@ -22,46 +22,14 @@
  *
  */
 
-#include "undo.h"
+#pragma once
 
-#include "util/util_memory.h"
-
-CommandManager::~CommandManager()
+template <typename T>
+static void release_stack_memory(std::stack<T *> &stack)
 {
-	release_stack_memory(m_undo_commands);
-	release_stack_memory(m_redo_commands);
-}
-
-void CommandManager::execute(Command *command)
-{
-	command->execute();
-	m_undo_commands.push(command);
-}
-
-void CommandManager::undo()
-{
-	if (m_undo_commands.empty()) {
-		return;
+	while (!stack.empty()) {
+		auto data = stack.top();
+		stack.pop();
+		delete data;
 	}
-
-	auto command = m_undo_commands.top();
-	m_undo_commands.pop();
-
-	command->undo();
-
-	m_redo_commands.push(command);
-}
-
-void CommandManager::redo()
-{
-	if (m_redo_commands.empty()) {
-		return;
-	}
-
-	auto command = m_redo_commands.top();
-	m_redo_commands.pop();
-
-	command->redo();
-
-	m_undo_commands.push(command);
 }

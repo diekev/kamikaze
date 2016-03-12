@@ -22,46 +22,31 @@
  *
  */
 
-#include "undo.h"
+#pragma once
 
-#include "util/util_memory.h"
+#include <QString>
 
-CommandManager::~CommandManager()
+template <typename OpType>
+bool ensure_unique_name(QString &name, const OpType &op)
 {
-	release_stack_memory(m_undo_commands);
-	release_stack_memory(m_redo_commands);
-}
-
-void CommandManager::execute(Command *command)
-{
-	command->execute();
-	m_undo_commands.push(command);
-}
-
-void CommandManager::undo()
-{
-	if (m_undo_commands.empty()) {
-		return;
+	if (op(name)) {
+		return false;
 	}
 
-	auto command = m_undo_commands.top();
-	m_undo_commands.pop();
+	QString temp;
+	int number = 0;
 
-	command->undo();
+	do {
+		++number;
 
-	m_redo_commands.push(command);
-}
+		QString num = QString::number(number);
+		for (int i = 0, e = 4 - num.size(); i < e; ++i) {
+			num = num.prepend(QChar('0'));
+		}
 
-void CommandManager::redo()
-{
-	if (m_redo_commands.empty()) {
-		return;
-	}
+		temp = name + "." + num;
+	} while (!op(temp));
 
-	auto command = m_redo_commands.top();
-	m_redo_commands.pop();
-
-	command->redo();
-
-	m_undo_commands.push(command);
+	name = temp;
+	return true;
 }
