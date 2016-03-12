@@ -26,7 +26,7 @@
 
 #include <QObject>
 
-#include "util_render.h"
+#include "../util/util_render.h"
 
 class Brush;
 class Object;

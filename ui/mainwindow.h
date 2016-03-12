@@ -31,10 +31,10 @@ class MainWindow;
 }
 
 class LevelSetDialog;
-class Scene;
 class QComboBox;
 class QListWidget;
 class QTimer;
+class Scene;
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT

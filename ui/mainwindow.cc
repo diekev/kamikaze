@@ -1,4 +1,4 @@
-/*
+﻿/*
  * ***** BEGIN GPL LICENSE BLOCK *****
  *
  * This program is free software; you can redistribute it and/or
@@ -31,17 +31,10 @@
 #include <QSplitter>
 #include <QTimer>
 
-#include <openvdb/tools/LevelSetSphere.h>
-#include <openvdb/tools/LevelSetUtil.h>
-
-#include "objects/levelset.h"
-#include "objects/volume.h"
+#include "objects/object_ops.h"
+#include "objects/volumebase.h"
 
 #include "render/scene.h"
-#include "render/viewer.h"
-
-#include "util/utils.h"
-#include "util/util_openvdb.h"
 
 #include "levelsetdialog.h"
 
@@ -137,55 +130,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::openFile(const QString &filename) const
 {
-	using openvdb::FloatGrid;
-	using openvdb::Vec3s;
-
-	openvdb::initialize();
-	openvdb::io::File file(filename.toStdString());
-
-	if (!file.open()) {
-		std::cerr << "Unable to open file \'" << filename.toStdString() << "\'\n";
-		return;
-	}
-
-	FloatGrid::Ptr grid;
-
-	if (file.hasGrid(openvdb::Name("Density"))) {
-		grid = openvdb::gridPtrCast<FloatGrid>(file.readGrid(openvdb::Name("Density")));
-	}
-	else if (file.hasGrid(openvdb::Name("density"))) {
-		grid = openvdb::gridPtrCast<FloatGrid>(file.readGrid(openvdb::Name("density")));
-	}
-	else {
-		openvdb::GridPtrVecPtr grids = file.getGrids();
-		grid = openvdb::gridPtrCast<FloatGrid>((*grids)[0]);
-	}
-
-	auto meta_map = file.getMetadata();
-
-	file.close();
-
-	if ((*meta_map)["creator"]) {
-		auto creator = (*meta_map)["creator"]->str();
-
-		/* If the grid comes from Blender (Z-up), rotate it so it is Y-up */
-		if (creator == "Blender/Smoke") {
-			Timer("Transform Blender Grid");
-			grid = transform_grid(*grid, Vec3s(-M_PI_2, 0.0f, 0.0f),
-			                      Vec3s(1.0f), Vec3s(0.0f), Vec3s(0.0f));
-		}
-	}
-
-	Object *ob;
-	if (grid->getGridClass() == openvdb::GRID_LEVEL_SET) {
-		ob = new LevelSet(grid);
-	}
-	else {
-		ob = new Volume(grid);
-	}
-
-	ob->name(grid->getName().c_str());
-	m_scene->addObject(ob);
+	load_object_from_file(filename, m_scene);
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *e)
@@ -310,12 +255,7 @@ void MainWindow::updateObjectTab() const
 
 void MainWindow::addCube() const
 {
-	float radius = 2.0f;
-	glm::vec3 min(-1.0f), max(1.0f);
-
-	Object *ob = new Cube(min * radius, max * radius);
-	ob->name("Cube");
-	m_scene->addObject(ob);
+	add_object(m_scene, "Cube", OBJECT_CUBE, 2.0f, 0.0f, 0.0f);
 }
 
 void MainWindow::addLevelSet() const
@@ -323,30 +263,17 @@ void MainWindow::addLevelSet() const
 	m_level_set_dialog->show();
 
 	if (m_level_set_dialog->exec() == QDialog::Accepted) {
-		using namespace openvdb;
-		using namespace openvdb::math;
-
 		const float voxel_size = m_level_set_dialog->voxelSize();
 		const float half_width = m_level_set_dialog->halfWidth();
 		const float radius = m_level_set_dialog->radius();
 		const auto name = m_level_set_dialog->name();
-		FloatGrid::Ptr ls;
 
 		if (m_level_set_dialog->levelSetType() == ADD_LEVEL_SET_SPHERE) {
-			ls = tools::createLevelSetSphere<FloatGrid>(radius, Vec3f(0.0f),
-			                                            voxel_size, half_width);
+			add_object(m_scene, name, OBJECT_SPHERE_LS, radius, voxel_size, half_width);
 		}
 		else {
-			Transform xform = *Transform::createLinearTransform(voxel_size);
-			Vec3s min(-1.0f * radius), max(1.0f * radius);
-			BBox<math::Vec3s> bbox(min, max);
-
-			ls = tools::createLevelSetBox<FloatGrid>(bbox, xform, half_width);
+			add_object(m_scene, name, OBJECT_CUBE_LS, radius, voxel_size, half_width);
 		}
-
-		Object *ob = new LevelSet(ls->deepCopy());
-		ob->name(name);
-		m_scene->addObject(ob);
 	}
 }
 

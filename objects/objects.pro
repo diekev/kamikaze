@@ -38,6 +38,7 @@ SOURCES += \
 	grid.cc \
 	levelset.cc \
     object.cc \
+    object_ops.cc \
 	volume.cc \
     volumebase.cc
 
@@ -46,5 +47,6 @@ HEADERS += \
 	grid.h \
 	levelset.h \
     object.h \
+    object_ops.h \
 	volume.h \
     volumebase.h
