@@ -38,30 +38,33 @@ void CommandManager::execute(Command *command)
 	m_undo_commands.push(command);
 }
 
-void CommandManager::undo()
+static void undo_redo_ex(std::stack<Command *> &pop_stack,
+                         std::stack<Command *> &push_stack,
+                         bool redo)
 {
-	if (m_undo_commands.empty()) {
+	if (pop_stack.empty()) {
 		return;
 	}
 
-	auto command = m_undo_commands.top();
-	m_undo_commands.pop();
+	auto command = pop_stack.top();
+	pop_stack.pop();
 
-	command->undo();
+	if (redo) {
+		command->redo();
+	}
+	else {
+		command->undo();
+	}
 
-	m_redo_commands.push(command);
+	push_stack.push(command);
+}
+
+void CommandManager::undo()
+{
+	undo_redo_ex(m_undo_commands, m_redo_commands, false);
 }
 
 void CommandManager::redo()
 {
-	if (m_redo_commands.empty()) {
-		return;
-	}
-
-	auto command = m_redo_commands.top();
-	m_redo_commands.pop();
-
-	command->redo();
-
-	m_undo_commands.push(command);
+	undo_redo_ex(m_redo_commands, m_undo_commands, true);
 }
