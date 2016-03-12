@@ -37,8 +37,6 @@ enum {
 	OBJECT_SPHERE_LS = 2,
 };
 
-void load_object_from_file(const QString &filename, Scene *scene);
-
 void add_object(Scene *scene, const QString &name, int type, float radius,
                 float voxel_size, float halfwidth);
 
@@ -59,6 +57,23 @@ public:
 	             float voxel_size, float halfwidth);
 
 	~AddObjectCmd();
+
+	void execute();
+	void undo();
+	void redo();
+};
+
+class LoadFromFileCmd : public Command {
+	Scene *m_scene;
+	Object *m_object;
+	QString m_filename;
+
+	/* TODO */
+	bool m_was_undone;
+
+public:
+	LoadFromFileCmd(Scene *scene, const QString &filename);
+	~LoadFromFileCmd();
 
 	void execute();
 	void undo();

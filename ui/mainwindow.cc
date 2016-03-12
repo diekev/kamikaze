@@ -135,7 +135,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::openFile(const QString &filename) const
 {
-	load_object_from_file(filename, m_scene);
+	m_command_manager->execute(new LoadFromFileCmd(m_scene, filename));
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *e)
