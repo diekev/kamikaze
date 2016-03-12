@@ -24,43 +24,25 @@
 
 #pragma once
 
-#include "undo.h"
+#include <stack>
 
-#include <QString>
+class Command {
+public:
+	virtual ~Command() = default;
 
-class Object;
-class Scene;
-
-enum {
-	OBJECT_CUBE = 0,
-	OBJECT_CUBE_LS = 1,
-	OBJECT_SPHERE_LS = 2,
+	virtual void execute() = 0;
+	virtual void undo() = 0;
+	virtual void redo() = 0;
 };
 
-void load_object_from_file(const QString &filename, Scene *scene);
-
-void add_object(Scene *scene, const QString &name, int type, float radius,
-                float voxel_size, float halfwidth);
-
-class AddObjectCmd : public Command {
-	Object *m_object;
-	Scene *m_scene;
-	QString m_name;
-	int m_type;
-	float m_radius;
-	float m_voxel_size;
-	float m_halfwidth;
-
-	/* TODO */
-	bool m_was_undone;
+class CommandManager final {
+	std::stack<Command *> m_undo_commands;
+	std::stack<Command *> m_redo_commands;
 
 public:
-	AddObjectCmd(Scene *scene, const QString &name, int type, float radius,
-	             float voxel_size, float halfwidth);
+	~CommandManager();
 
-	~AddObjectCmd();
-
-	void execute();
+	void execute(Command *command);
 	void undo();
 	void redo();
 };

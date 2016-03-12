@@ -40,7 +40,8 @@ SOURCES += \
     object.cc \
     object_ops.cc \
 	volume.cc \
-    volumebase.cc
+    volumebase.cc \
+    undo.cc
 
 HEADERS += \
 	cube.h \
@@ -49,4 +50,5 @@ HEADERS += \
     object.h \
     object_ops.h \
 	volume.h \
-    volumebase.h
+    volumebase.h \
+    undo.h

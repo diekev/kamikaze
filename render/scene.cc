@@ -79,6 +79,21 @@ bool Scene::isNameUnique(const QString &name) const
 	return true;
 }
 
+void Scene::removeObject(Object *ob)
+{
+	auto iter = std::find(m_objects.begin(), m_objects.end(), ob);
+
+	if (iter != m_objects.end()) {
+		m_objects.erase(iter);
+	}
+
+	if (ob == m_active_object) {
+		m_active_object = nullptr;
+	}
+
+	Q_EMIT objectChanged();
+}
+
 bool Scene::ensureUniqueName(QString &name) const
 {
 	if (isNameUnique(name)) {

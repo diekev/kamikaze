@@ -127,3 +127,72 @@ void add_object(Scene *scene, const QString &name, int type, float radius,
 	ob->name(name);
 	scene->addObject(ob);
 }
+
+AddObjectCmd::AddObjectCmd(Scene *scene, const QString &name, int type, float radius, float voxel_size, float halfwidth)
+    : m_object(nullptr)
+    , m_scene(scene)
+    , m_name(name)
+    , m_type(type)
+    , m_radius(radius)
+    , m_voxel_size(voxel_size)
+    , m_halfwidth(halfwidth)
+    , m_was_undone(false)
+{}
+
+AddObjectCmd::~AddObjectCmd()
+{
+	if (m_was_undone) {
+		delete m_object;
+	}
+}
+
+void AddObjectCmd::execute()
+{
+	using namespace openvdb;
+	using namespace openvdb::math;
+
+	switch (m_type) {
+		case OBJECT_CUBE:
+		{
+			glm::vec3 min(-1.0f), max(1.0f);
+			m_object = new Cube(min * m_radius, max * m_radius);
+			break;
+		}
+		case OBJECT_SPHERE_LS:
+		{
+			FloatGrid::Ptr ls = tools::createLevelSetSphere<FloatGrid>(
+			                        m_radius, Vec3f(0.0f), m_voxel_size, m_halfwidth);
+			m_object = new LevelSet(ls->deepCopy());
+			break;
+		}
+		case OBJECT_CUBE_LS:
+		{
+			Transform xform = *Transform::createLinearTransform(m_voxel_size);
+			Vec3s min(-1.0f * m_radius), max(1.0f * m_radius);
+			BBox<math::Vec3s> bbox(min, max);
+
+			FloatGrid::Ptr ls = tools::createLevelSetBox<FloatGrid>(bbox, xform, m_halfwidth);
+			m_object = new LevelSet(ls->deepCopy());
+			break;
+		}
+		default:
+			return;
+	}
+
+	assert(m_object != nullptr);
+
+	m_object->name(m_name);
+	m_scene->addObject(m_object);
+}
+
+void AddObjectCmd::undo()
+{
+	m_scene->removeObject(m_object);
+	m_was_undone = true;
+}
+
+void AddObjectCmd::redo()
+{
+	m_scene->addObject(m_object);
+	m_was_undone = false;
+}

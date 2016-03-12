@@ -22,45 +22,54 @@
  *
  */
 
-#pragma once
-
 #include "undo.h"
 
-#include <QString>
+template <typename T>
+static void release_stack_memory(std::stack<T *> &stack)
+{
+	while (!stack.empty()) {
+		auto data = stack.top();
+		stack.pop();
+		delete data;
+	}
+}
 
-class Object;
-class Scene;
+CommandManager::~CommandManager()
+{
+	release_stack_memory(m_undo_commands);
+	release_stack_memory(m_redo_commands);
+}
 
-enum {
-	OBJECT_CUBE = 0,
-	OBJECT_CUBE_LS = 1,
-	OBJECT_SPHERE_LS = 2,
-};
+void CommandManager::execute(Command *command)
+{
+	command->execute();
+	m_undo_commands.push(command);
+}
 
-void load_object_from_file(const QString &filename, Scene *scene);
+void CommandManager::undo()
+{
+	if (m_undo_commands.empty()) {
+		return;
+	}
 
-void add_object(Scene *scene, const QString &name, int type, float radius,
-                float voxel_size, float halfwidth);
+	auto command = m_undo_commands.top();
+	m_undo_commands.pop();
 
-class AddObjectCmd : public Command {
-	Object *m_object;
-	Scene *m_scene;
-	QString m_name;
-	int m_type;
-	float m_radius;
-	float m_voxel_size;
-	float m_halfwidth;
+	command->undo();
 
-	/* TODO */
-	bool m_was_undone;
+	m_redo_commands.push(command);
+}
 
-public:
-	AddObjectCmd(Scene *scene, const QString &name, int type, float radius,
-	             float voxel_size, float halfwidth);
+void CommandManager::redo()
+{
+	if (m_redo_commands.empty()) {
+		return;
+	}
 
-	~AddObjectCmd();
+	auto command = m_redo_commands.top();
+	m_redo_commands.pop();
 
-	void execute();
-	void undo();
-	void redo();
-};
+	command->redo();
+
+	m_undo_commands.push(command);
+}

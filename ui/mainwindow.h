@@ -30,6 +30,7 @@ namespace Ui {
 class MainWindow;
 }
 
+class CommandManager;
 class LevelSetDialog;
 class QComboBox;
 class QListWidget;
@@ -42,6 +43,7 @@ class MainWindow : public QMainWindow {
 	Ui::MainWindow *ui;
 	Scene *m_scene;
 	QTimer *m_timer;
+	CommandManager *m_command_manager;
 	bool m_timer_has_started;
 	QComboBox *m_scene_mode_box;
 	QListWidget *m_scene_mode_list;
@@ -74,4 +76,6 @@ private Q_SLOTS:
 	void setSceneMode(int idx) const;
 	void goToStartFrame() const;
 	void goToEndFrame() const;
+	void undo() const;
+	void redo() const;
 };

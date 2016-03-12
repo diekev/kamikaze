@@ -32,6 +32,7 @@
 #include <QTimer>
 
 #include "objects/object_ops.h"
+#include "objects/undo.h"
 #include "objects/volumebase.h"
 
 #include "render/scene.h"
@@ -57,6 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
     , m_scene(new Scene)
     , m_timer(new QTimer(this))
+    , m_command_manager(new CommandManager)
     , m_timer_has_started(false)
     , m_scene_mode_box(new QComboBox(this))
     , m_scene_mode_list(new QListWidget(m_scene_mode_box))
@@ -80,11 +82,13 @@ MainWindow::MainWindow(QWidget *parent)
 
 	/* set default heights for the timeline wigdet and the vertical splitter */
 	const int height = ui->vsplitter->size().height();
-	const int tiemeline_height = 0.1f * float(height);
-	const int hsplister_height= height - tiemeline_height;
+	const int timeline_height = 0.1f * float(height);
+	const int hsplister_height = 1.9f * float(height);
 	QList<int> hsizes;
-	hsizes << tiemeline_height << hsplister_height;
+	hsizes << hsplister_height << timeline_height;
 	ui->vsplitter->setSizes(hsizes);
+
+	ui->m_viewport->resize(viewport_width, hsplister_height);
 
 	/* Object */
 	ui->m_move_object->setMinMax(-9999.99f, 9999.99f);
@@ -126,6 +130,7 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
 	delete ui;
+	delete m_command_manager;
 }
 
 void MainWindow::openFile(const QString &filename) const
@@ -268,12 +273,17 @@ void MainWindow::addLevelSet() const
 		const float radius = m_level_set_dialog->radius();
 		const auto name = m_level_set_dialog->name();
 
+		int type;
+
 		if (m_level_set_dialog->levelSetType() == ADD_LEVEL_SET_SPHERE) {
-			add_object(m_scene, name, OBJECT_SPHERE_LS, radius, voxel_size, half_width);
+			type = OBJECT_SPHERE_LS;
 		}
 		else {
-			add_object(m_scene, name, OBJECT_CUBE_LS, radius, voxel_size, half_width);
+			type = OBJECT_CUBE_LS;
 		}
+
+		m_command_manager->execute(new AddObjectCmd(m_scene, name, type, radius,
+		                                            voxel_size, half_width));
 	}
 }
 
@@ -299,6 +309,18 @@ void MainWindow::goToStartFrame() const
 void MainWindow::goToEndFrame() const
 {
 	ui->m_timeline->setValue(ui->m_timeline->maximum());
+}
+
+void MainWindow::undo() const
+{
+	/* TODO: figure out how to update everything properly */
+	m_command_manager->undo();
+}
+
+void MainWindow::redo() const
+{
+	/* TODO: figure out how to update everything properly */
+	m_command_manager->redo();
 }
 
 void MainWindow::updateFrame() const
