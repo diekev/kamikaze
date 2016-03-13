@@ -208,6 +208,7 @@ void MainWindow::updateObjectTab() const
 	Object *ob = m_scene->currentObject();
 
 	if (ob == nullptr) {
+		ui->tabWidget->setTabEnabled(0, false);
 		return;
 	}
 
