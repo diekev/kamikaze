@@ -38,7 +38,8 @@
 #include "camera.h"
 #include "scene.h"
 
-#include "grid.h"
+#include "core/grid.h"
+#include "core/manipulator.h"
 #include "util/util_input.h"
 
 Viewer::Viewer(QWidget *parent)
@@ -53,6 +54,7 @@ Viewer::Viewer(QWidget *parent)
     , m_scene(nullptr)
     , m_timer(new QTimer(this))
     , m_context(new ViewerContext)
+    , m_manipulator(nullptr)
 {
 	setFocusPolicy(Qt::FocusPolicy::StrongFocus);
 	connect(m_timer, SIGNAL(timeout()), this, SLOT(updateGL()));
@@ -64,6 +66,7 @@ Viewer::~Viewer()
 	delete m_grid;
 	delete m_scene;
 	delete m_context;
+	delete m_manipulator;
 }
 
 void Viewer::initializeGL()
@@ -82,6 +85,7 @@ void Viewer::initializeGL()
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
 	m_grid = new Grid(20, 20);
+	m_manipulator = new Manipulator();
 	m_camera->update();
 
 	m_timer->start(1000 / 24);
@@ -122,6 +126,8 @@ void Viewer::paintGL()
 	if (m_scene != nullptr) {
 		m_scene->render(m_context);
 	}
+
+	m_manipulator->render(m_context);
 }
 
 void Viewer::mousePressEvent(QMouseEvent *e)
