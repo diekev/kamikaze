@@ -41,12 +41,14 @@ INCLUDEPATH += /opt/lib/openexr/include
 SOURCES += \
     mainwindow.cc \
     levelsetdialog.cc \
-    xyzspinbox.cc
+    xyzspinbox.cc \
+    paramfactory.cc
 
 HEADERS += \
     mainwindow.h \
     levelsetdialog.h \
-    xyzspinbox.h
+    xyzspinbox.h \
+    paramfactory.h
 
 FORMS += \
     mainwindow.ui \

@@ -25,6 +25,7 @@
 #include "mainwindow.h"
 
 #include <QComboBox>
+#include <QDialogButtonBox>
 #include <QFileDialog>
 #include <QKeyEvent>
 #include <QListWidget>
@@ -266,26 +267,32 @@ void MainWindow::addCube() const
 
 void MainWindow::addLevelSet() const
 {
-	m_level_set_dialog->show();
+	QDialog *dialog = new QDialog();
+	QDialogButtonBox *button_box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
-	if (m_level_set_dialog->exec() == QDialog::Accepted) {
-		const float voxel_size = m_level_set_dialog->voxelSize();
-		const float half_width = m_level_set_dialog->halfWidth();
-		const float radius = m_level_set_dialog->radius();
-		const auto name = m_level_set_dialog->name();
+	connect(button_box, SIGNAL(accepted()), dialog, SLOT(accept()));
+	connect(button_box, SIGNAL(rejected()), dialog, SLOT(reject()));
 
-		int type;
+	QGridLayout *layout = new QGridLayout();
 
-		if (m_level_set_dialog->levelSetType() == ADD_LEVEL_SET_SPHERE) {
-			type = OBJECT_SPHERE_LS;
-		}
-		else {
-			type = OBJECT_CUBE_LS;
-		}
+	dialog->setLayout(layout);
 
-		m_command_manager->execute(new AddObjectCmd(m_scene, name, type, radius,
-		                                            voxel_size, half_width));
+	ParamCallback cb(layout);
+
+	Command *cmd = new AddObjectCmd(m_scene);
+	cmd->setUIParams(cb);
+
+	layout->addWidget(button_box);
+
+	if (dialog->exec() == QDialog::Accepted) {
+		m_command_manager->execute(cmd);
 	}
+	else {
+		delete cmd;
+	}
+
+	delete layout;
+	delete dialog;
 }
 
 void MainWindow::startAnimation()

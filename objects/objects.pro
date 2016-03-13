@@ -19,6 +19,8 @@
 #
 # ***** END GPL LICENSE BLOCK *****
 
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
 TARGET = objects
 TEMPLATE = lib
 

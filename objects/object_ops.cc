@@ -77,16 +77,11 @@ void add_object(Scene *scene, const QString &name, int type, float radius,
 
 /* *************************** add object command *************************** */
 
-AddObjectCmd::AddObjectCmd(Scene *scene, const QString &name, int type, float radius, float voxel_size, float halfwidth)
-    : m_object(nullptr)
-    , m_scene(scene)
-    , m_name(name)
-    , m_type(type)
-    , m_radius(radius)
-    , m_voxel_size(voxel_size)
-    , m_halfwidth(halfwidth)
-    , m_was_undone(false)
-{}
+AddObjectCmd::AddObjectCmd(Scene *scene)
+    : AddObjectCmd()
+{
+	m_scene = scene;
+}
 
 AddObjectCmd::~AddObjectCmd()
 {
@@ -144,6 +139,21 @@ void AddObjectCmd::redo()
 {
 	m_scene->addObject(m_object);
 	m_was_undone = false;
+}
+
+void AddObjectCmd::setUIParams(ParamCallback &cb)
+{
+	const char *type_items[] = {
+	    "Cube", "Cube (Level Set)", "Sphere (Level Set)", nullptr
+    };
+
+	enum_param(cb, "Type", &m_type, type_items, 0);
+
+	float_param(cb, "Radius", &m_radius, 0.0f, 10.0f, 1.0f);
+	float_param(cb, "Voxel Size", &m_voxel_size, 0.0f, 10.0f, 0.1f);
+	float_param(cb, "Half Width", &m_halfwidth, 0.0f, 10.0f, 3.0f);
+
+	string_param(cb, "Name", &m_name, "");
 }
 
 /* *************************** load object command ************************** */

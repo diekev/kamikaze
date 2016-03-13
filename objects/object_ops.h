@@ -41,26 +41,26 @@ void add_object(Scene *scene, const QString &name, int type, float radius,
                 float voxel_size, float halfwidth);
 
 class AddObjectCmd : public Command {
-	Object *m_object;
-	Scene *m_scene;
-	QString m_name;
-	int m_type;
-	float m_radius;
-	float m_voxel_size;
-	float m_halfwidth;
+	Object *m_object = nullptr;
+	Scene *m_scene = nullptr;
+	QString m_name = "";
+	int m_type = 0;
+	float m_radius = 0.0f;
+	float m_voxel_size = 0.0f;
+	float m_halfwidth = 0.0f;
 
 	/* TODO */
-	bool m_was_undone;
+	bool m_was_undone = false;
 
 public:
-	AddObjectCmd(Scene *scene, const QString &name, int type, float radius,
-	             float voxel_size, float halfwidth);
-
+	AddObjectCmd() = default;
+	AddObjectCmd(Scene *scene);
 	~AddObjectCmd();
 
 	void execute();
 	void undo();
 	void redo();
+	void setUIParams(ParamCallback &cb);
 };
 
 class LoadFromFileCmd : public Command {
@@ -78,4 +78,5 @@ public:
 	void execute();
 	void undo();
 	void redo();
+	void setUIParams(ParamCallback &cb) { (void)cb; }
 };

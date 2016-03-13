@@ -26,6 +26,8 @@
 
 #include <stack>
 
+#include "ui/paramfactory.h"
+
 class Command {
 public:
 	virtual ~Command() = default;
@@ -33,6 +35,7 @@ public:
 	virtual void execute() = 0;
 	virtual void undo() = 0;
 	virtual void redo() = 0;
+	virtual void setUIParams(ParamCallback &cb) = 0;
 };
 
 class CommandManager final {
