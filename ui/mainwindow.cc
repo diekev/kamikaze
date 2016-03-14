@@ -32,6 +32,7 @@
 #include <QSplitter>
 #include <QTimer>
 
+#include "objects/context.h"
 #include "objects/object_ops.h"
 #include "objects/undo.h"
 #include "objects/volumebase.h"
@@ -40,13 +41,13 @@
 
 #include "ui_mainwindow.h"
 
-void disableListItem(QListWidget *list, int index)
+static void disableListItem(QListWidget *list, int index)
 {
 	QListWidgetItem *item = list->item(index);
 	item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
 }
 
-void enableListItem(QListWidget *list, int index)
+static void enableListItem(QListWidget *list, int index)
 {
 	QListWidgetItem *item = list->item(index);
 	item->setFlags(item->flags() | Qt::ItemIsEnabled);
@@ -58,6 +59,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_scene(new Scene)
     , m_timer(new QTimer(this))
     , m_command_manager(new CommandManager)
+    , m_command_factory(new CommandFactory)
     , m_timer_has_started(false)
     , m_scene_mode_box(new QComboBox(this))
     , m_scene_mode_list(new QListWidget(m_scene_mode_box))
@@ -123,17 +125,21 @@ MainWindow::MainWindow(QWidget *parent)
 
 	/* Timeline */
 	ui->m_timeline->setMaximum(250);
+
+	/* TODO: find another place to do this */
+	registerCommandType("Add Object CMD", AddObjectCmd::registerSelf);
 }
 
 MainWindow::~MainWindow()
 {
 	delete ui;
 	delete m_command_manager;
+	delete m_command_factory;
 }
 
 void MainWindow::openFile(const QString &filename) const
 {
-	m_command_manager->execute(new LoadFromFileCmd(m_scene, filename));
+	m_command_manager->execute(new LoadFromFileCmd(m_scene, filename), nullptr);
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *e)
@@ -257,41 +263,6 @@ void MainWindow::updateObjectTab() const
 	connectObjectSignals();
 }
 
-void MainWindow::addCube() const
-{
-	add_object(m_scene, "Cube", OBJECT_CUBE, 2.0f, 0.0f, 0.0f);
-}
-
-void MainWindow::addLevelSet() const
-{
-	QDialog *dialog = new QDialog();
-	QDialogButtonBox *button_box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-
-	connect(button_box, SIGNAL(accepted()), dialog, SLOT(accept()));
-	connect(button_box, SIGNAL(rejected()), dialog, SLOT(reject()));
-
-	QGridLayout *layout = new QGridLayout();
-
-	dialog->setLayout(layout);
-
-	ParamCallback cb(layout);
-
-	Command *cmd = new AddObjectCmd(m_scene);
-	cmd->setUIParams(cb);
-
-	layout->addWidget(button_box);
-
-	if (dialog->exec() == QDialog::Accepted) {
-		m_command_manager->execute(cmd);
-	}
-	else {
-		delete cmd;
-	}
-
-	delete layout;
-	delete dialog;
-}
-
 void MainWindow::startAnimation()
 {
 	if (m_timer_has_started) {
@@ -379,4 +350,54 @@ void MainWindow::disconnectObjectSignals() const
 	           m_scene, SLOT(setCurrentObject(QListWidgetItem*)));
 	disconnect(ui->m_use_lut, SIGNAL(clicked(bool)), m_scene, SLOT(setVolumeLUT(bool)));
 	disconnect(ui->m_num_slices, SIGNAL(valueChanged(int)), m_scene, SLOT(setVolumeSlices(int)));
+}
+
+void MainWindow::registerCommandType(const char *name, CommandFactory::command_factory_func func)
+{
+	auto action = ui->menuAdd->addAction(name);
+	m_command_factory->registerType(name, func);
+	connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
+}
+
+void MainWindow::handleCommand()
+{
+	QAction *action = qobject_cast<QAction *>(sender());
+
+	if (!action) {
+		return;
+	}
+
+	/* create UI */
+	QDialog *dialog = new QDialog();
+	QDialogButtonBox *button_box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+
+	connect(button_box, SIGNAL(accepted()), dialog, SLOT(accept()));
+	connect(button_box, SIGNAL(rejected()), dialog, SLOT(reject()));
+
+	QGridLayout *layout = new QGridLayout();
+
+	dialog->setLayout(layout);
+
+	ParamCallback cb(layout);
+
+	/* get command */
+	const auto &name = action->text();
+	Command *cmd = (*m_command_factory)(name.toStdString());
+	cmd->setUIParams(cb);
+
+	layout->addWidget(button_box);
+
+	/* TODO */
+	EvaluationContext context;
+	context.scene = m_scene;
+
+	if (dialog->exec() == QDialog::Accepted) {
+		m_command_manager->execute(cmd, &context);
+	}
+	else {
+		delete cmd;
+	}
+
+	delete layout;
+	delete dialog;
 }

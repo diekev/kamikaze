@@ -30,6 +30,8 @@ namespace Ui {
 class MainWindow;
 }
 
+class Command;
+class CommandFactory;
 class CommandManager;
 class QComboBox;
 class QListWidget;
@@ -43,9 +45,13 @@ class MainWindow : public QMainWindow {
 	Scene *m_scene;
 	QTimer *m_timer;
 	CommandManager *m_command_manager;
+	CommandFactory *m_command_factory;
 	bool m_timer_has_started;
 	QComboBox *m_scene_mode_box;
 	QListWidget *m_scene_mode_list;
+
+	/* TODO: de-duplicate this from undo.h */
+	typedef Command *(*command_factory_func)(void);
 
 public:
 	explicit MainWindow(QWidget *parent = nullptr);
@@ -59,13 +65,12 @@ protected:
 private:
 	void connectObjectSignals() const;
 	void disconnectObjectSignals() const;
+	void registerCommandType(const char *name, command_factory_func func);
 
 private Q_SLOTS:
 	void openFile();
 	void updateObject() const;
 	void updateObjectTab() const;
-	void addCube() const;
-	void addLevelSet() const;
 	void startAnimation();
 	void updateFrame() const;
 	void setStartFrame(int value) const;
@@ -75,4 +80,5 @@ private Q_SLOTS:
 	void goToEndFrame() const;
 	void undo() const;
 	void redo() const;
+	void handleCommand();
 };

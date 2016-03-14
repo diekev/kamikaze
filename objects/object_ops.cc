@@ -27,6 +27,7 @@
 #include <openvdb/tools/LevelSetSphere.h>
 #include <openvdb/tools/LevelSetUtil.h>
 
+#include "context.h"
 #include "levelset.h"
 #include "volume.h"
 
@@ -77,12 +78,6 @@ void add_object(Scene *scene, const QString &name, int type, float radius,
 
 /* *************************** add object command *************************** */
 
-AddObjectCmd::AddObjectCmd(Scene *scene)
-    : AddObjectCmd()
-{
-	m_scene = scene;
-}
-
 AddObjectCmd::~AddObjectCmd()
 {
 	if (m_was_undone) {
@@ -90,8 +85,10 @@ AddObjectCmd::~AddObjectCmd()
 	}
 }
 
-void AddObjectCmd::execute()
+void AddObjectCmd::execute(EvaluationContext *context)
 {
+	m_scene = context->scene;
+
 	using namespace openvdb;
 	using namespace openvdb::math;
 
@@ -119,13 +116,12 @@ void AddObjectCmd::execute()
 			m_object = new LevelSet(ls->deepCopy());
 			break;
 		}
-		default:
-			return;
 	}
 
 	assert(m_object != nullptr);
-
 	m_object->name(m_name);
+
+	assert(m_scene != nullptr);
 	m_scene->addObject(m_object);
 }
 
@@ -156,6 +152,11 @@ void AddObjectCmd::setUIParams(ParamCallback &cb)
 	string_param(cb, "Name", &m_name, "");
 }
 
+Command *AddObjectCmd::registerSelf()
+{
+	return new AddObjectCmd;
+}
+
 /* *************************** load object command ************************** */
 
 LoadFromFileCmd::LoadFromFileCmd(Scene *scene, const QString &filename)
@@ -172,8 +173,10 @@ LoadFromFileCmd::~LoadFromFileCmd()
 	}
 }
 
-void LoadFromFileCmd::execute()
+void LoadFromFileCmd::execute(EvaluationContext *context)
 {
+	m_scene = context->scene;
+
 	using openvdb::FloatGrid;
 	using openvdb::Vec3s;
 

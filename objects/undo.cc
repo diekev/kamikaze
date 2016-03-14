@@ -24,6 +24,8 @@
 
 #include "undo.h"
 
+#include <assert.h>
+
 #include "util/util_memory.h"
 
 CommandManager::~CommandManager()
@@ -32,9 +34,9 @@ CommandManager::~CommandManager()
 	release_stack_memory(m_redo_commands);
 }
 
-void CommandManager::execute(Command *command)
+void CommandManager::execute(Command *command, EvaluationContext *context)
 {
-	command->execute();
+	command->execute(context);
 	m_undo_commands.push(command);
 }
 
@@ -67,4 +69,20 @@ void CommandManager::undo()
 void CommandManager::redo()
 {
 	undo_redo_ex(m_redo_commands, m_undo_commands, true);
+}
+
+void CommandFactory::registerType(const std::string &name, CommandFactory::command_factory_func func)
+{
+	const auto iter = m_map.find(name);
+	assert(iter == m_map.end());
+
+	m_map[name] = func;
+}
+
+Command *CommandFactory::operator()(const std::string &name)
+{
+	const auto iter = m_map.find(name);
+	assert(iter != m_map.end());
+
+	return iter->second();
 }

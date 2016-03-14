@@ -53,4 +53,5 @@ HEADERS += \
     object_ops.h \
 	volume.h \
     volumebase.h \
-    undo.h
+    undo.h \
+    context.h

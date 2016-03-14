@@ -24,44 +24,8 @@
 
 #pragma once
 
-#include <stack>
-#include <unordered_map>
+class Scene;
 
-#include "ui/paramfactory.h"
-
-class CommandFactory;
-class EvaluationContext;
-
-class Command {
-public:
-	virtual ~Command() = default;
-
-	virtual void execute(EvaluationContext *context) = 0;
-	virtual void undo() = 0;
-	virtual void redo() = 0;
-	virtual void setUIParams(ParamCallback &cb) = 0;
-};
-
-class CommandManager final {
-	std::stack<Command *> m_undo_commands;
-	std::stack<Command *> m_redo_commands;
-
-public:
-	~CommandManager();
-
-	void execute(Command *command, EvaluationContext *context);
-	void undo();
-	void redo();
-};
-
-class CommandFactory final {
-public:
-	typedef Command *(*command_factory_func)(void);
-
-	void registerType(const std::string &name, command_factory_func func);
-
-	Command *operator()(const std::string &name);
-
-private:
-	std::unordered_map<std::string, command_factory_func> m_map;
+struct EvaluationContext {
+	Scene *scene;
 };

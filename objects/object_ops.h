@@ -57,10 +57,11 @@ public:
 	AddObjectCmd(Scene *scene);
 	~AddObjectCmd();
 
-	void execute();
+	void execute(EvaluationContext *context);
 	void undo();
 	void redo();
 	void setUIParams(ParamCallback &cb);
+	static Command *registerSelf();
 };
 
 class LoadFromFileCmd : public Command {
@@ -75,7 +76,7 @@ public:
 	LoadFromFileCmd(Scene *scene, const QString &filename);
 	~LoadFromFileCmd();
 
-	void execute();
+	void execute(EvaluationContext *context);
 	void undo();
 	void redo();
 	void setUIParams(ParamCallback &cb) { (void)cb; }
