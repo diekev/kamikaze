@@ -72,23 +72,12 @@ MainWindow::MainWindow(QWidget *parent)
 	ui->tabWidget->setTabEnabled(0, false);
 	ui->tabWidget->setTabEnabled(3, false);
 
-	/* set default widths for the viewport and side panel in the horizontal splitter */
-	const int width = ui->splitter->size().width();
-	const int viewport_width = 0.8f * float(width);
-	const int panel_width = width - viewport_width;
-	QList<int> sizes;
-	sizes << viewport_width << panel_width;
-	ui->splitter->setSizes(sizes);
+	/* set default strecthes for the splitters */
+	ui->splitter->setStretchFactor(0, 1);
+	ui->splitter->setStretchFactor(1, 0);
 
-	/* set default heights for the timeline wigdet and the vertical splitter */
-	const int height = ui->vsplitter->size().height();
-	const int timeline_height = 0.1f * float(height);
-	const int hsplister_height = 1.9f * float(height);
-	QList<int> hsizes;
-	hsizes << hsplister_height << timeline_height;
-	ui->vsplitter->setSizes(hsizes);
-
-	ui->m_viewport->resize(viewport_width, hsplister_height);
+	ui->vsplitter->setStretchFactor(0, 1);
+	ui->vsplitter->setStretchFactor(1, 0);
 
 	/* Object */
 	ui->m_move_object->setMinMax(-9999.99f, 9999.99f);
