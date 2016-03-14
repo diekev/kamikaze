@@ -34,47 +34,11 @@
 #include "../render/scene.h"
 #include "../util/util_openvdb.h"
 
-void add_object(Scene *scene, const QString &name, int type, float radius,
-                float voxel_size, float halfwidth)
-{
-	using namespace openvdb;
-	using namespace openvdb::math;
-
-	Object *ob = nullptr;
-
-	switch (type) {
-		case OBJECT_CUBE:
-		{
-			glm::vec3 min(-1.0f), max(1.0f);
-			ob = new Cube(min * radius, max * radius);
-			break;
-		}
-		case OBJECT_SPHERE_LS:
-		{
-			FloatGrid::Ptr ls = tools::createLevelSetSphere<FloatGrid>(
-			                        radius, Vec3f(0.0f), voxel_size, halfwidth);
-			ob = new LevelSet(ls->deepCopy());
-			break;
-		}
-		case OBJECT_CUBE_LS:
-		{
-			Transform xform = *Transform::createLinearTransform(voxel_size);
-			Vec3s min(-1.0f * radius), max(1.0f * radius);
-			BBox<math::Vec3s> bbox(min, max);
-
-			FloatGrid::Ptr ls = tools::createLevelSetBox<FloatGrid>(bbox, xform, halfwidth);
-			ob = new LevelSet(ls->deepCopy());
-			break;
-		}
-		default:
-			return;
-	}
-
-	assert(ob != nullptr);
-
-	ob->name(name);
-	scene->addObject(ob);
-}
+enum {
+	OBJECT_CUBE = 0,
+	OBJECT_CUBE_LS = 1,
+	OBJECT_SPHERE_LS = 2,
+};
 
 /* *************************** add object command *************************** */
 

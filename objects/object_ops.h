@@ -31,15 +31,6 @@
 class Object;
 class Scene;
 
-enum {
-	OBJECT_CUBE = 0,
-	OBJECT_CUBE_LS = 1,
-	OBJECT_SPHERE_LS = 2,
-};
-
-void add_object(Scene *scene, const QString &name, int type, float radius,
-                float voxel_size, float halfwidth);
-
 class AddObjectCmd : public Command {
 	Object *m_object = nullptr;
 	Scene *m_scene = nullptr;
