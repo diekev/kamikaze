@@ -38,8 +38,6 @@
 
 #include "render/scene.h"
 
-#include "levelsetdialog.h"
-
 #include "ui_mainwindow.h"
 
 void disableListItem(QListWidget *list, int index)
@@ -63,7 +61,6 @@ MainWindow::MainWindow(QWidget *parent)
     , m_timer_has_started(false)
     , m_scene_mode_box(new QComboBox(this))
     , m_scene_mode_list(new QListWidget(m_scene_mode_box))
-    , m_level_set_dialog(new LevelSetDialog(this))
 {
 	qApp->installEventFilter(this);
 	ui->setupUi(this);

@@ -31,7 +31,6 @@ class MainWindow;
 }
 
 class CommandManager;
-class LevelSetDialog;
 class QComboBox;
 class QListWidget;
 class QTimer;
@@ -47,8 +46,6 @@ class MainWindow : public QMainWindow {
 	bool m_timer_has_started;
 	QComboBox *m_scene_mode_box;
 	QListWidget *m_scene_mode_list;
-
-	LevelSetDialog *m_level_set_dialog;
 
 public:
 	explicit MainWindow(QWidget *parent = nullptr);
