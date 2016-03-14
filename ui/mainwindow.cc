@@ -116,7 +116,7 @@ MainWindow::MainWindow(QWidget *parent)
 	ui->m_timeline->setMaximum(250);
 
 	/* TODO: find another place to do this */
-	registerCommandType("Add Object CMD", AddObjectCmd::registerSelf);
+	registerCommandType("Add Object", AddObjectCmd::registerSelf);
 }
 
 MainWindow::~MainWindow()
@@ -175,7 +175,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 void MainWindow::openFile()
 {
 	const auto &filename = QFileDialog::getOpenFileName(
-	                          this, tr("Ouvrir fichier image"),
+	                          this, tr("Open File"),
 		                      QDir::homePath(),
 		                      tr("*.vdb"));
 
@@ -356,8 +356,13 @@ void MainWindow::handleCommand()
 		return;
 	}
 
+	const auto &name = action->text();
+
 	/* create UI */
 	QDialog *dialog = new QDialog();
+	dialog->setPalette(this->palette());
+	dialog->setWindowTitle(name);
+
 	QDialogButtonBox *button_box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
 	connect(button_box, SIGNAL(accepted()), dialog, SLOT(accept()));
@@ -370,7 +375,6 @@ void MainWindow::handleCommand()
 	ParamCallback cb(layout);
 
 	/* get command */
-	const auto &name = action->text();
 	Command *cmd = (*m_command_factory)(name.toStdString());
 	cmd->setUIParams(cb);
 

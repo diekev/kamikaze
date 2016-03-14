@@ -113,7 +113,7 @@ void AddObjectCmd::setUIParams(ParamCallback &cb)
 	float_param(cb, "Voxel Size", &m_voxel_size, 0.0f, 10.0f, 0.1f);
 	float_param(cb, "Half Width", &m_halfwidth, 0.0f, 10.0f, 3.0f);
 
-	string_param(cb, "Name", &m_name, "");
+	string_param(cb, "Name", &m_name, "Object");
 }
 
 Command *AddObjectCmd::registerSelf()
