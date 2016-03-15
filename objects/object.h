@@ -29,6 +29,8 @@
 
 #include "util/util_render.h"
 
+class ViewerContext;
+
 enum {
 	DRAW_WIRE = 0,
 	DRAW_SOLID = 1,
@@ -65,8 +67,7 @@ public:
 	virtual int type() const { return OBJECT; }
 
 	virtual bool intersect(const Ray &ray, float &min) const;
-	virtual void render(const glm::mat4 &MVP, const glm::mat3 &N,
-	                    const glm::vec3 &view_dir, const bool for_outline) = 0;
+	virtual void render(ViewerContext *context, const bool for_outline) = 0;
 	void setDrawType(int draw_type);
 
 	virtual void drawBBox(const bool b);

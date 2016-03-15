@@ -25,7 +25,6 @@
 #include "scene.h"
 
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/matrix_inverse.hpp>
 
 #include <QKeyEvent>
 #include <QListWidget>
@@ -98,11 +97,8 @@ void Scene::addObject(Object *object)
 	Q_EMIT objectChanged();
 }
 
-void Scene::render(const glm::mat4 &MV, const glm::mat4 &P, const glm::vec3 &view_dir)
+void Scene::render(ViewerContext *context)
 {
-	const auto &MVP = P * MV;
-	const auto &N = glm::inverseTranspose(glm::mat3(MV));
-
 	for (auto &object : m_objects) {
 		const bool active_object = (object == m_active_object);
 
@@ -113,15 +109,15 @@ void Scene::render(const glm::mat4 &MV, const glm::mat4 &P, const glm::vec3 &vie
 			VolumeBase *vb = static_cast<VolumeBase *>(object);
 
 			if (object->drawBBox()) {
-				vb->bbox()->render(MVP, N, view_dir, false);
+				vb->bbox()->render(context, false);
 			}
 
 			if (object->drawTreeTopology()) {
-				vb->topology()->render(MVP);
+				vb->topology()->render(context);
 			}
 		}
 
-		object->render(MVP, N, view_dir, false);
+		object->render(context, false);
 
 		if (active_object) {
 			glStencilFunc(GL_NOTEQUAL, 1, 0xff);
@@ -132,7 +128,7 @@ void Scene::render(const glm::mat4 &MV, const glm::mat4 &P, const glm::vec3 &vie
 			glm::mat4 obmat = object->matrix();
 			object->matrix() = glm::scale(obmat, glm::vec3(1.01f));
 
-			object->render(MVP, N, view_dir, true);
+			object->render(context, true);
 
 			object->matrix() = obmat;
 

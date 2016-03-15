@@ -33,6 +33,7 @@ class Object;
 class QListWidget;
 class QListWidgetItem;
 class SmokeSimulation;
+class ViewerContext;
 
 enum {
 	SCENE_MODE_OBJECT = 0,
@@ -58,7 +59,7 @@ public:
 	void addObject(Object *object);
 	void removeObject(Object *ob);
 
-	void render(const glm::mat4 &MV, const glm::mat4 &P, const glm::vec3 &view_dir);
+	void render(ViewerContext *context);
 	void intersect(const Ray &ray);
 
 	int mode() const;

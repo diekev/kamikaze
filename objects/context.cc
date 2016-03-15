@@ -1,4 +1,4 @@
-﻿/*
+/*
  * ***** BEGIN GPL LICENSE BLOCK *****
  *
  * This program is free software; you can redistribute it and/or
@@ -22,36 +22,54 @@
  *
  */
 
-#pragma once
+#include "context.h"
 
-#include <glm/glm.hpp>
+glm::mat4 ViewerContext::projection() const
+{
+	return m_projection;
+}
 
-class Scene;
+void ViewerContext::setProjection(const glm::mat4 &projection)
+{
+	m_projection = projection;
+}
 
-struct EvaluationContext {
-	Scene *scene;
-};
+glm::vec3 ViewerContext::view() const
+{
+	return m_view;
+}
 
-class ViewerContext {
-	glm::mat4 m_model_view;
-	glm::mat4 m_projection;
-	glm::mat4 m_modelviewprojection;
-	glm::vec3 m_view;
-	glm::mat3 m_normal;
+void ViewerContext::setView(const glm::vec3 &view)
+{
+	m_view = view;
+}
 
-public:
-	glm::mat4 modelview() const;
-	void setModelview(const glm::mat4 &modelview);
+glm::mat3 ViewerContext::normal() const
+{
+	return m_normal;
+}
 
-	glm::mat4 projection() const;
-	void setProjection(const glm::mat4 &projection);
+void ViewerContext::setNormal(const glm::mat3 &normal)
+{
+	m_normal = normal;
+}
 
-	glm::vec3 view() const;
-	void setView(const glm::vec3 &view);
+glm::mat4 ViewerContext::MVP() const
+{
+	return m_modelviewprojection;
+}
 
-	glm::mat3 normal() const;
-	void setNormal(const glm::mat3 &normal);
+void ViewerContext::setMVP(const glm::mat4 &MVP)
+{
+	m_modelviewprojection = MVP;
+}
 
-	glm::mat4 MVP() const;
-	void setMVP(const glm::mat4 &MVP);
-};
+glm::mat4 ViewerContext::modelview() const
+{
+	return m_model_view;
+}
+
+void ViewerContext::setModelview(const glm::mat4 &model_view)
+{
+	m_model_view = model_view;
+}

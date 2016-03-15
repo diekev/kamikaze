@@ -25,6 +25,7 @@
 #include "viewer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
 #include <iostream>
 #include <QApplication>
 #include <QColorDialog>
@@ -35,6 +36,7 @@
 #include "scene.h"
 
 #include "objects/grid.h"
+#include "objects/context.h"
 #include "util/util_input.h"
 
 Viewer::Viewer(QWidget *parent)
@@ -48,6 +50,7 @@ Viewer::Viewer(QWidget *parent)
     , m_grid(nullptr)
     , m_scene(nullptr)
     , m_timer(new QTimer(this))
+    , m_context(new ViewerContext)
 {
 	setFocusPolicy(Qt::FocusPolicy::StrongFocus);
 	connect(m_timer, SIGNAL(timeout()), this, SLOT(updateGL()));
@@ -58,6 +61,7 @@ Viewer::~Viewer()
 	delete m_camera;
 	delete m_grid;
 	delete m_scene;
+	delete m_context;
 }
 
 void Viewer::initializeGL()
@@ -99,17 +103,22 @@ void Viewer::paintGL()
 
 	m_camera->update();
 
-	const auto &view_dir = m_camera->dir();
 	const auto &MV = m_camera->MV();
 	const auto &P = m_camera->P();
 	const auto &MVP = P * MV;
+
+	m_context->setView(m_camera->dir());
+	m_context->setModelview(MV);
+	m_context->setProjection(P);
+	m_context->setMVP(MVP);
+	m_context->setNormal(glm::inverseTranspose(glm::mat3(MV)));
 
 	if (m_draw_grid) {
 		m_grid->render(MVP);
 	}
 
 	if (m_scene != nullptr) {
-		m_scene->render(MV, P, view_dir);
+		m_scene->render(m_context);
 	}
 }
 

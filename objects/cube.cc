@@ -21,8 +21,9 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-
 #include "cube.h"
+
+#include "context.h"
 
 #include <ego/utils.h>
 #include <GL/glew.h>
@@ -113,22 +114,18 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 	m_buffer_data->unbind();
 }
 
-void Cube::render(const glm::mat4 &MVP, const glm::mat3 &N, const glm::vec3 &dir,
-                  const bool for_outline)
+void Cube::render(ViewerContext *context, const bool /*for_outline*/)
 {
 	if (m_program.isValid()) {
 		m_program.enable();
 		m_buffer_data->bind();
 
 		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(m_matrix));
-		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
-		glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(N));
+		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(context->MVP()));
+		glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(context->normal()));
 		glDrawElements(m_draw_type, m_elements, GL_UNSIGNED_SHORT, nullptr);
 
 		m_buffer_data->unbind();
 		m_program.disable();
 	}
-
-	(void)dir;
-	(void)for_outline;
 }

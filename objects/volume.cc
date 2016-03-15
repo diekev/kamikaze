@@ -26,6 +26,8 @@
 #include <GL/glew.h>
 #include <ego/utils.h>
 
+#include "context.h"
+
 #include "util/util_openvdb.h"
 #include "util/util_openvdb_process.h"
 #include "util/utils.h"
@@ -235,10 +237,9 @@ void Volume::slice(const glm::vec3 &view_dir)
 	delete [] indices;
 }
 
-void Volume::render(const glm::mat4 &MVP, const glm::mat3 &N,
-                    const glm::vec3 &dir, const bool for_outline)
+void Volume::render(ViewerContext *context, const bool /*for_outline*/)
 {
-	slice(dir);
+	slice(context->view());
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -251,7 +252,7 @@ void Volume::render(const glm::mat4 &MVP, const glm::mat3 &N,
 
 		auto min = m_min * glm::mat3(m_inv_matrix);
 		glUniform3fv(m_program("offset"), 1, &min[0]);
-		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(context->MVP()));
 		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(m_matrix));
 		glUniform1i(m_program("use_lut"), m_use_lut);
 		glDrawElements(m_draw_type, m_elements, GL_UNSIGNED_INT, nullptr);
@@ -263,9 +264,6 @@ void Volume::render(const glm::mat4 &MVP, const glm::mat3 &N,
 	}
 
 	glDisable(GL_BLEND);
-
-	(void)N;
-	(void)for_outline;
 }
 
 void Volume::numSlices(int x)

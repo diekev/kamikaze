@@ -36,7 +36,7 @@ public:
 	explicit TreeTopology(openvdb::GridBase::ConstPtr grid);
 	~TreeTopology() = default;
 
-	void render(const glm::mat4 &MVP);
+	void render(ViewerContext *context);
 };
 
 class VolumeBase : public Object {

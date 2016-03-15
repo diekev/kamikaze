@@ -31,6 +31,7 @@
 class Camera;
 class Grid;
 class Scene;
+class ViewerContext;
 
 class Viewer : public QGLWidget {
 	Q_OBJECT
@@ -45,6 +46,7 @@ class Viewer : public QGLWidget {
 	Grid *m_grid;
 	Scene *m_scene;
 	QTimer *m_timer;
+	ViewerContext *m_context;
 
 	/* Get the world space position of the given point. */
 	glm::vec3 unproject(const glm::vec3 &pos) const;

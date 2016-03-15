@@ -43,7 +43,8 @@ SOURCES += \
     object_ops.cc \
 	volume.cc \
     volumebase.cc \
-    undo.cc
+    undo.cc \
+    context.cc
 
 HEADERS += \
 	cube.h \

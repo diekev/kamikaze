@@ -27,6 +27,8 @@
 #include <GL/glew.h>
 #include <openvdb/tools/GridTransformer.h>
 
+#include "context.h"
+
 #include "util/utils.h"
 #include "util/util_openvdb.h"
 #include "util/util_openvdb_process.h"
@@ -169,13 +171,13 @@ TreeTopology::TreeTopology(openvdb::GridBase::ConstPtr grid)
 	m_buffer_data->unbind();
 }
 
-void TreeTopology::render(const glm::mat4 &MVP)
+void TreeTopology::render(ViewerContext *context)
 {
 	if (m_program.isValid()) {
 		m_program.enable();
 		m_buffer_data->bind();
 
-		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(context->MVP()));
 		glDrawElements(GL_LINES, m_elements, GL_UNSIGNED_INT, nullptr);
 
 		m_buffer_data->unbind();
