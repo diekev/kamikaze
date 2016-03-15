@@ -41,6 +41,7 @@ class Primitive;
 class Node;
 class Object;
 class ObjectNodeItem;
+class GraphicsViewer;
 class QComboBox;
 class QListWidget;
 class QTimer;
@@ -58,6 +59,11 @@ class MainWindow : public QMainWindow {
 	CommandManager *m_command_manager;
 	CommandFactory *m_command_factory;
 	bool m_timer_has_started;
+
+	GraphicsViewer *m_viewer;
+
+	/* TODO: de-duplicate this from undo.h */
+	typedef Command *(*command_factory_func)(void);
 
 public:
 	explicit MainWindow(Main *main, QWidget *parent = nullptr);

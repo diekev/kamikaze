@@ -33,6 +33,7 @@
 #include <QApplication>
 #include <QColorDialog>
 #include <QKeyEvent>
+#include <QResizeEvent>
 #include <QTimer>
 
 #include "camera.h"
@@ -62,7 +63,7 @@ Viewer::~Viewer()
 {
 	delete m_camera;
 	delete m_grid;
-	delete m_scene;
+//	delete m_scene;
 	delete m_context;
 }
 
@@ -244,4 +245,151 @@ void Viewer::changeBackground()
 void Viewer::drawGrid(bool b)
 {
 	m_draw_grid = b;
+}
+
+GraphicsViewer::GraphicsViewer(QWidget *parent)
+    : QGraphicsView(parent)
+{
+//	setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+//	setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
+
+//	m_glscene = new OpenGLScene;
+
+//	setScene(m_glscene);
+}
+
+GraphicsViewer::~GraphicsViewer()
+{
+	delete m_glscene;
+}
+
+OpenGLScene *GraphicsViewer::GLScene() const
+{
+	return m_glscene;
+}
+
+void GraphicsViewer::GLScene(OpenGLScene *scene)
+{
+	m_glscene = scene;
+	setScene(m_glscene);
+}
+
+void GraphicsViewer::resizeEvent(QResizeEvent *event)
+{
+	if (scene()) {
+		scene()->setSceneRect(QRect(QPoint(0, 0), event->size()));
+		QGraphicsView::resizeEvent(event);
+	}
+}
+
+OpenGLScene::OpenGLScene()
+    : QGraphicsScene()
+    , m_width(0)
+    , m_height(0)
+    , m_camera(new Camera(m_width, m_height))
+    , m_grid(nullptr)
+    , m_scene(nullptr)
+    , m_context(new ViewerContext)
+    , m_draw_grid(true)
+    , m_initialized(false)
+{
+
+}
+
+OpenGLScene::~OpenGLScene()
+{
+	delete m_camera;
+
+	if (m_grid) {
+		delete m_grid;
+	}
+
+//	if (m_scene) {
+//		delete m_scene;
+//	}
+
+	delete m_context;
+}
+
+void OpenGLScene::drawBackground(QPainter *painter, QRectF &/*rect*/)
+{
+	std::cerr << __func__ << '\n';
+
+	if (painter->paintEngine()->type() != QPaintEngine::OpenGL) {
+		return;
+	}
+
+	if (!m_initialized) {
+		initializeGL();
+		m_initialized = true;
+	}
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+	/* setup stencil mask for outlining active object */
+	glStencilFunc(GL_ALWAYS, 1, 0xff);
+	glStencilMask(0xff);
+
+	m_camera->resize(width(), height());
+	m_camera->update();
+
+	const auto &MV = m_camera->MV();
+	const auto &P = m_camera->P();
+	const auto &MVP = P * MV;
+
+	m_context->setView(m_camera->dir());
+	m_context->setModelview(MV);
+	m_context->setProjection(P);
+	m_context->setMVP(MVP);
+	m_context->setNormal(glm::inverseTranspose(glm::mat3(MV)));
+
+	if (m_draw_grid) {
+		if (!m_grid) {
+			m_grid = new Grid(20, 20);
+		}
+		m_grid->render(MVP);
+	}
+
+	if (m_scene != nullptr) {
+		m_scene->render(m_context);
+	}
+}
+
+void OpenGLScene::setScene(Scene *scene)
+{
+	m_scene = scene;
+}
+
+void OpenGLScene::initializeGL()
+{
+	glewExperimental = GL_TRUE;
+	GLenum err = glewInit();
+
+	if (err != GLEW_OK) {
+		std::cerr << "Error: " << glewGetErrorString(err) << "\n";
+	}
+
+	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_STENCIL_TEST);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+}
+
+void GLWidget::initializeGL()
+{
+	std::cerr << __func__ << '\n';
+
+	glewExperimental = GL_TRUE;
+	GLenum err = glewInit();
+
+	if (err != GLEW_OK) {
+		std::cerr << "Error: " << glewGetErrorString(err) << "\n";
+	}
+
+	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_STENCIL_TEST);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 }

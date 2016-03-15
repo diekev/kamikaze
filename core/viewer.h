@@ -77,3 +77,71 @@ public:
 	/* Select the object at screen pos (x, y). */
 	void selectObject(int x, int y) const;
 };
+
+#include <QGraphicsView>
+
+class GLWidget : public QGLWidget {
+public:
+	GLWidget(const QGLFormat &format)
+	    : QGLWidget(format)
+	{}
+
+	void initializeGL();
+};
+
+class OpenGLScene : public QGraphicsScene {
+	Q_OBJECT
+
+	int m_width, m_height;
+
+	Camera *m_camera;
+	Grid *m_grid;
+	Scene *m_scene;
+	QTimer *m_timer;
+	ViewerContext *m_context;
+
+	bool m_draw_grid;
+	bool m_initialized;
+
+public:
+	OpenGLScene();
+	~OpenGLScene();
+
+	void drawBackground(QPainter *painter, QRectF &rect);
+
+//	void initializeGL();
+//	void paintGL();
+//	void resizeGL(int w, int h);
+
+//	void keyPressEvent(QKeyEvent *e);
+//	void mouseMoveEvent(QMouseEvent *e);
+//	void mousePressEvent(QMouseEvent *e);
+//	void mouseReleaseEvent(QMouseEvent *e);
+//	void wheelEvent(QWheelEvent *e);
+
+	void setScene(Scene *scene);
+
+//	/* Cast a ray in the scene at mouse pos (x, y). */
+//	void intersectScene(int x, int y) const;
+
+//	/* Select the object at screen pos (x, y). */
+//	void selectObject(int x, int y) const;
+
+	void resizeEvent(QResizeEvent*);
+
+	void initializeGL();
+};
+
+class GraphicsViewer : public QGraphicsView {
+	OpenGLScene *m_glscene;
+
+public:
+	explicit GraphicsViewer(QWidget *parent = nullptr);
+	~GraphicsViewer();
+
+	OpenGLScene *GLScene() const;
+	void GLScene(OpenGLScene *scene);
+
+protected:
+	void resizeEvent(QResizeEvent *event);
+};

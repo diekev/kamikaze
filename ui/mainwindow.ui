@@ -664,6 +664,9 @@
        </property>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
+         <widget class="GraphicsViewer" name="graphicsView"/>
+        </item>
+        <item>
          <widget class="QSlider" name="m_timeline">
           <property name="mouseTracking">
            <bool>false</bool>
@@ -825,6 +828,11 @@
    <extends>QWidget</extends>
    <header>node_editorwidget.h</header>
    <container>1</container>
+   </customwidget>
+   <customwidget>
+   <class>GraphicsViewer</class>
+   <extends>QGraphicsView</extends>
+   <header>viewer.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

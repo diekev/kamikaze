@@ -85,8 +85,13 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	ui->m_timeline->setMaximum(250);
 
 	/* TODO: find another place to do this */
-	generateObjectMenu();
 	generateNodeMenu();
+
+	ui->graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+	ui->graphicsView->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
+	ui->graphicsView->GLScene(new OpenGLScene);
+	ui->graphicsView->GLScene()->setScene(m_scene);
+	ui->graphicsView->adjustSize();
 }
 
 MainWindow::~MainWindow()
@@ -94,6 +99,7 @@ MainWindow::~MainWindow()
 	delete ui;
 	delete m_command_manager;
 	delete m_command_factory;
+	delete m_scene;
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *e)
