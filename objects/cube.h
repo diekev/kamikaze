@@ -23,13 +23,31 @@
 
 #pragma once
 
-#include "object.h"
+#include <ego/bufferobject.h>
+#include <ego/program.h>
+#include <glm/glm.hpp>
+#include <vector>
 
-class Cube : public Object {
+class ViewerContext;
+
+class Cube {
+	ego::BufferObject::Ptr m_buffer_data;
+	ego::Program m_program;
+	size_t m_elements;
+	unsigned int m_draw_type;
+
+	std::vector<glm::vec3> m_vertices;
+	glm::vec3 m_dimensions, m_scale, m_rotation;
+	glm::vec3 m_min, m_max, m_pos;
+	glm::mat4 m_matrix, m_inv_matrix;
+
+	bool m_draw_bbox;
+
+	void updateMatrix();
+
 public:
 	Cube(const glm::vec3 &min, const glm::vec3 &max);
 	~Cube() = default;
 
-	void render(ViewerContext *context, const bool for_outline) override;
-	void setCustomUIParams(ParamCallback &cb) override;
+	void render(ViewerContext *context, const bool for_outline);
 };

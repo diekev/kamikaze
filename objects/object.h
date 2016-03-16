@@ -27,6 +27,8 @@
 #include <ego/program.h>
 #include <QString>
 
+#include "cube.h"
+
 #include "ui/paramfactory.h"
 #include "util/util_render.h"
 
@@ -45,6 +47,7 @@ enum {
 
 class Object {
 protected:
+	std::unique_ptr<Cube> m_bbox;
 	ego::BufferObject::Ptr m_buffer_data;
 	ego::Program m_program;
 	size_t m_elements;
@@ -57,7 +60,7 @@ protected:
 
 	QString m_name;
 
-	bool m_draw_bbox, m_draw_topology, m_need_update;
+	bool m_draw_bbox, m_need_update;
 
 	void updateMatrix();
 
@@ -65,29 +68,31 @@ public:
 	Object();
 	virtual ~Object() = default;
 
-	virtual int type() const { return OBJECT; }
+	virtual int type() const;
 
 	virtual bool intersect(const Ray &ray, float &min) const;
 	virtual void render(ViewerContext *context, const bool for_outline) = 0;
 	void setDrawType(int draw_type);
 
-	virtual void drawBBox(const bool b);
-	virtual bool drawBBox() const { return m_draw_bbox; }
-	virtual void drawTreeTopology(const bool b);
-	virtual bool drawTreeTopology() const { return m_draw_topology; }
+	void drawBBox(const bool b);
+	bool drawBBox() const;
+
+	Cube *bbox() const;
 
 	glm::vec3 pos() const;
-	glm::vec3 &pos() { m_need_update = true; return m_pos; }
+	glm::vec3 &pos();
 	glm::vec3 scale() const;
-	glm::vec3 &scale() { m_need_update = true; return m_scale; }
+	glm::vec3 &scale();
 	glm::vec3 rotation() const;
-	glm::vec3 &rotation() { m_need_update = true; return m_rotation; }
+	glm::vec3 &rotation();
 
 	/* Return the object's matrix, mainly intended for rendering the active object */
-	glm::mat4 matrix() const { return m_matrix; }
-	glm::mat4 &matrix() { return m_matrix; }
+	glm::mat4 matrix() const;
+	glm::mat4 &matrix();
 
 	virtual void update();
+
+	void tagUpdate();
 
 	QString name() const;
 	void name(const QString &name);

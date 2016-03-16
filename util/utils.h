@@ -93,3 +93,11 @@ void print_mat4(const openvdb::math::Mat4<T> &mat, const std::string &title = ""
 
 	printf("\n");
 }
+
+template <typename T, glm::precision P>
+std::ostream &operator<<(std::ostream &os, const glm::detail::tvec3<T, P> &vec)
+{
+	os << "[" << vec[0] << ", " << vec[1] << ", " << vec[2] << "]";
+	return os;
+}
+

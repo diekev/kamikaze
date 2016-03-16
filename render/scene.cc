@@ -105,16 +105,8 @@ void Scene::render(ViewerContext *context)
 		/* update object before drawing */
 		object->update();
 
-		if (object->type() == VOLUME || object->type() == LEVEL_SET) {
-			VolumeBase *vb = static_cast<VolumeBase *>(object);
-
-			if (object->drawBBox()) {
-				vb->bbox()->render(context, false);
-			}
-
-			if (object->drawTreeTopology()) {
-				vb->topology()->render(context);
-			}
+		if (object->drawBBox()) {
+			object->bbox()->render(context, false);
 		}
 
 		object->render(context, false);

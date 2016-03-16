@@ -186,8 +186,8 @@ void TreeTopology::render(ViewerContext *context)
 }
 
 VolumeBase::VolumeBase(openvdb::GridBase::Ptr grid)
-    : m_bbox(nullptr)
-    , m_topology(nullptr)
+    : m_topology(nullptr)
+    , m_draw_topology(false)
 {
 	using namespace openvdb;
 	using namespace openvdb::math;
@@ -208,8 +208,8 @@ VolumeBase::VolumeBase(openvdb::GridBase::Ptr grid)
 	m_dimensions = (m_max - m_min);
 	updateMatrix();
 
-	m_buffer_data = ego::BufferObject::create();
 	m_bbox = std::unique_ptr<Cube>(new Cube(m_min, m_max));
+	m_buffer_data = ego::BufferObject::create();
 	m_topology = std::unique_ptr<TreeTopology>(new TreeTopology(grid));
 }
 
@@ -218,6 +218,7 @@ void VolumeBase::update()
 	if (m_need_update) {
 		updateMatrix();
 		updateGridTransform();
+		m_bbox.reset(new Cube(m_min, m_max));
 		m_need_update = true;
 	}
 }
@@ -266,8 +267,6 @@ void VolumeBase::updateGridTransform()
 	if (m_draw_topology) {
 		m_topology.reset(new TreeTopology(m_grid));
 	}
-
-	m_bbox.reset(new Cube(m_min, m_max));
 }
 
 struct ResampleGridOp {

@@ -27,7 +27,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 Object::Object()
-	: m_buffer_data(nullptr)
+    : m_buffer_data(nullptr)
     , m_elements(0)
     , m_draw_type(GL_TRIANGLES)
     , m_dimensions(glm::vec3(0.0f))
@@ -39,9 +39,11 @@ Object::Object()
     , m_pos(glm::vec3(0.0f))
     , m_name("")
     , m_draw_bbox(false)
-    , m_draw_topology(false)
     , m_need_update(true)
 {}
+
+int Object::type() const {
+	return OBJECT; }
 
 bool Object::intersect(const Ray &ray, float &min) const
 {
@@ -79,13 +81,24 @@ void Object::drawBBox(const bool b)
 	m_draw_bbox = b;
 }
 
-void Object::drawTreeTopology(const bool b)
+bool Object::drawBBox() const
 {
-	m_draw_topology = b;
+	return m_draw_bbox;
+}
+
+Cube *Object::bbox() const
+{
+	return m_bbox.get();
 }
 
 glm::vec3 Object::pos() const
 {
+	return m_pos;
+}
+
+glm::vec3 &Object::pos()
+{
+	m_need_update = true;
 	return m_pos;
 }
 
@@ -94,17 +107,46 @@ glm::vec3 Object::scale() const
 	return m_scale;
 }
 
+glm::vec3 &Object::scale()
+{
+	m_need_update = true;
+	return m_scale;
+}
+
 glm::vec3 Object::rotation() const
 {
 	return m_rotation;
+}
+
+glm::vec3 &Object::rotation()
+{
+	m_need_update = true;
+	return m_rotation;
+}
+
+glm::mat4 Object::matrix() const
+{
+	return m_matrix;
+}
+
+glm::mat4 &Object::matrix()
+{
+	return m_matrix;
 }
 
 void Object::update()
 {
 	if (m_need_update) {
 		updateMatrix();
+
+		m_bbox.reset(new Cube(m_min, m_max));
 		m_need_update = true;
 	}
+}
+
+void Object::tagUpdate()
+{
+	m_need_update = true;
 }
 
 void Object::updateMatrix()

@@ -27,6 +27,8 @@
 
 #include <ego/utils.h>
 #include <GL/glew.h>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 {
@@ -60,6 +62,7 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 
 	m_min = min;
 	m_max = max;
+	m_pos = (min + max) / 2.0f;
 	m_dimensions = max - min;
 
 	updateMatrix();
@@ -130,6 +133,14 @@ void Cube::render(ViewerContext *context, const bool /*for_outline*/)
 	}
 }
 
-void Cube::setCustomUIParams(ParamCallback &/*cb*/)
+void Cube::updateMatrix()
 {
+	m_min = m_pos - m_dimensions / 2.0f;
+	m_max = m_min + m_dimensions;
+
+	m_matrix = glm::mat4(1.0f);
+	m_matrix = glm::translate(m_matrix, m_pos);
+	m_matrix = glm::scale(m_matrix, 1.0f * m_dimensions);
+
+	m_inv_matrix = glm::inverse(m_matrix);
 }

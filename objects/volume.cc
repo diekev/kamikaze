@@ -241,6 +241,10 @@ void Volume::render(ViewerContext *context, const bool /*for_outline*/)
 {
 	slice(context->view());
 
+	if (m_draw_topology) {
+		m_topology->render(context);
+	}
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 

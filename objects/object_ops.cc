@@ -57,12 +57,6 @@ void AddObjectCmd::execute(EvaluationContext *context)
 	using namespace openvdb::math;
 
 	switch (m_type) {
-		case OBJECT_CUBE:
-		{
-			glm::vec3 min(-1.0f), max(1.0f);
-			m_object = new Cube(min * m_radius, max * m_radius);
-			break;
-		}
 		case OBJECT_SPHERE_LS:
 		{
 			FloatGrid::Ptr ls = tools::createLevelSetSphere<FloatGrid>(

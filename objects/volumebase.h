@@ -25,7 +25,7 @@
 
 #include <openvdb/openvdb.h>
 
-#include "cube.h"
+#include "object.h"
 
 class TreeTopology {
 	ego::BufferObject::Ptr m_buffer_data;
@@ -41,14 +41,13 @@ public:
 
 class VolumeBase : public Object {
 protected:
-	std::unique_ptr<Cube> m_bbox;
 	std::unique_ptr<TreeTopology> m_topology;
 
 	openvdb::GridBase::Ptr m_grid;
 	openvdb::Mat4R m_volume_matrix;  /* original volume matrix */
 
 	float m_voxel_size;
-	bool m_topology_changed;
+	bool m_topology_changed, m_draw_topology;
 
 	void updateGridTransform();
 	void resampleGridVoxel();
@@ -64,5 +63,4 @@ public:
 	void setVoxelSize(const float voxel_size);
 
 	TreeTopology *topology() const { return m_topology.get(); }
-	Cube *bbox() const { return m_bbox.get(); }
 };

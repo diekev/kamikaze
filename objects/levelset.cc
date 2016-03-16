@@ -65,6 +65,10 @@ void LevelSet::loadShader()
 
 void LevelSet::render(ViewerContext *context, const bool for_outline)
 {
+	if (m_draw_topology) {
+		m_topology->render(context);
+	}
+
 	if (m_program.isValid()) {
 		m_program.enable();
 		m_buffer_data->bind();
