@@ -26,12 +26,13 @@
 
 #include <QMainWindow>
 
+#include "objects/undo.h"
+
 namespace Ui {
 class MainWindow;
 }
 
 class Command;
-class CommandFactory;
 class CommandManager;
 class QComboBox;
 class QListWidget;
@@ -65,7 +66,7 @@ protected:
 private:
 	void connectObjectSignals() const;
 	void disconnectObjectSignals() const;
-	void registerCommandType(const char *name, command_factory_func func);
+	void registerCommandType(const char *name, CommandFactory::factory_func func);
 
 private Q_SLOTS:
 	void openFile();

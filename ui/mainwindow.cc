@@ -341,7 +341,7 @@ void MainWindow::disconnectObjectSignals() const
 	disconnect(ui->m_num_slices, SIGNAL(valueChanged(int)), m_scene, SLOT(setVolumeSlices(int)));
 }
 
-void MainWindow::registerCommandType(const char *name, CommandFactory::command_factory_func func)
+void MainWindow::registerCommandType(const char *name, CommandFactory::factory_func func)
 {
 	auto action = ui->menuAdd->addAction(name);
 	m_command_factory->registerType(name, func);

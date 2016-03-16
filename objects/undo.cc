@@ -70,19 +70,3 @@ void CommandManager::redo()
 {
 	undo_redo_ex(m_redo_commands, m_undo_commands, true);
 }
-
-void CommandFactory::registerType(const std::string &name, CommandFactory::command_factory_func func)
-{
-	const auto iter = m_map.find(name);
-	assert(iter == m_map.end());
-
-	m_map[name] = func;
-}
-
-Command *CommandFactory::operator()(const std::string &name)
-{
-	const auto iter = m_map.find(name);
-	assert(iter != m_map.end());
-
-	return iter->second();
-}

@@ -22,36 +22,31 @@
  *
  */
 
-#pragma once
-
-#include <stack>
+#include <cassert>
+#include <string>
 #include <unordered_map>
 
-#include "factory.h"
-#include "ui/paramfactory.h"
-
-class EvaluationContext;
-
-class Command {
+template <typename Base, typename Key = std::string>
+class Factory final {
 public:
-	virtual ~Command() = default;
+	typedef Base *(*factory_func)(void);
 
-	virtual void execute(EvaluationContext *context) = 0;
-	virtual void undo() = 0;
-	virtual void redo() = 0;
-	virtual void setUIParams(ParamCallback &cb) = 0;
+	void registerType(const Key &name, factory_func func)
+	{
+		const auto iter = m_map.find(name);
+		assert(iter == m_map.end());
+
+		m_map[name] = func;
+	}
+
+	Base *operator()(const Key &name)
+	{
+		const auto iter = m_map.find(name);
+		assert(iter != m_map.end());
+
+		return iter->second();
+	}
+
+private:
+	std::unordered_map<Key, factory_func> m_map;
 };
-
-class CommandManager final {
-	std::stack<Command *> m_undo_commands;
-	std::stack<Command *> m_redo_commands;
-
-public:
-	~CommandManager();
-
-	void execute(Command *command, EvaluationContext *context);
-	void undo();
-	void redo();
-};
-
-using CommandFactory = Factory<Command>;

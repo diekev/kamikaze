@@ -55,4 +55,5 @@ HEADERS += \
 	volume.h \
     volumebase.h \
     undo.h \
-    context.h
+    context.h \
+    factory.h
