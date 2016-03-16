@@ -213,6 +213,8 @@ void MainWindow::updateObjectTab() const
 	ob->setUIParams(cb);
 	ob->setCustomUIParams(cb);
 
+	cb.setContext(m_scene, SLOT(tagObjectUpdate()));
+
 	if (ob->type() == LEVEL_SET) {
 		enableListItem(m_scene_mode_list, 1);
 	}

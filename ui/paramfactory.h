@@ -52,6 +52,9 @@ public:
 
 private Q_SLOTS:
 	void updateValuePtr(double value);
+
+Q_SIGNALS:
+	void paramChanged();
 };
 
 /* ********************************** */
@@ -69,6 +72,9 @@ public:
 
 private Q_SLOTS:
 	void updateValuePtr(int value);
+
+Q_SIGNALS:
+	void paramChanged();
 };
 
 /* ********************************** */
@@ -86,6 +92,9 @@ public:
 
 private Q_SLOTS:
 	void updateValuePtr(bool value);
+
+Q_SIGNALS:
+	void paramChanged();
 };
 
 /* ********************************** */
@@ -103,6 +112,9 @@ public:
 
 private Q_SLOTS:
 	void updateValuePtr(int value);
+
+Q_SIGNALS:
+	void paramChanged();
 };
 
 /* ********************************** */
@@ -120,6 +132,9 @@ public:
 
 private Q_SLOTS:
 	void updateValuePtr(const QString &value);
+
+Q_SIGNALS:
+	void paramChanged();
 };
 
 /* ********************************** */
@@ -137,6 +152,9 @@ public:
 
 private Q_SLOTS:
 	void updateValuePtr(double value, int axis);
+
+Q_SIGNALS:
+	void paramChanged();
 };
 
 /* ********************************** */
@@ -146,11 +164,21 @@ class ParamCallback {
 	QWidget *m_last_widget;
 	int m_item_count;
 
+	std::vector<QWidget *> m_widgets;
+
 public:
 	explicit ParamCallback(QGridLayout *layout);
 
 	void addWidget(QWidget *widget, const QString &name);
 	void setTooltip(const QString &tooltip);
+
+	template <typename SlotType>
+	void setContext(QObject *context, SlotType slot)
+	{
+		for (auto &widget : m_widgets) {
+			QObject::connect(widget, SIGNAL(paramChanged()), context, slot);
+		}
+	}
 };
 
 /* ********************************** */

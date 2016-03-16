@@ -140,7 +140,7 @@ void Object::update()
 		updateMatrix();
 
 		m_bbox.reset(new Cube(m_min, m_max));
-		m_need_update = true;
+		m_need_update = false;
 	}
 }
 

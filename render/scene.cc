@@ -200,6 +200,13 @@ void Scene::setObjectName(const QString &name)
 	}
 }
 
+void Scene::tagObjectUpdate()
+{
+	if (m_active_object) {
+		m_active_object->tagUpdate();
+	}
+}
+
 void Scene::setBrushMode(int mode)
 {
 	m_brush->mode(mode);
