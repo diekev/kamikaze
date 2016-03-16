@@ -40,7 +40,7 @@ Object::Object()
     , m_name("")
     , m_draw_bbox(false)
     , m_draw_topology(false)
-    , m_need_update(false)
+    , m_need_update(true)
 {}
 
 bool Object::intersect(const Ray &ray, float &min) const
@@ -103,7 +103,7 @@ void Object::update()
 {
 	if (m_need_update) {
 		updateMatrix();
-		m_need_update = false;
+		m_need_update = true;
 	}
 }
 
@@ -130,4 +130,15 @@ QString Object::name() const
 void Object::name(const QString &name)
 {
 	m_name = name;
+}
+
+void Object::setUIParams(ParamCallback &cb)
+{
+	string_param(cb, "Name", &m_name, "");
+
+	bool_param(cb, "Draw BoundingBox", &m_draw_bbox, false);
+
+	xyz_param(cb, "Position", &m_pos[0]);
+	xyz_param(cb, "Scale", &m_scale[0]);
+	xyz_param(cb, "Rotation", &m_rotation[0]);
 }

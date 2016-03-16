@@ -27,6 +27,7 @@
 #include <ego/program.h>
 #include <QString>
 
+#include "ui/paramfactory.h"
 #include "util/util_render.h"
 
 class ViewerContext;
@@ -90,4 +91,8 @@ public:
 
 	QString name() const;
 	void name(const QString &name);
+
+	/* UI parameters */
+	void setUIParams(ParamCallback &cb);
+	virtual void setCustomUIParams(ParamCallback &cb) = 0;
 };

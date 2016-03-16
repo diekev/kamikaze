@@ -80,6 +80,12 @@ void LevelSet::render(ViewerContext *context, const bool for_outline)
 	}
 }
 
+void LevelSet::setCustomUIParams(ParamCallback &cb)
+{
+	float_param(cb, "Voxel Size", &m_voxel_size, 0.005f, 100.0f, m_voxel_size);
+	bool_param(cb, "Draw Topology", &m_draw_topology, m_draw_topology);
+}
+
 void LevelSet::generateMesh(const bool is_sculpt_mode)
 {
 	VolumeMesherOp op;

@@ -520,171 +520,7 @@
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
-           <layout class="QGridLayout" name="gridLayout_4">
-            <item row="0" column="1">
-             <widget class="QLineEdit" name="m_object_name"/>
-            </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_15">
-              <property name="text">
-               <string>Name</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="groupBox_3">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="title">
-             <string>Transform</string>
-            </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_2">
-             <property name="spacing">
-              <number>0</number>
-             </property>
-             <item>
-              <layout class="QGridLayout" name="gridLayout">
-               <property name="verticalSpacing">
-                <number>0</number>
-               </property>
-               <item row="0" column="1">
-                <widget class="QLabel" name="label_2">
-                 <property name="text">
-                  <string>Rotate</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="2">
-                <widget class="QLabel" name="label_3">
-                 <property name="text">
-                  <string>Scale</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="XYZSpinBox" name="m_move_object" native="true"/>
-               </item>
-               <item row="0" column="0">
-                <widget class="QLabel" name="label">
-                 <property name="text">
-                  <string>Translate</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="2">
-                <widget class="XYZSpinBox" name="m_scale_object" native="true"/>
-               </item>
-               <item row="1" column="1">
-                <widget class="XYZSpinBox" name="m_rotate_object" native="true"/>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="groupBox">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="title">
-             <string>Drawing</string>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_8">
-             <item row="0" column="0">
-              <widget class="QCheckBox" name="m_draw_bbox">
-               <property name="text">
-                <string>Bounding Box</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="0">
-              <widget class="QLabel" name="label_16">
-               <property name="text">
-                <string>Number of Slices</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QCheckBox" name="m_draw_tree">
-               <property name="text">
-                <string>Topology</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QCheckBox" name="m_use_lut">
-               <property name="text">
-                <string>Use LUT</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="1">
-              <widget class="QSpinBox" name="m_num_slices">
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="maximum">
-                <number>512</number>
-               </property>
-               <property name="value">
-                <number>256</number>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="groupBox_4">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="title">
-             <string>Properties</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_7">
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout">
-               <item>
-                <widget class="QLabel" name="label_10">
-                 <property name="text">
-                  <string>Voxel Size</string>
-                 </property>
-                 <property name="buddy">
-                  <cstring>m_voxel_size</cstring>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QDoubleSpinBox" name="m_voxel_size">
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                 </property>
-                 <property name="minimum">
-                  <double>0.010000000000000</double>
-                 </property>
-                 <property name="singleStep">
-                  <double>0.010000000000000</double>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </widget>
+           <layout class="QGridLayout" name="m_object_layout"/>
           </item>
           <item>
            <spacer name="verticalSpacer">
@@ -1228,18 +1064,9 @@
     <slot>drawGrid(bool)</slot>
    </slots>
   </customwidget>
-  <customwidget>
-   <class>XYZSpinBox</class>
-   <extends>QWidget</extends>
-   <header>xyzspinbox.h</header>
-   <container>1</container>
-  </customwidget>
  </customwidgets>
  <tabstops>
   <tabstop>tabWidget</tabstop>
-  <tabstop>m_draw_bbox</tabstop>
-  <tabstop>m_draw_tree</tabstop>
-  <tabstop>m_voxel_size</tabstop>
   <tabstop>pushButton</tabstop>
   <tabstop>m_draw_grid</tabstop>
  </tabstops>
@@ -1254,38 +1081,6 @@
     <hint type="sourcelabel">
      <x>-1</x>
      <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>399</x>
-     <y>299</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_draw_tree</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>MainWindow</receiver>
-   <slot>updateObject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>795</x>
-     <y>299</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>410</x>
-     <y>299</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_draw_bbox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>MainWindow</receiver>
-   <slot>updateObject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>795</x>
-     <y>270</y>
     </hint>
     <hint type="destinationlabel">
      <x>399</x>

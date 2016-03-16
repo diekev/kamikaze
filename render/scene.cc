@@ -191,29 +191,6 @@ Object *Scene::currentObject()
 	return nullptr;
 }
 
-void Scene::moveObject(double value, int axis)
-{
-	m_active_object->pos()[axis] = value;
-}
-
-void Scene::scaleObject(double value, int axis)
-{
-	m_active_object->scale()[axis] = value;
-}
-
-void Scene::rotateObject(double value, int axis)
-{
-	m_active_object->rotation()[axis] = value;
-}
-
-void Scene::setVoxelSize(double value)
-{
-	if (m_active_object->type() == VOLUME || m_active_object->type() == LEVEL_SET) {
-		VolumeBase *vb = static_cast<VolumeBase *>(m_active_object);
-		vb->setVoxelSize(value);
-	}
-}
-
 void Scene::setObjectName(const QString &name)
 {
 	/* Need to make a copy of the string, since the slot signature has to match
@@ -299,16 +276,4 @@ void Scene::setSimulationCache(const QString &path)
 void Scene::setSimulationAdvection(int index)
 {
 	m_smoke_simulation->advectionScheme(index);
-}
-
-void Scene::setVolumeSlices(int slices)
-{
-	Volume *volume = static_cast<Volume *>(m_active_object);
-	volume->numSlices(slices);
-}
-
-void Scene::setVolumeLUT(bool b)
-{
-	Volume *volume = static_cast<Volume *>(m_active_object);
-	volume->useLUT(b);
 }

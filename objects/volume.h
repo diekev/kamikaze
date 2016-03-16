@@ -46,7 +46,8 @@ public:
 	~Volume() = default;
 
 	void slice(const glm::vec3 &view_dir);
-	void render(ViewerContext *context, const bool for_outline);
+	void render(ViewerContext *context, const bool for_outline) override;
+	void setCustomUIParams(ParamCallback &cb) override;
 
 	void numSlices(int x);
 	void useLUT(bool b);

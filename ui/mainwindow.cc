@@ -53,6 +53,24 @@ static void enableListItem(QListWidget *list, int index)
 	item->setFlags(item->flags() | Qt::ItemIsEnabled);
 }
 
+static void clear_layout(QLayout *layout)
+{
+	QLayoutItem *item;
+
+	while ((item = layout->takeAt(0)) != nullptr) {
+		if (item->layout()) {
+			clear_layout(item->layout());
+			delete item->layout();
+		}
+
+		if (item->widget()) {
+			delete item->widget();
+		}
+
+		delete item;
+	}
+}
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -78,12 +96,6 @@ MainWindow::MainWindow(QWidget *parent)
 
 	ui->vsplitter->setStretchFactor(0, 1);
 	ui->vsplitter->setStretchFactor(1, 0);
-
-	/* Object */
-	ui->m_move_object->setMinMax(-9999.99f, 9999.99f);
-	ui->m_scale_object->setMinMax(-99.99f, 99.99f);
-	ui->m_rotate_object->setMinMax(-360.0f, 360.0f);
-	connectObjectSignals();
 
 	/* Brush */
 	connect(ui->m_brush_strength, SIGNAL(valueChanged(double)), m_scene, SLOT(setBrushStrength(double)));
@@ -184,18 +196,6 @@ void MainWindow::openFile()
 	}
 }
 
-void MainWindow::updateObject() const
-{
-	Object *ob = m_scene->currentObject();
-
-	if (ob == nullptr) {
-		return;
-	}
-
-	ob->drawBBox(ui->m_draw_bbox->isChecked());
-	ob->drawTreeTopology(ui->m_draw_tree->isChecked());
-}
-
 void MainWindow::updateObjectTab() const
 {
 	Object *ob = m_scene->currentObject();
@@ -205,41 +205,15 @@ void MainWindow::updateObjectTab() const
 		return;
 	}
 
-	/* Disconnect signals to avoid unnecessary updates which could lead to
-	 * crashes in some cases. */
-	disconnectObjectSignals();
-
 	ui->tabWidget->setTabEnabled(0, true);
 
-	ui->m_object_name->setText(ob->name());
+	clear_layout(ui->m_object_layout);
 
-	ui->m_draw_bbox->setChecked(ob->drawBBox());
+	ParamCallback cb(ui->m_object_layout);
+	ob->setUIParams(cb);
+	ob->setCustomUIParams(cb);
 
-	ui->m_move_object->setValue(&ob->pos()[0]);
-	ui->m_scale_object->setValue(&ob->scale()[0]);
-	ui->m_rotate_object->setValue(&ob->rotation()[0]);
-
-	const bool is_volume = ob->type() == VOLUME;
-	const bool is_level_set = ob->type() == LEVEL_SET;
-	const bool is_volume_base = is_volume || is_level_set;
-
-	if (is_volume_base) {
-		VolumeBase *vb = static_cast<VolumeBase *>(ob);
-
-		ui->m_voxel_size->setValue(vb->voxelSize());
-		ui->m_draw_tree->setChecked(vb->drawTreeTopology());
-	}
-	else {
-		ui->m_draw_tree->setChecked(false);
-		ui->m_voxel_size->setValue(0.0f);
-	}
-
-	ui->m_voxel_size->setEnabled(is_volume_base);
-	ui->m_draw_tree->setEnabled(is_volume_base);
-	ui->m_use_lut->setEnabled(is_volume);
-	ui->m_num_slices->setEnabled(is_volume);
-
-	if (is_level_set) {
+	if (ob->type() == LEVEL_SET) {
 		enableListItem(m_scene_mode_list, 1);
 	}
 	else {
@@ -247,9 +221,6 @@ void MainWindow::updateObjectTab() const
 	}
 
 	m_scene->objectNameList(ui->m_outliner);
-
-	/* Reconnect signals. */
-	connectObjectSignals();
 }
 
 void MainWindow::startAnimation()
@@ -313,32 +284,6 @@ void MainWindow::setSceneMode(int idx) const
 {
 	m_scene->setMode(idx);
 	ui->tabWidget->setTabEnabled(3, idx == SCENE_MODE_SCULPT);
-}
-
-void MainWindow::connectObjectSignals() const
-{
-	connect(ui->m_move_object, SIGNAL(valueChanged(double, int)), m_scene, SLOT(moveObject(double, int)));
-	connect(ui->m_scale_object, SIGNAL(valueChanged(double, int)), m_scene, SLOT(scaleObject(double, int)));
-	connect(ui->m_rotate_object, SIGNAL(valueChanged(double, int)), m_scene, SLOT(rotateObject(double, int)));
-	connect(ui->m_voxel_size, SIGNAL(valueChanged(double)), m_scene, SLOT(setVoxelSize(double)));
-	connect(ui->m_object_name, SIGNAL(textChanged(QString)), m_scene, SLOT(setObjectName(QString)));
-	connect(ui->m_outliner, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)),
-	        m_scene, SLOT(setCurrentObject(QListWidgetItem*)));
-	connect(ui->m_use_lut, SIGNAL(clicked(bool)), m_scene, SLOT(setVolumeLUT(bool)));
-	connect(ui->m_num_slices, SIGNAL(valueChanged(int)), m_scene, SLOT(setVolumeSlices(int)));
-}
-
-void MainWindow::disconnectObjectSignals() const
-{
-	disconnect(ui->m_move_object, SIGNAL(valueChanged(double, int)), m_scene, SLOT(moveObject(double, int)));
-	disconnect(ui->m_scale_object, SIGNAL(valueChanged(double, int)), m_scene, SLOT(scaleObject(double, int)));
-	disconnect(ui->m_rotate_object, SIGNAL(valueChanged(double, int)), m_scene, SLOT(rotateObject(double, int)));
-	disconnect(ui->m_voxel_size, SIGNAL(valueChanged(double)), m_scene, SLOT(setVoxelSize(double)));
-	disconnect(ui->m_object_name, SIGNAL(textChanged(QString)), m_scene, SLOT(setObjectName(QString)));
-	disconnect(ui->m_outliner, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)),
-	           m_scene, SLOT(setCurrentObject(QListWidgetItem*)));
-	disconnect(ui->m_use_lut, SIGNAL(clicked(bool)), m_scene, SLOT(setVolumeLUT(bool)));
-	disconnect(ui->m_num_slices, SIGNAL(valueChanged(int)), m_scene, SLOT(setVolumeSlices(int)));
 }
 
 void MainWindow::registerCommandType(const char *name, CommandFactory::factory_func func)

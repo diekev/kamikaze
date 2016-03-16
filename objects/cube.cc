@@ -129,3 +129,7 @@ void Cube::render(ViewerContext *context, const bool /*for_outline*/)
 		m_program.disable();
 	}
 }
+
+void Cube::setCustomUIParams(ParamCallback &/*cb*/)
+{
+}

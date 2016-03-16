@@ -218,7 +218,7 @@ void VolumeBase::update()
 	if (m_need_update) {
 		updateMatrix();
 		updateGridTransform();
-		m_need_update = false;
+		m_need_update = true;
 	}
 }
 

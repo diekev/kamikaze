@@ -64,13 +64,10 @@ protected:
 	bool eventFilter(QObject *obj, QEvent *e);
 
 private:
-	void connectObjectSignals() const;
-	void disconnectObjectSignals() const;
 	void registerCommandType(const char *name, CommandFactory::factory_func func);
 
 private Q_SLOTS:
 	void openFile();
-	void updateObject() const;
 	void updateObjectTab() const;
 	void startAnimation();
 	void updateFrame() const;

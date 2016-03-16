@@ -69,10 +69,6 @@ public:
 public Q_SLOTS:
 	void setMode(int mode);
 
-	void moveObject(double value, int axis);
-	void scaleObject(double value, int axis);
-	void rotateObject(double value, int axis);
-	void setVoxelSize(double value);
 	void setObjectName(const QString &name);
 
 	void setBrushMode(int mode);
@@ -85,9 +81,6 @@ public Q_SLOTS:
 	void setSimulationDt(double value);
 	void setSimulationCache(const QString &path);
 	void setSimulationAdvection(int index);
-
-	void setVolumeSlices(int slices);
-	void setVolumeLUT(bool b);
 
 private:
 	bool ensureUniqueName(QString &name) const;

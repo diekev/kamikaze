@@ -266,6 +266,14 @@ void Volume::render(ViewerContext *context, const bool /*for_outline*/)
 	glDisable(GL_BLEND);
 }
 
+void Volume::setCustomUIParams(ParamCallback &cb)
+{
+	float_param(cb, "Voxel Size", &m_voxel_size, 0.005f, 100.0f, m_voxel_size);
+	bool_param(cb, "Draw Topology", &m_draw_topology, m_draw_topology);
+	int_param(cb, "Slices", &m_num_slices, 1, 512, m_num_slices);
+	bool_param(cb, "Use LUT", &m_use_lut, m_use_lut);
+}
+
 void Volume::numSlices(int x)
 {
 	m_num_slices = std::min(MAX_SLICES, std::max(x, 3));
