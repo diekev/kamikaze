@@ -107,7 +107,7 @@ public:
 	OpenGLScene();
 	~OpenGLScene();
 
-	void drawBackground(QPainter *painter, QRectF &rect);
+	void drawBackground(QPainter *painter, const QRectF &rect) override;
 
 //	void initializeGL();
 //	void paintGL();

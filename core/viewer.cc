@@ -277,14 +277,16 @@ void GraphicsViewer::GLScene(OpenGLScene *scene)
 void GraphicsViewer::resizeEvent(QResizeEvent *event)
 {
 	if (scene()) {
+		std::cerr << __func__ << ": W, H: " << event->size().width() << ", "
+		          << event->size().height() << '\n';
+
 		scene()->setSceneRect(QRect(QPoint(0, 0), event->size()));
 		QGraphicsView::resizeEvent(event);
 	}
 }
 
 OpenGLScene::OpenGLScene()
-    : QGraphicsScene()
-    , m_width(0)
+    : m_width(0)
     , m_height(0)
     , m_camera(new Camera(m_width, m_height))
     , m_grid(nullptr)
@@ -292,9 +294,7 @@ OpenGLScene::OpenGLScene()
     , m_context(new ViewerContext)
     , m_draw_grid(true)
     , m_initialized(false)
-{
-
-}
+{}
 
 OpenGLScene::~OpenGLScene()
 {
@@ -311,18 +311,23 @@ OpenGLScene::~OpenGLScene()
 	delete m_context;
 }
 
-void OpenGLScene::drawBackground(QPainter *painter, QRectF &/*rect*/)
+void OpenGLScene::drawBackground(QPainter *painter, const QRectF &/*rect*/)
 {
-	std::cerr << __func__ << '\n';
-
-	if (painter->paintEngine()->type() != QPaintEngine::OpenGL) {
+	if (painter->paintEngine()->type() != QPaintEngine::OpenGL &&
+	    painter->paintEngine()->type() != QPaintEngine::OpenGL2)
+	{
+		std::cerr << __func__ << ": needs a QGLWidget to be set as viewport on the graphics view\n";
 		return;
 	}
+
+//	std::cerr << __func__ << '\n';
 
 	if (!m_initialized) {
 		initializeGL();
 		m_initialized = true;
 	}
+
+	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -331,6 +336,7 @@ void OpenGLScene::drawBackground(QPainter *painter, QRectF &/*rect*/)
 	glStencilMask(0xff);
 
 	m_camera->resize(width(), height());
+//	std::cerr << __func__ << ": W, H: " << width() << ", " << height() << '\n';
 	m_camera->update();
 
 	const auto &MV = m_camera->MV();
@@ -353,6 +359,8 @@ void OpenGLScene::drawBackground(QPainter *painter, QRectF &/*rect*/)
 	if (m_scene != nullptr) {
 		m_scene->render(m_context);
 	}
+
+	QTimer::singleShot(20, this, SLOT(update()));
 }
 
 void OpenGLScene::setScene(Scene *scene)
