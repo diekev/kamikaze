@@ -110,6 +110,8 @@ void AddObjectCmd::setUIParams(ParamCallback &cb)
 	enum_param(cb, "Type", &m_type, type_items, 0);
 
 	float_param(cb, "Radius", &m_radius, 0.0f, 10.0f, 1.0f);
+	param_tooltip(cb, "Radius of the object to be created");
+
 	float_param(cb, "Voxel Size", &m_voxel_size, 0.0f, 10.0f, 0.1f);
 	float_param(cb, "Half Width", &m_halfwidth, 0.0f, 10.0f, 3.0f);
 

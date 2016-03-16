@@ -73,6 +73,27 @@ void IntParam::updateValuePtr(int value)
 
 /* ********************************** */
 
+BoolParam::BoolParam(QWidget *parent)
+    : QCheckBox(parent)
+    , m_value_ptr(nullptr)
+{
+	setChecked(false);
+	connect(this, SIGNAL(toggled(bool)), this, SLOT(updateValuePtr(bool)));
+}
+
+void BoolParam::valuePtr(bool *ptr)
+{
+	m_value_ptr = ptr;
+	setChecked(*ptr);
+}
+
+void BoolParam::updateValuePtr(bool value)
+{
+	*m_value_ptr = value;
+}
+
+/* ********************************** */
+
 EnumParam::EnumParam(QWidget *parent)
     : QComboBox(parent)
     , m_value_ptr(nullptr)
@@ -113,6 +134,7 @@ void StringParam::updateValuePtr(const QString &value)
 
 ParamCallback::ParamCallback(QGridLayout *layout)
     : m_layout(layout)
+    , m_last_widget(nullptr)
     , m_item_count(0)
 {}
 
@@ -121,14 +143,23 @@ void ParamCallback::addWidget(QWidget *widget, const QString &name)
 	m_layout->addWidget(new QLabel(name), m_item_count, 0);
 	m_layout->addWidget(widget, m_item_count, 1);
 
+	m_last_widget = widget;
+
 	++m_item_count;
+}
+
+void ParamCallback::setTooltip(const QString &tooltip)
+{
+	if (m_last_widget) {
+		m_last_widget->setToolTip(tooltip);
+	}
 }
 
 /* ********************************** */
 
 void int_param(ParamCallback &cb, const char *name, int *ptr, int min, int max, int default_value)
 {
-	IntParam *param = new IntParam;
+	auto param = new IntParam;
 	param->valuePtr(ptr);
 	param->setRange(min, max);
 	param->setValue(default_value);
@@ -138,7 +169,7 @@ void int_param(ParamCallback &cb, const char *name, int *ptr, int min, int max, 
 
 void float_param(ParamCallback &cb, const char *name, float *ptr, float min, float max, float default_value)
 {
-	FloatParam *param = new FloatParam;
+	auto param = new FloatParam;
 	param->valuePtr(ptr);
 	param->setRange(min, max);
 	param->setValue(default_value);
@@ -148,7 +179,7 @@ void float_param(ParamCallback &cb, const char *name, float *ptr, float min, flo
 
 void enum_param(ParamCallback &cb, const char *name, int *ptr, const char *items[], int default_value)
 {
-	EnumParam *param = new EnumParam;
+	auto param = new EnumParam;
 	param->valuePtr(ptr);
 
 	while (*items != nullptr) {
@@ -162,9 +193,23 @@ void enum_param(ParamCallback &cb, const char *name, int *ptr, const char *items
 
 void string_param(ParamCallback &cb, const char *name, QString *ptr, const char *default_value)
 {
-	StringParam *param = new StringParam;
+	auto param = new StringParam;
 	param->valuePtr(ptr);
 	param->setPlaceholderText(default_value);
 
 	cb.addWidget(param, name);
+}
+
+void bool_param(ParamCallback &cb, const char *name, bool *ptr, bool default_value)
+{
+	auto param = new BoolParam;
+	param->valuePtr(ptr);
+	param->setChecked(default_value);
+
+	cb.addWidget(param, name);
+}
+
+void param_tooltip(ParamCallback &cb, const char *tooltip)
+{
+	cb.setTooltip(tooltip);
 }

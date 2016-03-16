@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <QCheckBox>
 #include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QLineEdit>
@@ -70,6 +71,23 @@ private Q_SLOTS:
 
 /* ********************************** */
 
+class BoolParam final : public QCheckBox {
+	Q_OBJECT
+
+	bool *m_value_ptr;
+
+public:
+	explicit BoolParam(QWidget *parent = nullptr);
+	~BoolParam() = default;
+
+	void valuePtr(bool *ptr);
+
+private Q_SLOTS:
+	void updateValuePtr(bool value);
+};
+
+/* ********************************** */
+
 class EnumParam final : public QComboBox {
 	Q_OBJECT
 
@@ -106,12 +124,14 @@ private Q_SLOTS:
 
 class ParamCallback {
 	QGridLayout *m_layout;
+	QWidget *m_last_widget;
 	int m_item_count;
 
 public:
 	explicit ParamCallback(QGridLayout *layout);
 
 	void addWidget(QWidget *widget, const QString &name);
+	void setTooltip(const QString &tooltip);
 };
 
 /* ********************************** */
@@ -120,3 +140,6 @@ void int_param(ParamCallback &cb, const char *name, int *ptr, int min, int max, 
 void float_param(ParamCallback &cb, const char *name, float *ptr, float min, float max, float default_value);
 void enum_param(ParamCallback &cb, const char *name, int *ptr, const char *items[], int default_value);
 void string_param(ParamCallback &cb, const char *name, QString *ptr, const char *default_value);
+void bool_param(ParamCallback &cb, const char *name, bool *ptr, bool default_value);
+
+void param_tooltip(ParamCallback &cb, const char *tooltip);
