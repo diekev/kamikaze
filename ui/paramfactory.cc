@@ -215,7 +215,13 @@ void string_param(ParamCallback &cb, const char *name, QString *ptr, const char 
 {
 	auto param = new StringParam;
 	param->valuePtr(ptr);
-	param->setPlaceholderText(default_value);
+
+	if (ptr->length() == 0) {
+		param->setPlaceholderText(default_value);
+	}
+	else {
+		param->setText(*ptr);
+	}
 
 	cb.addWidget(param, name);
 }
