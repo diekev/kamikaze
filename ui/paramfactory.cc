@@ -132,6 +132,26 @@ void StringParam::updateValuePtr(const QString &value)
 
 /* ********************************** */
 
+XYZParam::XYZParam(QWidget *parent)
+    : XYZSpinBox(parent)
+    , m_value_ptr(nullptr)
+{
+	connect(this, SIGNAL(valueChanged(double, int)), this, SLOT(updateValuePtr(double, int)));
+}
+
+void XYZParam::valuePtr(float ptr[3])
+{
+	m_value_ptr = ptr;
+	setValue(ptr);
+}
+
+void XYZParam::updateValuePtr(double value, int axis)
+{
+	m_value_ptr[axis] = static_cast<float>(value);
+}
+
+/* ********************************** */
+
 ParamCallback::ParamCallback(QGridLayout *layout)
     : m_layout(layout)
     , m_last_widget(nullptr)
@@ -212,4 +232,12 @@ void bool_param(ParamCallback &cb, const char *name, bool *ptr, bool default_val
 void param_tooltip(ParamCallback &cb, const char *tooltip)
 {
 	cb.setTooltip(tooltip);
+}
+
+void xyz_param(ParamCallback &cb, const char *name, float ptr[3])
+{
+	auto param = new XYZParam;
+	param->valuePtr(ptr);
+
+	cb.addWidget(param, name);
 }

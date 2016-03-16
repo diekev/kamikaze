@@ -30,6 +30,8 @@
 #include <QLineEdit>
 #include <QWidget>
 
+#include "xyzspinbox.h"
+
 class QGridLayout;
 
 /* ********************************** */
@@ -122,6 +124,23 @@ private Q_SLOTS:
 
 /* ********************************** */
 
+class XYZParam final : public XYZSpinBox {
+	Q_OBJECT
+
+	float *m_value_ptr;
+
+public:
+	explicit XYZParam(QWidget *parent = nullptr);
+	~XYZParam() = default;
+
+	void valuePtr(float ptr[3]);
+
+private Q_SLOTS:
+	void updateValuePtr(double value, int axis);
+};
+
+/* ********************************** */
+
 class ParamCallback {
 	QGridLayout *m_layout;
 	QWidget *m_last_widget;
@@ -141,5 +160,6 @@ void float_param(ParamCallback &cb, const char *name, float *ptr, float min, flo
 void enum_param(ParamCallback &cb, const char *name, int *ptr, const char *items[], int default_value);
 void string_param(ParamCallback &cb, const char *name, QString *ptr, const char *default_value);
 void bool_param(ParamCallback &cb, const char *name, bool *ptr, bool default_value);
+void xyz_param(ParamCallback &cb, const char *name, float ptr[]);
 
 void param_tooltip(ParamCallback &cb, const char *tooltip);

@@ -29,7 +29,7 @@
 class QDoubleSpinBox;
 class QVBoxLayout;
 
-class XYZSpinBox final : public QWidget {
+class XYZSpinBox : public QWidget {
 	Q_OBJECT
 
 	QDoubleSpinBox *m_x, *m_y, *m_z;
