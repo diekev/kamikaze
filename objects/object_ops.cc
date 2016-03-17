@@ -28,8 +28,8 @@
 #include <openvdb/tools/LevelSetUtil.h>
 
 #include "context.h"
-#include "levelset.h"
-#include "volume.h"
+#include "extension/levelset.h"
+#include "extension/volume.h"
 
 #include "../render/scene.h"
 #include "../util/util_openvdb.h"

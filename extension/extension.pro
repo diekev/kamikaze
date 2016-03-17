@@ -14,14 +14,15 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
-# The Original Code is Copyright (C) 2015 Kévin Dietrich.
+# The Original Code is Copyright (C) 2016 Kévin Dietrich.
 # All rights reserved.
 #
 # ***** END GPL LICENSE BLOCK *****
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT += core
+QT -= gui
 
-TARGET = objects
+TARGET = extension
 TEMPLATE = lib
 
 CONFIG += staticlib
@@ -36,18 +37,11 @@ INCLUDEPATH += /opt/lib/openexr/include
 DEFINES += GLM_FORCE_RADIANS
 
 SOURCES += \
-	cube.cc \
-	grid.cc \
-    object.cc \
-    object_ops.cc \
-    undo.cc \
-    context.cc
+	levelset.cc \
+	volume.cc \
+    volumebase.cc
 
 HEADERS += \
-	cube.h \
-	grid.h \
-    object.h \
-    object_ops.h \
-    undo.h \
-    context.h \
-    factory.h
+	levelset.h \
+	volume.h \
+    volumebase.h

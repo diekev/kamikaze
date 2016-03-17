@@ -48,9 +48,6 @@ enum {
 class Object {
 protected:
 	std::unique_ptr<Cube> m_bbox;
-	ego::BufferObject::Ptr m_buffer_data;
-	ego::Program m_program;
-	size_t m_elements;
 	unsigned int m_draw_type;
 
 	std::vector<glm::vec3> m_vertices;

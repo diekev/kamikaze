@@ -27,7 +27,7 @@
 #include <GL/glew.h>
 #include <openvdb/tools/GridTransformer.h>
 
-#include "context.h"
+#include "objects/context.h"
 
 #include "util/utils.h"
 #include "util/util_openvdb.h"
@@ -186,7 +186,9 @@ void TreeTopology::render(ViewerContext *context)
 }
 
 VolumeBase::VolumeBase(openvdb::GridBase::Ptr grid)
-    : m_topology(nullptr)
+    : m_buffer_data(nullptr)
+    , m_elements(0)
+    , m_topology(nullptr)
     , m_draw_topology(false)
 {
 	using namespace openvdb;

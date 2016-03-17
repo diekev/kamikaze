@@ -35,8 +35,9 @@ LIBS += $$OUT_PWD/../ui/libui.a
 LIBS += $$OUT_PWD/../render/librender.a
 LIBS += $$OUT_PWD/../objects/libobjects.a
 LIBS += $$OUT_PWD/../util/libutils.a
-LIBS += $$OUT_PWD/../sculpt/libsculpt.a
 LIBS += $$OUT_PWD/../smoke/libsmoke.a
+LIBS += $$OUT_PWD/../extension/libextension.a
+LIBS += $$OUT_PWD/../sculpt/libsculpt.a
 LIBS += $$OUT_PWD/../sdk/libsdk.a
 
 LIBS += -L/opt/lib/openvdb/lib -lopenvdb -ltbb

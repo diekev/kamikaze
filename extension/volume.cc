@@ -26,7 +26,7 @@
 #include <GL/glew.h>
 #include <ego/utils.h>
 
-#include "context.h"
+#include "objects/context.h"
 
 #include "util/util_openvdb.h"
 #include "util/util_openvdb_process.h"

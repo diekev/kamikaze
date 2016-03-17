@@ -25,7 +25,7 @@
 
 #include <openvdb/openvdb.h>
 
-#include "object.h"
+#include "objects/object.h"
 
 class TreeTopology {
 	ego::BufferObject::Ptr m_buffer_data;
@@ -41,6 +41,10 @@ public:
 
 class VolumeBase : public Object {
 protected:
+	ego::BufferObject::Ptr m_buffer_data;
+	ego::Program m_program;
+	size_t m_elements;
+
 	std::unique_ptr<TreeTopology> m_topology;
 
 	openvdb::GridBase::Ptr m_grid;

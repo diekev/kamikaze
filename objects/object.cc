@@ -29,9 +29,7 @@
 #include <sdk/paramfactory.h>
 
 Object::Object()
-    : m_buffer_data(nullptr)
-    , m_elements(0)
-    , m_draw_type(GL_TRIANGLES)
+    : m_draw_type(GL_TRIANGLES)
     , m_dimensions(glm::vec3(0.0f))
     , m_scale(glm::vec3(1.0f))
     , m_inv_size(glm::vec3(0.0f))

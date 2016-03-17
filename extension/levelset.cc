@@ -28,7 +28,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <openvdb/tools/VolumeToMesh.h>
 
-#include "context.h"
+#include "objects/context.h"
 
 #include "sculpt/brush.h"
 #include "sculpt/sculpt.h"
