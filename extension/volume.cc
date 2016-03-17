@@ -26,13 +26,12 @@
 #include <GL/glew.h>
 #include <ego/utils.h>
 
-#include "objects/context.h"
-
 #include "util/util_openvdb.h"
 #include "util/util_openvdb_process.h"
 #include "util/utils.h"
 
-#include <sdk/paramfactory.h>
+#include "sdk/context.h"
+#include "sdk/paramfactory.h"
 
 const int MAX_SLICES = 512;
 

@@ -40,8 +40,7 @@ SOURCES += \
 	grid.cc \
     object.cc \
     object_ops.cc \
-    undo.cc \
-    context.cc
+    undo.cc
 
 HEADERS += \
 	cube.h \
@@ -49,5 +48,4 @@ HEADERS += \
     object.h \
     object_ops.h \
     undo.h \
-    context.h \
     factory.h

@@ -28,8 +28,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <openvdb/tools/VolumeToMesh.h>
 
-#include "objects/context.h"
-
 #include "sculpt/brush.h"
 #include "sculpt/sculpt.h"
 
@@ -37,6 +35,7 @@
 #include "util/util_openvdb.h"
 #include "util/util_openvdb_process.h"
 
+#include "sdk/context.h"
 #include "sdk/paramfactory.h"
 
 LevelSet::LevelSet(openvdb::GridBase::Ptr grid)

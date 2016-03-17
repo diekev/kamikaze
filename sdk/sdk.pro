@@ -32,11 +32,13 @@ include(../global.pri)
 INCLUDEPATH += $$PWD/../
 
 SOURCES += \
+    context.cc \
     paramfactory.cc \
     param_widgets.cc \
     xyzspinbox.cc
 
 HEADERS += \
+    context.h \
     paramfactory.h \
     param_widgets.h \
     xyzspinbox.h

@@ -27,11 +27,11 @@
 #include <GL/glew.h>
 #include <openvdb/tools/GridTransformer.h>
 
-#include "objects/context.h"
-
 #include "util/utils.h"
 #include "util/util_openvdb.h"
 #include "util/util_openvdb_process.h"
+
+#include "sdk/context.h"
 
 struct TreeTopologyOp {
 	std::vector<glm::vec3> vertices;

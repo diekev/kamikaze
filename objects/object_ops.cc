@@ -27,14 +27,14 @@
 #include <openvdb/tools/LevelSetSphere.h>
 #include <openvdb/tools/LevelSetUtil.h>
 
-#include "context.h"
 #include "extension/levelset.h"
 #include "extension/volume.h"
 
 #include "../render/scene.h"
 #include "../util/util_openvdb.h"
 
-#include <sdk/paramfactory.h>
+#include "sdk/context.h"
+#include "sdk/paramfactory.h"
 
 enum {
 	OBJECT_CUBE = 0,
