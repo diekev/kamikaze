@@ -32,6 +32,8 @@
 #include "util/util_openvdb_process.h"
 #include "util/utils.h"
 
+#include <sdk/paramfactory.h>
+
 const int MAX_SLICES = 512;
 
 Volume::Volume(openvdb::GridBase::Ptr grid)
@@ -270,7 +272,7 @@ void Volume::render(ViewerContext *context, const bool /*for_outline*/)
 	glDisable(GL_BLEND);
 }
 
-void Volume::setCustomUIParams(ParamCallback &cb)
+void Volume::setCustomUIParams(ParamCallback *cb)
 {
 	float_param(cb, "Voxel Size", &m_voxel_size, 0.005f, 100.0f, m_voxel_size);
 	bool_param(cb, "Draw Topology", &m_draw_topology, m_draw_topology);

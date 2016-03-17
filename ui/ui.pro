@@ -40,13 +40,11 @@ INCLUDEPATH += /opt/lib/openexr/include
 
 SOURCES += \
     mainwindow.cc \
-    xyzspinbox.cc \
-    paramfactory.cc
+    paramcallback.cc
 
 HEADERS += \
     mainwindow.h \
-    xyzspinbox.h \
-    paramfactory.h
+    paramcallback.h
 
 FORMS += \
     mainwindow.ui

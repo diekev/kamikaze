@@ -14,24 +14,29 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
-# The Original Code is Copyright (C) 2015 Kévin Dietrich.
+# The Original Code is Copyright (C) 2016 Kévin Dietrich.
 # All rights reserved.
 #
 # ***** END GPL LICENSE BLOCK *****
 
-TEMPLATE = subdirs
+QT += widgets
+QT -= gui
 
-include(global.pri)
+TARGET = sdk
+TEMPLATE = lib
 
-CONFIG += ordered
+CONFIG += staticlib
 
-SUBDIRS += \
-	objects/objects.pro \
-	sculpt/sculpt.pro \
-	smoke/smoke.pro \
-	ui/ui.pro \
-	render/render.pro \
-	util/util.pro \
-	app/app.pro \
-    sdk
+include(../global.pri)
 
+INCLUDEPATH += $$PWD/../
+
+SOURCES += \
+    paramfactory.cc \
+    param_widgets.cc \
+    xyzspinbox.cc
+
+HEADERS += \
+    paramfactory.h \
+    param_widgets.h \
+    xyzspinbox.h

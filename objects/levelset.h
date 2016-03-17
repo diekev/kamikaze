@@ -49,7 +49,7 @@ public:
 	int type() const { return LEVEL_SET; }
 
 	void render(ViewerContext *context, const bool for_outline) override;
-	void setCustomUIParams(ParamCallback &cb) override;
+	void setCustomUIParams(ParamCallback *cb) override;
 
 	bool intersectLS(const Ray &ray, Brush *brush);
 

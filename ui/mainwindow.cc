@@ -39,6 +39,7 @@
 
 #include "render/scene.h"
 
+#include "paramcallback.h"
 #include "ui_mainwindow.h"
 
 static void disableListItem(QListWidget *list, int index)
@@ -210,8 +211,8 @@ void MainWindow::updateObjectTab() const
 	clear_layout(ui->m_object_layout);
 
 	ParamCallback cb(ui->m_object_layout);
-	ob->setUIParams(cb);
-	ob->setCustomUIParams(cb);
+	ob->setUIParams(&cb);
+	ob->setCustomUIParams(&cb);
 
 	cb.setContext(m_scene, SLOT(tagObjectUpdate()));
 
@@ -323,7 +324,7 @@ void MainWindow::handleCommand()
 
 	/* get command */
 	Command *cmd = (*m_command_factory)(name.toStdString());
-	cmd->setUIParams(cb);
+	cmd->setUIParams(&cb);
 
 	layout->addWidget(button_box);
 

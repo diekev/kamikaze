@@ -34,6 +34,8 @@
 #include "../render/scene.h"
 #include "../util/util_openvdb.h"
 
+#include <sdk/paramfactory.h>
+
 enum {
 	OBJECT_CUBE = 0,
 	OBJECT_CUBE_LS = 1,
@@ -95,7 +97,7 @@ void AddObjectCmd::redo()
 	m_was_undone = false;
 }
 
-void AddObjectCmd::setUIParams(ParamCallback &cb)
+void AddObjectCmd::setUIParams(ParamCallback *cb)
 {
 	const char *type_items[] = {
 	    "Cube", "Cube (Level Set)", "Sphere (Level Set)", nullptr

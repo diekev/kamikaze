@@ -51,7 +51,7 @@ public:
 	void execute(EvaluationContext *context);
 	void undo();
 	void redo();
-	void setUIParams(ParamCallback &cb);
+	void setUIParams(ParamCallback *cb);
 	static Command *registerSelf();
 };
 
@@ -70,5 +70,5 @@ public:
 	void execute(EvaluationContext *context);
 	void undo();
 	void redo();
-	void setUIParams(ParamCallback &cb) { (void)cb; }
+	void setUIParams(ParamCallback *cb) { (void)cb; }
 };

@@ -22,10 +22,7 @@
  *
  */
 
-#include "paramfactory.h"
-
-#include <QLabel>
-#include <QGridLayout>
+#include "param_widgets.h"
 
 /* ********************************** */
 
@@ -154,103 +151,4 @@ void XYZParam::updateValuePtr(double value, int axis)
 {
 	m_value_ptr[axis] = static_cast<float>(value);
 	Q_EMIT paramChanged();
-}
-
-/* ********************************** */
-
-ParamCallback::ParamCallback(QGridLayout *layout)
-    : m_layout(layout)
-    , m_last_widget(nullptr)
-    , m_item_count(0)
-{}
-
-void ParamCallback::addWidget(QWidget *widget, const QString &name)
-{
-	m_layout->addWidget(new QLabel(name), m_item_count, 0);
-	m_layout->addWidget(widget, m_item_count, 1);
-
-	m_last_widget = widget;
-	m_widgets.push_back(widget);
-
-	++m_item_count;
-}
-
-void ParamCallback::setTooltip(const QString &tooltip)
-{
-	if (m_last_widget) {
-		m_last_widget->setToolTip(tooltip);
-	}
-}
-
-/* ********************************** */
-
-void int_param(ParamCallback &cb, const char *name, int *ptr, int min, int max, int default_value)
-{
-	auto param = new IntParam;
-	param->valuePtr(ptr);
-	param->setRange(min, max);
-	param->setValue(default_value);
-
-	cb.addWidget(param, name);
-}
-
-void float_param(ParamCallback &cb, const char *name, float *ptr, float min, float max, float default_value)
-{
-	auto param = new FloatParam;
-	param->valuePtr(ptr);
-	param->setRange(min, max);
-	param->setValue(default_value);
-
-	cb.addWidget(param, name);
-}
-
-void enum_param(ParamCallback &cb, const char *name, int *ptr, const char *items[], int default_value)
-{
-	auto param = new EnumParam;
-	param->valuePtr(ptr);
-
-	while (*items != nullptr) {
-		param->addItem(*items++);
-	}
-
-	param->setCurrentIndex(default_value);
-
-	cb.addWidget(param, name);
-}
-
-void string_param(ParamCallback &cb, const char *name, QString *ptr, const char *default_value)
-{
-	auto param = new StringParam;
-	param->valuePtr(ptr);
-
-	if (ptr->length() == 0) {
-		param->setPlaceholderText(default_value);
-	}
-	else {
-		param->setText(*ptr);
-	}
-
-	cb.addWidget(param, name);
-}
-
-void bool_param(ParamCallback &cb, const char *name, bool *ptr, bool default_value)
-{
-	auto param = new BoolParam;
-	param->valuePtr(ptr);
-	param->setChecked(default_value);
-
-	cb.addWidget(param, name);
-}
-
-void param_tooltip(ParamCallback &cb, const char *tooltip)
-{
-	cb.setTooltip(tooltip);
-}
-
-void xyz_param(ParamCallback &cb, const char *name, float ptr[3])
-{
-	auto param = new XYZParam;
-	param->valuePtr(ptr);
-
-	cb.addWidget(param, name);
 }

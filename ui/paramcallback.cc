@@ -22,36 +22,32 @@
  *
  */
 
-#pragma once
+#include "paramcallback.h"
 
-#include <stack>
-#include <unordered_map>
+#include <QGridLayout>
+#include <QLabel>
+#include <QWidget>
 
-#include "factory.h"
+ParamCallback::ParamCallback(QGridLayout *layout)
+    : m_layout(layout)
+    , m_last_widget(nullptr)
+    , m_item_count(0)
+{}
 
-class EvaluationContext;
-class ParamCallback;
+void ParamCallback::addWidget(QWidget *widget, const QString &name)
+{
+	m_layout->addWidget(new QLabel(name), m_item_count, 0);
+	m_layout->addWidget(widget, m_item_count, 1);
 
-class Command {
-public:
-	virtual ~Command() = default;
+	m_last_widget = widget;
+	m_widgets.push_back(widget);
 
-	virtual void execute(EvaluationContext *context) = 0;
-	virtual void undo() = 0;
-	virtual void redo() = 0;
-	virtual void setUIParams(ParamCallback *cb) = 0;
-};
+	++m_item_count;
+}
 
-class CommandManager final {
-	std::stack<Command *> m_undo_commands;
-	std::stack<Command *> m_redo_commands;
-
-public:
-	~CommandManager();
-
-	void execute(Command *command, EvaluationContext *context);
-	void undo();
-	void redo();
-};
-
-using CommandFactory = Factory<Command>;
+void ParamCallback::setTooltip(const QString &tooltip)
+{
+	if (m_last_widget) {
+		m_last_widget->setToolTip(tooltip);
+	}
+}

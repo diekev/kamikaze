@@ -26,6 +26,8 @@
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <sdk/paramfactory.h>
+
 Object::Object()
     : m_buffer_data(nullptr)
     , m_elements(0)
@@ -174,7 +176,7 @@ void Object::name(const QString &name)
 	m_name = name;
 }
 
-void Object::setUIParams(ParamCallback &cb)
+void Object::setUIParams(ParamCallback *cb)
 {
 	string_param(cb, "Name", &m_name, "");
 

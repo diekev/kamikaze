@@ -29,7 +29,7 @@
 
 #include "cube.h"
 
-#include "ui/paramfactory.h"
+#include "ui/paramcallback.h"
 #include "util/util_render.h"
 
 class ViewerContext;
@@ -98,6 +98,6 @@ public:
 	void name(const QString &name);
 
 	/* UI parameters */
-	void setUIParams(ParamCallback &cb);
-	virtual void setCustomUIParams(ParamCallback &cb) = 0;
+	void setUIParams(ParamCallback *cb);
+	virtual void setCustomUIParams(ParamCallback *cb) = 0;
 };

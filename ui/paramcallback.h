@@ -24,34 +24,28 @@
 
 #pragma once
 
-#include <stack>
-#include <unordered_map>
+#include <QObject>
 
-#include "factory.h"
+class QGridLayout;
 
-class EvaluationContext;
-class ParamCallback;
+class ParamCallback {
+	QGridLayout *m_layout;
+	QWidget *m_last_widget;
+	int m_item_count;
 
-class Command {
-public:
-	virtual ~Command() = default;
-
-	virtual void execute(EvaluationContext *context) = 0;
-	virtual void undo() = 0;
-	virtual void redo() = 0;
-	virtual void setUIParams(ParamCallback *cb) = 0;
-};
-
-class CommandManager final {
-	std::stack<Command *> m_undo_commands;
-	std::stack<Command *> m_redo_commands;
+	std::vector<QWidget *> m_widgets;
 
 public:
-	~CommandManager();
+	explicit ParamCallback(QGridLayout *layout);
 
-	void execute(Command *command, EvaluationContext *context);
-	void undo();
-	void redo();
+	void addWidget(QWidget *widget, const QString &name);
+	void setTooltip(const QString &tooltip);
+
+	template <typename SlotType>
+	void setContext(QObject *context, SlotType slot)
+	{
+		for (auto &widget : m_widgets) {
+			QObject::connect(widget, SIGNAL(paramChanged()), context, slot);
+		}
+	}
 };
-
-using CommandFactory = Factory<Command>;

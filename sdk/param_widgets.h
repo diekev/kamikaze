@@ -156,38 +156,3 @@ private Q_SLOTS:
 Q_SIGNALS:
 	void paramChanged();
 };
-
-/* ********************************** */
-
-class ParamCallback {
-	QGridLayout *m_layout;
-	QWidget *m_last_widget;
-	int m_item_count;
-
-	std::vector<QWidget *> m_widgets;
-
-public:
-	explicit ParamCallback(QGridLayout *layout);
-
-	void addWidget(QWidget *widget, const QString &name);
-	void setTooltip(const QString &tooltip);
-
-	template <typename SlotType>
-	void setContext(QObject *context, SlotType slot)
-	{
-		for (auto &widget : m_widgets) {
-			QObject::connect(widget, SIGNAL(paramChanged()), context, slot);
-		}
-	}
-};
-
-/* ********************************** */
-
-void int_param(ParamCallback &cb, const char *name, int *ptr, int min, int max, int default_value);
-void float_param(ParamCallback &cb, const char *name, float *ptr, float min, float max, float default_value);
-void enum_param(ParamCallback &cb, const char *name, int *ptr, const char *items[], int default_value);
-void string_param(ParamCallback &cb, const char *name, QString *ptr, const char *default_value);
-void bool_param(ParamCallback &cb, const char *name, bool *ptr, bool default_value);
-void xyz_param(ParamCallback &cb, const char *name, float ptr[]);
-
-void param_tooltip(ParamCallback &cb, const char *tooltip);

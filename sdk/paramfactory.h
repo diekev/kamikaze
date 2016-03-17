@@ -24,34 +24,14 @@
 
 #pragma once
 
-#include <stack>
-#include <unordered_map>
-
-#include "factory.h"
-
-class EvaluationContext;
 class ParamCallback;
+class QString;
 
-class Command {
-public:
-	virtual ~Command() = default;
+void int_param(ParamCallback *cb, const char *name, int *ptr, int min, int max, int default_value);
+void float_param(ParamCallback *cb, const char *name, float *ptr, float min, float max, float default_value);
+void enum_param(ParamCallback *cb, const char *name, int *ptr, const char *items[], int default_value);
+void string_param(ParamCallback *cb, const char *name, QString *ptr, const char *default_value);
+void bool_param(ParamCallback *cb, const char *name, bool *ptr, bool default_value);
+void xyz_param(ParamCallback *cb, const char *name, float ptr[]);
 
-	virtual void execute(EvaluationContext *context) = 0;
-	virtual void undo() = 0;
-	virtual void redo() = 0;
-	virtual void setUIParams(ParamCallback *cb) = 0;
-};
-
-class CommandManager final {
-	std::stack<Command *> m_undo_commands;
-	std::stack<Command *> m_redo_commands;
-
-public:
-	~CommandManager();
-
-	void execute(Command *command, EvaluationContext *context);
-	void undo();
-	void redo();
-};
-
-using CommandFactory = Factory<Command>;
+void param_tooltip(ParamCallback *cb, const char *tooltip);
