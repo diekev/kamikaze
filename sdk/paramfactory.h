@@ -93,6 +93,15 @@ void bool_param(ParamCallback *cb, const char *name, bool *ptr, bool default_val
 void xyz_param(ParamCallback *cb, const char *name, float ptr[3]);
 
 /**
+ * @brief file_param Add a UI parameter for displaying a file selector.
+ *
+ * @param cb   The callback used to create the parameter.
+ * @param name The UI name of the parameter.
+ * @param ptr  The pointer to the file name property.
+ */
+void file_param(ParamCallback *cb, const char *name, QString *ptr);
+
+/**
  * @brief param_tooltip Set the tooltip for the last added parameter.
  *
  * @param cb The callback used to create the parameter.

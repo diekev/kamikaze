@@ -103,3 +103,11 @@ void xyz_param(ParamCallback *cb, const char *name, float ptr[3])
 
 	cb->addWidget(param, name);
 }
+
+void file_param(ParamCallback *cb, const char *name, QString *ptr)
+{
+	auto param = new FileParam;
+	param->valuePtr(ptr);
+
+	cb->addWidget(param, name);
+}

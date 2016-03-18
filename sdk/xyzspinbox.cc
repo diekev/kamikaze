@@ -25,6 +25,9 @@
 #include "xyzspinbox.h"
 
 #include <QDoubleSpinBox>
+#include <QFileDialog>
+#include <QLineEdit>
+#include <QPushButton>
 #include <QVBoxLayout>
 
 enum {
@@ -97,4 +100,33 @@ void XYZSpinBox::setMinMax(float min, float max) const
 	m_x->setMaximum(max);
 	m_y->setMaximum(max);
 	m_z->setMaximum(max);
+}
+
+FileSelector::FileSelector(QWidget *parent)
+    : QWidget(parent)
+    , m_layout(new QHBoxLayout(this))
+    , m_line_edit(new QLineEdit(this))
+    , m_push_button(new QPushButton("Open File", this))
+{
+	m_layout->addWidget(m_line_edit);
+	m_layout->addWidget(m_push_button);
+
+	setLayout(m_layout);
+
+	connect(m_push_button, SIGNAL(clicked()), this, SLOT(setChoosenFile()));
+}
+
+void FileSelector::setValue(const QString &text)
+{
+	m_line_edit->setText(text);
+}
+
+void FileSelector::setChoosenFile()
+{
+	auto filename = QFileDialog::getOpenFileName(this);
+
+	if (!filename.isEmpty()) {
+		m_line_edit->setText(filename);
+		Q_EMIT textChanged(filename);
+	}
 }

@@ -27,6 +27,9 @@
 #include <QWidget>
 
 class QDoubleSpinBox;
+class QHBoxLayout;
+class QLineEdit;
+class QPushButton;
 class QVBoxLayout;
 
 class XYZSpinBox : public QWidget {
@@ -50,4 +53,25 @@ public:
 	void setValue(float *value);
 	void getValue(float *value) const;
 	void setMinMax(float min, float max) const;
+};
+
+class FileSelector : public QWidget {
+	Q_OBJECT
+
+	QHBoxLayout *m_layout;
+	QLineEdit *m_line_edit;
+	QPushButton *m_push_button;
+
+public:
+	explicit FileSelector(QWidget *parent = nullptr);
+
+	~FileSelector() = default;
+
+	void setValue(const QString &text);
+
+private Q_SLOTS:
+	void setChoosenFile();
+
+Q_SIGNALS:
+	void textChanged(const QString &text);
 };

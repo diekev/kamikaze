@@ -152,3 +152,23 @@ void XYZParam::updateValuePtr(double value, int axis)
 	m_value_ptr[axis] = static_cast<float>(value);
 	Q_EMIT paramChanged();
 }
+
+/* ********************************** */
+
+FileParam::FileParam(QWidget *parent)
+    : FileSelector(parent)
+    , m_value_ptr(nullptr)
+{
+	connect(this, SIGNAL(textChanged(const QString &)), this, SLOT(updateValuePtr(const QString &)));
+}
+
+void FileParam::valuePtr(QString *ptr)
+{
+	m_value_ptr = ptr;
+}
+
+void FileParam::updateValuePtr(const QString &value)
+{
+	*m_value_ptr = value;
+	Q_EMIT paramChanged();
+}

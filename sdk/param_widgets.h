@@ -156,3 +156,23 @@ private Q_SLOTS:
 Q_SIGNALS:
 	void paramChanged();
 };
+
+/* ********************************** */
+
+class FileParam final : public FileSelector {
+	Q_OBJECT
+
+	QString *m_value_ptr;
+
+public:
+	explicit FileParam(QWidget *parent = nullptr);
+	~FileParam() = default;
+
+	void valuePtr(QString *ptr);
+
+private Q_SLOTS:
+	void updateValuePtr(const QString &value);
+
+Q_SIGNALS:
+	void paramChanged();
+};
