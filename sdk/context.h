@@ -26,10 +26,12 @@
 
 #include <glm/glm.hpp>
 
+class ObjectFactory;
 class Scene;
 
 struct EvaluationContext {
 	Scene *scene;
+	ObjectFactory *object_factory;
 };
 
 class ViewerContext {

@@ -43,10 +43,13 @@ class LevelSet : public VolumeBase {
 	void loadShader();
 
 public:
+	LevelSet();
 	explicit LevelSet(openvdb::GridBase::Ptr grid);
 	~LevelSet() = default;
 
-	int type() const { return LEVEL_SET; }
+	int type() const;
+
+	void setGrid(openvdb::GridBase::Ptr grid);
 
 	void render(ViewerContext *context, const bool for_outline) override;
 	void setCustomUIParams(ParamCallback *cb) override;
@@ -54,4 +57,6 @@ public:
 	bool intersectLS(const Ray &ray, Brush *brush);
 
 	void swapGrids(const bool is_scuplt_mode);
+
+	static void registerSelf(ObjectFactory *factory);
 };

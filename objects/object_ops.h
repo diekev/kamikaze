@@ -35,16 +35,13 @@ class AddObjectCmd : public Command {
 	Object *m_object = nullptr;
 	Scene *m_scene = nullptr;
 	QString m_name = "";
-	int m_type = 0;
-	float m_radius = 0.0f;
-	float m_voxel_size = 0.0f;
-	float m_halfwidth = 0.0f;
 
 	/* TODO */
 	bool m_was_undone = false;
 
 public:
 	AddObjectCmd() = default;
+	AddObjectCmd(const QString &name);
 	AddObjectCmd(Scene *scene);
 	~AddObjectCmd();
 

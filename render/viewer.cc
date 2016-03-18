@@ -36,7 +36,9 @@
 #include "scene.h"
 
 #include "objects/grid.h"
-#include "objects/context.h"
+
+#include "sdk/context.h"
+
 #include "util/util_input.h"
 
 Viewer::Viewer(QWidget *parent)

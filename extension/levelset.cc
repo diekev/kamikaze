@@ -26,6 +26,8 @@
 #include <ego/utils.h>
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
+
+#include <openvdb/tools/LevelSetSphere.h>
 #include <openvdb/tools/VolumeToMesh.h>
 
 #include "sculpt/brush.h"
@@ -38,10 +40,27 @@
 #include "sdk/context.h"
 #include "sdk/paramfactory.h"
 
-LevelSet::LevelSet(openvdb::GridBase::Ptr grid)
-    : VolumeBase(grid)
+LevelSet::LevelSet()
+    : VolumeBase()
     , m_isector(nullptr)
 {
+	openvdb::FloatGrid::Ptr ls = openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(
+	                        2.0f, openvdb::Vec3f(0.0f), 0.1f, openvdb::LEVEL_SET_HALF_WIDTH);
+
+	setGrid(ls);
+}
+
+LevelSet::LevelSet(openvdb::GridBase::Ptr grid)
+    : LevelSet()
+{
+	setGrid(grid);
+}
+
+int LevelSet::type() const { return LEVEL_SET; }
+
+void LevelSet::setGrid(openvdb::GridBase::Ptr grid)
+{
+	setupData(grid);
 	loadShader();
 	generateMesh(false);
 }
@@ -159,4 +178,14 @@ void LevelSet::swapGrids(const bool is_scuplt_mode)
 	else {
 		m_grid = m_level_set;
 	}
+}
+
+static Object *create_level_set()
+{
+	return new LevelSet();
+}
+
+void LevelSet::registerSelf(ObjectFactory *factory)
+{
+	factory->registerType("Level Set (VDB)", create_level_set);
 }

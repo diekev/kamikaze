@@ -42,8 +42,11 @@ class Volume : public VolumeBase {
 	void loadVolumeShader();
 
 public:
+	Volume();
 	explicit Volume(openvdb::GridBase::Ptr grid);
 	~Volume() = default;
+
+	void setGrid(openvdb::GridBase::Ptr grid);
 
 	void slice(const glm::vec3 &view_dir);
 	void render(ViewerContext *context, const bool for_outline) override;
@@ -53,4 +56,6 @@ public:
 	void useLUT(bool b);
 
 	int type() const { return VOLUME; }
+
+	static void registerSelf(ObjectFactory *factory);
 };

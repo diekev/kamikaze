@@ -24,9 +24,6 @@
 
 #include "object_ops.h"
 
-#include <openvdb/tools/LevelSetSphere.h>
-#include <openvdb/tools/LevelSetUtil.h>
-
 #include "extension/levelset.h"
 #include "extension/volume.h"
 
@@ -37,12 +34,17 @@
 #include "sdk/paramfactory.h"
 
 enum {
-	OBJECT_CUBE = 0,
-	OBJECT_CUBE_LS = 1,
-	OBJECT_SPHERE_LS = 2,
+	OBJECT_CUBE_LS = 0,
+	OBJECT_SPHERE_LS = 1,
 };
 
 /* *************************** add object command *************************** */
+
+AddObjectCmd::AddObjectCmd(const QString &name)
+    : AddObjectCmd()
+{
+	m_name = name;
+}
 
 AddObjectCmd::~AddObjectCmd()
 {
@@ -54,29 +56,7 @@ AddObjectCmd::~AddObjectCmd()
 void AddObjectCmd::execute(EvaluationContext *context)
 {
 	m_scene = context->scene;
-
-	using namespace openvdb;
-	using namespace openvdb::math;
-
-	switch (m_type) {
-		case OBJECT_SPHERE_LS:
-		{
-			FloatGrid::Ptr ls = tools::createLevelSetSphere<FloatGrid>(
-			                        m_radius, Vec3f(0.0f), m_voxel_size, m_halfwidth);
-			m_object = new LevelSet(ls->deepCopy());
-			break;
-		}
-		case OBJECT_CUBE_LS:
-		{
-			Transform xform = *Transform::createLinearTransform(m_voxel_size);
-			Vec3s min(-1.0f * m_radius), max(1.0f * m_radius);
-			BBox<math::Vec3s> bbox(min, max);
-
-			FloatGrid::Ptr ls = tools::createLevelSetBox<FloatGrid>(bbox, xform, m_halfwidth);
-			m_object = new LevelSet(ls->deepCopy());
-			break;
-		}
-	}
+	m_object = (*context->object_factory)(m_name.toStdString());
 
 	assert(m_object != nullptr);
 	m_object->name(m_name);
@@ -97,21 +77,8 @@ void AddObjectCmd::redo()
 	m_was_undone = false;
 }
 
-void AddObjectCmd::setUIParams(ParamCallback *cb)
+void AddObjectCmd::setUIParams(ParamCallback */*cb*/)
 {
-	const char *type_items[] = {
-	    "Cube", "Cube (Level Set)", "Sphere (Level Set)", nullptr
-    };
-
-	enum_param(cb, "Type", &m_type, type_items, 0);
-
-	float_param(cb, "Radius", &m_radius, 0.0f, 10.0f, 1.0f);
-	param_tooltip(cb, "Radius of the object to be created");
-
-	float_param(cb, "Voxel Size", &m_voxel_size, 0.0f, 10.0f, 0.1f);
-	float_param(cb, "Half Width", &m_halfwidth, 0.0f, 10.0f, 3.0f);
-
-	string_param(cb, "Name", &m_name, "Object");
 }
 
 Command *AddObjectCmd::registerSelf()

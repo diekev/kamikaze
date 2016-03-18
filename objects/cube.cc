@@ -23,7 +23,7 @@
 
 #include "cube.h"
 
-#include "context.h"
+#include "sdk/context.h"
 
 #include <ego/utils.h>
 #include <GL/glew.h>

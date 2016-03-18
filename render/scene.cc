@@ -29,10 +29,11 @@
 #include <QKeyEvent>
 #include <QListWidget>
 
-#include "objects/levelset.h"
-#include "objects/volume.h"
 #include "sculpt/brush.h"
 #include "smoke/smokesimulation.h"
+
+#include "extension/levelset.h"
+#include "extension/volume.h"
 
 #include "util/util_string.h"
 

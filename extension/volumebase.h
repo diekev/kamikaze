@@ -56,7 +56,10 @@ protected:
 	void updateGridTransform();
 	void resampleGridVoxel();
 
+	void setupData(openvdb::GridBase::Ptr grid);
+
 public:
+	VolumeBase();
 	explicit VolumeBase(openvdb::GridBase::Ptr grid);
 	~VolumeBase() = default;
 

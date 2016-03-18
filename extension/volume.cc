@@ -26,6 +26,9 @@
 #include <GL/glew.h>
 #include <ego/utils.h>
 
+#include <openvdb/tools/LevelSetSphere.h>
+#include <openvdb/tools/LevelSetUtil.h>
+
 #include "util/util_openvdb.h"
 #include "util/util_openvdb_process.h"
 #include "util/utils.h"
@@ -35,8 +38,8 @@
 
 const int MAX_SLICES = 512;
 
-Volume::Volume(openvdb::GridBase::Ptr grid)
-    : VolumeBase(grid)
+Volume::Volume()
+    : VolumeBase()
     , m_volume_texture(nullptr)
     , m_transfer_texture(nullptr)
     , m_num_slices(256)
@@ -45,8 +48,26 @@ Volume::Volume(openvdb::GridBase::Ptr grid)
     , m_use_lut(false)
     , m_num_textures(0)
 {
+	openvdb::FloatGrid::Ptr ls = openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(
+	                        2.0f, openvdb::Vec3f(0.0f), 0.1f, openvdb::LEVEL_SET_HALF_WIDTH);
+
+	openvdb::tools::sdfToFogVolume(*ls);
+
+	setGrid(ls);
+}
+
+Volume::Volume(openvdb::GridBase::Ptr grid)
+    : Volume()
+{
+	setGrid(grid);
+}
+
+void Volume::setGrid(openvdb::GridBase::Ptr grid)
+{
 	using namespace openvdb;
 	using namespace openvdb::math;
+
+	setupData(grid);
 
 	m_elements = m_num_slices * 6;
 
@@ -289,4 +310,14 @@ void Volume::numSlices(int x)
 void Volume::useLUT(bool b)
 {
 	m_use_lut = b;
+}
+
+static Object *create_volume()
+{
+	return new Volume();
+}
+
+void Volume::registerSelf(ObjectFactory *factory)
+{
+	factory->registerType("Fog Volume (VDB)", create_volume);
 }

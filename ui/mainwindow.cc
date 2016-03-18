@@ -32,10 +32,13 @@
 #include <QSplitter>
 #include <QTimer>
 
-#include "objects/context.h"
 #include "objects/object_ops.h"
 #include "objects/undo.h"
-#include "objects/volumebase.h"
+
+#include "sdk/context.h"
+
+#include "extension/levelset.h"
+#include "extension/volume.h"
 
 #include "render/scene.h"
 
@@ -82,6 +85,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_timer_has_started(false)
     , m_scene_mode_box(new QComboBox(this))
     , m_scene_mode_list(new QListWidget(m_scene_mode_box))
+    , m_object_factory(new ObjectFactory)
 {
 	qApp->installEventFilter(this);
 	ui->setupUi(this);
@@ -129,7 +133,8 @@ MainWindow::MainWindow(QWidget *parent)
 	ui->m_timeline->setMaximum(250);
 
 	/* TODO: find another place to do this */
-	registerCommandType("Add Object", AddObjectCmd::registerSelf);
+	registerObjectType();
+	generateObjectMenu();
 }
 
 MainWindow::~MainWindow()
@@ -137,6 +142,7 @@ MainWindow::~MainWindow()
 	delete ui;
 	delete m_command_manager;
 	delete m_command_factory;
+	delete m_object_factory;
 }
 
 void MainWindow::openFile(const QString &filename) const
@@ -296,6 +302,22 @@ void MainWindow::registerCommandType(const char *name, CommandFactory::factory_f
 	connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
 }
 
+void MainWindow::registerObjectType()
+{
+	LevelSet::registerSelf(m_object_factory);
+	Volume::registerSelf(m_object_factory);
+}
+
+void MainWindow::generateObjectMenu()
+{
+	std::vector<std::string> keys = m_object_factory->keys();
+
+	for (const auto &key : keys) {
+		auto action = ui->menuAdd->addAction(key.c_str());
+		connect(action, SIGNAL(triggered()), this, SLOT(handleObjectCommand()));
+	}
+}
+
 void MainWindow::handleCommand()
 {
 	QAction *action = qobject_cast<QAction *>(sender());
@@ -341,4 +363,25 @@ void MainWindow::handleCommand()
 
 	delete layout;
 	delete dialog;
+}
+
+void MainWindow::handleObjectCommand()
+{
+	QAction *action = qobject_cast<QAction *>(sender());
+
+	if (!action) {
+		return;
+	}
+
+	const auto &name = action->text();
+
+	/* get command */
+	Command *cmd = new AddObjectCmd(name);
+
+	/* TODO */
+	EvaluationContext context;
+	context.scene = m_scene;
+	context.object_factory = m_object_factory;
+
+	m_command_manager->execute(cmd, &context);
 }

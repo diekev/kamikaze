@@ -185,11 +185,14 @@ void TreeTopology::render(ViewerContext *context)
 	}
 }
 
-VolumeBase::VolumeBase(openvdb::GridBase::Ptr grid)
+VolumeBase::VolumeBase()
     : m_buffer_data(nullptr)
     , m_elements(0)
     , m_topology(nullptr)
     , m_draw_topology(false)
+{}
+
+void VolumeBase::setupData(openvdb::GridBase::Ptr grid)
 {
 	using namespace openvdb;
 	using namespace openvdb::math;
@@ -213,6 +216,15 @@ VolumeBase::VolumeBase(openvdb::GridBase::Ptr grid)
 	m_bbox = std::unique_ptr<Cube>(new Cube(m_min, m_max));
 	m_buffer_data = ego::BufferObject::create();
 	m_topology = std::unique_ptr<TreeTopology>(new TreeTopology(grid));
+}
+
+VolumeBase::VolumeBase(openvdb::GridBase::Ptr grid)
+    : VolumeBase()
+{
+	using namespace openvdb;
+	using namespace openvdb::math;
+
+	setupData(grid);
 }
 
 void VolumeBase::update()
