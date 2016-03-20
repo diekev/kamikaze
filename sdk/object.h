@@ -26,7 +26,7 @@
 #include <QString>
 #include <unordered_map>
 
-#include "cube.h"
+#include "objects/cube.h"
 
 #include "ui/paramcallback.h"
 #include "util/util_render.h"
@@ -48,7 +48,6 @@ protected:
 	std::unique_ptr<Cube> m_bbox;
 	unsigned int m_draw_type;
 
-	std::vector<glm::vec3> m_vertices;
 	glm::vec3 m_dimensions, m_scale, m_inv_size, m_rotation;
 	glm::vec3 m_min, m_max, m_pos;
 	glm::mat4 m_matrix, m_inv_matrix;

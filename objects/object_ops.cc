@@ -24,11 +24,10 @@
 
 #include "object_ops.h"
 
-#include "object.h"
-
-#include "../render/scene.h"
+#include "render/scene.h"
 
 #include "sdk/context.h"
+#include "sdk/object.h"
 #include "sdk/paramfactory.h"
 
 enum {

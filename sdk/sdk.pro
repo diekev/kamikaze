@@ -30,15 +30,18 @@ CONFIG += staticlib
 include(../global.pri)
 
 INCLUDEPATH += $$PWD/../
+INCLUDEPATH += /opt/lib/ego/include/
 
 SOURCES += \
     context.cc \
+    object.cc \
     paramfactory.cc \
     param_widgets.cc \
     xyzspinbox.cc
 
 HEADERS += \
     context.h \
+    object.h \
     paramfactory.h \
     param_widgets.h \
     xyzspinbox.h

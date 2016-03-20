@@ -33,7 +33,7 @@
 #include "sculpt/brush.h"
 #include "smoke/smokesimulation.h"
 
-#include "objects/object.h"
+#include "sdk/object.h"
 
 #include "util/util_string.h"
 
