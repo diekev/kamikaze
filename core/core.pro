@@ -19,18 +19,53 @@
 #
 # ***** END GPL LICENSE BLOCK *****
 
-TARGET = sculpt
+QT += core gui opengl
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
+TARGET = core
 TEMPLATE = lib
 
 CONFIG += staticlib
+CONFIG += no_keywords
 
 include(../global.pri)
 
-INCLUDEPATH += /opt/lib/openvdb/include
-INCLUDEPATH += /opt/lib/openexr/include
+INCLUDEPATH += $$PWD/../
+INCLUDEPATH += $$PWD/../util
+INCLUDEPATH += /opt/lib/ego/include
+INCLUDEPATH += /opt/lib/kamikaze/include
+
+DEFINES += GLM_FORCE_RADIANS
 
 SOURCES += \
+	dynamiclibrary.cc \
+	filesystem.cc \
+	grid.cc \
+    object_ops.cc \
+    undo.cc \
+	camera.cc \
+	scene.cc \
+	viewer.cc \
     brush.cc
 
 HEADERS += \
+	dynamiclibrary.h \
+	filesystem.h \
+	grid.h \
+    object_ops.h \
+    undo.h \
+    factory.h \
+	camera.h \
+	scene.h \
+	viewer.h \
     brush.h
+
+OTHER_FILES += \
+	shaders/flat_shader.frag \
+	shaders/flat_shader.vert \
+	shaders/object.frag \
+	shaders/object.vert \
+    shaders/volume.frag \
+    shaders/volume.vert \
+    shaders/tree_topology.frag \
+    shaders/tree_topology.vert

@@ -26,7 +26,7 @@
 
 #include <QMainWindow>
 
-#include "objects/undo.h"
+#include "core/undo.h"
 
 namespace Ui {
 class MainWindow;

@@ -32,23 +32,18 @@ INCLUDEPATH += $$PWD/../
 SOURCES += main.cc
 
 LIBS += $$OUT_PWD/../ui/libui.a
-LIBS += $$OUT_PWD/../render/librender.a
-LIBS += $$OUT_PWD/../objects/libobjects.a
-LIBS += $$OUT_PWD/../smoke/libsmoke.a
+LIBS += $$OUT_PWD/../core/libcore.a
+#LIBS += $$OUT_PWD/../smoke/libsmoke.a
 LIBS += $$OUT_PWD/../util/libutils.a
-LIBS += $$OUT_PWD/../sculpt/libsculpt.a
 
 LIBS += -L/opt/lib/kamikaze/lib -lkamikaze
 
-LIBS += -L/opt/lib/openvdb/lib -lopenvdb -ltbb
-LIBS += -L/opt/lib/openexr/lib -lHalf
-LIBS += -L/opt/lib/blosc/lib -lblosc -lz
 LIBS += /opt/lib/ego/lib/libego.a
 LIBS += -lGL -lGLEW
 LIBS += -ldl
 
 unix {
-	copy_files.commands = cp -r $$PWD/../render/shaders/ .
+	copy_files.commands = cp -r $$PWD/../core/shaders/ .
 }
 
 QMAKE_EXTRA_TARGETS += copy_files

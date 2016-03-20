@@ -38,7 +38,7 @@
 #include "camera.h"
 #include "scene.h"
 
-#include "objects/grid.h"
+#include "grid.h"
 #include "util/util_input.h"
 
 Viewer::Viewer(QWidget *parent)

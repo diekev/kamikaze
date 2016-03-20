@@ -37,12 +37,11 @@
 #include <QSplitter>
 #include <QTimer>
 
-#include "objects/dynamiclibrary.h"
-#include "objects/filesystem.h"
-#include "objects/object_ops.h"
-#include "objects/undo.h"
-
-#include "render/scene.h"
+#include "core/dynamiclibrary.h"
+#include "core/filesystem.h"
+#include "core/object_ops.h"
+#include "core/scene.h"
+#include "core/undo.h"
 
 #include "paramcallback.h"
 #include "ui_mainwindow.h"
@@ -152,10 +151,12 @@ MainWindow::MainWindow(QWidget *parent)
 
 	connect(m_scene_mode_box, SIGNAL(currentIndexChanged(int)), this, SLOT(setSceneMode(int)));
 
+#if 0
 	/* Smoke Simulation. */
 	connect(ui->m_time_step, SIGNAL(valueChanged(double)), m_scene, SLOT(setSimulationDt(double)));
 	connect(ui->m_cache_path, SIGNAL(textChanged(QString)), m_scene, SLOT(setSimulationCache(QString)));
 	connect(ui->m_advection, SIGNAL(currentIndexChanged(int)), m_scene, SLOT(setSimulationAdvection(int)));
+#endif
 
 	/* Timeline */
 	ui->m_timeline->setMaximum(250);

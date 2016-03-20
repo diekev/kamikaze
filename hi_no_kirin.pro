@@ -26,11 +26,9 @@ include(global.pri)
 CONFIG += ordered
 
 SUBDIRS += \
-	objects/objects.pro \
-	sculpt/sculpt.pro \
-	smoke/smoke.pro \
+	core/core.pro \
+#	smoke/smoke.pro \
 	ui/ui.pro \
-	render/render.pro \
 	util/util.pro \
 	app/app.pro \
-    sdk
+    sdk/sdk.pro

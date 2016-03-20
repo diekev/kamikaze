@@ -32,7 +32,7 @@ include(../global.pri)
 DEFINES += GLM_FORCE_RADIANS
 
 INCLUDEPATH += $$PWD/../
-INCLUDEPATH += $$PWD/../render
+INCLUDEPATH += $$PWD/../core
 INCLUDEPATH += $$PWD/../util
 INCLUDEPATH += /opt/lib/ego/include
 INCLUDEPATH += /opt/lib/kamikaze/include

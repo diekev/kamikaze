@@ -24,10 +24,6 @@
 
 #pragma once
 
-#include <openvdb/openvdb.h>
-
-using openvdb::math::Coord;
-
 enum {
 	BRUSH_MODE_ADD = 0,
 	BRUSH_MODE_SUB = 1,
@@ -49,10 +45,12 @@ public:
 	Brush(const float radius, const float strength);
 	~Brush() = default;
 
+#if 0
 	inline float influence(const Coord &center, const Coord &pos)
 	{
 		return 1.0f - (center - pos).asVec3d().length() * m_inv_radius + 0.001f;
 	}
+#endif
 
 	void radius(const float rad);
 	float radius() const;

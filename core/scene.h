@@ -32,7 +32,7 @@ class Brush;
 class Object;
 class QListWidget;
 class QListWidgetItem;
-class SmokeSimulation;
+//class SmokeSimulation;
 class ViewerContext;
 
 enum {
@@ -46,7 +46,7 @@ class Scene : public QObject {
 	std::vector<Object *> m_objects;
 	Object *m_active_object;
 	Brush *m_brush;
-	SmokeSimulation *m_smoke_simulation;
+//	SmokeSimulation *m_smoke_simulation;
 	int m_mode;
 
 public:
@@ -79,9 +79,9 @@ public Q_SLOTS:
 
 	void setCurrentObject(QListWidgetItem *item);
 
-	void setSimulationDt(double value);
-	void setSimulationCache(const QString &path);
-	void setSimulationAdvection(int index);
+//	void setSimulationDt(double value);
+//	void setSimulationCache(const QString &path);
+//	void setSimulationAdvection(int index);
 
 private:
 	bool ensureUniqueName(QString &name) const;

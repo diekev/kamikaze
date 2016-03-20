@@ -28,7 +28,7 @@
 #include <kamikaze/object.h>
 #include <kamikaze/paramfactory.h>
 
-#include "render/scene.h"
+#include "scene.h"
 
 enum {
 	OBJECT_CUBE_LS = 0,
