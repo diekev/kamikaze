@@ -22,18 +22,23 @@
 QT += core
 QT -= gui
 
-TARGET = extension
+TARGET = openvdb_kamikaze
+VERSION = 0.1
 TEMPLATE = lib
 
-CONFIG += staticlib
+CONFIG += shared
 
 include(../global.pri)
+
+QMAKE_CXXFLAGS += --whole-archive
 
 INCLUDEPATH += $$PWD/../
 INCLUDEPATH += /opt/lib/ego/include
 INCLUDEPATH += /opt/lib/kamikaze/include
 INCLUDEPATH += /opt/lib/openvdb/include
 INCLUDEPATH += /opt/lib/openexr/include
+
+LIBS += /opt/lib/ego/lib/libego.a
 
 DEFINES += GLM_FORCE_RADIANS
 
@@ -42,7 +47,8 @@ SOURCES += \
 #	sculpt.cc \
 	util_openvdb.cc \
 	volume.cc \
-    volumebase.cc
+    volumebase.cc \
+    main.cc
 
 HEADERS += \
 	levelset.h \

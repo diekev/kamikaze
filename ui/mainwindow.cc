@@ -336,7 +336,7 @@ typedef void (*register_func_t)(ObjectFactory *);
 
 void MainWindow::registerObjectType()
 {
-	PluginVec plugins = load_plugins("../plugins/");
+	PluginVec plugins = load_plugins("/opt/kamikaze/");
 
 	for (const auto &plugin : plugins) {
 		auto register_figures = plugin.symbol<register_func_t>("new_kamikaze_objects");
