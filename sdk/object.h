@@ -26,11 +26,10 @@
 #include <QString>
 #include <unordered_map>
 
-#include "objects/cube.h"
+#include "cube.h"
 
-#include "ui/paramcallback.h"
-#include "util/util_render.h"
-
+class Ray;
+class ParamCallback;
 class ViewerContext;
 
 enum {

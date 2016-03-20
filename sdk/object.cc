@@ -28,6 +28,10 @@
 
 #include "paramfactory.h"
 
+#include "ui/paramcallback.h"
+
+#include "util/util_render.h"
+
 Object::Object()
     : m_draw_type(GL_TRIANGLES)
     , m_dimensions(glm::vec3(0.0f))
