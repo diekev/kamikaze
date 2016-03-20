@@ -39,11 +39,14 @@ DEFINES += GLM_FORCE_RADIANS
 SOURCES += \
 	levelset.cc \
 #	sculpt.cc \
+	util_openvdb.cc \
 	volume.cc \
     volumebase.cc
 
 HEADERS += \
 	levelset.h \
 #	sculpt.h \
+	util_openvdb.h \
+	util_openvdb_process.h \
 	volume.h \
     volumebase.h

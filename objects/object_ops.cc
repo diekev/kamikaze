@@ -27,7 +27,6 @@
 #include "object.h"
 
 #include "../render/scene.h"
-#include "../util/util_openvdb.h"
 
 #include "sdk/context.h"
 #include "sdk/paramfactory.h"

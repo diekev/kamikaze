@@ -32,14 +32,11 @@ INCLUDEPATH += /opt/lib/openexr/include
 DEFINES += GLM_FORCE_RADIANS
 
 SOURCES += \
-	utils.cc \
-	util_openvdb.cc
+	utils.cc
 
 HEADERS += \
 	utils.h \
     util_input.h \
-	util_openvdb.h \
-    util_openvdb_process.h \
     util_render.h \
     util_string.h \
     util_memory.h

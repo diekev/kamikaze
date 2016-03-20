@@ -27,7 +27,9 @@
 #include <openvdb/tools/GridTransformer.h>
 #include <openvdb/util/PagedArray.h>
 
-#include "utils.h"  /* for ScopeTimer */
+#include <glm/glm.hpp>
+
+//#include "util/utils.h"  /* for ScopeTimer */
 
 openvdb::FloatGrid::Ptr transform_grid(const openvdb::FloatGrid &grid,
                                        const openvdb::Vec3s &rot,
@@ -48,7 +50,7 @@ struct SparseToDenseOp {
 	template <typename GridType>
 	void operator()(typename GridType::ConstPtr grid)
 	{
-		Timer("SparseToDenseOp");
+		//Timer("SparseToDenseOp");
 
 		using namespace openvdb;
 
@@ -166,3 +168,43 @@ struct VolumeMesherOp {
 		}
 	}
 };
+
+int axis_dominant_v3_single(const float vec[3]);
+
+/* Functions to convert between glm and openvdb types. */
+
+template <typename T>
+glm::vec3 convertOpenVDBVec(const openvdb::math::Vec3<T> &vec)
+{
+	return glm::vec3(vec[0], vec[1], vec[2]);
+}
+
+openvdb::math::Vec3d convertGLMVec(const glm::vec3 &vec);
+
+template <typename T>
+glm::mat4 convertOpenVDBMat4(const openvdb::math::Mat4<T> &mat)
+{
+	glm::mat4 ret;
+
+	for (int i = 0; i < 4; ++i) {
+		for (int j = 0; j < 4; ++j) {
+			ret[i][j] = mat[i][j];
+		}
+	}
+
+	return ret;
+}
+
+template <typename T>
+void print_mat4(const openvdb::math::Mat4<T> &mat, const std::string &title = "")
+{
+	if (!title.empty()) {
+		printf("%s:\n", title.c_str());
+	}
+
+	for (int i = 0; i < 4; ++i) {
+		printf("[%.6f, %.6f, %.6f, %.6f]\n", mat[i][0], mat[i][1], mat[i][2], mat[i][3]);
+	}
+
+	printf("\n");
+}

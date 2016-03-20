@@ -28,8 +28,8 @@
 #include <openvdb/tools/GridTransformer.h>
 
 #include "util/utils.h"
-#include "util/util_openvdb.h"
-#include "util/util_openvdb_process.h"
+#include "util_openvdb.h"
+#include "util_openvdb_process.h"
 
 #include "sdk/context.h"
 

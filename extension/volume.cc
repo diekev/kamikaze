@@ -29,8 +29,8 @@
 #include <openvdb/tools/LevelSetSphere.h>
 #include <openvdb/tools/LevelSetUtil.h>
 
-#include "util/util_openvdb.h"
-#include "util/util_openvdb_process.h"
+#include "util_openvdb.h"
+#include "util_openvdb_process.h"
 #include "util/utils.h"
 
 #include "sdk/context.h"

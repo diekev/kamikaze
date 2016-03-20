@@ -22,7 +22,6 @@
  */
 
 #include "util_openvdb.h"
-#include "utils.h"
 
 openvdb::FloatGrid::Ptr transform_grid(const openvdb::FloatGrid &grid,
                                        const openvdb::Vec3s &rot,
@@ -48,3 +47,18 @@ openvdb::FloatGrid::Ptr transform_grid(const openvdb::FloatGrid &grid,
 
 	return xformed;
 }
+
+int axis_dominant_v3_single(const float vec[3])
+{
+	const float x = std::abs(vec[0]);
+	const float y = std::abs(vec[1]);
+	const float z = std::abs(vec[2]);
+
+	return ((x > y) ? ((x > z) ? 0 : 2) : ((y > z) ? 1 : 2));
+}
+
+openvdb::math::Vec3d convertGLMVec(const glm::vec3 &vec)
+{
+	return openvdb::math::Vec3d(vec[0], vec[1], vec[2]);
+}
+

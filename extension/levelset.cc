@@ -30,12 +30,11 @@
 #include <openvdb/tools/LevelSetSphere.h>
 #include <openvdb/tools/VolumeToMesh.h>
 
-#include "sculpt/brush.h"
+//#include "sculpt/brush.h"
 #include "sculpt.h"
 
-#include "util/utils.h"
-#include "util/util_openvdb.h"
-#include "util/util_openvdb_process.h"
+#include "util_openvdb.h"
+#include "util_openvdb_process.h"
 
 #include "sdk/context.h"
 #include "sdk/paramfactory.h"
@@ -133,7 +132,8 @@ void LevelSet::generateMesh(const bool is_sculpt_mode)
 	ego::util::GPU_check_errors("Unable to create level set buffer");
 }
 
-bool LevelSet::intersectLS(const Ray &ray, Brush *brush)
+#if 0
+bool LevelSet::intersectLS(const Ray &/*ray*/, Brush */*brush*/)
 {
 	using namespace openvdb;
 
@@ -167,6 +167,7 @@ bool LevelSet::intersectLS(const Ray &ray, Brush *brush)
 
 	return false;
 }
+#endif
 
 void LevelSet::swapGrids(const bool is_scuplt_mode)
 {
