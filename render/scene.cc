@@ -27,13 +27,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <GL/glew.h>
 
+#include <kamikaze/object.h>
+
 #include <QKeyEvent>
 #include <QListWidget>
 
 #include "sculpt/brush.h"
 #include "smoke/smokesimulation.h"
-
-#include "sdk/object.h"
 
 #include "util/util_string.h"
 

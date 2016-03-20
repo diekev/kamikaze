@@ -33,6 +33,7 @@ include(../global.pri)
 INCLUDEPATH += $$PWD/../
 INCLUDEPATH += $$PWD/../util
 INCLUDEPATH += /opt/lib/ego/include
+INCLUDEPATH += /opt/lib/kamikaze/include
 INCLUDEPATH += /opt/lib/openvdb/include
 INCLUDEPATH += /opt/lib/openexr/include
 

@@ -26,15 +26,15 @@
 #include <GL/glew.h>
 #include <ego/utils.h>
 
+#include <kamikaze/context.h>
+#include <kamikaze/paramfactory.h>
+
 #include <openvdb/tools/LevelSetSphere.h>
 #include <openvdb/tools/LevelSetUtil.h>
 
 #include "util_openvdb.h"
 #include "util_openvdb_process.h"
 #include "util/utils.h"
-
-#include "sdk/context.h"
-#include "sdk/paramfactory.h"
 
 const int MAX_SLICES = 512;
 

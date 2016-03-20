@@ -25,13 +25,14 @@
 
 #include <ego/utils.h>
 #include <GL/glew.h>
+
+#include <kamikaze/context.h>
+
 #include <openvdb/tools/GridTransformer.h>
 
 #include "util/utils.h"
 #include "util_openvdb.h"
 #include "util_openvdb_process.h"
-
-#include "sdk/context.h"
 
 struct TreeTopologyOp {
 	std::vector<glm::vec3> vertices;

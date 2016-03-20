@@ -38,7 +38,8 @@ LIBS += $$OUT_PWD/../smoke/libsmoke.a
 LIBS += $$OUT_PWD/../extension/libextension.a
 LIBS += $$OUT_PWD/../util/libutils.a
 LIBS += $$OUT_PWD/../sculpt/libsculpt.a
-LIBS += $$OUT_PWD/../sdk/libsdk.a
+
+LIBS += -L/opt/lib/kamikaze/lib -lkamikaze
 
 LIBS += -L/opt/lib/openvdb/lib -lopenvdb -ltbb
 LIBS += -L/opt/lib/openexr/lib -lHalf

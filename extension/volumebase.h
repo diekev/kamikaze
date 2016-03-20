@@ -23,9 +23,9 @@
 
 #pragma once
 
-#include <openvdb/openvdb.h>
+#include <kamikaze/object.h>
 
-#include "sdk/object.h"
+#include <openvdb/openvdb.h>
 
 class TreeTopology {
 	ego::BufferObject::Ptr m_buffer_data;

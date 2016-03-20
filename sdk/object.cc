@@ -26,7 +26,7 @@
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <sdk/paramfactory.h>
+#include "paramfactory.h"
 
 Object::Object()
     : m_draw_type(GL_TRIANGLES)

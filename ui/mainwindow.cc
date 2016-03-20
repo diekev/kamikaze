@@ -24,6 +24,8 @@
 
 #include "mainwindow.h"
 
+#include <kamikaze/context.h>
+
 #include <QComboBox>
 #include <QDialogButtonBox>
 #include <QFileDialog>
@@ -34,8 +36,6 @@
 
 #include "objects/object_ops.h"
 #include "objects/undo.h"
-
-#include "sdk/context.h"
 
 #include "extension/levelset.h"
 #include "extension/volume.h"

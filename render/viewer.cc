@@ -27,6 +27,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 #include <iostream>
+
+#include <kamikaze/context.h>
+
 #include <QApplication>
 #include <QColorDialog>
 #include <QKeyEvent>
@@ -36,9 +39,6 @@
 #include "scene.h"
 
 #include "objects/grid.h"
-
-#include "sdk/context.h"
-
 #include "util/util_input.h"
 
 Viewer::Viewer(QWidget *parent)

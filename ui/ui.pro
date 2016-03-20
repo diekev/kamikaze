@@ -35,6 +35,7 @@ INCLUDEPATH += $$PWD/../
 INCLUDEPATH += $$PWD/../render
 INCLUDEPATH += $$PWD/../util
 INCLUDEPATH += /opt/lib/ego/include
+INCLUDEPATH += /opt/lib/kamikaze/include
 INCLUDEPATH += /opt/lib/openvdb/include
 INCLUDEPATH += /opt/lib/openexr/include
 

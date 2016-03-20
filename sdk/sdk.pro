@@ -22,10 +22,11 @@
 QT += widgets
 QT -= gui
 
-TARGET = sdk
+TARGET = kamikaze
+VERSION = 0.1
 TEMPLATE = lib
 
-CONFIG += staticlib
+CONFIG += shared
 
 include(../global.pri)
 
@@ -45,3 +46,13 @@ HEADERS += \
     paramfactory.h \
     param_widgets.h \
     xyzspinbox.h
+
+unix {
+	lib_install.command = cp $$PWD/sdk/libkamikaze.so* /opt/lib/kamikaze/lib
+
+	header_install.files = $$HEADERS
+	header_install.path = /opt/lib/kamikaze/include/kamikaze
+    INSTALLS += header_install
+}
+
+QMAKE_EXTRA_TARGETS += lib_install

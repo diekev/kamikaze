@@ -27,6 +27,9 @@
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <kamikaze/context.h>
+#include <kamikaze/paramfactory.h>
+
 #include <openvdb/tools/LevelSetSphere.h>
 #include <openvdb/tools/VolumeToMesh.h>
 
@@ -35,9 +38,6 @@
 
 #include "util_openvdb.h"
 #include "util_openvdb_process.h"
-
-#include "sdk/context.h"
-#include "sdk/paramfactory.h"
 
 LevelSet::LevelSet()
     : VolumeBase()

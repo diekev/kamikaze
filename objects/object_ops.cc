@@ -24,11 +24,11 @@
 
 #include "object_ops.h"
 
-#include "render/scene.h"
+#include <kamikaze/context.h>
+#include <kamikaze/object.h>
+#include <kamikaze/paramfactory.h>
 
-#include "sdk/context.h"
-#include "sdk/object.h"
-#include "sdk/paramfactory.h"
+#include "render/scene.h"
 
 enum {
 	OBJECT_CUBE_LS = 0,
