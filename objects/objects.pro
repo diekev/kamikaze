@@ -37,7 +37,6 @@ INCLUDEPATH += /opt/lib/openexr/include
 DEFINES += GLM_FORCE_RADIANS
 
 SOURCES += \
-	cube.cc \
 	dynamiclibrary.cc \
 	filesystem.cc \
 	grid.cc \
@@ -45,7 +44,6 @@ SOURCES += \
     undo.cc
 
 HEADERS += \
-	cube.h \
 	dynamiclibrary.h \
 	filesystem.h \
 	grid.h \

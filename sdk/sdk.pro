@@ -35,6 +35,7 @@ INCLUDEPATH += /opt/lib/ego/include/
 
 SOURCES += \
     context.cc \
+	cube.cc \
     object.cc \
     paramfactory.cc \
     param_widgets.cc \
@@ -42,6 +43,7 @@ SOURCES += \
 
 HEADERS += \
     context.h \
+	cube.h \
     object.h \
     paramfactory.h \
     param_widgets.h \

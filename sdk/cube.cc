@@ -22,13 +22,12 @@
  */
 
 #include "cube.h"
+#include "context.h"
 
 #include <ego/utils.h>
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
-#include <kamikaze/context.h>
 
 Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 {
