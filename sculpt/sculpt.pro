@@ -30,9 +30,7 @@ INCLUDEPATH += /opt/lib/openvdb/include
 INCLUDEPATH += /opt/lib/openexr/include
 
 SOURCES += \
-    brush.cc \
-    sculpt.cc
+    brush.cc
 
 HEADERS += \
-    brush.h \
-    sculpt.h
+    brush.h

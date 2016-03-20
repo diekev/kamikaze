@@ -24,20 +24,6 @@
 
 #include "brush.h"
 
-/* Note: since we are dealing with level sets where exterior values are positive
- * and interior ones are negative, addition and subtraction are swapped.
- */
-
-void addOp(float &value)
-{
-	value -= 0.1f;
-}
-
-void subOp(float &value)
-{
-	value += 0.1f;
-}
-
 Brush::Brush()
     : Brush(0.0f, 0.0f)
 {}

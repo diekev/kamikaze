@@ -25,7 +25,7 @@
 
 #include <openvdb/math/Stencils.h>
 
-#include "brush.h"
+#include "sculpt/brush.h"
 
 /* Modifiy level set by adding or subtracting values based on the brush's strength */
 void do_sculpt_draw(openvdb::FloatGrid &level_set, Brush *brush,

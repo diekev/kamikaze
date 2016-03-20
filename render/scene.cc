@@ -25,6 +25,7 @@
 #include "scene.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <GL/glew.h>
 
 #include <QKeyEvent>
 #include <QListWidget>
@@ -32,8 +33,7 @@
 #include "sculpt/brush.h"
 #include "smoke/smokesimulation.h"
 
-#include "extension/levelset.h"
-#include "extension/volume.h"
+#include "objects/object.h"
 
 #include "util/util_string.h"
 
@@ -133,12 +133,14 @@ void Scene::render(ViewerContext *context)
 	}
 }
 
-void Scene::intersect(const Ray &ray)
+void Scene::intersect(const Ray &/*ray*/)
 {
+#if 0
 	LevelSet *ls = static_cast<LevelSet *>(m_active_object);
 	if (ls->intersectLS(ray, m_brush)) {
 		// TODO: separate intersection from sculpting.
 	}
+#endif
 }
 
 /* Select the object which is closest to pos. */
@@ -171,8 +173,10 @@ int Scene::mode() const
 void Scene::setMode(int mode)
 {
 	m_mode = mode;
+#if 0
 	LevelSet *ls = static_cast<LevelSet *>(m_active_object);
 	ls->swapGrids(mode == SCENE_MODE_SCULPT);
+#endif
 }
 
 Object *Scene::currentObject()

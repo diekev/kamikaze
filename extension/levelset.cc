@@ -31,7 +31,7 @@
 #include <openvdb/tools/VolumeToMesh.h>
 
 #include "sculpt/brush.h"
-#include "sculpt/sculpt.h"
+#include "sculpt.h"
 
 #include "util/utils.h"
 #include "util/util_openvdb.h"

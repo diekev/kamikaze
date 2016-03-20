@@ -38,10 +38,12 @@ DEFINES += GLM_FORCE_RADIANS
 
 SOURCES += \
 	levelset.cc \
+#	sculpt.cc \
 	volume.cc \
     volumebase.cc
 
 HEADERS += \
 	levelset.h \
+#	sculpt.h \
 	volume.h \
     volumebase.h
