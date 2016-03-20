@@ -46,6 +46,7 @@ LIBS += -L/opt/lib/openexr/lib -lHalf
 LIBS += -L/opt/lib/blosc/lib -lblosc -lz
 LIBS += /opt/lib/ego/lib/libego.a
 LIBS += -lGL -lGLEW
+LIBS += -ldl
 
 unix {
 	copy_files.commands = cp -r $$PWD/../render/shaders/ .

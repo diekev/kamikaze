@@ -24,7 +24,10 @@
 
 #include "mainwindow.h"
 
+#include <iostream>
+
 #include <kamikaze/context.h>
+#include <kamikaze/object.h>
 
 #include <QComboBox>
 #include <QDialogButtonBox>
@@ -34,11 +37,10 @@
 #include <QSplitter>
 #include <QTimer>
 
+#include "objects/dynamiclibrary.h"
+#include "objects/filesystem.h"
 #include "objects/object_ops.h"
 #include "objects/undo.h"
-
-#include "extension/levelset.h"
-#include "extension/volume.h"
 
 #include "render/scene.h"
 
@@ -73,6 +75,32 @@ static void clear_layout(QLayout *layout)
 
 		delete item;
 	}
+}
+
+namespace fs = filesystem;
+using PluginVec = std::vector<fs::shared_library>;
+
+PluginVec load_plugins(const std::string &path)
+{
+	PluginVec plugins;
+	fs::dir dir(path);
+
+	for (const auto &file : dir) {
+		if (!fs::is_library(file)) {
+			continue;
+		}
+
+		fs::shared_library lib(file);
+
+		if (!lib) {
+			std::cerr << lib.error() << '\n';
+			continue;
+		}
+
+		plugins.push_back(std::move(lib));
+	}
+
+	return plugins;
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -304,10 +332,19 @@ void MainWindow::registerCommandType(const char *name, CommandFactory::factory_f
 	connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
 }
 
+typedef void (*register_func_t)(ObjectFactory *);
+
 void MainWindow::registerObjectType()
 {
-	LevelSet::registerSelf(m_object_factory);
-	Volume::registerSelf(m_object_factory);
+	PluginVec plugins = load_plugins("../plugins/");
+
+	for (const auto &plugin : plugins) {
+		auto register_figures = plugin.symbol<register_func_t>("new_kamikaze_objects");
+
+		if (register_figures != nullptr) {
+			register_figures(m_object_factory);
+		}
+	}
 }
 
 void MainWindow::generateObjectMenu()

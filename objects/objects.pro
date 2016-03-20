@@ -38,12 +38,16 @@ DEFINES += GLM_FORCE_RADIANS
 
 SOURCES += \
 	cube.cc \
+	dynamiclibrary.cc \
+	filesystem.cc \
 	grid.cc \
     object_ops.cc \
     undo.cc
 
 HEADERS += \
 	cube.h \
+	dynamiclibrary.h \
+	filesystem.h \
 	grid.h \
     object_ops.h \
     undo.h \
