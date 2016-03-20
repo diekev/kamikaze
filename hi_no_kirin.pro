@@ -33,6 +33,4 @@ SUBDIRS += \
 	render/render.pro \
 	util/util.pro \
 	app/app.pro \
-    sdk \
-    extension
-
+    sdk
