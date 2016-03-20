@@ -52,6 +52,7 @@ public:
 	static Command *registerSelf();
 };
 
+#if 0
 class LoadFromFileCmd : public Command {
 	Scene *m_scene;
 	Object *m_object;
@@ -69,3 +70,4 @@ public:
 	void redo();
 	void setUIParams(ParamCallback *cb) { (void)cb; }
 };
+#endif

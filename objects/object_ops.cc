@@ -24,8 +24,7 @@
 
 #include "object_ops.h"
 
-#include "extension/levelset.h"
-#include "extension/volume.h"
+#include "object.h"
 
 #include "../render/scene.h"
 #include "../util/util_openvdb.h"
@@ -88,6 +87,7 @@ Command *AddObjectCmd::registerSelf()
 
 /* *************************** load object command ************************** */
 
+# if 0
 LoadFromFileCmd::LoadFromFileCmd(Scene *scene, const QString &filename)
     : m_scene(scene)
     , m_object(nullptr)
@@ -167,3 +167,5 @@ void LoadFromFileCmd::redo()
 	m_scene->addObject(m_object);
 	m_was_undone = false;
 }
+
+#endif
