@@ -39,7 +39,8 @@ SOURCES += \
     object.cc \
     paramfactory.cc \
     param_widgets.cc \
-    xyzspinbox.cc
+    xyzspinbox.cc \
+    modifiers.cc
 
 HEADERS += \
     context.h \
@@ -47,7 +48,8 @@ HEADERS += \
     object.h \
     paramfactory.h \
     param_widgets.h \
-    xyzspinbox.h
+    xyzspinbox.h \
+    modifiers.h
 
 unix {
 	lib_install.command = cp $$PWD/sdk/libkamikaze.so* /opt/lib/kamikaze/lib
