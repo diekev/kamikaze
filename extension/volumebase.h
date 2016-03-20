@@ -63,7 +63,6 @@ public:
 	explicit VolumeBase(openvdb::GridBase::Ptr grid);
 	~VolumeBase() = default;
 
-	int type() const { return VOLUME; }
 	void update();
 
 	float voxelSize() const;

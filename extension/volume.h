@@ -55,7 +55,5 @@ public:
 	void numSlices(int x);
 	void useLUT(bool b);
 
-	int type() const { return VOLUME; }
-
 	static void registerSelf(ObjectFactory *factory);
 };

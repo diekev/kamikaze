@@ -40,10 +40,8 @@ Object::Object()
     , m_name("")
     , m_draw_bbox(false)
     , m_need_update(true)
+    , m_flags(object_flags::object_flags_none)
 {}
-
-int Object::type() const {
-	return OBJECT; }
 
 bool Object::intersect(const Ray &ray, float &min) const
 {
@@ -122,6 +120,16 @@ glm::vec3 &Object::rotation()
 {
 	m_need_update = true;
 	return m_rotation;
+}
+
+void Object::flags(object_flags flags)
+{
+	m_flags = flags;
+}
+
+object_flags Object::flags() const
+{
+	return m_flags;
 }
 
 glm::mat4 Object::matrix() const

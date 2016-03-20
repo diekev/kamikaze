@@ -47,6 +47,7 @@ LevelSet::LevelSet()
 	openvdb::FloatGrid::Ptr ls = openvdb::tools::createLevelSetSphere<openvdb::FloatGrid>(
 	                        2.0f, openvdb::Vec3f(0.0f), 0.1f, openvdb::LEVEL_SET_HALF_WIDTH);
 
+	flags(object_flags::object_supports_sculpt);
 	setGrid(ls);
 }
 
@@ -55,8 +56,6 @@ LevelSet::LevelSet(openvdb::GridBase::Ptr grid)
 {
 	setGrid(grid);
 }
-
-int LevelSet::type() const { return LEVEL_SET; }
 
 void LevelSet::setGrid(openvdb::GridBase::Ptr grid)
 {

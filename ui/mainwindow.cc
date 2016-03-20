@@ -222,7 +222,7 @@ void MainWindow::updateObjectTab() const
 
 	cb.setContext(m_scene, SLOT(tagObjectUpdate()));
 
-	if (ob->type() == LEVEL_SET) {
+	if ((ob->flags() & object_flags::object_supports_sculpt) != object_flags::object_flags_none) {
 		enableListItem(m_scene_mode_list, 1);
 	}
 	else {

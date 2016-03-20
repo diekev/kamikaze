@@ -38,10 +38,9 @@ enum {
 	DRAW_SOLID = 1,
 };
 
-enum {
-	OBJECT    = 0,
-	LEVEL_SET = 1,
-	VOLUME    = 2,
+enum object_flags {
+	object_flags_none      = 0,
+	object_supports_sculpt = (1 << 0),
 };
 
 class Object {
@@ -58,13 +57,13 @@ protected:
 
 	bool m_draw_bbox, m_need_update;
 
+	object_flags m_flags;
+
 	void updateMatrix();
 
 public:
 	Object();
 	virtual ~Object() = default;
-
-	virtual int type() const;
 
 	virtual bool intersect(const Ray &ray, float &min) const;
 	virtual void render(ViewerContext *context, const bool for_outline) = 0;
@@ -81,6 +80,9 @@ public:
 	glm::vec3 &scale();
 	glm::vec3 rotation() const;
 	glm::vec3 &rotation();
+
+	void flags(object_flags flags);
+	object_flags flags() const;
 
 	/* Return the object's matrix, mainly intended for rendering the active object */
 	glm::mat4 matrix() const;

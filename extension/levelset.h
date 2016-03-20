@@ -47,8 +47,6 @@ public:
 	explicit LevelSet(openvdb::GridBase::Ptr grid);
 	~LevelSet() = default;
 
-	int type() const;
-
 	void setGrid(openvdb::GridBase::Ptr grid);
 
 	void render(ViewerContext *context, const bool for_outline) override;
