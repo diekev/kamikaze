@@ -24,6 +24,16 @@
 
 #include "modifiers.h"
 
+void Modifier::setName(const std::string &name)
+{
+	m_name = name;
+}
+
+std::string Modifier::name() const
+{
+	return m_name;
+}
+
 void ModifierFactory::registerType(const std::string &name, ModifierFactory::factory_func func)
 {
 	const auto iter = m_map.find(name);

@@ -26,6 +26,7 @@
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "modifiers.h"
 #include "paramfactory.h"
 
 #include "ui/paramcallback.h"
@@ -46,6 +47,13 @@ Object::Object()
     , m_need_update(true)
     , m_flags(object_flags::object_flags_none)
 {}
+
+Object::~Object()
+{
+	for (auto &modifier : m_modifiers) {
+		delete modifier;
+	}
+}
 
 bool Object::intersect(const Ray &ray, float &min) const
 {
@@ -184,6 +192,16 @@ QString Object::name() const
 void Object::name(const QString &name)
 {
 	m_name = name;
+}
+
+void Object::addModifier(Modifier *modifier)
+{
+	m_modifiers.push_back(modifier);
+}
+
+std::vector<Modifier *> Object::modifiers() const
+{
+	return m_modifiers;
 }
 
 void Object::setUIParams(ParamCallback *cb)

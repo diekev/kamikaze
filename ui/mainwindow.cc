@@ -28,6 +28,7 @@
 
 #include <kamikaze/context.h>
 #include <kamikaze/object.h>
+#include <kamikaze/modifiers.h>
 
 #include <QComboBox>
 #include <QDialogButtonBox>
@@ -43,6 +44,7 @@
 #include "core/scene.h"
 #include "core/undo.h"
 
+#include "modifieritem.h"
 #include "paramcallback.h"
 #include "ui_mainwindow.h"
 
@@ -102,6 +104,42 @@ PluginVec load_plugins(const std::string &path)
 	return plugins;
 }
 
+#include <kamikaze/paramfactory.h>
+
+class DummyModifier : public Modifier {
+	int m_x = 2;
+	int m_y = 10;
+	float m_zzz = 5.0f;
+
+public:
+	DummyModifier() = default;
+	~DummyModifier() = default;
+
+	void evaluate(Object */*ob*/) override
+	{
+		return;
+	}
+
+	void setUIParams(ParamCallback *cb) override
+	{
+		int_param(cb, "text_x", &m_x, 0, 10, m_x);
+		int_param(cb, "text_y", &m_y, 0, 10, m_y);
+		float_param(cb, "text_zzz", &m_zzz, 0.0f, 10.0f, m_zzz);
+	}
+
+	static void registerSelf(ModifierFactory *factory);
+};
+
+static Modifier *newDummyModifier()
+{
+	return new DummyModifier();
+}
+
+void DummyModifier::registerSelf(ModifierFactory *factory)
+{
+	factory->registerType("Dummy", newDummyModifier);
+}
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -113,6 +151,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_scene_mode_box(new QComboBox(this))
     , m_scene_mode_list(new QListWidget(m_scene_mode_box))
     , m_object_factory(new ObjectFactory)
+    , m_modifier_factory(new ModifierFactory)
 {
 	qApp->installEventFilter(this);
 	ui->setupUi(this);
@@ -164,6 +203,7 @@ MainWindow::MainWindow(QWidget *parent)
 	/* TODO: find another place to do this */
 	registerObjectType();
 	generateObjectMenu();
+	generateModifiersMenu();
 }
 
 MainWindow::~MainWindow()
@@ -172,6 +212,7 @@ MainWindow::~MainWindow()
 	delete m_command_manager;
 	delete m_command_factory;
 	delete m_object_factory;
+	delete m_modifier_factory;
 }
 
 void MainWindow::openFile(const QString &filename) const
@@ -258,6 +299,20 @@ void MainWindow::updateObjectTab() const
 	}
 	else {
 		disableListItem(m_scene_mode_list, 1);
+	}
+
+	/* set modifiers */
+	{
+		clear_layout(ui->modifiers_tab->layout());
+
+		for (const auto &modifier : ob->modifiers()) {
+			auto item = new ModifierItem(modifier->name().c_str());
+
+			ParamCallback modcb(item->layout());
+			modifier->setUIParams(&modcb);
+
+			ui->modifiers_tab->layout()->addWidget(item);
+		}
 	}
 
 	m_scene->objectNameList(ui->m_outliner);
@@ -358,6 +413,18 @@ void MainWindow::generateObjectMenu()
 	}
 }
 
+void MainWindow::generateModifiersMenu()
+{
+	DummyModifier::registerSelf(m_modifier_factory);
+
+	std::vector<std::string> keys = m_modifier_factory->keys();
+
+	for (const auto &key : keys) {
+		auto action = ui->add_modifier_menu->addAction(key.c_str());
+		connect(action, SIGNAL(triggered()), this, SLOT(handleModifierCommand()));
+	}
+}
+
 void MainWindow::handleCommand()
 {
 	QAction *action = qobject_cast<QAction *>(sender());
@@ -424,4 +491,29 @@ void MainWindow::handleObjectCommand()
 	context.object_factory = m_object_factory;
 
 	m_command_manager->execute(cmd, &context);
+}
+
+void MainWindow::handleModifierCommand()
+{
+	QAction *action = qobject_cast<QAction *>(sender());
+
+	if (!action) {
+		return;
+	}
+
+	const auto &name = action->text();
+
+	/* get command */
+	Command *cmd = new AddModifierCmd(name);
+
+	/* TODO */
+	EvaluationContext context;
+	context.scene = m_scene;
+	context.object_factory = m_object_factory;
+	context.modifier_factory = m_modifier_factory;
+
+	m_command_manager->execute(cmd, &context);
+
+	/* TODO */
+	updateObjectTab();
 }

@@ -28,8 +28,9 @@
 
 #include "cube.h"
 
-class Ray;
+class Modifier;
 class ParamCallback;
+class Ray;
 class ViewerContext;
 
 enum {
@@ -57,11 +58,13 @@ protected:
 
 	object_flags m_flags;
 
+	std::vector<Modifier *> m_modifiers;
+
 	void updateMatrix();
 
 public:
 	Object();
-	virtual ~Object() = default;
+	virtual ~Object();
 
 	virtual bool intersect(const Ray &ray, float &min) const;
 	virtual void render(ViewerContext *context, const bool for_outline) = 0;
@@ -92,6 +95,10 @@ public:
 
 	QString name() const;
 	void name(const QString &name);
+
+	/* Modifiers */
+	void addModifier(Modifier *modifier);
+	std::vector<Modifier *> modifiers() const;
 
 	/* UI parameters */
 	void setUIParams(ParamCallback *cb);

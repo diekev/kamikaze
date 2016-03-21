@@ -52,6 +52,22 @@ public:
 	static Command *registerSelf();
 };
 
+class AddModifierCmd : public Command {
+	Object *m_object = nullptr;
+	Scene *m_scene = nullptr;
+	QString m_name = "";
+
+public:
+	AddModifierCmd() = default;
+	AddModifierCmd(const QString &name);
+	~AddModifierCmd() = default;
+
+	void execute(EvaluationContext *context);
+	void undo();
+	void redo();
+	void setUIParams(ParamCallback *cb);
+};
+
 #if 0
 class LoadFromFileCmd : public Command {
 	Scene *m_scene;

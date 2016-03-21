@@ -35,6 +35,7 @@ class MainWindow;
 class Command;
 class CommandManager;
 class ObjectFactory;
+class ModifierFactory;
 class QComboBox;
 class QListWidget;
 class QTimer;
@@ -53,6 +54,7 @@ class MainWindow : public QMainWindow {
 	QListWidget *m_scene_mode_list;
 
 	ObjectFactory *m_object_factory;
+	ModifierFactory *m_modifier_factory;
 
 	/* TODO: de-duplicate this from undo.h */
 	typedef Command *(*command_factory_func)(void);
@@ -70,6 +72,7 @@ private:
 	void registerCommandType(const char *name, CommandFactory::factory_func func);
 	void registerObjectType();
 	void generateObjectMenu();
+	void generateModifiersMenu();
 
 private Q_SLOTS:
 	void openFile();
@@ -85,4 +88,5 @@ private Q_SLOTS:
 	void redo() const;
 	void handleCommand();
 	void handleObjectCommand();
+	void handleModifierCommand();
 };

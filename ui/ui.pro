@@ -41,11 +41,13 @@ INCLUDEPATH += /opt/lib/openexr/include
 
 SOURCES += \
     mainwindow.cc \
-    paramcallback.cc
+    paramcallback.cc \
+    modifieritem.cc
 
 HEADERS += \
     mainwindow.h \
-    paramcallback.h
+    paramcallback.h \
+    modifieritem.h
 
 FORMS += \
     mainwindow.ui

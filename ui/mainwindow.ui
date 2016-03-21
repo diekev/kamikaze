@@ -429,7 +429,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_3">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
     <item>
      <widget class="QSplitter" name="vsplitter">
       <property name="sizePolicy">
@@ -503,7 +503,7 @@
          <enum>QTabWidget::North</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <property name="movable">
          <bool>true</bool>
@@ -536,6 +536,12 @@
            </spacer>
           </item>
          </layout>
+        </widget>
+        <widget class="QWidget" name="modifiers_tab">
+         <attribute name="title">
+          <string>Modifers</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_5"/>
         </widget>
         <widget class="QWidget" name="tab">
          <attribute name="title">
@@ -1007,9 +1013,15 @@
     <addaction name="actionUndo"/>
     <addaction name="actionRedo"/>
    </widget>
+   <widget class="QMenu" name="add_modifier_menu">
+    <property name="title">
+     <string>Add Modifier</string>
+    </property>
+   </widget>
    <addaction name="menuFichier"/>
    <addaction name="menuAdd"/>
    <addaction name="menuEdit"/>
+   <addaction name="add_modifier_menu"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">

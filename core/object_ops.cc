@@ -25,6 +25,7 @@
 #include "object_ops.h"
 
 #include <kamikaze/context.h>
+#include <kamikaze/modifiers.h>
 #include <kamikaze/object.h>
 #include <kamikaze/paramfactory.h>
 
@@ -81,6 +82,42 @@ void AddObjectCmd::setUIParams(ParamCallback */*cb*/)
 Command *AddObjectCmd::registerSelf()
 {
 	return new AddObjectCmd;
+}
+
+/* ************************** add modifier command ************************** */
+
+AddModifierCmd::AddModifierCmd(const QString &name)
+    : AddModifierCmd()
+{
+	m_name = name;
+}
+
+void AddModifierCmd::execute(EvaluationContext *context)
+{
+	m_scene = context->scene;
+	m_object = m_scene->currentObject();
+
+	const auto &name = m_name.toStdString();
+	auto modifier = (*context->modifier_factory)(name);
+
+	modifier->setName(name);
+
+	assert(m_object != nullptr);
+	m_object->addModifier(modifier);
+}
+
+void AddModifierCmd::undo()
+{
+	//m_scene->removeObject(m_object);
+}
+
+void AddModifierCmd::redo()
+{
+	//m_scene->addObject(m_object);
+}
+
+void AddModifierCmd::setUIParams(ParamCallback */*cb*/)
+{
 }
 
 /* *************************** load object command ************************** */

@@ -32,8 +32,13 @@ class ParamCallback;
 class Object;
 
 class Modifier {
+	std::string m_name;
+
 public:
 	virtual ~Modifier() = default;
+
+	void setName(const std::string &name);
+	std::string name() const;
 
 	virtual void evaluate(Object *ob) = 0;
 	virtual void setUIParams(ParamCallback *cb) = 0;

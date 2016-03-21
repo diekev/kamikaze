@@ -1,4 +1,4 @@
-﻿/*
+/*
  * ***** BEGIN GPL LICENSE BLOCK *****
  *
  * This program is free software; you can redistribute it and/or
@@ -24,38 +24,32 @@
 
 #pragma once
 
-#include <glm/glm.hpp>
+#include <QWidget>
 
-class ModifierFactory;
-class ObjectFactory;
-class Scene;
+class QFrame;
+class QLabel;
+class QVBoxLayout;
+class QGridLayout;
+class Modifier;
 
-struct EvaluationContext {
-	Scene *scene;
-	ObjectFactory *object_factory;
-	ModifierFactory *modifier_factory;
-};
+class ModifierItem : public QWidget {
+	Q_OBJECT
 
-class ViewerContext {
-	glm::mat4 m_model_view;
-	glm::mat4 m_projection;
-	glm::mat4 m_modelviewprojection;
-	glm::vec3 m_view;
-	glm::mat3 m_normal;
+	QFrame *m_frame;
+	QVBoxLayout *m_vlayout;
+	QVBoxLayout *m_flayout;
+	QGridLayout *m_layout;
+	QLabel *m_label;
+
+	Modifier *m_modifier_data;
 
 public:
-	glm::mat4 modelview() const;
-	void setModelview(const glm::mat4 &modelview);
+	explicit ModifierItem(const QString &name, QWidget *parent = nullptr);
+	~ModifierItem();
 
-	glm::mat4 projection() const;
-	void setProjection(const glm::mat4 &projection);
+	QGridLayout *&layout();
 
-	glm::vec3 view() const;
-	void setView(const glm::vec3 &view);
+	void setModifierData(Modifier *modifier);
 
-	glm::mat3 normal() const;
-	void setNormal(const glm::mat3 &normal);
-
-	glm::mat4 MVP() const;
-	void setMVP(const glm::mat4 &MVP);
+	Modifier *modifierData() const;
 };
