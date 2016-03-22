@@ -46,7 +46,8 @@ SOURCES += \
 	camera.cc \
 	scene.cc \
 	viewer.cc \
-    brush.cc
+    brush.cc \
+    kamikaze_main.cc
 
 HEADERS += \
 	dynamiclibrary.h \
@@ -58,7 +59,8 @@ HEADERS += \
 	camera.h \
 	scene.h \
 	viewer.h \
-    brush.h
+    brush.h \
+    kamikaze_main.h
 
 OTHER_FILES += \
 	shaders/flat_shader.frag \

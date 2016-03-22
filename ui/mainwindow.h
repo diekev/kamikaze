@@ -34,8 +34,7 @@ class MainWindow;
 
 class Command;
 class CommandManager;
-class ObjectFactory;
-class ModifierFactory;
+class Main;
 class QComboBox;
 class QListWidget;
 class QTimer;
@@ -45,6 +44,9 @@ class MainWindow : public QMainWindow {
 	Q_OBJECT
 
 	Ui::MainWindow *ui;
+
+	Main *m_main;
+
 	Scene *m_scene;
 	QTimer *m_timer;
 	CommandManager *m_command_manager;
@@ -53,11 +55,8 @@ class MainWindow : public QMainWindow {
 	QComboBox *m_scene_mode_box;
 	QListWidget *m_scene_mode_list;
 
-	ObjectFactory *m_object_factory;
-	ModifierFactory *m_modifier_factory;
-
 public:
-	explicit MainWindow(QWidget *parent = nullptr);
+	explicit MainWindow(Main *main, QWidget *parent = nullptr);
 	~MainWindow();
 
 	void openFile(const QString &filename) const;
@@ -66,7 +65,6 @@ protected:
 	bool eventFilter(QObject *obj, QEvent *e);
 
 private:
-	void registerObjectType();
 	void generateObjectMenu();
 	void generateModifiersMenu();
 

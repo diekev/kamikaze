@@ -38,8 +38,7 @@
 #include <QSplitter>
 #include <QTimer>
 
-#include "core/dynamiclibrary.h"
-#include "core/filesystem.h"
+#include "core/kamikaze_main.h"
 #include "core/object_ops.h"
 #include "core/scene.h"
 #include "core/undo.h"
@@ -78,32 +77,6 @@ static void clear_layout(QLayout *layout)
 	}
 }
 
-namespace fs = filesystem;
-using PluginVec = std::vector<fs::shared_library>;
-
-PluginVec load_plugins(const std::string &path)
-{
-	PluginVec plugins;
-	fs::dir dir(path);
-
-	for (const auto &file : dir) {
-		if (!fs::is_library(file)) {
-			continue;
-		}
-
-		fs::shared_library lib(file);
-
-		if (!lib) {
-			std::cerr << lib.error() << '\n';
-			continue;
-		}
-
-		plugins.push_back(std::move(lib));
-	}
-
-	return plugins;
-}
-
 #include <kamikaze/paramfactory.h>
 
 class DummyModifier : public Modifier {
@@ -140,9 +113,10 @@ void DummyModifier::registerSelf(ModifierFactory *factory)
 	factory->registerType("Dummy", newDummyModifier);
 }
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(Main *main, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , m_main(main)
     , m_scene(new Scene)
     , m_timer(new QTimer(this))
     , m_command_manager(new CommandManager)
@@ -150,8 +124,6 @@ MainWindow::MainWindow(QWidget *parent)
     , m_timer_has_started(false)
     , m_scene_mode_box(new QComboBox(this))
     , m_scene_mode_list(new QListWidget(m_scene_mode_box))
-    , m_object_factory(new ObjectFactory)
-    , m_modifier_factory(new ModifierFactory)
 {
 	qApp->installEventFilter(this);
 	ui->setupUi(this);
@@ -201,7 +173,6 @@ MainWindow::MainWindow(QWidget *parent)
 	ui->m_timeline->setMaximum(250);
 
 	/* TODO: find another place to do this */
-	registerObjectType();
 	generateObjectMenu();
 	generateModifiersMenu();
 }
@@ -211,8 +182,6 @@ MainWindow::~MainWindow()
 	delete ui;
 	delete m_command_manager;
 	delete m_command_factory;
-	delete m_object_factory;
-	delete m_modifier_factory;
 }
 
 void MainWindow::openFile(const QString &filename) const
@@ -390,33 +359,11 @@ void MainWindow::setSceneMode(int idx) const
 	ui->tabWidget->setTabEnabled(3, idx == SCENE_MODE_SCULPT);
 }
 
-typedef void (*register_func_t)(ObjectFactory *);
-typedef void (*register_modifier_func_t)(ModifierFactory *);
-
-void MainWindow::registerObjectType()
-{
-	PluginVec plugins = load_plugins("/opt/kamikaze/");
-
-	for (const auto &plugin : plugins) {
-		auto register_figures = plugin.symbol<register_func_t>("new_kamikaze_objects");
-
-		if (register_figures != nullptr) {
-			register_figures(m_object_factory);
-		}
-
-		auto register_modifiers = plugin.symbol<register_modifier_func_t>("new_kamikaze_modifiers");
-
-		if (register_modifiers != nullptr) {
-			register_modifiers(m_modifier_factory);
-		}
-	}
-}
-
 void MainWindow::generateObjectMenu()
 {
 	m_command_factory->registerType("add object", AddObjectCmd::registerSelf);
 
-	for (const auto &key : m_object_factory->keys()) {
+	for (const auto &key : m_main->objectFactory()->keys()) {
 		auto action = ui->menuAdd->addAction(key.c_str());
 		action->setData(QVariant::fromValue(QString("add object")));
 
@@ -428,9 +375,9 @@ void MainWindow::generateModifiersMenu()
 {
 	m_command_factory->registerType("add modifier", AddModifierCmd::registerSelf);
 
-	DummyModifier::registerSelf(m_modifier_factory);
+	DummyModifier::registerSelf(m_main->modifierFactory());
 
-	for (const auto &key : m_modifier_factory->keys()) {
+	for (const auto &key : m_main->modifierFactory()->keys()) {
 		auto action = ui->add_modifier_menu->addAction(key.c_str());
 		action->setData(QVariant::fromValue(QString("add modifier")));
 
@@ -503,8 +450,8 @@ void MainWindow::handleObjectCommand()
 	/* TODO */
 	EvaluationContext context;
 	context.scene = m_scene;
-	context.object_factory = m_object_factory;
-	context.modifier_factory = m_modifier_factory;
+	context.object_factory = m_main->objectFactory();
+	context.modifier_factory = m_main->modifierFactory();
 
 	m_command_manager->execute(cmd, &context);
 

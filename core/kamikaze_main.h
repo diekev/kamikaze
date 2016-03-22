@@ -15,37 +15,28 @@
  * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * The Original Code is Copyright (C) 2015 Kévin Dietrich.
+ * The Original Code is Copyright (C) 2016 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
  *
  */
 
-#include <QApplication>
-#include <QFileInfo>
+#pragma once
 
-#include "core/kamikaze_main.h"
-#include "ui/mainwindow.h"
+class ObjectFactory;
+class ModifierFactory;
 
-int main(int argc, char *argv[])
-{
-	QApplication a(argc, argv);
-	QCoreApplication::setOrganizationName("giraffeenfeu");
-	QCoreApplication::setApplicationName("Hi no Kirin");
+class Main final {
+	ObjectFactory *m_object_factory;
+	ModifierFactory *m_modifier_factory;
 
-	Main main;
-	main.loadPlugins();
+public:
+	Main();
+	~Main();
 
-	MainWindow w(&main);
-	w.setWindowTitle(QCoreApplication::applicationName());
-	w.showMaximized();
+	void loadPlugins();
 
-	/* load file passed as argument */
-	if (argc > 1) {
-		auto file = QFileInfo(argv[1]).filePath();
-		w.openFile(file);
-	}
-
-	return a.exec();
-}
+	ObjectFactory *objectFactory() const;
+	ModifierFactory *modifierFactory() const;
+};
