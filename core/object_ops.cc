@@ -31,18 +31,7 @@
 
 #include "scene.h"
 
-enum {
-	OBJECT_CUBE_LS = 0,
-	OBJECT_SPHERE_LS = 1,
-};
-
 /* *************************** add object command *************************** */
-
-AddObjectCmd::AddObjectCmd(const QString &name)
-    : AddObjectCmd()
-{
-	m_name = name;
-}
 
 AddObjectCmd::~AddObjectCmd()
 {
@@ -54,10 +43,10 @@ AddObjectCmd::~AddObjectCmd()
 void AddObjectCmd::execute(EvaluationContext *context)
 {
 	m_scene = context->scene;
-	m_object = (*context->object_factory)(m_name.toStdString());
+	m_object = (*context->object_factory)(m_name);
 
 	assert(m_object != nullptr);
-	m_object->name(m_name);
+	m_object->name(m_name.c_str());
 
 	assert(m_scene != nullptr);
 	m_scene->addObject(m_object);
@@ -86,21 +75,13 @@ Command *AddObjectCmd::registerSelf()
 
 /* ************************** add modifier command ************************** */
 
-AddModifierCmd::AddModifierCmd(const QString &name)
-    : AddModifierCmd()
-{
-	m_name = name;
-}
-
 void AddModifierCmd::execute(EvaluationContext *context)
 {
 	m_scene = context->scene;
 	m_object = m_scene->currentObject();
 
-	const auto &name = m_name.toStdString();
-	auto modifier = (*context->modifier_factory)(name);
-
-	modifier->setName(name);
+	auto modifier = (*context->modifier_factory)(m_name);
+	modifier->setName(m_name);
 
 	assert(m_object != nullptr);
 	m_object->addModifier(modifier);
@@ -118,6 +99,11 @@ void AddModifierCmd::redo()
 
 void AddModifierCmd::setUIParams(ParamCallback */*cb*/)
 {
+}
+
+Command *AddModifierCmd::registerSelf()
+{
+	return new AddModifierCmd;
 }
 
 /* *************************** load object command ************************** */

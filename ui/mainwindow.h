@@ -56,9 +56,6 @@ class MainWindow : public QMainWindow {
 	ObjectFactory *m_object_factory;
 	ModifierFactory *m_modifier_factory;
 
-	/* TODO: de-duplicate this from undo.h */
-	typedef Command *(*command_factory_func)(void);
-
 public:
 	explicit MainWindow(QWidget *parent = nullptr);
 	~MainWindow();
@@ -69,7 +66,6 @@ protected:
 	bool eventFilter(QObject *obj, QEvent *e);
 
 private:
-	void registerCommandType(const char *name, CommandFactory::factory_func func);
 	void registerObjectType();
 	void generateObjectMenu();
 	void generateModifiersMenu();
@@ -77,6 +73,7 @@ private:
 private Q_SLOTS:
 	void openFile();
 	void updateObjectTab() const;
+	void updateModifiersTab() const;
 	void startAnimation();
 	void updateFrame() const;
 	void setStartFrame(int value) const;
@@ -88,5 +85,4 @@ private Q_SLOTS:
 	void redo() const;
 	void handleCommand();
 	void handleObjectCommand();
-	void handleModifierCommand();
 };

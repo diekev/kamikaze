@@ -28,6 +28,11 @@
 
 #include "util/util_memory.h"
 
+void Command::setName(const std::string &name)
+{
+	m_name = name;
+}
+
 CommandManager::~CommandManager()
 {
 	release_stack_memory(m_undo_commands);

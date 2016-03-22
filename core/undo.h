@@ -33,6 +33,9 @@ class EvaluationContext;
 class ParamCallback;
 
 class Command {
+protected:
+	std::string m_name;
+
 public:
 	virtual ~Command() = default;
 
@@ -40,6 +43,8 @@ public:
 	virtual void undo() = 0;
 	virtual void redo() = 0;
 	virtual void setUIParams(ParamCallback *cb) = 0;
+
+	void setName(const std::string &name);
 };
 
 class CommandManager final {

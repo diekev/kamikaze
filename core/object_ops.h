@@ -34,7 +34,6 @@ class Scene;
 class AddObjectCmd : public Command {
 	Object *m_object = nullptr;
 	Scene *m_scene = nullptr;
-	QString m_name = "";
 
 	/* TODO */
 	bool m_was_undone = false;
@@ -55,7 +54,6 @@ public:
 class AddModifierCmd : public Command {
 	Object *m_object = nullptr;
 	Scene *m_scene = nullptr;
-	QString m_name = "";
 
 public:
 	AddModifierCmd() = default;
@@ -66,6 +64,7 @@ public:
 	void undo();
 	void redo();
 	void setUIParams(ParamCallback *cb);
+	static Command *registerSelf();
 };
 
 #if 0

@@ -301,21 +301,29 @@ void MainWindow::updateObjectTab() const
 		disableListItem(m_scene_mode_list, 1);
 	}
 
-	/* set modifiers */
-	{
-		clear_layout(ui->modifiers_tab->layout());
-
-		for (const auto &modifier : ob->modifiers()) {
-			auto item = new ModifierItem(modifier->name().c_str());
-
-			ParamCallback modcb(item->layout());
-			modifier->setUIParams(&modcb);
-
-			ui->modifiers_tab->layout()->addWidget(item);
-		}
-	}
+	updateModifiersTab();
 
 	m_scene->objectNameList(ui->m_outliner);
+}
+
+void MainWindow::updateModifiersTab() const
+{
+	Object *ob = m_scene->currentObject();
+
+	if (ob == nullptr) {
+		return;
+	}
+
+	clear_layout(ui->modifiers_tab->layout());
+
+	for (const auto &modifier : ob->modifiers()) {
+		auto item = new ModifierItem(modifier->name().c_str());
+
+		ParamCallback modcb(item->layout());
+		modifier->setUIParams(&modcb);
+
+		ui->modifiers_tab->layout()->addWidget(item);
+	}
 }
 
 void MainWindow::startAnimation()
@@ -381,13 +389,6 @@ void MainWindow::setSceneMode(int idx) const
 	ui->tabWidget->setTabEnabled(3, idx == SCENE_MODE_SCULPT);
 }
 
-void MainWindow::registerCommandType(const char *name, CommandFactory::factory_func func)
-{
-	auto action = ui->menuAdd->addAction(name);
-	m_command_factory->registerType(name, func);
-	connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
-}
-
 typedef void (*register_func_t)(ObjectFactory *);
 
 void MainWindow::registerObjectType()
@@ -405,23 +406,27 @@ void MainWindow::registerObjectType()
 
 void MainWindow::generateObjectMenu()
 {
-	std::vector<std::string> keys = m_object_factory->keys();
+	m_command_factory->registerType("add object", AddObjectCmd::registerSelf);
 
-	for (const auto &key : keys) {
+	for (const auto &key : m_object_factory->keys()) {
 		auto action = ui->menuAdd->addAction(key.c_str());
+		action->setData(QVariant::fromValue(QString("add object")));
+
 		connect(action, SIGNAL(triggered()), this, SLOT(handleObjectCommand()));
 	}
 }
 
 void MainWindow::generateModifiersMenu()
 {
+	m_command_factory->registerType("add modifier", AddModifierCmd::registerSelf);
+
 	DummyModifier::registerSelf(m_modifier_factory);
 
-	std::vector<std::string> keys = m_modifier_factory->keys();
-
-	for (const auto &key : keys) {
+	for (const auto &key : m_modifier_factory->keys()) {
 		auto action = ui->add_modifier_menu->addAction(key.c_str());
-		connect(action, SIGNAL(triggered()), this, SLOT(handleModifierCommand()));
+		action->setData(QVariant::fromValue(QString("add modifier")));
+
+		connect(action, SIGNAL(triggered()), this, SLOT(handleObjectCommand()));
 	}
 }
 
@@ -480,31 +485,12 @@ void MainWindow::handleObjectCommand()
 		return;
 	}
 
-	const auto &name = action->text();
+	const auto &name = action->text().toStdString();
+	const auto &data = action->data().toString().toStdString();
 
 	/* get command */
-	Command *cmd = new AddObjectCmd(name);
-
-	/* TODO */
-	EvaluationContext context;
-	context.scene = m_scene;
-	context.object_factory = m_object_factory;
-
-	m_command_manager->execute(cmd, &context);
-}
-
-void MainWindow::handleModifierCommand()
-{
-	QAction *action = qobject_cast<QAction *>(sender());
-
-	if (!action) {
-		return;
-	}
-
-	const auto &name = action->text();
-
-	/* get command */
-	Command *cmd = new AddModifierCmd(name);
+	Command *cmd = (*m_command_factory)(data);
+	cmd->setName(name);
 
 	/* TODO */
 	EvaluationContext context;
@@ -515,5 +501,5 @@ void MainWindow::handleModifierCommand()
 	m_command_manager->execute(cmd, &context);
 
 	/* TODO */
-	updateObjectTab();
+	updateModifiersTab();
 }
