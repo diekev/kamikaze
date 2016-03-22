@@ -77,42 +77,6 @@ static void clear_layout(QLayout *layout)
 	}
 }
 
-#include <kamikaze/paramfactory.h>
-
-class DummyModifier : public Modifier {
-	int m_x = 2;
-	int m_y = 10;
-	float m_zzz = 5.0f;
-
-public:
-	DummyModifier() = default;
-	~DummyModifier() = default;
-
-	void evaluate(Object */*ob*/) override
-	{
-		return;
-	}
-
-	void setUIParams(ParamCallback *cb) override
-	{
-		int_param(cb, "text_x", &m_x, 0, 10, m_x);
-		int_param(cb, "text_y", &m_y, 0, 10, m_y);
-		float_param(cb, "text_zzz", &m_zzz, 0.0f, 10.0f, m_zzz);
-	}
-
-	static void registerSelf(ModifierFactory *factory);
-};
-
-static Modifier *newDummyModifier()
-{
-	return new DummyModifier();
-}
-
-void DummyModifier::registerSelf(ModifierFactory *factory)
-{
-	factory->registerType("Dummy", newDummyModifier);
-}
-
 MainWindow::MainWindow(Main *main, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -374,8 +338,6 @@ void MainWindow::generateObjectMenu()
 void MainWindow::generateModifiersMenu()
 {
 	m_command_factory->registerType("add modifier", AddModifierCmd::registerSelf);
-
-	DummyModifier::registerSelf(m_main->modifierFactory());
 
 	for (const auto &key : m_main->modifierFactory()->keys()) {
 		auto action = ui->add_modifier_menu->addAction(key.c_str());
