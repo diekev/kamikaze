@@ -204,6 +204,13 @@ std::vector<Modifier *> Object::modifiers() const
 	return m_modifiers;
 }
 
+void Object::evalModifiers()
+{
+	for (auto &modifier : m_modifiers) {
+		modifier->evaluate(this);
+	}
+}
+
 void Object::setUIParams(ParamCallback *cb)
 {
 	string_param(cb, "Name", &m_name, "");

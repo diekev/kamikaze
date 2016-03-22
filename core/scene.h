@@ -71,6 +71,7 @@ public Q_SLOTS:
 
 	void setObjectName(const QString &name);
 	void tagObjectUpdate();
+	void evalObjectModifiers();
 
 	void setBrushMode(int mode);
 	void setBrushRadius(double value);

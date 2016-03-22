@@ -321,6 +321,7 @@ void MainWindow::updateModifiersTab() const
 
 		ParamCallback modcb(item->layout());
 		modifier->setUIParams(&modcb);
+		modcb.setContext(m_scene, SLOT(evalObjectModifiers()));
 
 		ui->modifiers_tab->layout()->addWidget(item);
 	}
@@ -390,6 +391,7 @@ void MainWindow::setSceneMode(int idx) const
 }
 
 typedef void (*register_func_t)(ObjectFactory *);
+typedef void (*register_modifier_func_t)(ModifierFactory *);
 
 void MainWindow::registerObjectType()
 {
@@ -400,6 +402,12 @@ void MainWindow::registerObjectType()
 
 		if (register_figures != nullptr) {
 			register_figures(m_object_factory);
+		}
+
+		auto register_modifiers = plugin.symbol<register_modifier_func_t>("new_kamikaze_modifiers");
+
+		if (register_modifiers != nullptr) {
+			register_modifiers(m_modifier_factory);
 		}
 	}
 }

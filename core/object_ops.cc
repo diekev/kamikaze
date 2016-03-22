@@ -85,6 +85,9 @@ void AddModifierCmd::execute(EvaluationContext *context)
 
 	assert(m_object != nullptr);
 	m_object->addModifier(modifier);
+
+	/* TODO */
+	m_scene->evalObjectModifiers();
 }
 
 void AddModifierCmd::undo()

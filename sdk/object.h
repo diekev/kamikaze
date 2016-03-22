@@ -100,6 +100,8 @@ public:
 	void addModifier(Modifier *modifier);
 	std::vector<Modifier *> modifiers() const;
 
+	void evalModifiers();
+
 	/* UI parameters */
 	void setUIParams(ParamCallback *cb);
 	virtual void setCustomUIParams(ParamCallback *cb) = 0;
