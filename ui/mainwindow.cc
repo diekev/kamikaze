@@ -46,36 +46,7 @@
 #include "modifieritem.h"
 #include "paramcallback.h"
 #include "ui_mainwindow.h"
-
-static void disableListItem(QListWidget *list, int index)
-{
-	QListWidgetItem *item = list->item(index);
-	item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
-}
-
-static void enableListItem(QListWidget *list, int index)
-{
-	QListWidgetItem *item = list->item(index);
-	item->setFlags(item->flags() | Qt::ItemIsEnabled);
-}
-
-static void clear_layout(QLayout *layout)
-{
-	QLayoutItem *item;
-
-	while ((item = layout->takeAt(0)) != nullptr) {
-		if (item->layout()) {
-			clear_layout(item->layout());
-			delete item->layout();
-		}
-
-		if (item->widget()) {
-			delete item->widget();
-		}
-
-		delete item;
-	}
-}
+#include "utils_ui.h"
 
 MainWindow::MainWindow(Main *main, QWidget *parent)
     : QMainWindow(parent)
@@ -122,7 +93,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	m_scene_mode_list->addItem("Object Mode");
 	m_scene_mode_list->addItem("Sculpt Mode");
 
-	disableListItem(m_scene_mode_list, 1);
+	disable_list_item(m_scene_mode_list, 1);
 
 	connect(m_scene_mode_box, SIGNAL(currentIndexChanged(int)), this, SLOT(setSceneMode(int)));
 
@@ -209,10 +180,10 @@ void MainWindow::updateObjectTab() const
 	cb.setContext(m_scene, SLOT(tagObjectUpdate()));
 
 	if ((ob->flags() & object_flags::object_supports_sculpt) != object_flags::object_flags_none) {
-		enableListItem(m_scene_mode_list, 1);
+		enable_list_item(m_scene_mode_list, 1);
 	}
 	else {
-		disableListItem(m_scene_mode_list, 1);
+		disable_list_item(m_scene_mode_list, 1);
 	}
 
 	updateModifiersTab();
