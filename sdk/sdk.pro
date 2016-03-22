@@ -33,6 +33,8 @@ include(../global.pri)
 INCLUDEPATH += $$PWD/../
 INCLUDEPATH += /opt/lib/ego/include/
 
+DEFINES += GLM_FORCE_RADIANS
+
 SOURCES += \
     context.cc \
 	cube.cc \
@@ -52,11 +54,10 @@ HEADERS += \
     modifiers.h
 
 unix {
-	lib_install.command = cp $$PWD/sdk/libkamikaze.so* /opt/lib/kamikaze/lib
+	target.path = /opt/lib/kamikaze/lib
+    INSTALLS += target
 
 	header_install.files = $$HEADERS
 	header_install.path = /opt/lib/kamikaze/include/kamikaze
     INSTALLS += header_install
 }
-
-QMAKE_EXTRA_TARGETS += lib_install
