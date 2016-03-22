@@ -41,11 +41,5 @@ int main(int argc, char *argv[])
 	w.setWindowTitle(QCoreApplication::applicationName());
 	w.showMaximized();
 
-	/* load file passed as argument */
-	if (argc > 1) {
-		auto file = QFileInfo(argv[1]).filePath();
-		w.openFile(file);
-	}
-
 	return a.exec();
 }

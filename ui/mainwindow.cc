@@ -148,13 +148,6 @@ MainWindow::~MainWindow()
 	delete m_command_factory;
 }
 
-void MainWindow::openFile(const QString &filename) const
-{
-#if 0
-	m_command_manager->execute(new LoadFromFileCmd(m_scene, filename), nullptr);
-#endif
-}
-
 bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 {
 	if (e->type() == QEvent::KeyPress) {
@@ -194,18 +187,6 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 	}
 
 	return QObject::eventFilter(obj, e);
-}
-
-void MainWindow::openFile()
-{
-	const auto &filename = QFileDialog::getOpenFileName(
-	                          this, tr("Open File"),
-		                      QDir::homePath(),
-		                      tr("*.vdb"));
-
-	if (!filename.isEmpty()) {
-		openFile(filename);
-	}
 }
 
 void MainWindow::updateObjectTab() const

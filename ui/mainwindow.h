@@ -59,8 +59,6 @@ public:
 	explicit MainWindow(Main *main, QWidget *parent = nullptr);
 	~MainWindow();
 
-	void openFile(const QString &filename) const;
-
 protected:
 	bool eventFilter(QObject *obj, QEvent *e);
 
@@ -69,7 +67,6 @@ private:
 	void generateModifiersMenu();
 
 private Q_SLOTS:
-	void openFile();
 	void updateObjectTab() const;
 	void updateModifiersTab() const;
 	void startAnimation();

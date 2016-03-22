@@ -999,7 +999,6 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="m_open_file_act"/>
    </widget>
    <widget class="QMenu" name="menuAdd">
     <property name="title">
@@ -1084,22 +1083,6 @@
  </tabstops>
  <resources/>
  <connections>
-  <connection>
-   <sender>m_open_file_act</sender>
-   <signal>triggered()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>openFile()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>399</x>
-     <y>299</y>
-    </hint>
-   </hints>
-  </connection>
   <connection>
    <sender>pushButton</sender>
    <signal>clicked()</signal>
@@ -1262,7 +1245,6 @@
   </connection>
  </connections>
  <slots>
-  <slot>openFile()</slot>
   <slot>updateObject()</slot>
   <slot>startAnimation()</slot>
   <slot>setStartFrame(int)</slot>
