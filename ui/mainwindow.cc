@@ -90,7 +90,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	ui->graphicsView->GLScene(new OpenGLScene);
 	ui->graphicsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	ui->graphicsView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-	ui->graphicsView->setViewport(new QGLWidget(/*QGLFormat(QGL::SampleBuffers)*/));
+	ui->graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers | QGL::DirectRendering)));
 	ui->graphicsView->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
 	ui->graphicsView->GLScene()->setScene(m_scene);
 	ui->graphicsView->adjustSize();

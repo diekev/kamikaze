@@ -278,10 +278,9 @@ void GraphicsViewer::GLScene(OpenGLScene *scene)
 void GraphicsViewer::resizeEvent(QResizeEvent *event)
 {
 	if (scene()) {
-		std::cerr << __func__ << ": W, H: " << event->size().width() << ", "
-		          << event->size().height() << '\n';
+		OpenGLScene *glscene = static_cast<OpenGLScene *>(scene());
+		glscene->resize(event->size().width(), event->size().height());
 
-		scene()->setSceneRect(QRect(QPoint(0, 0), event->size()));
 		QGraphicsView::resizeEvent(event);
 	}
 }
@@ -336,8 +335,6 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &/*rect*/)
 	glStencilFunc(GL_ALWAYS, 1, 0xff);
 	glStencilMask(0xff);
 
-	m_camera->resize(width(), height());
-//	std::cerr << __func__ << ": W, H: " << width() << ", " << height() << '\n';
 	m_camera->update();
 
 	const auto &MV = m_camera->MV();
@@ -371,6 +368,7 @@ void OpenGLScene::setScene(Scene *scene)
 
 void OpenGLScene::initializeGL()
 {
+	std::cerr << __func__ << "\n";
 	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
 
@@ -488,6 +486,14 @@ void OpenGLScene::selectObject(int x, int y) const
 
 	const glm::vec3 pos = unproject(glm::vec3(x, m_height - y, z));
 	m_scene->selectObject(pos);
+}
+
+void OpenGLScene::resize(int x, int y)
+{
+	setSceneRect(0, 0, x, y);
+	m_camera->resize(x, y);
+	m_width = x;
+	m_height = y;
 }
 
 glm::vec3 OpenGLScene::unproject(const glm::vec3 &pos) const

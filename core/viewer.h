@@ -128,7 +128,7 @@ public:
 	/* Select the object at screen pos (x, y). */
 	void selectObject(int x, int y) const;
 
-	void resizeEvent(QResizeEvent*);
+	void resize(int x, int y);
 
 	void initializeGL();
 };
