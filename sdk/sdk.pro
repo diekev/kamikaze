@@ -42,7 +42,8 @@ SOURCES += \
     paramfactory.cc \
     param_widgets.cc \
     xyzspinbox.cc \
-    modifiers.cc
+    modifiers.cc \
+    noise.cc
 
 HEADERS += \
     context.h \
@@ -51,7 +52,8 @@ HEADERS += \
     paramfactory.h \
     param_widgets.h \
     xyzspinbox.h \
-    modifiers.h
+    modifiers.h \
+    noise.h
 
 unix {
 	target.path = /opt/lib/kamikaze/lib
