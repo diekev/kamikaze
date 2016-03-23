@@ -32,6 +32,7 @@
 
 #include <QApplication>
 #include <QColorDialog>
+#include <QGraphicsSceneMouseEvent>
 #include <QKeyEvent>
 #include <QResizeEvent>
 #include <QTimer>
@@ -382,6 +383,118 @@ void OpenGLScene::initializeGL()
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_STENCIL_TEST);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+}
+
+void OpenGLScene::mousePressEvent(QGraphicsSceneMouseEvent *e)
+{
+	const int x = e->pos().x();
+	const int y = e->pos().y();
+
+	const auto &modifier = QApplication::keyboardModifiers();
+
+	switch (modifier) {
+		case Qt::NoModifier:
+			m_modifier = MOD_KEY_NONE;
+			break;
+		case Qt::ShiftModifier:
+			m_modifier = MOD_KEY_SHIFT;
+			break;
+		case Qt::ControlModifier:
+			m_modifier = MOD_KEY_CTRL;
+			break;
+		case Qt::AltModifier:
+			m_modifier = MOD_KEY_ALT;
+			break;
+	}
+
+	if (e->buttons() == Qt::MidButton) {
+		m_mouse_button = MOUSE_MIDDLE;
+	}
+	else if (e->buttons() == Qt::LeftButton) {
+		m_mouse_button = MOUSE_LEFT;
+
+		if (m_scene->mode() == SCENE_MODE_SCULPT) {
+			intersectScene(x, y);
+		}
+		else {
+			selectObject(x, y);
+		}
+	}
+	else if (e->buttons() == Qt::RightButton) {
+		m_mouse_button = MOUSE_RIGHT;
+	}
+	else {
+		m_mouse_button = MOUSE_NONE;
+	}
+
+	m_camera->mouseDownEvent(x, y);
+}
+
+void OpenGLScene::mouseMoveEvent(QGraphicsSceneMouseEvent *e)
+{
+	if (m_mouse_button == MOUSE_NONE) {
+		return;
+	}
+
+	const int x = e->pos().x();
+	const int y = e->pos().y();
+
+	m_camera->mouseMoveEvent(m_mouse_button, m_modifier, x, y);
+
+	if (m_scene->mode() == SCENE_MODE_SCULPT && m_mouse_button == MOUSE_LEFT) {
+		intersectScene(x, y);
+	}
+}
+
+void OpenGLScene::mouseReleaseEvent(QGraphicsSceneMouseEvent */*e*/)
+{
+	m_mouse_button = MOUSE_NONE;
+	update();
+}
+
+void OpenGLScene::keyPressEvent(QKeyEvent *e)
+{
+	m_scene->keyboardEvent(e->key());
+}
+
+void OpenGLScene::wheelEvent(QGraphicsSceneWheelEvent *e)
+{
+	if (e->delta() < 0) {
+		m_mouse_button = MOUSE_SCROLL_DOWN;
+	}
+	else {
+		m_mouse_button = MOUSE_SCROLL_UP;
+	}
+
+	m_camera->mouseWheelEvent(m_mouse_button);
+}
+
+void OpenGLScene::intersectScene(int x, int y) const
+{
+	const glm::vec3 start = unproject(glm::vec3(x, m_height - y, 0.0f));
+	const glm::vec3 end = unproject(glm::vec3(x, m_height - y, 1.0f));
+
+	Ray ray;
+	ray.pos = m_camera->pos();
+	ray.dir = glm::normalize(end - start);
+
+	m_scene->intersect(ray);
+}
+
+void OpenGLScene::selectObject(int x, int y) const
+{
+	float z;
+	glReadPixels(x, m_height - y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &z);
+
+	const glm::vec3 pos = unproject(glm::vec3(x, m_height - y, z));
+	m_scene->selectObject(pos);
+}
+
+glm::vec3 OpenGLScene::unproject(const glm::vec3 &pos) const
+{
+	const auto &MV = m_camera->MV();
+	const auto &P = m_camera->P();
+	return glm::unProject(pos, MV, P, glm::vec4(0, 0, m_width, m_height));
 }
 
 void GLWidget::initializeGL()

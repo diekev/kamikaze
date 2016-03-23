@@ -64,7 +64,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
     , m_command_factory(new CommandFactory)
     , m_timer_has_started(false)
 {
-	qApp->installEventFilter(this);
+//	qApp->installEventFilter(this);
 	ui->setupUi(this);
 	ui->m_viewport->setScene(m_scene);
 
@@ -90,7 +90,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	ui->graphicsView->GLScene(new OpenGLScene);
 	ui->graphicsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	ui->graphicsView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-	ui->graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+	ui->graphicsView->setViewport(new QGLWidget(/*QGLFormat(QGL::SampleBuffers)*/));
 	ui->graphicsView->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
 	ui->graphicsView->GLScene()->setScene(m_scene);
 	ui->graphicsView->adjustSize();
@@ -120,6 +120,13 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 			return true;
 		}
 	}
+//	else if (e->type() == QEvent::GraphicsSceneMousePress) {
+//		if (obj == ui->graphicsView) {
+//			auto event = dynamic_cast<QGraphicsSceneMouseEvent *>(e);
+//			ui->graphicsView->mousePressEvent(event);
+//			return true;
+//		}
+//	}
 	else if (e->type() == QEvent::MouseMove) {
 		if (obj == ui->m_viewport) {
 			QMouseEvent *event = static_cast<QMouseEvent *>(e);

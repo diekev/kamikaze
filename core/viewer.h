@@ -92,6 +92,8 @@ public:
 class OpenGLScene : public QGraphicsScene {
 	Q_OBJECT
 
+	int m_mouse_button;
+	int m_modifier;
 	int m_width, m_height;
 
 	Camera *m_camera;
@@ -103,29 +105,28 @@ class OpenGLScene : public QGraphicsScene {
 	bool m_draw_grid;
 	bool m_initialized;
 
+	/* Get the world space position of the given point. */
+	glm::vec3 unproject(const glm::vec3 &pos) const;
+
 public:
 	OpenGLScene();
 	~OpenGLScene();
 
 	void drawBackground(QPainter *painter, const QRectF &rect) override;
 
-//	void initializeGL();
-//	void paintGL();
-//	void resizeGL(int w, int h);
-
-//	void keyPressEvent(QKeyEvent *e);
-//	void mouseMoveEvent(QMouseEvent *e);
-//	void mousePressEvent(QMouseEvent *e);
-//	void mouseReleaseEvent(QMouseEvent *e);
-//	void wheelEvent(QWheelEvent *e);
+	void keyPressEvent(QKeyEvent *e) override;
+	void mouseMoveEvent(QGraphicsSceneMouseEvent *e) override;
+	void mousePressEvent(QGraphicsSceneMouseEvent *e) override;
+	void mouseReleaseEvent(QGraphicsSceneMouseEvent *e) override;
+	void wheelEvent(QGraphicsSceneWheelEvent *e) override;
 
 	void setScene(Scene *scene);
 
-//	/* Cast a ray in the scene at mouse pos (x, y). */
-//	void intersectScene(int x, int y) const;
+	/* Cast a ray in the scene at mouse pos (x, y). */
+	void intersectScene(int x, int y) const;
 
-//	/* Select the object at screen pos (x, y). */
-//	void selectObject(int x, int y) const;
+	/* Select the object at screen pos (x, y). */
+	void selectObject(int x, int y) const;
 
 	void resizeEvent(QResizeEvent*);
 
