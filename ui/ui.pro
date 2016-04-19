@@ -34,6 +34,7 @@ DEFINES += GLM_FORCE_RADIANS
 INCLUDEPATH += $$PWD/../
 INCLUDEPATH += $$PWD/../core
 INCLUDEPATH += $$PWD/../util
+INCLUDEPATH += nodes/
 INCLUDEPATH += /opt/lib/ego/include
 INCLUDEPATH += /opt/lib/kamikaze/include
 INCLUDEPATH += /opt/lib/openvdb/include
@@ -41,14 +42,26 @@ INCLUDEPATH += /opt/lib/openexr/include
 
 SOURCES += \
     mainwindow.cc \
+    nodes/node_compound.cc \
+    nodes/node_connection.cc \
+    nodes/node_editorwidget.cc \
+    nodes/node_node.cc \
+    nodes/node_port.cc \
+    nodes/node_porttype.cc \
     paramcallback.cc \
-    modifieritem.cc \
     utils_ui.cc
 
 HEADERS += \
     mainwindow.h \
+    nodes/node_compound.h \
+    nodes/node_connection.h \
+    nodes/node_constants.h \
+    nodes/node_editorwidget.h \
+    nodes/node_node.h \
+    nodes/node_port.h \
+    nodes/node_porttype.h \
+    nodes/node_scene.h \
     paramcallback.h \
-    modifieritem.h \
     utils_ui.h
 
 FORMS += \

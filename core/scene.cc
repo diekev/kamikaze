@@ -27,12 +27,14 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <GL/glew.h>
 
-#include <kamikaze/object.h>
+#include <kamikaze/nodes.h>
+#include <kamikaze/primitive.h>
 
 #include <QKeyEvent>
 #include <QListWidget>
 
 #include "brush.h"
+#include "object.h"
 //#include "smoke/smokesimulation.h"
 
 #include "util/util_string.h"
@@ -76,6 +78,7 @@ void Scene::removeObject(Object *ob)
 
 	if (iter != m_objects.end()) {
 		m_objects.erase(iter);
+		delete ob;
 	}
 
 	if (ob == m_active_object) {
@@ -95,22 +98,28 @@ void Scene::addObject(Object *object)
 	m_objects.push_back(object);
 	m_active_object = object;
 
-	Q_EMIT objectChanged();
+	Q_EMIT objectAdded(object);
 }
 
 void Scene::render(ViewerContext *context)
 {
 	for (auto &object : m_objects) {
-		const bool active_object = (object == m_active_object);
-
-		/* update object before drawing */
-		object->update();
-
-		if (object->drawBBox()) {
-			object->bbox()->render(context, false);
+		if (!object || !object->primitive()) {
+			continue;
 		}
 
-		object->render(context, false);
+		const bool active_object = (object == m_active_object);
+
+		auto prim = object->primitive();
+
+		/* update prim before drawing */
+		prim->update();
+
+		if (prim->drawBBox()) {
+			prim->bbox()->render(context, false);
+		}
+
+		prim->render(context, false);
 
 		if (active_object) {
 			glStencilFunc(GL_NOTEQUAL, 1, 0xff);
@@ -118,12 +127,12 @@ void Scene::render(ViewerContext *context)
 			glDisable(GL_DEPTH_TEST);
 
 			/* scale up the object a bit */
-			glm::mat4 obmat = object->matrix();
-			object->matrix() = glm::scale(obmat, glm::vec3(1.01f));
+			glm::mat4 obmat = prim->matrix();
+			prim->matrix() = glm::scale(obmat, glm::vec3(1.01f));
 
-			object->render(context, true);
+			prim->render(context, true);
 
-			object->matrix() = obmat;
+			prim->matrix() = obmat;
 
 			/* restore */
 			glStencilFunc(GL_ALWAYS, 1, 0xff);
@@ -150,7 +159,11 @@ void Scene::selectObject(const glm::vec3 &pos)
 	int selected_object = -1, index = 0;
 
 	for (auto &object : m_objects) {
-		float dist = glm::distance(object->pos(), pos);
+		if (!object) {
+			continue;
+		}
+
+		float dist = glm::distance(object->primitive()->pos(), pos);
 		if (/*dist < 1.0f &&*/ dist < min) {
 			selected_object = index;
 			min = dist;
@@ -208,15 +221,20 @@ void Scene::setObjectName(const QString &name)
 void Scene::tagObjectUpdate()
 {
 	if (m_active_object) {
-		m_active_object->tagUpdate();
+		m_active_object->primitive()->tagUpdate();
 	}
 }
 
-void Scene::evalObjectModifiers()
+void Scene::evalObjectGraph()
 {
 	if (m_active_object) {
-		m_active_object->evalModifiers();
+		m_active_object->evalGraph();
 	}
+}
+
+void Scene::emitNodeAdded(Object *ob, Node *node)
+{
+	Q_EMIT nodeAdded(ob, node);
 }
 
 void Scene::setBrushMode(int mode)
@@ -271,6 +289,12 @@ void Scene::setCurrentObject(QListWidgetItem *item)
 		}
 	}
 
+	Q_EMIT objectChanged();
+}
+
+void Scene::setActiveObject(Object *object)
+{
+	m_active_object = object;
 	Q_EMIT objectChanged();
 }
 

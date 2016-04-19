@@ -27,8 +27,8 @@
 #include <iostream>
 
 #include <kamikaze/context.h>
-#include <kamikaze/object.h>
-#include <kamikaze/modifiers.h>
+#include <kamikaze/primitive.h>
+#include <kamikaze/nodes.h>
 
 #include <QComboBox>
 #include <QDialogButtonBox>
@@ -38,12 +38,19 @@
 #include <QSplitter>
 #include <QTimer>
 
+#include "core/nodes/graph.h"
 #include "core/kamikaze_main.h"
+#include "core/object.h"
 #include "core/object_ops.h"
 #include "core/scene.h"
 #include "core/undo.h"
 
-#include "modifieritem.h"
+#include "node_compound.h"
+#include "node_editorwidget.h"
+#include "node_node.h"
+#include "node_porttype.h"
+#include "node_scene.h"
+
 #include "paramcallback.h"
 #include "ui_mainwindow.h"
 #include "utils_ui.h"
@@ -68,18 +75,20 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	ui->tabWidget->setTabEnabled(0, false);
 	ui->tabWidget->setTabEnabled(3, false);
 
-	/* set default strecthes for the splitters */
-	ui->splitter->setStretchFactor(0, 1);
-	ui->splitter->setStretchFactor(1, 0);
-
-	ui->vsplitter->setStretchFactor(0, 1);
-	ui->vsplitter->setStretchFactor(1, 0);
-
 	/* Brush */
 	connect(ui->m_brush_strength, SIGNAL(valueChanged(double)), m_scene, SLOT(setBrushStrength(double)));
 	connect(ui->m_brush_radius, SIGNAL(valueChanged(double)), m_scene, SLOT(setBrushRadius(double)));
 	connect(ui->m_brush_mode, SIGNAL(currentIndexChanged(int)), m_scene, SLOT(setBrushMode(int)));
 	connect(ui->m_brush_tool, SIGNAL(currentIndexChanged(int)), m_scene, SLOT(setBrushTool(int)));
+	connect(m_scene, SIGNAL(objectAdded(Object *)), this, SLOT(setupObjectUI(Object *)));
+	connect(m_scene, SIGNAL(nodeAdded(Object *, Node *)), this, SLOT(setupNodeUI(Object *, Node *)));
+	connect(ui->graph_editor, SIGNAL(objectNodeSelected(ObjectNodeItem *)), this, SLOT(setActiveObject(ObjectNodeItem *)));
+	connect(ui->graph_editor, SIGNAL(objectNodeRemoved(ObjectNodeItem *)), this, SLOT(removeObject(ObjectNodeItem *)));
+	connect(ui->graph_editor, SIGNAL(nodeSelected(QtNode *)), this, SLOT(setupNodeParamUI(QtNode *)));
+	connect(ui->graph_editor, SIGNAL(nodesConnected(QtNode *, const QString &, QtNode *, const QString &)),
+	        this, SLOT(nodesConnected(QtNode *, const QString &, QtNode *, const QString &)));
+	connect(ui->graph_editor, SIGNAL(connectionRemoved(QtNode *, const QString &, QtNode *, const QString &)),
+	        this, SLOT(connectionRemoved(QtNode *, const QString &, QtNode *, const QString &)));
 
 	connect(m_timer, SIGNAL(timeout()), this, SLOT(updateFrame()));
 
@@ -109,7 +118,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 
 	/* TODO: find another place to do this */
 	generateObjectMenu();
-	generateModifiersMenu();
+	generateNodeMenu();
 }
 
 MainWindow::~MainWindow()
@@ -171,45 +180,22 @@ void MainWindow::updateObjectTab() const
 
 	ui->tabWidget->setTabEnabled(0, true);
 
-	clear_layout(ui->m_object_layout);
+	clear_layout(ui->node_param_layout);
 
-	ParamCallback cb(ui->m_object_layout);
-	ob->setUIParams(&cb);
-	ob->setCustomUIParams(&cb);
+	ParamCallback cb(ui->node_param_layout);
+	ob->primitive()->setUIParams(&cb);
+	ob->primitive()->setCustomUIParams(&cb);
 
 	cb.setContext(m_scene, SLOT(tagObjectUpdate()));
 
-	if ((ob->flags() & object_flags::object_supports_sculpt) != object_flags::object_flags_none) {
+	if ((ob->primitive()->flags() & object_flags::object_supports_sculpt) != object_flags::object_flags_none) {
 		enable_list_item(m_scene_mode_list, 1);
 	}
 	else {
 		disable_list_item(m_scene_mode_list, 1);
 	}
 
-	updateModifiersTab();
-
 	m_scene->objectNameList(ui->m_outliner);
-}
-
-void MainWindow::updateModifiersTab() const
-{
-	Object *ob = m_scene->currentObject();
-
-	if (ob == nullptr) {
-		return;
-	}
-
-	clear_layout(ui->modifiers_tab->layout());
-
-	for (const auto &modifier : ob->modifiers()) {
-		auto item = new ModifierItem(modifier->name().c_str());
-
-		ParamCallback modcb(item->layout());
-		modifier->setUIParams(&modcb);
-		modcb.setContext(m_scene, SLOT(evalObjectModifiers()));
-
-		ui->modifiers_tab->layout()->addWidget(item);
-	}
 }
 
 void MainWindow::startAnimation()
@@ -287,15 +273,19 @@ void MainWindow::generateObjectMenu()
 	}
 }
 
-void MainWindow::generateModifiersMenu()
+void MainWindow::generateNodeMenu()
 {
-	m_command_factory->registerType("add modifier", AddModifierCmd::registerSelf);
+	m_command_factory->registerType("add node", AddNodeCmd::registerSelf);
 
-	for (const auto &key : m_main->modifierFactory()->keys()) {
-		auto action = ui->add_modifier_menu->addAction(key.c_str());
-		action->setData(QVariant::fromValue(QString("add modifier")));
+	for (const auto &category : m_main->nodeFactory()->categories()) {
+		auto sub_menu = ui->add_nodes_menu->addMenu(category.c_str());
 
-		connect(action, SIGNAL(triggered()), this, SLOT(handleObjectCommand()));
+		for (const auto &key : m_main->nodeFactory()->keys(category)) {
+			auto action = sub_menu->addAction(key.c_str());
+			action->setData(QVariant::fromValue(QString("add node")));
+
+			connect(action, SIGNAL(triggered()), this, SLOT(handleObjectCommand()));
+		}
 	}
 }
 
@@ -365,10 +355,109 @@ void MainWindow::handleObjectCommand()
 	EvaluationContext context;
 	context.scene = m_scene;
 	context.object_factory = m_main->objectFactory();
-	context.modifier_factory = m_main->modifierFactory();
+	context.node_factory = m_main->nodeFactory();
 
+	/* Create node */
 	m_command_manager->execute(cmd, &context);
+}
 
-	/* TODO */
-	updateModifiersTab();
+void MainWindow::setupNodeUI(Object *, Node *node)
+{
+	QtNode *node_item = new QtNode(node->name().c_str());
+	node_item->setTitleColor(Qt::white);
+	node_item->alignTitle(ALIGNED_LEFT);
+	node_item->setNode(node);
+
+	ui->graph_editor->addNode(node_item);
+}
+
+void MainWindow::setupNodeParamUI(QtNode *node_item)
+{
+	auto node = node_item->getNode();
+
+	if (!node) {
+		return;
+	}
+
+	clear_layout(ui->node_param_layout);
+
+	ParamCallback cb(ui->node_param_layout);
+	node->setUIParams(&cb);
+
+	/* Only update/evaluate the graph if the node is connected. */
+	if (node->isLinked()) {
+		cb.setContext(m_scene, SLOT(evalObjectGraph()));
+	}
+}
+
+void MainWindow::setupObjectUI(Object *object)
+{
+	ObjectNodeItem *obnode_item = new ObjectNodeItem(object, object->name());
+	obnode_item->setTitleColor(Qt::white);
+	obnode_item->alignTitle(ALIGNED_CENTER);
+
+	/* add node item for the object's graph output node */
+	{
+		auto graph = object->graph();
+		auto node = graph->output();
+
+		QtNode *node_item = new QtNode(node->name().c_str());
+		node_item->setTitleColor(Qt::white);
+		node_item->alignTitle(ALIGNED_LEFT);
+		node_item->setNode(node);
+		node_item->_setScene(obnode_item->nodeScene());
+		node_item->_setEditor(ui->graph_editor);
+
+		obnode_item->addNode(node_item);
+	}
+
+	ui->graph_editor->addNode(obnode_item);
+
+	updateObjectTab();
+}
+
+void MainWindow::setActiveObject(ObjectNodeItem *node)
+{
+	m_scene->setActiveObject(node->object());
+}
+
+void MainWindow::removeObject(ObjectNodeItem *node)
+{
+	m_scene->removeObject(node->object());
+}
+
+void MainWindow::nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
+{
+	auto object = m_scene->currentObject();
+	auto graph = object->graph();
+
+	auto node_from = from->getNode();
+	auto node_to = to->getNode();
+
+	auto output_socket = node_from->output(socket_from.toStdString());
+	auto input_socket = node_to->input(socket_to.toStdString());
+
+	assert((output_socket != nullptr) && (input_socket != nullptr));
+
+	graph->connect(output_socket, input_socket);
+
+	object->evalGraph();
+}
+
+void MainWindow::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
+{
+	auto object = m_scene->currentObject();
+	auto graph = object->graph();
+
+	auto node_from = from->getNode();
+	auto node_to = to->getNode();
+
+	auto output_socket = node_from->output(socket_from.toStdString());
+	auto input_socket = node_to->input(socket_to.toStdString());
+
+	assert((output_socket != nullptr) && (input_socket != nullptr));
+
+	graph->disconnect(output_socket, input_socket);
+
+	object->evalGraph();
 }

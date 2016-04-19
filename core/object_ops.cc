@@ -25,10 +25,11 @@
 #include "object_ops.h"
 
 #include <kamikaze/context.h>
-#include <kamikaze/modifiers.h>
-#include <kamikaze/object.h>
+#include <kamikaze/nodes.h>
+#include <kamikaze/primitive.h>
 #include <kamikaze/paramfactory.h>
 
+#include "object.h"
 #include "scene.h"
 
 /* *************************** add object command *************************** */
@@ -43,7 +44,11 @@ AddObjectCmd::~AddObjectCmd()
 void AddObjectCmd::execute(EvaluationContext *context)
 {
 	m_scene = context->scene;
-	m_object = (*context->object_factory)(m_name);
+
+	m_object = new Object;
+
+	Primitive *prim = (*context->object_factory)(m_name);
+	m_object->primitive(prim);
 
 	assert(m_object != nullptr);
 	m_object->name(m_name.c_str());
@@ -73,40 +78,38 @@ Command *AddObjectCmd::registerSelf()
 	return new AddObjectCmd;
 }
 
-/* ************************** add modifier command ************************** */
+/* **************************** add node command **************************** */
 
-void AddModifierCmd::execute(EvaluationContext *context)
+void AddNodeCmd::execute(EvaluationContext *context)
 {
 	m_scene = context->scene;
 	m_object = m_scene->currentObject();
 
-	auto modifier = (*context->modifier_factory)(m_name);
-	modifier->setName(m_name);
-
 	assert(m_object != nullptr);
-	m_object->addModifier(modifier);
 
+	auto node = (*context->node_factory)(m_name);
+	m_object->addNode(node);
+
+	m_scene->emitNodeAdded(m_object, node);
+}
+
+void AddNodeCmd::undo()
+{
 	/* TODO */
-	m_scene->evalObjectModifiers();
 }
 
-void AddModifierCmd::undo()
+void AddNodeCmd::redo()
 {
-	//m_scene->removeObject(m_object);
+	/* TODO */
 }
 
-void AddModifierCmd::redo()
-{
-	//m_scene->addObject(m_object);
-}
-
-void AddModifierCmd::setUIParams(ParamCallback */*cb*/)
+void AddNodeCmd::setUIParams(ParamCallback */*cb*/)
 {
 }
 
-Command *AddModifierCmd::registerSelf()
+Command *AddNodeCmd::registerSelf()
 {
-	return new AddModifierCmd;
+	return new AddNodeCmd;
 }
 
 /* *************************** load object command ************************** */

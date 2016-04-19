@@ -24,8 +24,8 @@
 
 #include "kamikaze_main.h"
 
-#include <kamikaze/object.h>
-#include <kamikaze/modifiers.h>
+#include <kamikaze/nodes.h>
+#include <kamikaze/primitive.h>
 
 #include "dynamiclibrary.h"
 #include "filesystem.h"
@@ -34,7 +34,7 @@ namespace fs = filesystem;
 using PluginVec = std::vector<fs::shared_library>;
 
 typedef void (*register_func_t)(ObjectFactory *);
-typedef void (*register_modifier_func_t)(ModifierFactory *);
+typedef void (*register_node_func_t)(NodeFactory *);
 
 PluginVec load_plugins(const std::string &path)
 {
@@ -61,13 +61,13 @@ PluginVec load_plugins(const std::string &path)
 
 Main::Main()
     : m_object_factory(new ObjectFactory)
-    , m_modifier_factory(new ModifierFactory)
+    , m_node_factory(new NodeFactory)
 {}
 
 Main::~Main()
 {
 	delete m_object_factory;
-	delete m_modifier_factory;
+	delete m_node_factory;
 }
 
 void Main::loadPlugins()
@@ -81,10 +81,10 @@ void Main::loadPlugins()
 			register_figures(m_object_factory);
 		}
 
-		auto register_modifiers = plugin.symbol<register_modifier_func_t>("new_kamikaze_modifiers");
+		auto register_nodes = plugin.symbol<register_node_func_t>("new_kamikaze_nodes");
 
-		if (register_modifiers != nullptr) {
-			register_modifiers(m_modifier_factory);
+		if (register_nodes != nullptr) {
+			register_nodes(m_node_factory);
 		}
 	}
 }
@@ -94,7 +94,7 @@ ObjectFactory *Main::objectFactory() const
 	return m_object_factory;
 }
 
-ModifierFactory *Main::modifierFactory() const
+NodeFactory *Main::nodeFactory() const
 {
-	return m_modifier_factory;
+	return m_node_factory;
 }

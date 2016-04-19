@@ -38,22 +38,22 @@ DEFINES += GLM_FORCE_RADIANS
 SOURCES += \
     context.cc \
 	cube.cc \
-    object.cc \
     paramfactory.cc \
     param_widgets.cc \
     xyzspinbox.cc \
-    modifiers.cc \
-    noise.cc
+    noise.cc \
+    nodes.cc \
+    primitive.cc
 
 HEADERS += \
     context.h \
 	cube.h \
-    object.h \
     paramfactory.h \
     param_widgets.h \
     xyzspinbox.h \
-    modifiers.h \
-    noise.h
+    noise.h \
+    nodes.h \
+    primitive.h
 
 unix {
 	target.path = /opt/lib/kamikaze/lib

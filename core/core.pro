@@ -47,7 +47,9 @@ SOURCES += \
 	scene.cc \
 	viewer.cc \
     brush.cc \
-    kamikaze_main.cc
+    kamikaze_main.cc \
+    nodes/graph.cc \
+    object.cc
 
 HEADERS += \
 	dynamiclibrary.h \
@@ -60,7 +62,9 @@ HEADERS += \
 	scene.h \
 	viewer.h \
     brush.h \
-    kamikaze_main.h
+    kamikaze_main.h \
+    nodes/graph.h \
+    object.h
 
 OTHER_FILES += \
 	shaders/flat_shader.frag \

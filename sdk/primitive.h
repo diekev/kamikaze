@@ -43,28 +43,37 @@ enum object_flags {
 	object_supports_sculpt = (1 << 0),
 };
 
-class Object {
+class Primitive {
 protected:
-	std::unique_ptr<Cube> m_bbox;
-	unsigned int m_draw_type;
+	std::unique_ptr<Cube> m_bbox{};
+	unsigned int m_draw_type = 0x0004;  /* GL_TRIANGLES */
 
-	glm::vec3 m_dimensions, m_scale, m_inv_size, m_rotation;
-	glm::vec3 m_min, m_max, m_pos;
-	glm::mat4 m_matrix, m_inv_matrix;
+	glm::vec3 m_dimensions = glm::vec3(0.0f);
+	glm::vec3 m_scale = glm::vec3(1.0f);
+	glm::vec3 m_inv_size = glm::vec3(0.0f);
+	glm::vec3 m_rotation = glm::vec3(0.0f);
 
-	QString m_name;
+	glm::vec3 m_min = glm::vec3(0.0f);
+	glm::vec3 m_max = glm::vec3(0.0f);
+	glm::vec3 m_pos = glm::vec3(0.0f);
 
-	bool m_draw_bbox, m_need_update;
+	glm::mat4 m_matrix = glm::mat4(0.0f);
+	glm::mat4 m_inv_matrix = glm::mat4(0.0f);
 
-	object_flags m_flags;
+	QString m_name{};
 
-	std::vector<Modifier *> m_modifiers;
+	bool m_draw_bbox = false;
+	bool m_need_update = true;
+
+	int m_refcount = 0;
+
+	object_flags m_flags = object_flags::object_flags_none;
 
 	void updateMatrix();
 
 public:
-	Object();
-	virtual ~Object();
+	Primitive() = default;
+	virtual ~Primitive() = default;
 
 	virtual bool intersect(const Ray &ray, float &min) const;
 	virtual void render(ViewerContext *context, const bool for_outline) = 0;
@@ -96,20 +105,19 @@ public:
 	QString name() const;
 	void name(const QString &name);
 
-	/* Modifiers */
-	void addModifier(Modifier *modifier);
-	std::vector<Modifier *> modifiers() const;
-
-	void evalModifiers();
-
 	/* UI parameters */
 	void setUIParams(ParamCallback *cb);
 	virtual void setCustomUIParams(ParamCallback *cb) = 0;
+
+	/* Reference counting */
+	int refcount() const;
+	void incref();
+	void decref();
 };
 
 class ObjectFactory final {
 public:
-	typedef Object *(*factory_func)(void);
+	typedef Primitive *(*factory_func)(void);
 
 	void registerType(const std::string &name, factory_func func)
 	{
@@ -119,7 +127,7 @@ public:
 		m_map[name] = func;
 	}
 
-	Object *operator()(const std::string &name)
+	Primitive *operator()(const std::string &name)
 	{
 		const auto iter = m_map.find(name);
 		assert(iter != m_map.end());
@@ -146,4 +154,3 @@ public:
 private:
 	std::unordered_map<std::string, factory_func> m_map;
 };
-

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1003</width>
-    <height>643</height>
+    <width>887</width>
+    <height>698</height>
    </rect>
   </property>
   <property name="palette">
@@ -429,434 +429,482 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_3">
+   <layout class="QHBoxLayout" name="horizontalLayout_2">
     <item>
-     <widget class="QSplitter" name="vsplitter">
+     <widget class="Viewer" name="m_viewport">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
+      <property name="minimumSize">
+       <size>
+        <width>1</width>
+        <height>1</height>
+       </size>
       </property>
-      <widget class="QSplitter" name="splitter">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>887</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFichier">
+    <property name="title">
+     <string>File</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuAdd">
+    <property name="title">
+     <string>Add</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="actionUndo"/>
+    <addaction name="actionRedo"/>
+   </widget>
+   <widget class="QMenu" name="add_nodes_menu">
+    <property name="title">
+     <string>Add Node</string>
+    </property>
+   </widget>
+   <addaction name="menuFichier"/>
+   <addaction name="menuAdd"/>
+   <addaction name="menuEdit"/>
+   <addaction name="add_nodes_menu"/>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+  </widget>
+  <widget class="QDockWidget" name="dockWidget">
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <property name="floating">
+    <bool>false</bool>
+   </property>
+   <property name="features">
+    <set>QDockWidget::AllDockWidgetFeatures</set>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents">
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="0" column="0">
+      <widget class="QTabWidget" name="tabWidget">
+       <property name="enabled">
+        <bool>true</bool>
        </property>
-       <widget class="QFrame" name="frame_2">
-        <property name="frameShape">
-         <enum>QFrame::StyledPanel</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_2">
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item row="0" column="0">
-          <widget class="Viewer" name="m_viewport">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>1</width>
-             <height>1</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QTabWidget" name="tabWidget">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
+       <property name="minimumSize">
+        <size>
+         <width>1</width>
+         <height>1</height>
+        </size>
+       </property>
+       <property name="tabPosition">
+        <enum>QTabWidget::North</enum>
+       </property>
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <property name="movable">
+        <bool>true</bool>
+       </property>
+       <widget class="QWidget" name="m_object_tab">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <property name="minimumSize">
-         <size>
-          <width>1</width>
-          <height>1</height>
-         </size>
-        </property>
-        <property name="tabPosition">
-         <enum>QTabWidget::North</enum>
-        </property>
-        <property name="currentIndex">
-         <number>1</number>
-        </property>
-        <property name="movable">
-         <bool>true</bool>
-        </property>
-        <widget class="QWidget" name="m_object_tab">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <attribute name="title">
-          <string>Object</string>
-         </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_2">
-          <item>
-           <layout class="QGridLayout" name="m_object_layout"/>
-          </item>
-          <item>
-           <spacer name="verticalSpacer">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="modifiers_tab">
-         <attribute name="title">
-          <string>Modifers</string>
-         </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_5"/>
-        </widget>
-        <widget class="QWidget" name="tab">
-         <attribute name="title">
-          <string>World</string>
-         </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout">
-          <item>
-           <widget class="QGroupBox" name="groupBox_2">
-            <property name="title">
-             <string>Display</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_4">
-             <item>
-              <widget class="QPushButton" name="pushButton">
+        <attribute name="title">
+         <string>Graph Editor</string>
+        </attribute>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QtNodeEditor" name="graph_editor" native="true"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tab">
+        <attribute name="title">
+         <string>World</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QGroupBox" name="groupBox_2">
+           <property name="title">
+            <string>Display</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <widget class="QPushButton" name="pushButton">
+              <property name="text">
+               <string>Change Color</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="m_draw_grid">
+              <property name="text">
+               <string>Draw Grid</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tab_2">
+        <attribute name="title">
+         <string>Sculpt</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_8">
+         <item>
+          <widget class="QGroupBox" name="groupBox_5">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="title">
+            <string>Brush Settings</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_3">
+            <item row="2" column="1">
+             <widget class="QDoubleSpinBox" name="m_brush_radius">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="value">
+               <double>5.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QComboBox" name="m_brush_mode">
+              <item>
                <property name="text">
-                <string>Change Color</string>
+                <string>Add</string>
                </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="m_draw_grid">
+              </item>
+              <item>
                <property name="text">
-                <string>Draw Grid</string>
+                <string>Subtract</string>
                </property>
-               <property name="checked">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <spacer name="verticalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="tab_2">
-         <attribute name="title">
-          <string>Sculpt</string>
-         </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_8">
-          <item>
-           <widget class="QGroupBox" name="groupBox_5">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="title">
-             <string>Brush Settings</string>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_3">
-             <item row="2" column="1">
-              <widget class="QDoubleSpinBox" name="m_brush_radius">
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="value">
-                <double>5.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QComboBox" name="m_brush_mode">
-               <item>
-                <property name="text">
-                 <string>Add</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Subtract</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="label_12">
+              </item>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_12">
+              <property name="text">
+               <string>Radius</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QDoubleSpinBox" name="m_brush_strength">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="decimals">
+               <number>3</number>
+              </property>
+              <property name="maximum">
+               <double>1.000000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.010000000000000</double>
+              </property>
+              <property name="value">
+               <double>0.500000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_13">
+              <property name="text">
+               <string>Strength</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_11">
+              <property name="text">
+               <string>Mode</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_14">
+              <property name="text">
+               <string>Tool</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="m_brush_tool">
+              <item>
                <property name="text">
-                <string>Radius</string>
+                <string>Draw</string>
                </property>
-              </widget>
-             </item>
-             <item row="3" column="1">
-              <widget class="QDoubleSpinBox" name="m_brush_strength">
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="decimals">
-                <number>3</number>
-               </property>
-               <property name="maximum">
-                <double>1.000000000000000</double>
-               </property>
-               <property name="singleStep">
-                <double>0.010000000000000</double>
-               </property>
-               <property name="value">
-                <double>0.500000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="0">
-              <widget class="QLabel" name="label_13">
+              </item>
+              <item>
                <property name="text">
-                <string>Strength</string>
+                <string>Smooth</string>
                </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="label_11">
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tab_3">
+        <attribute name="title">
+         <string>Outliner</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_9">
+         <item>
+          <widget class="QListWidget" name="m_outliner"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tab_4">
+        <attribute name="title">
+         <string>Simulation</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_10">
+         <item>
+          <widget class="QGroupBox" name="groupBox_6">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="title">
+            <string>Time Stepping</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_5">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_4">
+              <property name="text">
+               <string>Time Step</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QDoubleSpinBox" name="m_time_step">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="value">
+               <double>0.100000000000000</double>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_7">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="title">
+            <string>Cache</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_6">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string>Path</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="m_cache_path"/>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_8">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="title">
+            <string>Behaviour</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_7">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_6">
+              <property name="text">
+               <string>Advection</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="m_advection">
+              <property name="currentIndex">
+               <number>2</number>
+              </property>
+              <item>
                <property name="text">
-                <string>Mode</string>
+                <string>Semi-Lagragian</string>
                </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_14">
+              </item>
+              <item>
                <property name="text">
-                <string>Tool</string>
+                <string>Mid-Point</string>
                </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QComboBox" name="m_brush_tool">
-               <item>
-                <property name="text">
-                 <string>Draw</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Smooth</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <spacer name="verticalSpacer_4">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="tab_3">
-         <attribute name="title">
-          <string>Outliner</string>
-         </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_9">
-          <item>
-           <widget class="QListWidget" name="m_outliner"/>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="tab_4">
-         <attribute name="title">
-          <string>Simulation</string>
-         </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_10">
-          <item>
-           <widget class="QGroupBox" name="groupBox_6">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="title">
-             <string>Time Stepping</string>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_5">
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_4">
+              </item>
+              <item>
                <property name="text">
-                <string>Time Step</string>
+                <string>RK3</string>
                </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="m_time_step">
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="value">
-                <double>0.100000000000000</double>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="groupBox_7">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="title">
-             <string>Cache</string>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_6">
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_5">
+              </item>
+              <item>
                <property name="text">
-                <string>Path</string>
+                <string>RK4</string>
                </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QLineEdit" name="m_cache_path"/>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="groupBox_8">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="title">
-             <string>Behaviour</string>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_7">
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_6">
+              </item>
+              <item>
                <property name="text">
-                <string>Advection</string>
+                <string>MAC</string>
                </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QComboBox" name="m_advection">
-               <property name="currentIndex">
-                <number>2</number>
+              </item>
+              <item>
+               <property name="text">
+                <string>BEFCC</string>
                </property>
-               <item>
-                <property name="text">
-                 <string>Semi-Lagragian</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Mid-Point</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>RK3</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>RK4</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>MAC</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>BEFCC</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <spacer name="verticalSpacer_5">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </widget>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_5">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
        </widget>
       </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="dockWidget_3">
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_3">
+    <layout class="QVBoxLayout" name="verticalLayout_7">
+     <item>
+      <widget class="QScrollArea" name="scrollArea">
+       <property name="widgetResizable">
+        <bool>true</bool>
+       </property>
+       <widget class="QWidget" name="scrollAreaWidgetContents">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>275</width>
+          <height>85</height>
+         </rect>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <layout class="QGridLayout" name="node_param_layout">
+           <property name="horizontalSpacing">
+            <number>0</number>
+           </property>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="dockWidget_6">
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_6">
+    <layout class="QVBoxLayout" name="verticalLayout_5">
+     <item>
       <widget class="QFrame" name="frame">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -870,14 +918,14 @@
        <property name="frameShadow">
         <enum>QFrame::Raised</enum>
        </property>
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
          <widget class="QSlider" name="m_timeline">
           <property name="mouseTracking">
            <bool>false</bool>
           </property>
           <property name="value">
-           <number>7</number>
+           <number>0</number>
           </property>
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -895,37 +943,6 @@
           <property name="sizeConstraint">
            <enum>QLayout::SetMinimumSize</enum>
           </property>
-          <item row="1" column="0">
-           <widget class="QSpinBox" name="m_star_frame">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="maximum">
-             <number>500000</number>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QPushButton" name="m_start_but">
-            <property name="text">
-             <string>Play</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QPushButton" name="m_end_but">
-            <property name="text">
-             <string>Last</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QPushButton" name="m_begin_but">
-            <property name="text">
-             <string>First</string>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="2">
            <widget class="QSpinBox" name="m_end_frame">
             <property name="alignment">
@@ -949,13 +966,20 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
-           <widget class="QLabel" name="label_7">
-            <property name="text">
-             <string>FPS</string>
+          <item row="1" column="0">
+           <widget class="QSpinBox" name="m_star_frame">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
-            <property name="buddy">
-             <cstring>m_fps</cstring>
+            <property name="maximum">
+             <number>500000</number>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QPushButton" name="m_begin_but">
+            <property name="text">
+             <string>First</string>
             </property>
            </widget>
           </item>
@@ -978,60 +1002,37 @@
             </property>
            </widget>
           </item>
+          <item row="0" column="1">
+           <widget class="QPushButton" name="m_start_but">
+            <property name="text">
+             <string>Play</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QPushButton" name="m_end_but">
+            <property name="text">
+             <string>Last</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="label_7">
+            <property name="text">
+             <string>FPS</string>
+            </property>
+            <property name="buddy">
+             <cstring>m_fps</cstring>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
        </layout>
       </widget>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1003</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuFichier">
-    <property name="title">
-     <string>File</string>
-    </property>
+     </item>
+    </layout>
    </widget>
-   <widget class="QMenu" name="menuAdd">
-    <property name="title">
-     <string>Add</string>
-    </property>
-   </widget>
-   <widget class="QMenu" name="menuEdit">
-    <property name="title">
-     <string>Edit</string>
-    </property>
-    <addaction name="actionUndo"/>
-    <addaction name="actionRedo"/>
-   </widget>
-   <widget class="QMenu" name="add_modifier_menu">
-    <property name="title">
-     <string>Add Modifier</string>
-    </property>
-   </widget>
-   <addaction name="menuFichier"/>
-   <addaction name="menuAdd"/>
-   <addaction name="menuEdit"/>
-   <addaction name="add_modifier_menu"/>
-  </widget>
-  <widget class="QToolBar" name="toolBar">
-   <property name="windowTitle">
-    <string>toolBar</string>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
   </widget>
   <action name="m_open_file_act">
    <property name="text">
@@ -1075,14 +1076,99 @@
     <slot>drawGrid(bool)</slot>
    </slots>
   </customwidget>
+  <customwidget>
+   <class>QtNodeEditor</class>
+   <extends>QWidget</extends>
+   <header>node_editorwidget.h</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
  <tabstops>
   <tabstop>tabWidget</tabstop>
-  <tabstop>pushButton</tabstop>
   <tabstop>m_draw_grid</tabstop>
  </tabstops>
  <resources/>
  <connections>
+  <connection>
+   <sender>actionUndo</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>undo()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>501</x>
+     <y>329</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionRedo</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>redo()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>501</x>
+     <y>321</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>m_end_but</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>goToEndFrame()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>944</x>
+     <y>629</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>501</x>
+     <y>329</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>m_draw_grid</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>m_viewport</receiver>
+   <slot>drawGrid(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>745</x>
+     <y>135</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>204</x>
+     <y>330</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>m_begin_but</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>goToStartFrame()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>772</x>
+     <y>629</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>501</x>
+     <y>329</y>
+    </hint>
+   </hints>
+  </connection>
   <connection>
    <sender>pushButton</sender>
    <signal>clicked()</signal>
@@ -1100,18 +1186,34 @@
    </hints>
   </connection>
   <connection>
-   <sender>m_draw_grid</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>m_viewport</receiver>
-   <slot>drawGrid(bool)</slot>
+   <sender>m_end_frame</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>setEndFrame(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>745</x>
-     <y>135</y>
+     <x>793</x>
+     <y>194</y>
     </hint>
     <hint type="destinationlabel">
-     <x>204</x>
-     <y>330</y>
+     <x>491</x>
+     <y>336</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>m_timeline</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>m_cur_frame</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>371</x>
+     <y>596</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>857</x>
+     <y>595</y>
     </hint>
    </hints>
   </connection>
@@ -1144,102 +1246,6 @@
     <hint type="destinationlabel">
      <x>491</x>
      <y>336</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_end_frame</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>MainWindow</receiver>
-   <slot>setEndFrame(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>793</x>
-     <y>194</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>491</x>
-     <y>336</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_begin_but</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>goToStartFrame()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>772</x>
-     <y>629</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>501</x>
-     <y>329</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_end_but</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>goToEndFrame()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>944</x>
-     <y>629</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>501</x>
-     <y>329</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_timeline</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>m_cur_frame</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>371</x>
-     <y>596</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>857</x>
-     <y>595</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionUndo</sender>
-   <signal>triggered()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>undo()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>501</x>
-     <y>329</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionRedo</sender>
-   <signal>triggered()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>redo()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>501</x>
-     <y>321</y>
     </hint>
    </hints>
   </connection>

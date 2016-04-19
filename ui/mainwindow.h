@@ -32,9 +32,15 @@ namespace Ui {
 class MainWindow;
 }
 
+class QtNode;
+
 class Command;
 class CommandManager;
 class Main;
+class Primitive;
+class Node;
+class Object;
+class ObjectNodeItem;
 class QComboBox;
 class QListWidget;
 class QTimer;
@@ -64,11 +70,10 @@ protected:
 
 private:
 	void generateObjectMenu();
-	void generateModifiersMenu();
+	void generateNodeMenu();
 
 private Q_SLOTS:
 	void updateObjectTab() const;
-	void updateModifiersTab() const;
 	void startAnimation();
 	void updateFrame() const;
 	void setStartFrame(int value) const;
@@ -80,4 +85,11 @@ private Q_SLOTS:
 	void redo() const;
 	void handleCommand();
 	void handleObjectCommand();
+	void setupNodeUI(Object *, Node *node);
+	void setupNodeParamUI(QtNode *node_item);
+	void setupObjectUI(Object *);
+	void setActiveObject(ObjectNodeItem *);
+	void removeObject(ObjectNodeItem *node);
+	void nodesConnected(QtNode *, const QString &, QtNode *, const QString &);
+	void connectionRemoved(QtNode *, const QString &, QtNode *, const QString &);
 };

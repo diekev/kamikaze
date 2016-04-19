@@ -51,14 +51,14 @@ public:
 	static Command *registerSelf();
 };
 
-class AddModifierCmd : public Command {
+class AddNodeCmd : public Command {
 	Object *m_object = nullptr;
 	Scene *m_scene = nullptr;
 
 public:
-	AddModifierCmd() = default;
-	AddModifierCmd(const QString &name);
-	~AddModifierCmd() = default;
+	AddNodeCmd() = default;
+	AddNodeCmd(const QString &name);
+	~AddNodeCmd() = default;
 
 	void execute(EvaluationContext *context);
 	void undo();

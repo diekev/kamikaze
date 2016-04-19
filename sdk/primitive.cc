@@ -21,41 +21,18 @@
  * ***** END GPL LICENSE BLOCK *****
  */
 
-#include "object.h"
+#include "primitive.h"
 
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "modifiers.h"
 #include "paramfactory.h"
 
 #include "ui/paramcallback.h"
 
 #include "util/util_render.h"
 
-Object::Object()
-    : m_draw_type(GL_TRIANGLES)
-    , m_dimensions(glm::vec3(0.0f))
-    , m_scale(glm::vec3(1.0f))
-    , m_inv_size(glm::vec3(0.0f))
-    , m_rotation(glm::vec3(0.0f))
-    , m_min(glm::vec3(0.0f))
-    , m_max(glm::vec3(0.0f))
-    , m_pos(glm::vec3(0.0f))
-    , m_name("")
-    , m_draw_bbox(false)
-    , m_need_update(true)
-    , m_flags(object_flags::object_flags_none)
-{}
-
-Object::~Object()
-{
-	for (auto &modifier : m_modifiers) {
-		delete modifier;
-	}
-}
-
-bool Object::intersect(const Ray &ray, float &min) const
+bool Primitive::intersect(const Ray &ray, float &min) const
 {
 	glm::vec3 inv_dir = 1.0f / ray.dir;
 	glm::vec3 t_min = (m_min - ray.pos) * inv_dir;
@@ -73,7 +50,7 @@ bool Object::intersect(const Ray &ray, float &min) const
 	return false;
 }
 
-void Object::setDrawType(int draw_type)
+void Primitive::setDrawType(int draw_type)
 {
 	switch (draw_type) {
 		case DRAW_WIRE:
@@ -86,75 +63,75 @@ void Object::setDrawType(int draw_type)
 	}
 }
 
-void Object::drawBBox(const bool b)
+void Primitive::drawBBox(const bool b)
 {
 	m_draw_bbox = b;
 }
 
-bool Object::drawBBox() const
+bool Primitive::drawBBox() const
 {
 	return m_draw_bbox;
 }
 
-Cube *Object::bbox() const
+Cube *Primitive::bbox() const
 {
 	return m_bbox.get();
 }
 
-glm::vec3 Object::pos() const
+glm::vec3 Primitive::pos() const
 {
 	return m_pos;
 }
 
-glm::vec3 &Object::pos()
+glm::vec3 &Primitive::pos()
 {
 	m_need_update = true;
 	return m_pos;
 }
 
-glm::vec3 Object::scale() const
+glm::vec3 Primitive::scale() const
 {
 	return m_scale;
 }
 
-glm::vec3 &Object::scale()
+glm::vec3 &Primitive::scale()
 {
 	m_need_update = true;
 	return m_scale;
 }
 
-glm::vec3 Object::rotation() const
+glm::vec3 Primitive::rotation() const
 {
 	return m_rotation;
 }
 
-glm::vec3 &Object::rotation()
+glm::vec3 &Primitive::rotation()
 {
 	m_need_update = true;
 	return m_rotation;
 }
 
-void Object::flags(object_flags flags)
+void Primitive::flags(object_flags flags)
 {
 	m_flags = flags;
 }
 
-object_flags Object::flags() const
+object_flags Primitive::flags() const
 {
 	return m_flags;
 }
 
-glm::mat4 Object::matrix() const
+glm::mat4 Primitive::matrix() const
 {
 	return m_matrix;
 }
 
-glm::mat4 &Object::matrix()
+glm::mat4 &Primitive::matrix()
 {
 	return m_matrix;
 }
 
-void Object::update()
+void Primitive::update()
 {
 	if (m_need_update) {
 		updateMatrix();
@@ -164,12 +141,12 @@ void Object::update()
 	}
 }
 
-void Object::tagUpdate()
+void Primitive::tagUpdate()
 {
 	m_need_update = true;
 }
 
-void Object::updateMatrix()
+void Primitive::updateMatrix()
 {
 	m_min = m_pos - m_dimensions / 2.0f;
 	m_max = m_min + m_dimensions;
@@ -184,34 +161,17 @@ void Object::updateMatrix()
 	m_inv_matrix = glm::inverse(m_matrix);
 }
 
-QString Object::name() const
+QString Primitive::name() const
 {
 	return m_name;
 }
 
-void Object::name(const QString &name)
+void Primitive::name(const QString &name)
 {
 	m_name = name;
 }
 
-void Object::addModifier(Modifier *modifier)
-{
-	m_modifiers.push_back(modifier);
-}
-
-std::vector<Modifier *> Object::modifiers() const
-{
-	return m_modifiers;
-}
-
-void Object::evalModifiers()
-{
-	for (auto &modifier : m_modifiers) {
-		modifier->evaluate(this);
-	}
-}
-
-void Object::setUIParams(ParamCallback *cb)
+void Primitive::setUIParams(ParamCallback *cb)
 {
 	string_param(cb, "Name", &m_name, "");
 
@@ -220,4 +180,19 @@ void Object::setUIParams(ParamCallback *cb)
 	xyz_param(cb, "Position", &m_pos[0]);
 	xyz_param(cb, "Scale", &m_scale[0]);
 	xyz_param(cb, "Rotation", &m_rotation[0]);
+}
+
+int Primitive::refcount() const
+{
+	return m_refcount;
+}
+
+void Primitive::incref()
+{
+	++m_refcount;
+}
+
+void Primitive::decref()
+{
+	--m_refcount;
 }

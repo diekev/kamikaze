@@ -26,14 +26,14 @@
 
 #include <glm/glm.hpp>
 
-class ModifierFactory;
+class NodeFactory;
 class ObjectFactory;
 class Scene;
 
 struct EvaluationContext {
 	Scene *scene;
 	ObjectFactory *object_factory;
-	ModifierFactory *modifier_factory;
+	NodeFactory *node_factory;
 };
 
 class ViewerContext {

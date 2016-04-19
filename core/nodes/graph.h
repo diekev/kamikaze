@@ -15,53 +15,53 @@
  * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * The Original Code is Copyright (C) 2016 Kévin Dietrich.
+ * The Original Code is Copyright (C) 2015 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
  *
  */
 
-#include "modifiers.h"
+#pragma once
 
-void Modifier::setName(const std::string &name)
-{
-	m_name = name;
-}
+#include <kamikaze/nodes.h>
+#include <vector>
 
-std::string Modifier::name() const
-{
-	return m_name;
-}
+class InputSocket;
+class OutputNode;
+class OutputSocket;
 
-void ModifierFactory::registerType(const std::string &name, ModifierFactory::factory_func func)
-{
-	const auto iter = m_map.find(name);
-	assert(iter == m_map.end());
+class Graph {
+	std::vector<Node *> m_nodes;
+	std::vector<Node *> m_stack;
 
-	m_map[name] = func;
-}
+	bool m_need_update;
 
-Modifier *ModifierFactory::operator()(const std::string &name)
-{
-	const auto iter = m_map.find(name);
-	assert(iter != m_map.end());
+	void build(Node *node);
 
-	return iter->second();
-}
+public:
+	Graph();
+	~Graph();
 
-size_t ModifierFactory::numEntries() const
-{
-	return m_map.size();
-}
+	void add(Node *node);
+	void connect(OutputSocket *from, InputSocket *to);
+	void disconnect(OutputSocket *from, InputSocket *to);
 
-std::vector<std::string> ModifierFactory::keys() const
-{
-	std::vector<std::string> v;
+	void build();
+	void execute();
 
-	for (const auto &entry : m_map) {
-		v.push_back(entry.first);
-	}
+	OutputNode *output() const;
+};
 
-	return v;
-}
+class OutputNode : public Node {
+	Primitive *m_primitive = nullptr;
+
+public:
+	OutputNode(const std::string &name);
+
+	Primitive *primitive() const;
+
+	void process() override;
+
+	void setUIParams(ParamCallback */*cb*/) override;
+};

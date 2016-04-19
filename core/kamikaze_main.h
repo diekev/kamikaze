@@ -25,11 +25,11 @@
 #pragma once
 
 class ObjectFactory;
-class ModifierFactory;
+class NodeFactory;
 
 class Main final {
 	ObjectFactory *m_object_factory;
-	ModifierFactory *m_modifier_factory;
+	NodeFactory *m_node_factory;
 
 public:
 	Main();
@@ -38,5 +38,5 @@ public:
 	void loadPlugins();
 
 	ObjectFactory *objectFactory() const;
-	ModifierFactory *modifierFactory() const;
+	NodeFactory *nodeFactory() const;
 };

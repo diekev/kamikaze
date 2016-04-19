@@ -24,38 +24,48 @@
 
 #pragma once
 
-#include <cassert>
-#include <unordered_map>
+#include <QString>
 #include <vector>
 
-class ParamCallback;
-class Object;
+class Graph;
+class Node;
+class Primitive;
 
-class Modifier {
-	std::string m_name;
+/**
+ * This class is used to gather and release the primitives created inside of an
+ * object's node graph.
+ */
+class PrimitiveCache {
+	std::vector<Primitive *> m_primitives;
 
 public:
-	virtual ~Modifier() = default;
-
-	void setName(const std::string &name);
-	std::string name() const;
-
-	virtual void evaluate(Object *ob) = 0;
-	virtual void setUIParams(ParamCallback *cb) = 0;
+	void add(Primitive *prim);
+	void clear();
 };
 
-class ModifierFactory final {
+class Object {
+	Primitive *m_primitive = nullptr;
+	Primitive *m_orig_prim = nullptr;
+	PrimitiveCache m_cache;
+
+	Graph *m_graph;
+
+	QString m_name;
+
 public:
-	typedef Modifier *(*factory_func)(void);
+	Object();
+	~Object();
 
-	void registerType(const std::string &name, factory_func func);
+	Primitive *primitive() const;
+	void primitive(Primitive *prim);
 
-	Modifier *operator()(const std::string &name);
+	/* Nodes */
+	void addNode(Node *node);
 
-	size_t numEntries() const;
+	Graph *graph() const;
 
-	std::vector<std::string> keys() const;
+	void evalGraph();
 
-private:
-	std::unordered_map<std::string, factory_func> m_map;
+	void name(const QString &name);
+	const QString &name() const;
 };

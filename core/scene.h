@@ -29,6 +29,7 @@
 #include "../util/util_render.h"
 
 class Brush;
+class Node;
 class Object;
 class QListWidget;
 class QListWidgetItem;
@@ -66,12 +67,14 @@ public:
 	void selectObject(const glm::vec3 &pos);
 	void objectNameList(QListWidget *widget) const;
 
+	void emitNodeAdded(Object *ob, Node *node);
+
 public Q_SLOTS:
 	void setMode(int mode);
 
 	void setObjectName(const QString &name);
 	void tagObjectUpdate();
-	void evalObjectModifiers();
+	void evalObjectGraph();
 
 	void setBrushMode(int mode);
 	void setBrushRadius(double value);
@@ -79,6 +82,7 @@ public Q_SLOTS:
 	void setBrushTool(int tool);
 
 	void setCurrentObject(QListWidgetItem *item);
+	void setActiveObject(Object *object);
 
 //	void setSimulationDt(double value);
 //	void setSimulationCache(const QString &path);
@@ -88,5 +92,7 @@ private:
 	bool ensureUniqueName(QString &name) const;
 
 Q_SIGNALS:
+	void objectAdded(Object *);
+	void nodeAdded(Object *, Node *);
 	void objectChanged();
 };
