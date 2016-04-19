@@ -34,12 +34,11 @@ INCLUDEPATH += $$PWD/../
 INCLUDEPATH += $$PWD/../util
 INCLUDEPATH += /opt/lib/ego/include
 INCLUDEPATH += /opt/lib/kamikaze/include
+INCLUDEPATH += /opt/lib/utils/include
 
 DEFINES += GLM_FORCE_RADIANS
 
 SOURCES += \
-	dynamiclibrary.cc \
-	filesystem.cc \
 	grid.cc \
     object_ops.cc \
     undo.cc \
@@ -52,8 +51,6 @@ SOURCES += \
     object.cc
 
 HEADERS += \
-	dynamiclibrary.h \
-	filesystem.h \
 	grid.h \
     object_ops.h \
     undo.h \

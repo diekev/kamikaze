@@ -39,6 +39,7 @@ LIBS += $$OUT_PWD/../util/libutils.a
 LIBS += -L/opt/lib/kamikaze/lib -lkamikaze
 
 LIBS += /opt/lib/ego/lib/libego.a
+LIBS += /opt/lib/utils/lib/libfilesystem.a
 LIBS += -lGL -lGLEW
 LIBS += -ldl
 

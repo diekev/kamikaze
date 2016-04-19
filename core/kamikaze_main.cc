@@ -27,8 +27,7 @@
 #include <kamikaze/nodes.h>
 #include <kamikaze/primitive.h>
 
-#include "dynamiclibrary.h"
-#include "filesystem.h"
+#include <utils/filesystem.h>
 
 namespace fs = filesystem;
 using PluginVec = std::vector<fs::shared_library>;
@@ -36,20 +35,19 @@ using PluginVec = std::vector<fs::shared_library>;
 typedef void (*register_func_t)(ObjectFactory *);
 typedef void (*register_node_func_t)(NodeFactory *);
 
-PluginVec load_plugins(const std::string &path)
+PluginVec load_plugins(const fs::path &path)
 {
 	PluginVec plugins;
-	fs::dir dir(path);
 
-	for (const auto &file : dir) {
-		if (!fs::is_library(file)) {
+	for (const auto &entry : fs::directory_iterator(path)) {
+		if (!fs::is_library(entry)) {
 			continue;
 		}
 
-		fs::shared_library lib(file);
+		fs::shared_library lib(entry);
 
 		if (!lib) {
-			std::cerr << lib.error() << '\n';
+			std::cerr << "Invalid library object: " << entry.path_() << '\n';
 			continue;
 		}
 
@@ -74,16 +72,29 @@ void Main::loadPlugins()
 {
 	PluginVec plugins = load_plugins("/opt/kamikaze/");
 
-	for (const auto &plugin : plugins) {
-		auto register_figures = plugin.symbol<register_func_t>("new_kamikaze_objects");
+	for (auto &plugin : plugins) {
+		if (!plugin) {
+			std::cerr << "Invalid library object\n";
+			continue;
+		}
 
-		if (register_figures != nullptr) {
+		auto symbol = plugin("new_kamikaze_objects");
+		auto register_figures = fs::dso_function<void(ObjectFactory *)>(symbol);
+
+		if (!register_figures) {
+			std::cerr << "Cannot find symbol: new_kamikaze_objects\n";
+		}
+		else {
 			register_figures(m_object_factory);
 		}
 
-		auto register_nodes = plugin.symbol<register_node_func_t>("new_kamikaze_nodes");
+		symbol = plugin("new_kamikaze_nodes");
+		auto register_nodes = fs::dso_function<void(NodeFactory *)>(symbol);
 
-		if (register_nodes != nullptr) {
+		if (!register_nodes) {
+			std::cerr << "Cannot find symbol: new_kamikaze_nodes\n";
+		}
+		else {
 			register_nodes(m_node_factory);
 		}
 	}
