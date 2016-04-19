@@ -923,9 +923,13 @@ void QtNodeEditor::removeAllSelelected()
 		removeConnection(selectedConnection);
 	}
 
+	m_currently_selected_connections.clear();
+
 	for (QtNode *selectedNode : m_currently_selected_nodes) {
 		removeNode(selectedNode);
 	}
+
+	m_currently_selected_nodes.clear();
 }
 
 //****************************************************************************/
