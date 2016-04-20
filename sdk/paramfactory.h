@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include <string>
+
 class ParamCallback;
 class QString;
 
@@ -99,7 +101,7 @@ void xyz_param(ParamCallback *cb, const char *name, float ptr[3]);
  * @param name The UI name of the parameter.
  * @param ptr  The pointer to the file name property.
  */
-void file_param(ParamCallback *cb, const char *name, QString *ptr);
+void file_param(ParamCallback *cb, const char *name, std::string *ptr);
 
 /**
  * @brief param_tooltip Set the tooltip for the last added parameter.

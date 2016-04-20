@@ -162,13 +162,13 @@ Q_SIGNALS:
 class FileParam final : public FileSelector {
 	Q_OBJECT
 
-	QString *m_value_ptr;
+	std::string *m_value_ptr;
 
 public:
 	explicit FileParam(QWidget *parent = nullptr);
 	~FileParam() = default;
 
-	void valuePtr(QString *ptr);
+	void valuePtr(std::string *ptr);
 
 private Q_SLOTS:
 	void updateValuePtr(const QString &value);

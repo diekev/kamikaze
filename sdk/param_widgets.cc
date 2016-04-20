@@ -162,13 +162,13 @@ FileParam::FileParam(QWidget *parent)
 	connect(this, SIGNAL(textChanged(const QString &)), this, SLOT(updateValuePtr(const QString &)));
 }
 
-void FileParam::valuePtr(QString *ptr)
+void FileParam::valuePtr(std::string *ptr)
 {
 	m_value_ptr = ptr;
 }
 
 void FileParam::updateValuePtr(const QString &value)
 {
-	*m_value_ptr = value;
+	*m_value_ptr = value.toStdString();
 	Q_EMIT paramChanged();
 }

@@ -123,7 +123,7 @@ void FileSelector::setValue(const QString &text)
 
 void FileSelector::setChoosenFile()
 {
-	auto filename = QFileDialog::getOpenFileName(this);
+	auto filename = QFileDialog::getSaveFileName(this);
 
 	if (!filename.isEmpty()) {
 		m_line_edit->setText(filename);
