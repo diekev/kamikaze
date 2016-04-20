@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 {
 	QApplication a(argc, argv);
 	QCoreApplication::setOrganizationName("giraffeenfeu");
-	QCoreApplication::setApplicationName("Hi no Kirin");
+	QCoreApplication::setApplicationName("Kamikaze");
 
 	Main main;
 	main.loadPlugins();
