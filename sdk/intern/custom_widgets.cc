@@ -22,7 +22,7 @@
  *
  */
 
-#include "xyzspinbox.h"
+#include "custom_widgets.h"
 
 #include <QDoubleSpinBox>
 #include <QFileDialog>

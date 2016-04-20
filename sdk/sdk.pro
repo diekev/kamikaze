@@ -35,31 +35,40 @@ INCLUDEPATH += $$EGO_INCLUDE_DIR
 
 DEFINES += GLM_FORCE_RADIANS
 
+SRC_INTERN = \
+    intern/param_widgets.cc \
+    intern/custom_widgets.cc
+
+HDR_INTERN = \
+    intern/param_widgets.h \
+    intern/custom_widgets.h
+
+HDR_SDK = \
+    context.h \
+	cube.h \
+    paramfactory.h \
+    noise.h \
+    nodes.h \
+    primitive.h
+
 SOURCES += \
+    $$SRC_INTERN \
     context.cc \
 	cube.cc \
     paramfactory.cc \
-    param_widgets.cc \
-    xyzspinbox.cc \
     noise.cc \
     nodes.cc \
     primitive.cc
 
 HEADERS += \
-    context.h \
-	cube.h \
-    paramfactory.h \
-    param_widgets.h \
-    xyzspinbox.h \
-    noise.h \
-    nodes.h \
-    primitive.h
+    $$HDR_SDK \
+    $$HDR_INTERN
 
 unix {
 	target.path = /opt/lib/kamikaze/lib
     INSTALLS += target
 
-	header_install.files = $$HEADERS
+	header_install.files = $$HDR_SDK
 	header_install.path = /opt/lib/kamikaze/include/kamikaze
     INSTALLS += header_install
 }

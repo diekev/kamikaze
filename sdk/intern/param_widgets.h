@@ -30,7 +30,7 @@
 #include <QLineEdit>
 #include <QWidget>
 
-#include "xyzspinbox.h"
+#include "custom_widgets.h"
 
 class QGridLayout;
 

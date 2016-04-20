@@ -26,7 +26,7 @@
 
 #include "ui/paramcallback.h"
 
-#include "param_widgets.h"
+#include "intern/param_widgets.h"
 
 #include <QLabel>
 #include <QGridLayout>
