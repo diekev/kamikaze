@@ -35,10 +35,8 @@ INCLUDEPATH += $$PWD/../
 INCLUDEPATH += $$PWD/../core
 INCLUDEPATH += $$PWD/../util
 INCLUDEPATH += nodes/
-INCLUDEPATH += /opt/lib/ego/include
-INCLUDEPATH += /opt/lib/kamikaze/include
-INCLUDEPATH += /opt/lib/openvdb/include
-INCLUDEPATH += /opt/lib/openexr/include
+INCLUDEPATH += $$EGO_INCLUDE_DIR
+INCLUDEPATH += $$KAMIKAZE_SDK_INCLUDE_DIR
 
 SOURCES += \
     mainwindow.cc \

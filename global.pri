@@ -25,4 +25,13 @@ include(../../repos/seppuku/rcfiles/build_flags.pri)
 
 QMAKE_CXXFLAGS -= -Weffc++
 
-DEFINES += DWREAL_IS_DOUBLE=0
+KAMIKAZE_SDK_INCLUDE_DIR = /opt/lib/kamikaze/include
+KAMIKAZE_SDK_LIBRARY = -L/opt/lib/kamikaze/lib -lkamikaze
+
+EGO_INCLUDE_DIR = /opt/lib/ego/include
+EGO_LIBRARY = /opt/lib/ego/lib/libego.a
+EGO_LIBRARIES = $$EGO_LIBRARY -lGL -lGLEW
+
+FILESYSTEM_INCLUDE_DIR = /opt/lib/utils/include
+FILESYSTEM_LIBRARY = /opt/lib/utils/lib/libfilesystem.a
+FILESYSTEM_LIBRARIES = $$FILESYSTEM_LIBRARY -ldl

@@ -36,12 +36,9 @@ LIBS += $$OUT_PWD/../core/libcore.a
 #LIBS += $$OUT_PWD/../smoke/libsmoke.a
 LIBS += $$OUT_PWD/../util/libutils.a
 
-LIBS += -L/opt/lib/kamikaze/lib -lkamikaze
-
-LIBS += /opt/lib/ego/lib/libego.a
-LIBS += /opt/lib/utils/lib/libfilesystem.a
-LIBS += -lGL -lGLEW
-LIBS += -ldl
+LIBS += $$EGO_LIBRARIES
+LIBS += $$FILESYSTEM_LIBRARIES
+LIBS += $$KAMIKAZE_SDK_LIBRARY
 
 unix {
 	copy_files.commands = cp -r $$PWD/../core/shaders/ .

@@ -32,9 +32,9 @@ include(../global.pri)
 
 INCLUDEPATH += $$PWD/../
 INCLUDEPATH += $$PWD/../util
-INCLUDEPATH += /opt/lib/ego/include
-INCLUDEPATH += /opt/lib/kamikaze/include
-INCLUDEPATH += /opt/lib/utils/include
+INCLUDEPATH += $$EGO_INCLUDE_DIR
+INCLUDEPATH += $$KAMIKAZE_SDK_INCLUDE_DIR
+INCLUDEPATH += $$FILESYSTEM_INCLUDE_DIR
 
 DEFINES += GLM_FORCE_RADIANS
 

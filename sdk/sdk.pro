@@ -31,7 +31,7 @@ CONFIG += shared
 include(../global.pri)
 
 INCLUDEPATH += $$PWD/../
-INCLUDEPATH += /opt/lib/ego/include/
+INCLUDEPATH += $$EGO_INCLUDE_DIR
 
 DEFINES += GLM_FORCE_RADIANS
 
