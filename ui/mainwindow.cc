@@ -231,6 +231,8 @@ void MainWindow::updateFrame() const
 	}
 
 	ui->m_timeline->setValue(value);
+
+	m_scene->updateForNewFrame();
 }
 
 void MainWindow::setStartFrame(int value) const

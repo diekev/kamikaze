@@ -67,6 +67,8 @@ public:
 
 	void emitNodeAdded(Object *ob, Node *node);
 
+	void updateForNewFrame();
+
 public Q_SLOTS:
 	void setMode(int mode);
 

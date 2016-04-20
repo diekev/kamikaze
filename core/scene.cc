@@ -260,3 +260,13 @@ void Scene::setActiveObject(Object *object)
 	m_active_object = object;
 	Q_EMIT objectChanged();
 }
+
+void Scene::updateForNewFrame()
+{
+	/* TODO: dependency graph */
+
+	for (Object *object : m_objects) {
+		/* TODO: replace with proper update method? */
+		object->evalGraph();
+	}
+}
