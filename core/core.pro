@@ -39,35 +39,35 @@ INCLUDEPATH += /opt/lib/utils/include
 DEFINES += GLM_FORCE_RADIANS
 
 SOURCES += \
-	grid.cc \
+    grid.cc \
     object_ops.cc \
     undo.cc \
-	camera.cc \
-	scene.cc \
-	viewer.cc \
-    brush.cc \
+    camera.cc \
+    scene.cc \
+    viewer.cc \
+#    brush.cc \
     kamikaze_main.cc \
     nodes/graph.cc \
     object.cc
 
 HEADERS += \
-	grid.h \
+    grid.h \
     object_ops.h \
     undo.h \
     factory.h \
-	camera.h \
-	scene.h \
-	viewer.h \
-    brush.h \
+    camera.h \
+    scene.h \
+    viewer.h \
+#    brush.h \
     kamikaze_main.h \
     nodes/graph.h \
     object.h
 
 OTHER_FILES += \
-	shaders/flat_shader.frag \
-	shaders/flat_shader.vert \
-	shaders/object.frag \
-	shaders/object.vert \
+    shaders/flat_shader.frag \
+    shaders/flat_shader.vert \
+    shaders/object.frag \
+    shaders/object.vert \
     shaders/volume.frag \
     shaders/volume.vert \
     shaders/tree_topology.frag \

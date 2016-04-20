@@ -46,8 +46,6 @@ class Scene : public QObject {
 
 	std::vector<Object *> m_objects;
 	Object *m_active_object;
-	Brush *m_brush;
-//	SmokeSimulation *m_smoke_simulation;
 	int m_mode;
 
 public:
@@ -76,17 +74,8 @@ public Q_SLOTS:
 	void tagObjectUpdate();
 	void evalObjectGraph();
 
-	void setBrushMode(int mode);
-	void setBrushRadius(double value);
-	void setBrushStrength(double value);
-	void setBrushTool(int tool);
-
 	void setCurrentObject(QListWidgetItem *item);
 	void setActiveObject(Object *object);
-
-//	void setSimulationDt(double value);
-//	void setSimulationCache(const QString &path);
-//	void setSimulationAdvection(int index);
 
 private:
 	bool ensureUniqueName(QString &name) const;

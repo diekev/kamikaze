@@ -33,16 +33,12 @@
 #include <QKeyEvent>
 #include <QListWidget>
 
-#include "brush.h"
 #include "object.h"
-//#include "smoke/smokesimulation.h"
 
 #include "util/util_string.h"
 
 Scene::Scene()
     : m_active_object(nullptr)
-    , m_brush(new Brush(5.0f, 0.5f))
- //   , m_smoke_simulation(new SmokeSimulation)
     , m_mode(SCENE_MODE_OBJECT)
 {}
 
@@ -51,9 +47,6 @@ Scene::~Scene()
 	for (auto &object : m_objects) {
 		delete object;
 	}
-
-	delete m_brush;
-//	delete m_smoke_simulation;
 }
 
 void Scene::keyboardEvent(int key)
@@ -144,12 +137,6 @@ void Scene::render(ViewerContext *context)
 
 void Scene::intersect(const Ray &/*ray*/)
 {
-#if 0
-	LevelSet *ls = static_cast<LevelSet *>(m_active_object);
-	if (ls->intersectLS(ray, m_brush)) {
-		// TODO: separate intersection from sculpting.
-	}
-#endif
 }
 
 /* Select the object which is closest to pos. */
@@ -186,10 +173,6 @@ int Scene::mode() const
 void Scene::setMode(int mode)
 {
 	m_mode = mode;
-#if 0
-	LevelSet *ls = static_cast<LevelSet *>(m_active_object);
-	ls->swapGrids(mode == SCENE_MODE_SCULPT);
-#endif
 }
 
 Object *Scene::currentObject()
@@ -237,26 +220,6 @@ void Scene::emitNodeAdded(Object *ob, Node *node)
 	Q_EMIT nodeAdded(ob, node);
 }
 
-void Scene::setBrushMode(int mode)
-{
-	m_brush->mode(mode);
-}
-
-void Scene::setBrushRadius(double value)
-{
-	m_brush->radius(value);
-}
-
-void Scene::setBrushStrength(double value)
-{
-	m_brush->strength(value);
-}
-
-void Scene::setBrushTool(int tool)
-{
-	m_brush->tool(tool);
-}
-
 void Scene::objectNameList(QListWidget *widget) const
 {
 	widget->clear();
@@ -297,20 +260,3 @@ void Scene::setActiveObject(Object *object)
 	m_active_object = object;
 	Q_EMIT objectChanged();
 }
-
-#if 0
-void Scene::setSimulationDt(double value)
-{
-	m_smoke_simulation->timeStep(value);
-}
-
-void Scene::setSimulationCache(const QString &path)
-{
-	m_smoke_simulation->cachePath(path.toStdString());
-}
-
-void Scene::setSimulationAdvection(int index)
-{
-	m_smoke_simulation->advectionScheme(index);
-}
-#endif
