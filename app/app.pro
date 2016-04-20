@@ -22,7 +22,7 @@
 QT += core opengl
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = hi_no_kirin
+TARGET = kamikaze
 TEMPLATE = app
 
 include(../global.pri)
