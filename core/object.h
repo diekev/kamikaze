@@ -64,7 +64,7 @@ public:
 
 	Graph *graph() const;
 
-	void evalGraph();
+	void evalGraph(bool force = false);
 
 	void name(const QString &name);
 	const QString &name() const;

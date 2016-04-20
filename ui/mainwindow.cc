@@ -431,7 +431,7 @@ void MainWindow::nodesConnected(QtNode *from, const QString &socket_from, QtNode
 
 	graph->connect(output_socket, input_socket);
 
-	object->evalGraph();
+	object->evalGraph(true);
 }
 
 void MainWindow::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
@@ -449,5 +449,5 @@ void MainWindow::connectionRemoved(QtNode *from, const QString &socket_from, QtN
 
 	graph->disconnect(output_socket, input_socket);
 
-	object->evalGraph();
+	object->evalGraph(true);
 }

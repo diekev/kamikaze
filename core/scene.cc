@@ -211,7 +211,7 @@ void Scene::tagObjectUpdate()
 void Scene::evalObjectGraph()
 {
 	if (m_active_object) {
-		m_active_object->evalGraph();
+		m_active_object->evalGraph(true);
 	}
 }
 

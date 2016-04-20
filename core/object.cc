@@ -67,8 +67,12 @@ Graph *Object::graph() const
 	return m_graph;
 }
 
-void Object::evalGraph()
+void Object::evalGraph(bool force)
 {
+	if (!force) {
+		return;
+	}
+
 	m_graph->build();
 
 	m_cache.clear();
