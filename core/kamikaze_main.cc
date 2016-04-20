@@ -25,6 +25,7 @@
 #include "kamikaze_main.h"
 
 #include <kamikaze/nodes.h>
+#include <kamikaze/mesh.h>
 #include <kamikaze/primitive.h>
 
 #include <utils/filesystem.h>
@@ -98,6 +99,8 @@ void Main::loadPlugins()
 			register_nodes(m_node_factory);
 		}
 	}
+
+	Mesh::registerSelf(m_object_factory);
 }
 
 ObjectFactory *Main::objectFactory() const

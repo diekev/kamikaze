@@ -47,6 +47,7 @@ HDR_SDK = \
     context.h \
 	cube.h \
     paramfactory.h \
+    mesh.h \
     noise.h \
     nodes.h \
     primitive.h
@@ -58,7 +59,8 @@ SOURCES += \
     paramfactory.cc \
     noise.cc \
     nodes.cc \
-    primitive.cc
+    primitive.cc \
+    mesh.cc
 
 HEADERS += \
     $$HDR_SDK \
