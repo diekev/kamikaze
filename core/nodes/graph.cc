@@ -27,6 +27,10 @@
 #include <algorithm>
 #include <iostream>
 
+#include "graph_dumper.h"
+
+//#define DEBUG_GRAPH
+
 Graph::Graph()
     : m_need_update(false)
 {
@@ -63,6 +67,11 @@ void Graph::build(Node *node)
 	}
 }
 
+const std::vector<Node *> &Graph::nodes() const
+{
+	return m_nodes;
+}
+
 void Graph::add(Node *node)
 {
 	m_nodes.push_back(node);
@@ -77,9 +86,12 @@ void Graph::build()
 	m_stack.reserve(m_nodes.size());
 	build(m_nodes.front());
 
-#if 0
+#ifdef DEGUB_GRAPH
 	std::cerr << "Number of nodes: " << m_nodes.size() << "\n";
 	std::cerr << "Stack size: " << m_stack.size() << "\n";
+
+	GraphDumper gd(this);
+	gd("/tmp/kamikaze.gv");
 #endif
 
 	m_need_update = false;

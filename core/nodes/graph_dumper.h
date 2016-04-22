@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * The Original Code is Copyright (C) 2015 Kévin Dietrich.
+ * The Original Code is Copyright (C) 2016 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
@@ -24,46 +24,15 @@
 
 #pragma once
 
-#include <kamikaze/nodes.h>
-#include <vector>
+#include <utils/filesystem.h>
 
-class InputSocket;
-class OutputNode;
-class OutputSocket;
+class Graph;
 
-class Graph {
-	std::vector<Node *> m_nodes;
-	std::vector<Node *> m_stack;
-
-	bool m_need_update;
-
-	void build(Node *node);
+class GraphDumper {
+	Graph *m_graph;
 
 public:
-	Graph();
-	~Graph();
+	GraphDumper(Graph *graph);
 
-	void add(Node *node);
-	void connect(OutputSocket *from, InputSocket *to);
-	void disconnect(OutputSocket *from, InputSocket *to);
-
-	void build();
-	void execute();
-
-	OutputNode *output() const;
-
-	const std::vector<Node *> &nodes() const;
-};
-
-class OutputNode : public Node {
-	Primitive *m_primitive = nullptr;
-
-public:
-	OutputNode(const std::string &name);
-
-	Primitive *primitive() const;
-
-	void process() override;
-
-	void setUIParams(ParamCallback */*cb*/) override;
+	void operator()(const filesystem::path &path);
 };
