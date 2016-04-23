@@ -30,9 +30,17 @@
 
 class InputSocket;
 class Node;
+class NodeFactory;
 class ParamCallback;
 class Primitive;
 class PrimitiveCache;
+
+/**
+ * API for registering new nodes from plugins.
+ */
+extern "C" {
+void new_kamikaze_node(NodeFactory *factory);
+}
 
 struct OutputSocket {
 	Node *parent = nullptr;
