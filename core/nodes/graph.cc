@@ -44,29 +44,6 @@ Graph::~Graph()
 	}
 }
 
-void Graph::build(Node *node)
-{
-	auto iter = std::find(m_stack.begin(), m_stack.end(), node);
-
-	/* same node was connected to other node, move it to the "front" */
-	if (iter != m_stack.end()) {
-		std::rotate(iter, iter + 1, m_stack.end());
-	}
-	else {
-		m_stack.push_back(node);
-	}
-
-	if (!node->isLinked()) {
-		return;
-	}
-
-	for (const auto &input : node->inputs()) {
-		if (input->link != nullptr) {
-			build(input->link->parent);
-		}
-	}
-}
-
 const std::vector<Node *> &Graph::nodes() const
 {
 	return m_nodes;
@@ -83,18 +60,91 @@ void Graph::build()
 		return;
 	}
 
+	m_stack.clear();
 	m_stack.reserve(m_nodes.size());
-	build(m_nodes.front());
 
-#ifdef DEGUB_GRAPH
-	std::cerr << "Number of nodes: " << m_nodes.size() << "\n";
-	std::cerr << "Stack size: " << m_stack.size() << "\n";
+	topology_sort();
+
+#ifdef DEBUG_GRAPH
+	std::cerr << "Order of operation:\n";
+
+	for (auto iter = m_stack.rbegin(); iter != m_stack.rend(); ++iter) {
+		Node *node = *iter;
+		std::cerr << node->name() << '\n';
+	}
 
 	GraphDumper gd(this);
 	gd("/tmp/kamikaze.gv");
 #endif
 
 	m_need_update = false;
+}
+
+void Graph::topology_sort()
+{
+	/* 1. store each node degree in an array */
+	std::vector<Node *> stack;
+
+	std::vector<int> degrees(m_nodes.size());
+	std::vector<bool> resolved(m_nodes.size());
+	Node *node;
+	int degree;
+
+	for (size_t i = 0; i < m_nodes.size(); ++i) {
+		node = m_nodes[i];
+		degree = 0;
+
+		/* 2. initialize a stack with all out-degree zero nodes */
+		if (node->outputs().size() == 0) {
+			stack.push_back(m_nodes[i]);
+			degrees[i] = -1;
+			resolved[i] = true;
+			continue;
+		}
+
+		for (OutputSocket *socket : node->outputs()) {
+			degree += socket->links.size();
+		}
+
+		degrees[i] = degree;
+		resolved[i] = false;
+	}
+
+	/* 3. While there are vertices remaining in the stack:
+	 *   - Dequeue and output a node
+	 *   - Reduce out-degree of all vertices adjacent to it by 1
+	 *   - Enqueue any of these nodes whose out-degree became zero
+	 */
+	while (!stack.empty()) {
+		node = stack.back();
+		m_stack.push_back(node);
+		stack.pop_back();
+
+		for (InputSocket *socket : node->inputs()) {
+			if (!socket->link) {
+				continue;
+			}
+
+			auto iter = std::find(m_nodes.begin(), m_nodes.end(), socket->link->parent);
+
+			if (iter == m_nodes.end()) {
+				continue;
+			}
+
+			auto index = std::distance(m_nodes.begin(), iter);
+
+			if (resolved[index]) {
+				continue;
+			}
+
+			degrees[index] -= 1;
+
+			if (degrees[index] == 0) {
+				stack.push_back(m_nodes[index]);
+				resolved[index] = true;
+			}
+		}
+	}
 }
 
 void Graph::execute()

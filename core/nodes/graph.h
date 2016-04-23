@@ -37,7 +37,7 @@ class Graph {
 
 	bool m_need_update;
 
-	void build(Node *node);
+	void topology_sort();
 
 public:
 	Graph();
