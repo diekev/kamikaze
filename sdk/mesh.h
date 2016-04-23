@@ -63,6 +63,8 @@ public:
 
 	static void registerSelf(ObjectFactory *factory);
 
+	Primitive *copy() const override;
+
 private:
 	void computeBBox();
 	void computeNormals();

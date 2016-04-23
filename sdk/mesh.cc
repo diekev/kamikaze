@@ -92,6 +92,44 @@ void Mesh::update()
 	}
 }
 
+Primitive *Mesh::copy() const
+{
+	Mesh *mesh = new Mesh;
+
+	mesh->verts().resize(this->verts().size());
+	auto &verts = mesh->verts();
+
+	for (size_t i = 0; i < verts.size(); ++i) {
+		verts[i] = this->verts()[i];
+	}
+
+	mesh->tris().resize(this->tris().size());
+	auto &tris = mesh->tris();
+
+	for (size_t i = 0; i < tris.size(); ++i) {
+		tris[i] = this->tris()[i];
+	}
+
+	mesh->quads().resize(this->quads().size());
+	auto &quads = mesh->quads();
+
+	for (size_t i = 0; i < quads.size(); ++i) {
+		quads[i] = this->quads()[i];
+	}
+
+	mesh->normals().resize(this->normals().size());
+	auto &normals = mesh->normals();
+
+	for (size_t i = 0; i < normals.size(); ++i) {
+		normals[i] = this->normals()[i];
+	}
+
+	mesh->update();
+	mesh->generateGPUData();
+
+	return mesh;
+}
+
 void Mesh::loadShader()
 {
 	m_program.load(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/object.vert"));

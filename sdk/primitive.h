@@ -105,6 +105,9 @@ public:
 	QString name() const;
 	void name(const QString &name);
 
+	/* perform a deep copy of this primitive */
+	virtual Primitive *copy() const = 0;
+
 	/* UI parameters */
 	void setUIParams(ParamCallback *cb);
 	virtual void setCustomUIParams(ParamCallback *cb) = 0;

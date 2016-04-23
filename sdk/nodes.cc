@@ -146,7 +146,26 @@ Primitive *Node::getInputPrimitive(const std::string &name)
 		return nullptr;
 	}
 
-	return socket->link->prim;
+	auto prim = socket->link->prim;
+
+	if (!prim) {
+		return nullptr;
+	}
+
+	if (socket->link->links.size() > 1) {
+		auto copy = prim->copy();
+
+		if (!copy) {
+			return nullptr;
+		}
+
+		m_cache->add(copy);
+		copy->incref();
+
+		return copy;
+	}
+
+	return prim;
 }
 
 void Node::setOutputPrimitive(const std::string &name, Primitive *prim)
