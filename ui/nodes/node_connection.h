@@ -21,7 +21,6 @@
 #pragma once
 
 #include <QGraphicsPathItem>
-#include <QPainter>
 
 #include "node_constants.h"
 

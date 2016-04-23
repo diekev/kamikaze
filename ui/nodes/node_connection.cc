@@ -29,7 +29,7 @@ QtConnection::QtConnection(QtPort *basePort, QGraphicsPathItem *parent)
 {
 	setPen(QPen(Qt::black, 3));
 	setBrush(Qt::NoBrush);
-	m_target_port = 0;
+	m_target_port = nullptr;
 	m_base_port = basePort;
 	m_color = Qt::black;
 }
@@ -72,12 +72,13 @@ QtPort *QtConnection::getTargetPort() const
 //****************************************************************************/
 void QtConnection::updatePath(const QPointF &altTargetPos)
 {
+	prepareGeometryChange();
+
 	QPointF basePos = m_base_port->scenePos();
 	QPointF targetPos;
 
 	if (m_target_port) {
 		targetPos = m_target_port->scenePos();
-		//QMessageBox::information(0, "test", "test"); /* Test */
 	}
 	else {
 		targetPos = altTargetPos;
@@ -103,10 +104,13 @@ void QtConnection::setColor(const QColor &color)
 //****************************************************************************/
 bool QtConnection::isNodeConnectedToThisConnection(QtNode *node)
 {
-	if (m_base_port)
+	if (m_base_port) {
 		return (node == m_base_port->parentItem());
-	else if (m_target_port)
+	}
+
+	if (m_target_port) {
 		return (node == m_target_port->parentItem());
-	else
-		return false;
+	}
+
+	return false;
 }

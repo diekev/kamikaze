@@ -48,7 +48,6 @@
 #include "node_compound.h"
 #include "node_editorwidget.h"
 #include "node_node.h"
-#include "node_porttype.h"
 #include "node_scene.h"
 
 #include "paramcallback.h"
@@ -395,8 +394,8 @@ void MainWindow::setupObjectUI(Object *object)
 		node_item->setTitleColor(Qt::white);
 		node_item->alignTitle(ALIGNED_LEFT);
 		node_item->setNode(node);
-		node_item->_setScene(obnode_item->nodeScene());
-		node_item->_setEditor(ui->graph_editor);
+		node_item->setScene(obnode_item->nodeScene());
+		node_item->setEditor(ui->graph_editor);
 
 		obnode_item->addNode(node_item);
 	}

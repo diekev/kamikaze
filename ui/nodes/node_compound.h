@@ -21,61 +21,6 @@
 #pragma once
 
 #include "node_node.h"
-#include "node_porttype.h"
-
-/****************************************************************************
-	QtCompoundNode is a subclass of QtNode that contains other nodes. This is
-	usefull to clean-up the editor canvas, but can also be used as a blueprint /
-	template.
-	***************************************************************************/
-class QtCompoundNode : public QtNode {
-	Q_OBJECT
-
-	QVector<QtNode *> m_node_list;
-
-public:
-	QtCompoundNode(const QString &title, QGraphicsItem *parent = nullptr);
-	virtual ~QtCompoundNode() = default;
-
-	/* Overridden from parent */
-	virtual void _prepareDelete() override;
-
-	/* Add a node to the compound; it becomes invisible.
-	 * Nodes that are connected to the added node, remain connected, but via the
-	 * compound. The connected port is displayed in the compound. */
-	void addNode(QtNode *node);
-
-	/* Remove a node from the compound; it becomes visible again (the node is
-	 * not deleted). A removed node that still has a connection with a node in
-	 * the compound remains connected (but with the compound). The port of the
-	 * connected node is part of and displayed in the compound. */
-	void removeNode(QtNode *node);
-
-	/* Returns true in case the given node is included in this compound. */
-	bool isNodeOfThisCompound (QtNode *node);
-
-	/* Returns the vector with nodes added to this compound.
-	 * Note, that the connections of the returned nodes are not correct as long
-	 * as the nodes are part of the compound. The connections are rewired, so
-	 * the internal relations of the nodes are changed. Only if the compound is
-	 * removed (deleted), its added nodes are released and their original
-	 * relationships are restored. */
-	const QVector<QtNode *> &getNodes() const;
-
-	/* Default behaviour is that the added nodes are released and the compound
-	 * deleted. */
-	virtual void mouseLeftClickAction2ButtonHandler(QGraphicsSceneMouseEvent *mouseEvent, QGraphicsItem *item);
-
-protected:
-	bool isCompoundNode(QtNode *node);
-
-Q_SIGNALS:
-	/* Emitted when the a node is added to the compound. */
-	void nodeAdded(QtNode *);
-
-	/* Emitted when the a node is removed (not deleted) from the compound. */
-	void nodeRemoved(QtNode *);
-};
 
 class Object;
 class QtNodeGraphicsScene;
@@ -93,7 +38,7 @@ public:
 	virtual ~ObjectNodeItem();
 
 	/* Overridden from parent */
-//	virtual void _prepareDelete() override;
+	virtual void prepareDelete() override;
 
 	/* Add a node to the compound; it becomes invisible.
 	 * Nodes that are connected to the added node, remain connected, but via the
@@ -124,9 +69,6 @@ public:
 //	virtual void mouseLeftClickAction2ButtonHandler(QGraphicsSceneMouseEvent *mouseEvent, QGraphicsItem *item);
 
 	Object *object() const;
-
-protected:
-	bool isCompoundNode(QtNode *node);
 
 Q_SIGNALS:
 	/* Emitted when the a node is added to the compound. */

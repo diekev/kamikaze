@@ -38,4 +38,4 @@ static constexpr auto NODE_VALUE_TYPE_ACTION_2_ICON = 6;
 static constexpr auto NODE_VALUE_TYPE_PORT = 7;
 static constexpr auto NODE_VALUE_TYPE_HEADER_TITLE = 8;
 static constexpr auto NODE_VALUE_TYPE_CONNECTION = 9;
-static constexpr auto NODE_VALUE_SUBTYPE_COMPOUND = 10;
+static constexpr auto NODE_VALUE_SUBTYPE_OBJECT = 10;

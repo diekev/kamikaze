@@ -24,155 +24,27 @@
 #include "node_port.h"
 #include "node_scene.h"
 
-//****************************************************************************/
-QtCompoundNode::QtCompoundNode(const QString &title, QGraphicsItem *parent)
-    : QtNode(title, parent)
-{
-	setData(NODE_KEY_GRAPHIC_ITEM_SUBTYPE, QVariant(NODE_VALUE_SUBTYPE_COMPOUND));
-	m_auto_size = false;
-}
-
-//****************************************************************************/
-void QtCompoundNode::_prepareDelete()
-{
-	/* First release the nodes */
-	/*    QtCompoundNode *compound; */
-	for (QtNode *node : m_node_list)
-		removeNode(node);
-
-	m_node_list.clear();
-}
-
-//****************************************************************************/
-void QtCompoundNode::mouseLeftClickAction2ButtonHandler(QGraphicsSceneMouseEvent *mouseEvent, QGraphicsItem *item)
-{
-	_prepareDelete();
-	QtNode::mouseLeftClickAction2ButtonHandler(mouseEvent, item);
-	m_scene->update();
-}
-
-//****************************************************************************/
-void QtCompoundNode::addNode(QtNode *node)
-{
-	if (!node)
-		return;
-
-	m_node_list.append(node);
-	node->setParentItem(this);
-
-	/* Take over the ports of the included nodes */
-	QVector<QtPort*> ports = node->getPorts();
-	node->setVisible(false);
-	QtConnection *connection;
-	QtPort *createdPort;
-
-	for (QtPort *port : ports) {
-		connection = port->getConnection();
-
-		/* Add a copy of the port to this compound */
-		createdPort = createPort(port->getPortId(),
-		                         port->getPortName(),
-		                         port->getPortType(),
-		                         port->getPortColour(),
-		                         port->getPortShape(),
-		                         port->getAlignment(),
-		                         port->getConnectionColour());
-		createdPort->setCopyOfPort(port);
-
-		/* Rewire the connection */
-		if (connection) {
-			createdPort->setConnection(connection, port->isBasePort());
-			connection->setVisible(true);
-		}
-	}
-
-	/* Set connections of this node to front */
-	for (QtPort *portFromCompound : m_port_list) {
-		connection = portFromCompound->getConnection();
-		if (connection)
-			setZValue(connection->zValue() - 1.0f);
-	}
-
-	Q_EMIT nodeAdded(node);
-}
-
-//****************************************************************************/
-void QtCompoundNode::removeNode(QtNode *node)
-{
-	if (!node)
-		return;
-
-	/* Remove it from the list */
-	auto iter = std::find(m_node_list.begin(), m_node_list.begin(), node);
-	m_node_list.erase(iter);
-
-	/* Set the original parent */
-	node->_restoreOriginalParentItem();
-
-	/* Restore the connections */
-	QtConnection *connection;
-	QtPort *referencePort;
-
-	for (QtPort *port : m_port_list) {
-		/* If the reference of the port in the compound is a port in the node, rewire the connection */
-		referencePort = port->getCopyOfPort();
-
-		if (node->isPortOfThisNode(referencePort)) {
-			connection = port->getConnection();
-
-			if (referencePort) {
-				/* Note, that connection may be 0 */
-				referencePort->setConnection(connection, port->isBasePort());
-				node->stackBefore(connection);
-				/* 'Clear' the connection of the compound */
-				port->setConnection(0, false);
-				/* TODO: Delete the port of the compound instead */
-			}
-		}
-	}
-
-	node->setVisible(true);
-	node->update();
-	Q_EMIT nodeRemoved(node);
-}
-
-//****************************************************************************/
-bool QtCompoundNode::isNodeOfThisCompound(QtNode *node)
-{
-	for (QtNode *nodeFromList : m_node_list) {
-		if (node == nodeFromList)
-			return true;
-	}
-
-	return false;
-}
-
-//****************************************************************************/
-const QVector<QtNode *> &QtCompoundNode::getNodes() const
-{
-	return m_node_list;
-}
-
-//****************************************************************************/
-bool QtCompoundNode::isCompoundNode(QtNode *node)
-{
-	if (node->data(NODE_KEY_GRAPHIC_ITEM_SUBTYPE).isValid()) {
-		int subType = node->data(NODE_KEY_GRAPHIC_ITEM_SUBTYPE).toInt();
-		return NODE_VALUE_SUBTYPE_COMPOUND == subType;
-	}
-
-	return false;
-}
-
 ObjectNodeItem::ObjectNodeItem(Object *object, const QString &title, QGraphicsItem *parent)
     : QtNode(title, parent)
     , m_node_scene(new QtNodeGraphicsScene)
     , m_object(object)
-{}
+{
+	setData(NODE_KEY_GRAPHIC_ITEM_SUBTYPE, QVariant(NODE_VALUE_SUBTYPE_OBJECT));
+}
 
 ObjectNodeItem::~ObjectNodeItem()
 {
 	delete m_node_scene;
+}
+
+void ObjectNodeItem::prepareDelete()
+{
+	/* First release the nodes */
+	for (QtNode *node : m_node_list) {
+		removeNode(node);
+	}
+
+	m_node_list.clear();
 }
 
 void ObjectNodeItem::addNode(QtNode *node)

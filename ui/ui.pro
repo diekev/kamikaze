@@ -45,7 +45,6 @@ SOURCES += \
     nodes/node_editorwidget.cc \
     nodes/node_node.cc \
     nodes/node_port.cc \
-    nodes/node_porttype.cc \
     paramcallback.cc \
     utils_ui.cc
 
@@ -57,7 +56,6 @@ HEADERS += \
     nodes/node_editorwidget.h \
     nodes/node_node.h \
     nodes/node_port.h \
-    nodes/node_porttype.h \
     nodes/node_scene.h \
     paramcallback.h \
     utils_ui.h

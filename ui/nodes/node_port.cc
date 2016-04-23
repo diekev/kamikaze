@@ -20,69 +20,48 @@
 
 #include "node_port.h"
 
+#include <iostream>
+
 #include "node_constants.h"
 #include "node_node.h"
 
 static constexpr auto NODE_PORT_PEN_SIZE = 1;
 
 //****************************************************************************/
-QtPort::QtPort(unsigned int portId,
-               const QString &portName,
-               QtPortType portType,
+QtPort::QtPort(const QString &portName,
+               int portType,
                QColor portColour,
                QColor connectionColour,
                QtPortShape portShape,
                Alignment alignment,
-               qreal zoom,
                QGraphicsItem *parent)
     : QGraphicsPathItem(parent)
 {
-	m_port_id = portId;
 	m_port_name = portName;
 	m_port_type = portType;
 	m_port_colour = portColour;
 	m_connection_colour = connectionColour;
 	m_port_shape = portShape;
 	m_alignment = alignment;
-	m_zoom = zoom;
-	m_parent = parent;
-	m_port_open = true;
-	m_connection = nullptr;
-	m_copy_of_port = 0;
-	m_connection_is_base = false;
-
-	/* Set default: Input and Output ports may only be connected to each other */
-	if (m_port_type.m_port_type == NODE_PORT_TYPE_INPUT) {
-		QtOutputPortType outputPortType;
-		m_port_type.addPortTypeToConnectionPolicy(outputPortType);
-	}
-	else if (portType.m_port_type == NODE_PORT_TYPE_OUTPUT) {
-		QtInputPortType inputPortType;
-		m_port_type.addPortTypeToConnectionPolicy(inputPortType);
-	}
-
 
 	/* Create label */
 	m_label = new QGraphicsTextItem(this);
 	m_label->setPlainText(portName);
 
 	QPen pen(portColour);
-	pen.setWidth(m_zoom * NODE_PORT_PEN_SIZE);
+	pen.setWidth(NODE_PORT_PEN_SIZE);
 	setPen(pen);
 	redraw();
 }
 
 //****************************************************************************/
-//****************************************************************************/
 void QtPort::setPortOpen(bool open)
 {
-	m_port_open = open;
 	if (!open) {
 		setBrush(m_port_colour);
 	}
 	else {
-		QColor col(QString("#000000ff"));
-		setBrush(col);
+		setBrush(QColor("#000000ff"));
 	}
 }
 
@@ -93,22 +72,16 @@ void QtPort::setNameColor(const QColor &color)
 }
 
 //****************************************************************************/
-void QtPort::setZoom(qreal zoom)
-{
-	m_zoom = zoom;
-}
-
-//****************************************************************************/
 void QtPort::redraw()
 {
-	m_font.setPointSize(m_zoom * NODE_PORT_FONT_SIZE);
+	m_font.setPointSize(NODE_PORT_FONT_SIZE);
 	m_label->setFont(m_font);
 
 	QPainterPath p;
 	QPen pen(m_port_colour);
-	pen.setWidth(m_zoom * NODE_PORT_PEN_SIZE);
+	pen.setWidth(NODE_PORT_PEN_SIZE);
 	setPen(pen);
-	qreal shapeSize = m_zoom * NODE_PORT_SHAPE_SIZE;
+	qreal shapeSize = NODE_PORT_SHAPE_SIZE;
 
 	switch (m_port_shape) {
 		case PORT_SHAPE_CIRCLE:
@@ -136,7 +109,7 @@ qreal QtPort::getNormalizedWidth()
 	m_font.setPointSize(NODE_PORT_FONT_SIZE);
 	m_label->setFont(m_font);
 	qreal width = m_label->boundingRect().width() + NODE_PORT_SHAPE_SIZE + NODE_PORT_WIDTH_MARGIN;
-	m_font.setPointSize(m_zoom * NODE_PORT_FONT_SIZE);
+	m_font.setPointSize(NODE_PORT_FONT_SIZE);
 	m_label->setFont(m_font);
 
 	return width;
@@ -154,7 +127,7 @@ qreal QtPort::getNormalizedHeight()
 		height = NODE_PORT_SHAPE_SIZE; /* In case the text is smaller than the port shape */
 	}
 
-	m_font.setPointSize(m_zoom * NODE_PORT_FONT_SIZE);
+	m_font.setPointSize(NODE_PORT_FONT_SIZE);
 	m_label->setFont(m_font);
 
 	return height;
@@ -164,10 +137,10 @@ qreal QtPort::getNormalizedHeight()
 void QtPort::setAlignedPos(const QPointF &pos)
 {
 	if (m_alignment == ALIGNED_RIGHT) {
-		m_label->setPos(-m_label->boundingRect().width() - m_zoom * NODE_PORT_WIDTH_MARGIN, -0.5 * m_label->boundingRect().height());
+		m_label->setPos(-m_label->boundingRect().width() - NODE_PORT_WIDTH_MARGIN, -0.5 * m_label->boundingRect().height());
 	}
 	else {
-		m_label->setPos(m_zoom * NODE_PORT_WIDTH_MARGIN, -0.5 * m_label->boundingRect().height());
+		m_label->setPos(NODE_PORT_WIDTH_MARGIN, -0.5 * m_label->boundingRect().height());
 	}
 
 	setPos(pos);
@@ -184,141 +157,98 @@ QtConnection *QtPort::createConnection(QtConnection *targetConnection)
 {
 	if (targetConnection) {
 		/* The port is not the base, but the target */
-		m_connection = targetConnection;
+		m_connections.push_back(targetConnection);
 		targetConnection->setTargetPort(this);
-		m_connection_is_base = false;
 	}
 	else {
-		/* The port is the base */
-		/* Note, that adding the connection to the scene is done on a higher level */
-		m_connection = new QtConnection(this); /* Don't make it a child of port, but do provide the port as a baseport */
-		m_connection->setData(NODE_KEY_GRAPHIC_ITEM_TYPE, QVariant(NODE_VALUE_TYPE_CONNECTION));
-		m_connection->setColor(m_connection_colour);
-		m_connection_is_base = true;
+		/* The port is the base. Note that adding the connection to the scene is
+		 * done on a higher level. */
+
+		/* Don't make it a child of port, but do provide the port as a baseport */
+		auto connection = new QtConnection(this);
+		connection->setData(NODE_KEY_GRAPHIC_ITEM_TYPE, QVariant(NODE_VALUE_TYPE_CONNECTION));
+		connection->setColor(m_connection_colour);
+
+		m_connections.push_back(connection);
 	}
 
 	setPortOpen(false);
-	return m_connection;
+	return m_connections.back();
 }
 
 //****************************************************************************/
-void QtPort::setConnection(QtConnection *connection, bool base)
+void QtPort::deleteConnection(QtConnection *connection, bool erase)
 {
-	m_connection = connection;
+	if (!connection) {
+		return;
+	}
 
-	if (base) {
-		if (connection) {
-			m_connection->setBasePort(this);
-			setPortOpen(false);
+	QtPort *basePort = connection->getBasePort();
+	QtPort *targetPort = connection->getTargetPort();
+
+	if (basePort == this) {
+		/* Inform the target port */
+		if (targetPort) {
+			targetPort->informConnectionDeleted(connection);
 		}
-		else
-			setPortOpen(true);
-
-		m_connection_is_base = true;
 	}
 	else {
-		if (connection) {
-			m_connection->setTargetPort(this);
-			setPortOpen(false);
-		}
-		else {
-			setPortOpen(true);
-		}
-
-		m_connection_is_base = false;
+		/* 'This' port is the target port; call the base port to delete its connection */
+		basePort->deleteConnection(connection);
 	}
-}
 
-//****************************************************************************/
-void QtPort::deleteConnection()
-{
-	if (m_connection) {
-		QtPort *basePort = m_connection->getBasePort();
-		QtPort *targetPort = m_connection->getTargetPort();
-
-		if (m_connection_is_base) {
-			/* Inform the target port */
-			if (targetPort) {
-				targetPort->informConnectionDeleted();
-			}
-		}
-		else {
-			/* 'This' port is the target port; call the base port to delete its connection */
-			basePort->deleteConnection();
-		}
-
-		m_connection_is_base = false;
-		delete m_connection;
-		m_connection = nullptr;
-		setPortOpen(true);
+	if (erase) {
+		auto iter = std::find(m_connections.begin(), m_connections.end(), connection);
+		m_connections.erase(iter);
 	}
+
+	delete connection;
+	setPortOpen(m_connections.empty());
 }
 
 //****************************************************************************/
-void QtPort::informConnectionDeleted()
+void QtPort::informConnectionDeleted(QtConnection *connection)
 {
-	setPortOpen(true);
-	m_connection_is_base = false;
-	m_connection = nullptr;
+	auto iter = std::find(m_connections.begin(), m_connections.end(), connection);
+
+	if (iter == m_connections.end()) {
+		std::cerr << "Trying to delete connection not present in port!\n";
+		return;
+	}
+
+	m_connections.erase(iter);
+
+	setPortOpen(m_connections.size() == 0);
 }
 
-//****************************************************************************/
-QtConnection *QtPort::getConnection() const
+void QtPort::deleteAllConnections()
 {
-	return m_connection;
+	for (auto &connection : m_connections) {
+		deleteConnection(connection, false);
+	}
+
+	m_connections.clear();
 }
 
 //****************************************************************************/
 void QtPort::updateConnection(const QPointF &altTargetPos)
 {
-	if (m_connection) {
-		m_connection->updatePath(altTargetPos);
+	for (auto &connection : m_connections) {
+		connection->updatePath(altTargetPos);
 	}
-}
-
-//****************************************************************************/
-bool QtPort::isConnectionAllowed(QtPort *portToConnect)
-{
-	if (portToConnect) {
-		QtPortType pt = portToConnect->getPortType();
-		if (m_port_type.isConnectionAllowed(pt))
-			return true;
-	}
-
-	return false;
-}
-
-//****************************************************************************/
-bool QtPort::isBasePort()
-{
-	if (m_connection) {
-		return (this == m_connection->getBasePort());
-	}
-
-	return false;
-}
-\
-//****************************************************************************/
-bool QtPort::isTargetPort()
-{
-	if (m_connection) {
-		return (this == m_connection->getTargetPort());
-	}
-
-	return false;
 }
 
 //****************************************************************************/
 void QtPort::collapse()
 {
 	setVisible(false);
-	m_original_pos = pos() / m_zoom;
+	m_original_pos = pos();
 	qreal y = 0.5 * parentItem()->boundingRect().height();
-	setAlignedPos(m_zoom * m_original_pos.x(), y);
+	setAlignedPos(m_original_pos.x(), y);
 
-	if (m_connection) {
-		m_connection->setZValue(-1);
-		m_connection->updatePath(pos());
+	for (auto &connection : m_connections) {
+		connection->setZValue(-1);
+		connection->updatePath(pos());
 	}
 }
 
@@ -326,16 +256,55 @@ void QtPort::collapse()
 void QtPort::expand()
 {
 	setVisible(true);
-	setAlignedPos(m_zoom * m_original_pos);
+	setAlignedPos(m_original_pos);
 
-	if (m_connection) {
-		m_connection->setZValue(1);
-		m_connection->updatePath(pos());
+	for (auto &connection : m_connections) {
+		connection->setZValue(1);
+		connection->updatePath(pos());
 	}
 }
 
-//****************************************************************************/
-void QtPort::setCopyOfPort(QtPort *port)
+QVector<QtConnection *> &QtPort::getConnections()
 {
-	m_copy_of_port = port;
+	return m_connections;
+}
+
+const QVector<QtConnection *> &QtPort::getConnections() const
+{
+	return m_connections;
+}
+
+const QString &QtPort::getPortName() const
+{
+	return m_port_name;
+}
+
+const Alignment &QtPort::getAlignment() const
+{
+	return m_alignment;
+}
+
+int QtPort::getPortType() const
+{
+	return m_port_type;
+}
+
+bool QtPort::isPortOpen() const
+{
+	return !isConnected();
+}
+
+bool QtPort::isOutputPort() const
+{
+	return getPortType() == NODE_PORT_TYPE_OUTPUT;
+}
+
+bool QtPort::isConnected() const
+{
+	return !m_connections.empty();
+}
+
+bool is_connection_allowed(QtPort *from, QtPort *to)
+{
+	return from->getPortType() != to->getPortType();
 }

@@ -20,14 +20,10 @@
 
 #pragma once
 
-#include <QGraphicsItem>
-#include <QGraphicsPathItem>
-#include <QGraphicsTextItem>
-#include <QBrush>
+#include <QFont>
 
-#include "node_constants.h"
-#include "node_porttype.h"
 #include "node_connection.h"
+#include "node_constants.h"
 
 enum QtPortShape {
 	PORT_SHAPE_CIRCLE,
@@ -49,38 +45,28 @@ static constexpr auto NODE_PORT_HEIGHT_MARGIN_FACTOR = 0.8f; /* Margin factor in
  * conditions are defined by mean of a Policy
  ***************************************************************************/
 class QtPort : public QGraphicsPathItem {
-	unsigned int m_port_id;
 	QString m_port_name;
-	QtPortType m_port_type;
+	int m_port_type;
 	QColor m_port_colour;
 	QColor m_connection_colour;
 	QtPortShape m_port_shape;
 	Alignment m_alignment;
-	qreal m_zoom;
-	QGraphicsItem *m_parent;
 	QGraphicsTextItem *m_label;
 	QFont m_font;
-	bool m_port_open;
-	QtConnection *m_connection;
-	bool m_connection_is_base;
 	QPointF m_original_pos;
-	QtPort *m_copy_of_port;
+
+	QVector<QtConnection *> m_connections;
 
 public:
-	QtPort(unsigned int portId,
-	       const QString &portName,
-	       QtPortType portType,
+	QtPort(const QString &portName,
+	       int portType,
 	       QColor portColour,
 	       QColor connectionColour,
 	       QtPortShape portShape,
 	       Alignment alignment,
-	       qreal zoom,
 	       QGraphicsItem *parent = nullptr);
 
-	virtual ~QtPort() = default;
-
-	/* Scale the port */
-	void setZoom(qreal zoom);
+	~QtPort() = default;
 
 	/* Redraw the port */
 	void redraw();
@@ -98,36 +84,17 @@ public:
 	void setAlignedPos(const QPointF &pos);
 	void setAlignedPos(qreal x, qreal y);
 
-	/* Set a port open or closed; if the port is closed, no connection can be
-	 * made or there is already a connection */
-	void setPortOpen(bool open);
-
 	/* Create a connection on this port. The port acts as base or a target */
 	QtConnection *createConnection(QtConnection *targetConnection = nullptr);
 
-	/* Set a connection to this port. This is an existing connection. If base is
-	 * set to 'true', this port becomes the base port; otherwise the target port */
-	void setConnection(QtConnection *connection, bool base);
-
 	/* Delete the connection of this port. */
-	void deleteConnection();
-	void informConnectionDeleted();
+	void deleteConnection(QtConnection *connection, bool erase = true);
+	void informConnectionDeleted(QtConnection *connection);
 
-	/* Return the connection of this port. The port can act as base- or target-port. */
-	QtConnection *getConnection() const;
+	void deleteAllConnections();
 
 	/* Update the base connection (redraw the connection for which this port is base) */
 	void updateConnection(const QPointF &altTargetPos = QPointF(0.0f, 0.0f));
-
-	/* Check whether 'this' port is allow to connect to the port, given as an argument */
-	/* The porttype of each port is compared. */
-	bool isConnectionAllowed(QtPort *portToConnect);
-
-	/* Return true is this port is the base port of a connection */
-	bool isBasePort();
-
-	/* Return true is this port is the target port of a connection */
-	bool isTargetPort();
 
 	/* Hide the port and move the endpoint of the connection to the header of the node */
 	void collapse();
@@ -135,18 +102,25 @@ public:
 	/* Make the port visible and restore the endpoint of the connection */
 	void expand();
 
-	/* If the port is a copy of another port, its pointer can be passed as a
-	 * reference. Nothing is done with this value */
-	void setCopyOfPort(QtPort *port);
+	/* Observers */
 
-	/* Getters */
-	unsigned int getPortId() const { return m_port_id; }
-	const QString &getPortName() const { return m_port_name; }
-	Alignment getAlignment() const { return m_alignment; }
-	QtPortType getPortType() const { return m_port_type; }
-	QColor getPortColour() const { return m_port_colour; }
-	QColor getConnectionColour() const { return m_connection_colour; }
-	QtPortShape getPortShape() const { return m_port_shape; }
-	bool isPortOpen() const { return m_port_open; }
-	QtPort *getCopyOfPort() const { return m_copy_of_port; }
+	QVector<QtConnection *> &getConnections();
+	const QVector<QtConnection *> &getConnections() const;
+
+	const QString &getPortName() const;
+
+	const Alignment &getAlignment() const;
+
+	int getPortType() const;
+
+	bool isPortOpen() const;
+	bool isOutputPort() const;
+	bool isConnected() const;
+
+private:
+	/* Set a port open or closed; if the port is closed, no connection can be
+	 * made or there is already a connection */
+	void setPortOpen(bool open);
 };
+
+bool is_connection_allowed(QtPort *from, QtPort *to);
