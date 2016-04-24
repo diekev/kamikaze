@@ -30,25 +30,29 @@
 
 #include <utils/filesystem.h>
 
+#include <dlfcn.h>
+
 namespace fs = filesystem;
 using PluginVec = std::vector<fs::shared_library>;
 
 typedef void (*register_func_t)(ObjectFactory *);
 typedef void (*register_node_func_t)(NodeFactory *);
 
-PluginVec load_plugins(const fs::path &path)
+std::vector<fs::shared_library> load_plugins(const fs::path &path)
 {
 	PluginVec plugins;
 
+	std::error_code ec;
 	for (const auto &entry : fs::directory_iterator(path)) {
 		if (!fs::is_library(entry)) {
 			continue;
 		}
 
-		fs::shared_library lib(entry);
+		fs::shared_library lib(entry, ec);
 
 		if (!lib) {
 			std::cerr << "Invalid library object: " << entry.path_() << '\n';
+			std::cerr << dlerror() << '\n';
 			continue;
 		}
 
@@ -71,15 +75,16 @@ Main::~Main()
 
 void Main::loadPlugins()
 {
-	PluginVec plugins = load_plugins("/opt/kamikaze/");
+	m_plugins = load_plugins("/opt/kamikaze/plugins");
 
-	for (auto &plugin : plugins) {
+	std::error_code ec;
+	for (auto &plugin : m_plugins) {
 		if (!plugin) {
 			std::cerr << "Invalid library object\n";
 			continue;
 		}
 
-		auto symbol = plugin("new_kamikaze_objects");
+		auto symbol = plugin("new_kamikaze_objects", ec);
 		auto register_figures = fs::dso_function<void(ObjectFactory *)>(symbol);
 
 		if (!register_figures) {
@@ -89,7 +94,7 @@ void Main::loadPlugins()
 			register_figures(m_object_factory);
 		}
 
-		symbol = plugin("new_kamikaze_nodes");
+		symbol = plugin("new_kamikaze_nodes", ec);
 		auto register_nodes = fs::dso_function<void(NodeFactory *)>(symbol);
 
 		if (!register_nodes) {

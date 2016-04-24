@@ -28,6 +28,7 @@ TEMPLATE = app
 include(../global.pri)
 
 INCLUDEPATH += $$PWD/../
+INCLUDEPATH += $$FILESYSTEM_INCLUDE_DIR
 
 SOURCES += main.cc
 
