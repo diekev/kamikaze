@@ -33,6 +33,18 @@ class ParamCallback;
 class Ray;
 class ViewerContext;
 
+extern "C" {
+
+/**
+ * @brief new_kamikaze_prims API for plugins to register new primitive types.
+ *                           There is no limit to the number of primitives to
+ *                           register from a single call to this function.
+ * @param factory The factory used to register the new primitives in.
+ */
+void new_kamikaze_prims(PrimitiveFactory *factory);
+
+}
+
 enum {
 	DRAW_WIRE = 0,
 	DRAW_SOLID = 1,
@@ -118,41 +130,48 @@ public:
 	void decref();
 };
 
-class ObjectFactory final {
+class PrimitiveFactory final {
 public:
 	typedef Primitive *(*factory_func)(void);
 
-	void registerType(const std::string &name, factory_func func)
-	{
-		const auto iter = m_map.find(name);
-		assert(iter == m_map.end());
+	/**
+	 * @brief registerType Register a new element in this factory.
+	 *
+	 * @param key The key associate @ func to.
+	 * @param func A function pointer with signature 'Primitive *(void)'.
+	 */
+	void registerType(const std::string &key, factory_func func);
 
-		m_map[name] = func;
-	}
+	/**
+	 * @brief operator() Create a Primitive based on the given key.
+	 *
+	 * @param key The key to lookup.
+	 * @return A new Primitive object corresponding to the given key.
+	 */
+	Primitive *operator()(const std::string &key);
 
-	Primitive *operator()(const std::string &name)
-	{
-		const auto iter = m_map.find(name);
-		assert(iter != m_map.end());
+	/**
+	 * @brief numEntries The number of entries registered in this factory.
+	 *
+	 * @return The number of entries registered in this factory, 0 if empty.
+	 */
+	size_t numEntries() const;
 
-		return iter->second();
-	}
+	/**
+	 * @brief keys Keys registered in this factory.
+	 *
+	 * @return A vector containing the keys registered in this factory.
+	 */
+	std::vector<std::string> keys() const;
 
-	size_t numEntries() const
-	{
-		return m_map.size();
-	}
-
-	std::vector<std::string> keys() const
-	{
-		std::vector<std::string> v;
-
-		for (const auto &entry : m_map) {
-			v.push_back(entry.first);
-		}
-
-		return v;
-	}
+	/**
+	 * @brief registered Check whether or not a key has been registered in this
+	 *                   factory.
+	 *
+	 * @param key The key to lookup.
+	 * @return True if the key is found, false otherwise.
+	 */
+	bool registered(const std::string &key) const;
 
 private:
 	std::unordered_map<std::string, factory_func> m_map;

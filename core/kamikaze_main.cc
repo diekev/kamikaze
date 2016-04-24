@@ -59,7 +59,7 @@ static std::vector<fs::shared_library> load_plugins(const fs::path &path)
 }
 
 Main::Main()
-    : m_object_factory(new ObjectFactory)
+    : m_object_factory(new PrimitiveFactory)
     , m_node_factory(new NodeFactory)
 {}
 
@@ -80,8 +80,8 @@ void Main::loadPlugins()
 			continue;
 		}
 
-		auto symbol = plugin("new_kamikaze_objects", ec);
-		auto register_figures = fs::dso_function<void(ObjectFactory *)>(symbol);
+		auto symbol = plugin("new_kamikaze_prims", ec);
+		auto register_figures = fs::dso_function<void(PrimitiveFactory *)>(symbol);
 
 		if (register_figures) {
 			register_figures(m_object_factory);
@@ -98,7 +98,7 @@ void Main::loadPlugins()
 	Mesh::registerSelf(m_object_factory);
 }
 
-ObjectFactory *Main::objectFactory() const
+PrimitiveFactory *Main::objectFactory() const
 {
 	return m_object_factory;
 }

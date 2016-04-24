@@ -196,3 +196,40 @@ void Primitive::decref()
 {
 	--m_refcount;
 }
+
+void PrimitiveFactory::registerType(const std::string &name, PrimitiveFactory::factory_func func)
+{
+	const auto iter = m_map.find(name);
+	assert(iter == m_map.end());
+
+	m_map[name] = func;
+}
+
+Primitive *PrimitiveFactory::operator()(const std::string &name)
+{
+	const auto iter = m_map.find(name);
+	assert(iter != m_map.end());
+
+	return iter->second();
+}
+
+size_t PrimitiveFactory::numEntries() const
+{
+	return m_map.size();
+}
+
+std::vector<std::string> PrimitiveFactory::keys() const
+{
+	std::vector<std::string> v;
+
+	for (const auto &entry : m_map) {
+		v.push_back(entry.first);
+	}
+
+	return v;
+}
+
+bool PrimitiveFactory::registered(const std::string &key) const
+{
+	return (m_map.find(key) != m_map.end());
+}

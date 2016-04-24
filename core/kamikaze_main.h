@@ -27,11 +27,11 @@
 #include <vector>
 #include <utils/filesystem.h>
 
-class ObjectFactory;
+class PrimitiveFactory;
 class NodeFactory;
 
 class Main final {
-	ObjectFactory *m_object_factory;
+	PrimitiveFactory *m_object_factory;
 	NodeFactory *m_node_factory;
 
 	std::vector<filesystem::shared_library> m_plugins;
@@ -42,6 +42,6 @@ public:
 
 	void loadPlugins();
 
-	ObjectFactory *objectFactory() const;
+	PrimitiveFactory *objectFactory() const;
 	NodeFactory *nodeFactory() const;
 };

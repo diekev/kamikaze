@@ -35,11 +35,16 @@ class ParamCallback;
 class Primitive;
 class PrimitiveCache;
 
-/**
- * API for registering new nodes from plugins.
- */
 extern "C" {
+
+/**
+ * @brief new_kamikaze_node API for registering a new node from a plugin.
+ *                          There is no limit to the number of nodes to register
+ *                          from a single call to this function.
+ * @param factory The factory in which to register the node(s).
+ */
 void new_kamikaze_node(NodeFactory *factory);
+
 }
 
 struct OutputSocket {

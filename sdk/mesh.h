@@ -61,7 +61,7 @@ public:
 	/* TODO */
 	void generateGPUData();
 
-	static void registerSelf(ObjectFactory *factory);
+	static void registerSelf(PrimitiveFactory *factory);
 
 	Primitive *copy() const override;
 

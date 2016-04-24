@@ -393,7 +393,7 @@ static Primitive *create_torus()
 	return mesh;
 }
 
-void Mesh::registerSelf(ObjectFactory *factory)
+void Mesh::registerSelf(PrimitiveFactory *factory)
 {
 	factory->registerType("Box Mesh", create_cube);
 	factory->registerType("Plane Mesh", create_plane);

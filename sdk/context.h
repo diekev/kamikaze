@@ -27,12 +27,12 @@
 #include <glm/glm.hpp>
 
 class NodeFactory;
-class ObjectFactory;
+class PrimitiveFactory;
 class Scene;
 
 struct EvaluationContext {
 	Scene *scene;
-	ObjectFactory *object_factory;
+	PrimitiveFactory *object_factory;
 	NodeFactory *node_factory;
 };
 
