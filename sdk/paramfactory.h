@@ -92,7 +92,7 @@ void bool_param(ParamCallback *cb, const char *name, bool *ptr, bool default_val
  * @param name The UI name of the parameter.
  * @param ptr  The pointer to the vector property.
  */
-void xyz_param(ParamCallback *cb, const char *name, float ptr[3]);
+void xyz_param(ParamCallback *cb, const char *name, float ptr[3], float min = 0.0f, float max = 10.0f);
 
 /**
  * @brief file_param Add a UI parameter for displaying a file selector.

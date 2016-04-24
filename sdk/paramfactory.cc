@@ -96,9 +96,10 @@ void param_tooltip(ParamCallback *cb, const char *tooltip)
 	cb->setTooltip(tooltip);
 }
 
-void xyz_param(ParamCallback *cb, const char *name, float ptr[3])
+void xyz_param(ParamCallback *cb, const char *name, float ptr[3], float min, float max)
 {
 	auto param = new XYZParam;
+	param->setMinMax(min, max);
 	param->valuePtr(ptr);
 
 	cb->addWidget(param, name);
