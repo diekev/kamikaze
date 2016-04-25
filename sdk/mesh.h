@@ -70,3 +70,15 @@ private:
 	void computeNormals();
 	void loadShader();
 };
+
+template <typename CharT, typename CharTraits>
+std::basic_ostream<CharT, CharTraits> &operator<<(std::basic_ostream<CharT, CharTraits> &os, const Mesh &mesh)
+{
+	os << "Mesh: " << mesh.name().toStdString() << '\n'
+	   << "\tvertices: " << mesh.verts().size() << '\n'
+	   << "\tnormals: " << mesh.normals().size() << '\n'
+	   << "\ttris: " << mesh.tris().size() << '\n'
+	   << "\tquads: " << mesh.quads().size() << '\n';
+
+	return os;
+}
