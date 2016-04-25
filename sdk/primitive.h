@@ -30,6 +30,7 @@
 
 class Modifier;
 class ParamCallback;
+class PrimitiveFactory;
 class Ray;
 class ViewerContext;
 
