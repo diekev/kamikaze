@@ -39,7 +39,7 @@ class QGridLayout;
 /* Params are subclasses of their equivalent QWidgets. To avoid weird APIs, they
  * store a pointer to the external value they are 'connected' to. */
 
-class FloatParam final : public QDoubleSpinBox {
+class FloatParam final : public FloatSpinBox {
 	Q_OBJECT
 
 	float *m_value_ptr;
@@ -59,7 +59,7 @@ Q_SIGNALS:
 
 /* ********************************** */
 
-class IntParam final : public QSpinBox {
+class IntParam final : public IntSpinBox {
 	Q_OBJECT
 
 	int *m_value_ptr;

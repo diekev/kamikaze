@@ -27,11 +27,10 @@
 /* ********************************** */
 
 FloatParam::FloatParam(QWidget *parent)
-    : QDoubleSpinBox(parent)
+    : FloatSpinBox(parent)
     , m_value_ptr(nullptr)
 {
 	setValue(0.0);
-	setAlignment(Qt::AlignRight);
 	connect(this, SIGNAL(valueChanged(double)), this, SLOT(updateValuePtr(double)));
 }
 
@@ -50,11 +49,10 @@ void FloatParam::updateValuePtr(double value)
 /* ********************************** */
 
 IntParam::IntParam(QWidget *parent)
-    : QSpinBox(parent)
+    : IntSpinBox(parent)
     , m_value_ptr(nullptr)
 {
 	setValue(0);
-	setAlignment(Qt::AlignRight);
 	connect(this, SIGNAL(valueChanged(int)), this, SLOT(updateValuePtr(int)));
 }
 

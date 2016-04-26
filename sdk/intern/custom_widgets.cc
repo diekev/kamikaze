@@ -28,6 +28,7 @@
 #include <QFileDialog>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QSlider>
 #include <QVBoxLayout>
 
 enum {
@@ -36,24 +37,125 @@ enum {
 	AXIS_Z = 2,
 };
 
+/* ********************************** */
+
+FloatSpinBox::FloatSpinBox(QWidget *parent)
+    : QWidget(parent)
+    , m_layout(new QHBoxLayout(this))
+    , m_spin_box(new QDoubleSpinBox(this))
+    , m_slider(new QSlider(Qt::Orientation::Horizontal, this))
+    , m_scale(1.0f)
+{
+	m_layout->addWidget(m_spin_box);
+	m_layout->addWidget(m_slider);
+
+	setLayout(m_layout);
+
+	m_spin_box->setAlignment(Qt::AlignRight);
+	m_spin_box->setButtonSymbols(QAbstractSpinBox::NoButtons);
+	m_spin_box->setReadOnly(true);
+
+	connect(m_slider, SIGNAL(sliderReleased()), this, SLOT(ValueChanged()));
+	connect(m_slider, SIGNAL(valueChanged(int)), this, SLOT(updateLabel(int)));
+}
+
+void FloatSpinBox::ValueChanged()
+{
+	const auto value = m_slider->value();
+	const float fvalue = value / m_scale;
+	m_spin_box->setValue(fvalue);
+	Q_EMIT valueChanged(fvalue);
+}
+
+void FloatSpinBox::updateLabel(int value)
+{
+	m_spin_box->setValue(value / m_scale);
+}
+
+void FloatSpinBox::setValue(float value)
+{
+	m_spin_box->setValue(value);
+	m_slider->setValue(value * m_scale);
+}
+
+float FloatSpinBox::value() const
+{
+	return m_spin_box->value();
+}
+
+void FloatSpinBox::setRange(float min, float max)
+{
+	if (min != 0.0f && min < 1.0f) {
+		m_scale = 1.0f / min;
+	}
+	else {
+		m_scale = 10000.0f;
+	}
+
+	m_slider->setRange(min * m_scale, max * m_scale);
+}
+
+/* ********************************** */
+
+IntSpinBox::IntSpinBox(QWidget *parent)
+    : QWidget(parent)
+    , m_layout(new QHBoxLayout(this))
+    , m_spin_box(new QSpinBox(this))
+    , m_slider(new QSlider(Qt::Orientation::Horizontal, this))
+{
+	m_layout->addWidget(m_spin_box);
+	m_layout->addWidget(m_slider);
+
+	setLayout(m_layout);
+
+	m_spin_box->setAlignment(Qt::AlignRight);
+	m_spin_box->setButtonSymbols(QAbstractSpinBox::NoButtons);
+	m_spin_box->setReadOnly(true);
+
+	connect(m_slider, SIGNAL(sliderReleased()), this, SLOT(ValueChanged()));
+	connect(m_slider, SIGNAL(valueChanged(int)), this, SLOT(updateLabel(int)));
+}
+
+void IntSpinBox::ValueChanged()
+{
+	const auto value = m_slider->value();
+	m_spin_box->setValue(value);
+	Q_EMIT valueChanged(value);
+}
+
+void IntSpinBox::updateLabel(int value)
+{
+	m_spin_box->setValue(value);
+}
+
+void IntSpinBox::setValue(int value)
+{
+	m_spin_box->setValue(value);
+	m_slider->setValue(value);
+}
+
+int IntSpinBox::value() const
+{
+	return m_spin_box->value();
+}
+
+void IntSpinBox::setRange(int min, int max)
+{
+	m_slider->setRange(min, max);
+}
+
+/* ********************************** */
+
 XYZSpinBox::XYZSpinBox(QWidget *parent)
     : QWidget(parent)
-    , m_x(new QDoubleSpinBox(this))
-    , m_y(new QDoubleSpinBox(this))
-    , m_z(new QDoubleSpinBox(this))
+    , m_x(new FloatSpinBox(this))
+    , m_y(new FloatSpinBox(this))
+    , m_z(new FloatSpinBox(this))
     , m_layout(new QVBoxLayout(this))
 {
 	connect(m_x, SIGNAL(valueChanged(double)), this, SLOT(xValueChanged(double)));
 	connect(m_y, SIGNAL(valueChanged(double)), this, SLOT(yValueChanged(double)));
 	connect(m_z, SIGNAL(valueChanged(double)), this, SLOT(zValueChanged(double)));
-
-	m_x->setAlignment(Qt::AlignRight);
-	m_y->setAlignment(Qt::AlignRight);
-	m_z->setAlignment(Qt::AlignRight);
-
-	m_x->setSingleStep(0.01);
-	m_y->setSingleStep(0.01);
-	m_z->setSingleStep(0.01);
 
 	m_layout->addWidget(m_x);
 	m_layout->addWidget(m_y);
@@ -93,14 +195,12 @@ void XYZSpinBox::getValue(float *value) const
 
 void XYZSpinBox::setMinMax(float min, float max) const
 {
-	m_x->setMinimum(min);
-	m_y->setMinimum(min);
-	m_z->setMinimum(min);
-
-	m_x->setMaximum(max);
-	m_y->setMaximum(max);
-	m_z->setMaximum(max);
+	m_x->setRange(min, max);
+	m_y->setRange(min, max);
+	m_z->setRange(min, max);
 }
+
+/* ********************************** */
 
 FileSelector::FileSelector(QWidget *parent)
     : QWidget(parent)

@@ -30,12 +30,68 @@ class QDoubleSpinBox;
 class QHBoxLayout;
 class QLineEdit;
 class QPushButton;
+class QSlider;
+class QSpinBox;
 class QVBoxLayout;
+
+/* ********************************** */
+
+class FloatSpinBox : public QWidget {
+	Q_OBJECT
+
+	QHBoxLayout *m_layout;
+	QDoubleSpinBox *m_spin_box;
+	QSlider *m_slider;
+
+	float m_scale;
+
+public:
+	explicit FloatSpinBox(QWidget *parent = nullptr);
+	~FloatSpinBox() = default;
+
+	void setValue(float value);
+	float value() const;
+	void setRange(float min, float max);
+
+Q_SIGNALS:
+	void valueChanged(double value);
+
+private Q_SLOTS:
+	void ValueChanged();
+	void updateLabel(int value);
+};
+
+/* ********************************** */
+
+class IntSpinBox : public QWidget {
+	Q_OBJECT
+
+	QHBoxLayout *m_layout;
+	QSpinBox *m_spin_box;
+	QSlider *m_slider;
+
+public:
+	explicit IntSpinBox(QWidget *parent = nullptr);
+	~IntSpinBox() = default;
+
+	void setValue(int value);
+	int value() const;
+	void setRange(int min, int max);
+
+Q_SIGNALS:
+	void valueChanged(int value);
+
+private Q_SLOTS:
+	void ValueChanged();
+	void updateLabel(int value);
+};
+
+/* ********************************** */
 
 class XYZSpinBox : public QWidget {
 	Q_OBJECT
 
-	QDoubleSpinBox *m_x, *m_y, *m_z;
+	FloatSpinBox *m_x, *m_y, *m_z;
 	QVBoxLayout *m_layout;
 
 private Q_SLOTS:
@@ -54,6 +110,8 @@ public:
 	void getValue(float *value) const;
 	void setMinMax(float min, float max) const;
 };
+
+/* ********************************** */
 
 class FileSelector : public QWidget {
 	Q_OBJECT
