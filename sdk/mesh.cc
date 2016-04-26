@@ -309,7 +309,7 @@ void Mesh::computeNormals()
 	}
 
 	for (size_t i = 0, ie = this->points()->size(); i < ie ; ++i) {
-		normals->vec3(i, glm::normalize(normals->vec3(i)));
+		normals->vec3(i, -glm::normalize(normals->vec3(i)));
 	}
 }
 
