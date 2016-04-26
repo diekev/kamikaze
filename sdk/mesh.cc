@@ -36,49 +36,72 @@
 
 Mesh::Mesh()
     : Primitive()
+    , m_need_data_update(true)
 {
 	loadShader();
+	addAttribute("normal", ATTR_TYPE_VEC3);
 	m_need_update = true;
 }
 
-std::vector<glm::ivec4> &Mesh::quads()
+Mesh::~Mesh()
 {
-	return m_quads;
+	for (auto &attr : m_attributes) {
+		delete attr;
+	}
 }
 
-const std::vector<glm::ivec4> &Mesh::quads() const
+PointList *Mesh::points()
 {
-	return m_quads;
+	return &m_point_list;
 }
 
-std::vector<glm::ivec3> &Mesh::tris()
+const PointList *Mesh::points() const
 {
-	return m_tris;
+	return &m_point_list;
 }
 
-const std::vector<glm::ivec3> &Mesh::tris() const
+PolygonList *Mesh::polys()
 {
-	return m_tris;
+	return &m_poly_list;
 }
 
-std::vector<glm::vec3> &Mesh::verts()
+const PolygonList *Mesh::polys() const
 {
-	return m_verts;
+	return &m_poly_list;
 }
 
-const std::vector<glm::vec3> &Mesh::verts() const
+Attribute *Mesh::attribute(const std::string &name, AttributeType type)
 {
-	return m_verts;
+	auto iter = std::find_if(m_attributes.begin(), m_attributes.end(),
+	                         [&](Attribute *attr)
+	{
+		return (attr->type() == type) && (attr->name() == name);
+	});
+
+	if (iter == m_attributes.end()) {
+		return nullptr;
+	}
+
+	return *iter;
 }
 
-std::vector<glm::vec3> &Mesh::normals()
+void Mesh::addAttribute(Attribute *attr)
 {
-	return m_normals;
+	if (attribute(attr->name(), attr->type()) == nullptr) {
+		m_attributes.push_back(attr);
+	}
 }
 
-const std::vector<glm::vec3> &Mesh::normals() const
+Attribute *Mesh::addAttribute(const std::string &name, AttributeType type, size_t size)
 {
-	return m_normals;
+	auto attr = attribute(name, type);
+
+	if (attr == nullptr) {
+		attr = new Attribute(name, type, size);
+		m_attributes.push_back(attr);
+	}
+
+	return attr;
 }
 
 void Mesh::update()
@@ -92,36 +115,38 @@ void Mesh::update()
 	}
 }
 
+void Mesh::tag_update()
+{
+	m_need_update = true;
+	m_need_data_update = true;
+}
+
 Primitive *Mesh::copy() const
 {
 	Mesh *mesh = new Mesh;
 
-	mesh->verts().resize(this->verts().size());
-	auto &verts = mesh->verts();
+	PointList *points = mesh->points();
+	points->resize(this->points()->size());
 
-	for (size_t i = 0; i < verts.size(); ++i) {
-		verts[i] = this->verts()[i];
+	for (size_t i = 0; i < points->size(); ++i) {
+		(*points)[i] = m_point_list[i];
 	}
 
-	mesh->tris().resize(this->tris().size());
-	auto &tris = mesh->tris();
+	PolygonList *polys = mesh->polys();
+	polys->resize(this->polys()->size());
 
-	for (size_t i = 0; i < tris.size(); ++i) {
-		tris[i] = this->tris()[i];
+	for (size_t i = 0; i < polys->size(); ++i) {
+		(*polys)[i] = m_poly_list[i];
 	}
 
-	mesh->quads().resize(this->quads().size());
-	auto &quads = mesh->quads();
-
-	for (size_t i = 0; i < quads.size(); ++i) {
-		quads[i] = this->quads()[i];
+	/* XXX TODO: we need a better way to copy/update default attributes
+	 * (e.g. normals) */
+	for (auto &attr : mesh->m_attributes) {
+		delete attr;
 	}
 
-	mesh->normals().resize(this->normals().size());
-	auto &normals = mesh->normals();
-
-	for (size_t i = 0; i < normals.size(); ++i) {
-		normals[i] = this->normals()[i];
+	for (const auto &attr : m_attributes) {
+		mesh->addAttribute(new Attribute(*attr));
 	}
 
 	mesh->update();
@@ -150,6 +175,11 @@ void Mesh::loadShader()
 
 void Mesh::render(ViewerContext *context, const bool for_outline)
 {
+	if (m_need_data_update) {
+		generateGPUData();
+		m_need_data_update = false;
+	}
+
 	if (m_program.isValid()) {
 		m_program.enable();
 		m_buffer_data->bind();
@@ -172,34 +202,43 @@ void Mesh::setCustomUIParams(ParamCallback *cb)
 
 void Mesh::generateGPUData()
 {
-	computeNormals();
+	Attribute *normals = this->attribute("normal", ATTR_TYPE_VEC3);
+
+	if (normals->size() != this->points()->size()) {
+		computeNormals();
+	}
+
+	for (size_t i = 0, ie = this->points()->size(); i < ie; ++i) {
+		m_point_list[i] = m_point_list[i] * glm::mat3(m_inv_matrix);
+	}
 
 	std::vector<unsigned int> indices;
-	indices.reserve(m_quads.size() * 6 + m_tris.size() * 3);
+	indices.reserve(this->polys()->size());
 
-	for (const auto &quad : m_quads) {
+	PolygonList *polys = this->polys();
+
+	for (size_t i = 0, ie = polys->size(); i < ie; ++i) {
+		const auto &quad = (*polys)[i];
+
 		indices.push_back(quad[0]);
 		indices.push_back(quad[1]);
 		indices.push_back(quad[2]);
-		indices.push_back(quad[0]);
-		indices.push_back(quad[2]);
-		indices.push_back(quad[3]);
-	}
 
-	for (const auto &tri : m_tris) {
-		indices.push_back(tri[0]);
-		indices.push_back(tri[1]);
-		indices.push_back(tri[2]);
+		if (quad[3] != std::numeric_limits<int>::max()) {
+			indices.push_back(quad[0]);
+			indices.push_back(quad[2]);
+			indices.push_back(quad[3]);
+		}
 	}
 
 	m_elements = indices.size();
 
 	m_buffer_data.reset(new ego::BufferObject());
 	m_buffer_data->bind();
-	m_buffer_data->generateVertexBuffer(&m_verts[0][0], m_verts.size() * sizeof(glm::vec3));
+	m_buffer_data->generateVertexBuffer(m_point_list.data(), m_point_list.byte_size());
 	m_buffer_data->generateIndexBuffer(&indices[0], m_elements * sizeof(GLuint));
 	m_buffer_data->attribPointer(m_program["vertex"], 3);
-	m_buffer_data->generateNormalBuffer(&m_normals[0], m_normals.size() * sizeof(glm::vec3));
+	m_buffer_data->generateNormalBuffer(normals->data(), normals->byte_size());
 	m_buffer_data->attribPointer(m_program["normal"], 3);
 	m_buffer_data->unbind();
 
@@ -208,7 +247,9 @@ void Mesh::generateGPUData()
 
 void Mesh::computeBBox()
 {
-	for (const auto &vert : verts()) {
+	for (size_t i = 0, ie = m_point_list.size(); i < ie; ++i) {
+		const auto &vert = m_point_list[i];
+
 		if (vert.x < m_min.x) {
 			m_min.x = vert.x;
 		}
@@ -244,35 +285,31 @@ static inline glm::vec3 get_normal(const glm::vec3 &v0, const glm::vec3 &v1, con
 
 void Mesh::computeNormals()
 {
-	m_normals.resize(m_verts.size());
+	Attribute *normals = this->attribute("normal", ATTR_TYPE_VEC3);
+	normals->resize(this->points()->size());
 
-	for (const auto &quad : m_quads) {
-		const auto v0 = m_verts[quad[0]];
-		const auto v1 = m_verts[quad[1]];
-		const auto v2 = m_verts[quad[2]];
+	PolygonList *polys = this->polys();
 
-		const auto normal = get_normal(v0, v1, v2);
+	for (size_t i = 0, ie = polys->size(); i < ie; ++i) {
+		const auto &quad = (*polys)[i];
 
-		m_normals[quad[0]] += normal;
-		m_normals[quad[1]] += normal;
-		m_normals[quad[2]] += normal;
-		m_normals[quad[3]] += normal;
-	}
-
-	for (const auto &tri : m_tris) {
-		const auto v0 = m_verts[tri[0]];
-		const auto v1 = m_verts[tri[1]];
-		const auto v2 = m_verts[tri[2]];
+		const auto v0 = m_point_list[quad[0]];
+		const auto v1 = m_point_list[quad[1]];
+		const auto v2 = m_point_list[quad[2]];
 
 		const auto normal = get_normal(v0, v1, v2);
 
-		m_normals[tri[0]] += normal;
-		m_normals[tri[1]] += normal;
-		m_normals[tri[2]] += normal;
+		normals->vec3(quad[0], normals->vec3(quad[0]) + normal);
+		normals->vec3(quad[1], normals->vec3(quad[1]) + normal);
+		normals->vec3(quad[2], normals->vec3(quad[2]) + normal);
+
+		if (quad[3] != std::numeric_limits<unsigned int>::max()) {
+			normals->vec3(quad[3], normals->vec3(quad[3]) + normal);
+		}
 	}
 
-	for (auto &normal : m_normals) {
-		normal = glm::normalize(normal);
+	for (size_t i = 0, ie = this->points()->size(); i < ie ; ++i) {
+		normals->vec3(i, glm::normalize(normals->vec3(i)));
 	}
 }
 
@@ -280,26 +317,28 @@ static Primitive *create_cube()
 {
 	Mesh *mesh = new Mesh;
 
-	mesh->verts().resize(8);
-	mesh->verts()[0] = glm::vec3(-0.5f, -0.5f, -0.5f);
-	mesh->verts()[1] = glm::vec3( 0.5f, -0.5f, -0.5f);
-	mesh->verts()[2] = glm::vec3( 0.5f, -0.5f,  0.5f);
-	mesh->verts()[3] = glm::vec3(-0.5f, -0.5f,  0.5f);
-	mesh->verts()[4] = glm::vec3(-0.5f,  0.5f, -0.5f);
-	mesh->verts()[5] = glm::vec3( 0.5f,  0.5f, -0.5f);
-	mesh->verts()[6] = glm::vec3( 0.5f,  0.5f,  0.5f);
-	mesh->verts()[7] = glm::vec3(-0.5f,  0.5f,  0.5f);
+	PointList *points = mesh->points();
+	points->reserve(8);
 
-	mesh->quads().resize(6);
-	mesh->quads()[0] = glm::ivec4(1, 0, 4, 5);
-	mesh->quads()[1] = glm::ivec4(2, 1, 5, 6);
-	mesh->quads()[2] = glm::ivec4(3, 2, 6, 7);
-	mesh->quads()[3] = glm::ivec4(0, 3, 7, 4);
-	mesh->quads()[4] = glm::ivec4(2, 3, 0, 1);
-	mesh->quads()[5] = glm::ivec4(5, 4, 7, 6);
+	points->push_back(glm::vec3(-0.5f, -0.5f, -0.5f));
+	points->push_back(glm::vec3( 0.5f, -0.5f, -0.5f));
+	points->push_back(glm::vec3( 0.5f, -0.5f,  0.5f));
+	points->push_back(glm::vec3(-0.5f, -0.5f,  0.5f));
+	points->push_back(glm::vec3(-0.5f,  0.5f, -0.5f));
+	points->push_back(glm::vec3( 0.5f,  0.5f, -0.5f));
+	points->push_back(glm::vec3( 0.5f,  0.5f,  0.5f));
+	points->push_back(glm::vec3(-0.5f,  0.5f,  0.5f));
 
-	mesh->update();
-	mesh->generateGPUData();
+	PolygonList *polys = mesh->polys();
+	polys->resize(6);
+	polys->push_back(glm::ivec4(1, 0, 4, 5));
+	polys->push_back(glm::ivec4(2, 1, 5, 6));
+	polys->push_back(glm::ivec4(3, 2, 6, 7));
+	polys->push_back(glm::ivec4(0, 3, 7, 4));
+	polys->push_back(glm::ivec4(2, 3, 0, 1));
+	polys->push_back(glm::ivec4(5, 4, 7, 6));
+
+	mesh->tag_update();
 
 	return mesh;
 }
@@ -308,17 +347,18 @@ static Primitive *create_plane()
 {
 	Mesh *mesh = new Mesh;
 
-	mesh->verts().resize(4);
-	mesh->verts()[0] = glm::vec3(-1.0f,  0.0f, -1.0f);
-	mesh->verts()[1] = glm::vec3( 1.0f,  0.0f, -1.0f);
-	mesh->verts()[2] = glm::vec3( 1.0f,  0.0f,  1.0f);
-	mesh->verts()[3] = glm::vec3(-1.0f,  0.0f,  1.0f);
+	PointList *points = mesh->points();
+	points->reserve(4);
 
-	mesh->quads().resize(1);
-	mesh->quads()[0] = glm::ivec4(0, 1, 2, 3);
+	points->push_back(glm::vec3(-1.0f,  0.0f, -1.0f));
+	points->push_back(glm::vec3( 1.0f,  0.0f, -1.0f));
+	points->push_back(glm::vec3( 1.0f,  0.0f,  1.0f));
+	points->push_back(glm::vec3(-1.0f,  0.0f,  1.0f));
 
-	mesh->update();
-	mesh->generateGPUData();
+	PolygonList *polys = mesh->polys();
+	polys->push_back(glm::ivec4(0, 1, 2, 3));
+
+	mesh->tag_update();
 
 	return mesh;
 }
@@ -326,6 +366,8 @@ static Primitive *create_plane()
 static Primitive *create_torus()
 {
 	Mesh *mesh = new Mesh;
+	PointList *points = mesh->points();
+	PolygonList *polys = mesh->polys();
 
 	const auto major_segment = 48;
 	const auto minor_segment = 24;
@@ -339,7 +381,8 @@ static Primitive *create_torus()
 
 	int f1 = 0, f2, f3, f4;
 	const auto tot_verts = major_segment * minor_segment;
-	mesh->verts().reserve(tot_verts);
+
+	points->reserve(tot_verts);
 
 	for (int i = 0; i < major_segment; ++i) {
 		auto theta = vertical_angle_stride * i;
@@ -351,9 +394,7 @@ static Primitive *create_torus()
 			auto y = minor_radius * glm::sin(phi);
 			auto z = glm::sin(theta) * (major_radius + minor_radius * glm::cos(phi));
 
-			auto vec = glm::vec3(x, y, z);
-
-			mesh->verts().push_back(vec);
+			points->push_back(glm::vec3(x, y, z));
 
 			if (j + 1 == minor_segment) {
 				f2 = i * minor_segment;
@@ -377,18 +418,17 @@ static Primitive *create_torus()
 			}
 
 			if (f2 > 0) {
-				mesh->quads().emplace_back(f1, f3, f4, f2);
+				polys->push_back(glm::ivec4(f1, f3, f4, f2));
 			}
 			else {
-				mesh->quads().emplace_back(f2, f1, f3, f4);
+				polys->push_back(glm::ivec4(f2, f1, f3, f4));
 			}
 
 			++f1;
 		}
 	}
 
-	mesh->update();
-	mesh->generateGPUData();
+	mesh->tag_update();
 
 	return mesh;
 }

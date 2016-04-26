@@ -44,6 +44,7 @@ HDR_INTERN = \
     intern/custom_widgets.h
 
 HDR_SDK = \
+    attribute.h \
     context.h \
 	cube.h \
     paramfactory.h \
@@ -60,11 +61,14 @@ SOURCES += \
     noise.cc \
     nodes.cc \
     primitive.cc \
-    mesh.cc
+    mesh.cc \
+    attribute.cc \
+    geomlists.cc
 
 HEADERS += \
     $$HDR_SDK \
-    $$HDR_INTERN
+    $$HDR_INTERN \
+    geomlists.h
 
 unix {
 	target.path = /opt/lib/kamikaze/lib

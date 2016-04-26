@@ -24,35 +24,87 @@
 
 #pragma once
 
+#include "attribute.h"
+#include "geomlists.h"
 #include "primitive.h"
 
 class Mesh : public Primitive {
 	std::vector<glm::ivec4> m_quads{};
 	std::vector<glm::ivec3> m_tris{};
 	std::vector<glm::vec3> m_verts{};
+
 	std::vector<glm::vec2> m_uvs{};
 	std::vector<glm::vec3> m_normals{};
+
+	PointList m_point_list;
+	PolygonList m_poly_list;
+
+	std::vector<Attribute *> m_attributes;
 
 	ego::BufferObject::Ptr m_buffer_data;
 	ego::Program m_program;
 	size_t m_elements;
 
+	bool m_need_data_update;
+
 public:
 	Mesh();
+	~Mesh();
 
-	std::vector<glm::ivec4> &quads();
-	const std::vector<glm::ivec4> &quads() const;
+	/**
+	 * @brief points The points (or vertices) of this mesh.
+	 * @return A pointer to the list of points contained in this mesh.
+	 */
+	PointList *points();
 
-	std::vector<glm::ivec3> &tris();
-	const std::vector<glm::ivec3> &tris() const;
+	/**
+	 * @brief points The points (or vertices) of this mesh.
+	 * @return A pointer to the const list of points contained in this mesh.
+	 */
+	const PointList *points() const;
 
-	std::vector<glm::vec3> &verts();
-	const std::vector<glm::vec3> &verts() const;
+	/**
+	 * @brief polys The polys of this mesh.
+	 * @return A pointer to the list of polys contained in this mesh.
+	 */
+	PolygonList *polys();
 
-	std::vector<glm::vec3> &normals();
-	const std::vector<glm::vec3> &normals() const;
+	/**
+	 * @brief polys The polys of this mesh.
+	 * @return A pointer to the const list of polys contained in this mesh.
+	 */
+	const PolygonList *polys() const;
+
+	/**
+	 * @brief attribute Return an attribute from this primitive's attibute list.
+	 * @param name The name of the attribute to look up.
+	 * @param type The type of the attribute to look up.
+	 *
+	 * @return The attribute corresponding to the given name and type, nullptr
+	 *         if no such attribute exists.
+	 */
+	Attribute *attribute(const std::string &name, AttributeType type);
+
+	/**
+	 * @brief attribute Add an attribute to this primitive's attibute list.
+	 * @param attr The attribute to add.
+	 */
+	void addAttribute(Attribute *attr);
+
+	/**
+	 * @brief attribute Add an attribute to this primitive's attibute list.
+	 * @param name The name of the attribute to add.
+	 * @param type The type of the attribute to add.
+	 *
+	 * @return The newly added attribute. If there is already an attribute with
+	 *         the given name and type in this primitive's attibute list,  it is
+	 *         returned, and no new attribute is created.
+	 */
+	Attribute *addAttribute(const std::string &name, AttributeType type, size_t size = 0);
 
 	void update() override;
+
+	void tag_update();
 
 	void render(ViewerContext *context, const bool for_outline) override;
 
@@ -75,10 +127,8 @@ template <typename CharT, typename CharTraits>
 std::basic_ostream<CharT, CharTraits> &operator<<(std::basic_ostream<CharT, CharTraits> &os, const Mesh &mesh)
 {
 	os << "Mesh: " << mesh.name().toStdString() << '\n'
-	   << "\tvertices: " << mesh.verts().size() << '\n'
-	   << "\tnormals: " << mesh.normals().size() << '\n'
-	   << "\ttris: " << mesh.tris().size() << '\n'
-	   << "\tquads: " << mesh.quads().size() << '\n';
+	   << "\tvertices: " << mesh.points()->size() << '\n'
+	   << "\tpolys: " << mesh.polys()->size() << '\n';
 
 	return os;
 }
