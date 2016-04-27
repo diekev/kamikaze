@@ -33,6 +33,8 @@ include(../global.pri)
 INCLUDEPATH += $$PWD/../
 INCLUDEPATH += $$EGO_INCLUDE_DIR
 
+LIBS += -ltbb
+
 DEFINES += GLM_FORCE_RADIANS
 
 SRC_INTERN = \
@@ -51,7 +53,9 @@ HDR_SDK = \
     mesh.h \
     noise.h \
     nodes.h \
-    primitive.h
+    primitive.h \
+    geomlists.h \
+    util_parallel.h
 
 SOURCES += \
     $$SRC_INTERN \
@@ -67,8 +71,7 @@ SOURCES += \
 
 HEADERS += \
     $$HDR_SDK \
-    $$HDR_INTERN \
-    geomlists.h
+    $$HDR_INTERN
 
 unix {
 	target.path = /opt/lib/kamikaze/lib
