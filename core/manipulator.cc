@@ -29,6 +29,63 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <kamikaze/context.h>
+#include "util/utils.h"
+
+enum {
+	X_AXIS = 0,
+	Y_AXIS = 1,
+	Z_AXIS = 2,
+
+	XY_PLANE = 3,
+	XZ_PLANE = 4,
+	YZ_PLANE = 5,
+};
+
+bool intersect(const Ray &ray, const glm::vec3 &obmin, const glm::vec3 &obmax, float &min)
+{
+	glm::vec3 inv_dir = 1.0f / ray.dir;
+	glm::vec3 t_min = (obmin - ray.pos) * inv_dir;
+	glm::vec3 t_max = (obmax - ray.pos) * inv_dir;
+	glm::vec3 t1 = glm::min(t_min, t_max);
+	glm::vec3 t2 = glm::max(t_min, t_max);
+	float t_near = glm::max(t1.x, glm::max(t1.y, t1.z));
+	float t_far = glm::min(t2.x, glm::min(t2.y, t2.z));
+
+	if (t_near < t_far && t_near < min) {
+		min = t_near;
+		return true;
+	}
+
+	return false;
+}
+
+bool intersect(const Ray &ray, const glm::vec3 &pos, const glm::vec3 &nor, glm::vec3 &ipos)
+{
+	const auto &u = ray.dir - ray.pos;
+	const auto &w = ray.pos - pos;
+
+	const auto &D = glm::dot(nor, u);
+	const auto &N = -glm::dot(nor, w);
+
+	/* segment is parallel to the plane */
+	if (glm::abs(D) < 1e-6f) {
+		/* segment lies on the plane */
+		if (N == 0) {
+			return false;
+		}
+
+		return false;
+	}
+
+	const auto &s = N / D;
+
+	if (s < 0.0f || s > 1.0f) {
+		return false;
+	}
+
+	ipos = ray.pos + u * s;
+	return true;
+}
 
 void add_arrow(std::vector<glm::vec3> &points, const int axis)
 {
@@ -72,6 +129,7 @@ void Manipulator::updateMatrix()
 	m_matrix = glm::scale(m_matrix, 1.0f * m_dimensions);
 
 	m_inv_matrix = glm::inverse(m_matrix);
+	std::cerr << "Manipulator pos: " << m_pos << '\n';
 }
 
 Manipulator::Manipulator()
@@ -95,6 +153,10 @@ Manipulator::Manipulator()
 	m_min = glm::vec3(0.0f, 0.0f, 0.0f);
 	m_max = glm::vec3(1.0f, 1.0f, 1.0f);
 	m_dimensions = m_max - m_min;
+	m_pos = glm::vec3(0.0f, 0.0f, 0.0f);
+	m_last_pos = glm::vec3(0.0f, 0.0f, 0.0f);
+	m_delta_pos = glm::vec3(0.0f, 0.0f, 0.0f);
+	m_plane_pos = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	updateMatrix();
 
@@ -128,6 +190,102 @@ Manipulator::Manipulator()
 	m_buffer_data->generateNormalBuffer(&colors[0][0], sizeof(glm::vec3) * m_elements);
 	m_buffer_data->attribPointer(m_program["color"], 3);
 	m_buffer_data->unbind();
+}
+
+bool Manipulator::intersect(const Ray &ray, float &min)
+{
+	/* Check X-axis. */
+	auto nor = ray.pos - ray.dir;
+	auto xmin = glm::vec3{ -1.0f, -0.05f, -0.05f }, xmax = glm::vec3{ 1.0f, 0.05f, 0.05f };
+	if (::intersect(ray, xmin * glm::mat3(m_matrix), xmax * glm::mat3(m_matrix), min)) {
+		m_axis = X_AXIS;
+		m_plane_nor = glm::vec3{ 0.0f, nor.y, nor.z };
+		return true;
+	}
+
+	/* Check Y-axis. */
+	auto ymin = glm::vec3{ -0.05f, -1.0f, -0.05f }, ymax = glm::vec3{ 0.05f, 1.0f, 0.05f };
+	if (::intersect(ray, ymin * glm::mat3(m_matrix), ymax * glm::mat3(m_matrix), min)) {
+		m_axis = Y_AXIS;
+		m_plane_nor = glm::vec3{ nor.x, 0.0f, nor.z };
+		return true;
+	}
+
+	/* Check Z-axis. */
+	auto zmin = glm::vec3{ -0.05f, -0.05f, -1.0f }, zmax = glm::vec3{ 0.05f, 0.05f, 1.0f };
+	if (::intersect(ray, zmin * glm::mat3(m_matrix), zmax * glm::mat3(m_matrix), min)) {
+		m_axis = Z_AXIS;
+		m_plane_nor = glm::vec3{ nor.x, nor.y, 0.0f };
+		return true;
+	}
+
+	/* TODO check XY-Plane */
+	if (false) {
+		m_axis = XY_PLANE;
+		m_plane_nor =  glm::vec3{ 0.0f, 0.0f, 1.0f };
+	}
+
+	/* TODO check XZ-Plane */
+	if (false) {
+		m_axis = XZ_PLANE;
+		m_plane_nor =  glm::vec3{ 0.0f, 1.0f, 0.0f };
+	}
+
+	/* TODO check YZ-Plane */
+	if (false) {
+		m_axis = YZ_PLANE;
+		m_plane_nor =  glm::vec3{ 1.0f, 0.0f, 0.0f };
+	}
+
+	m_axis = -1;
+	return false;
+}
+
+void Manipulator::pos(const glm::vec3 &p)
+{
+	m_pos = p;
+	m_plane_pos = p;
+	updateMatrix();
+}
+
+const glm::vec3 &Manipulator::pos() const
+{
+	return m_pos;
+}
+
+void Manipulator::update(const Ray &ray)
+{
+	if (m_axis < 0 || m_axis > 2) {
+		return;
+	}
+
+	/* find intersectiopn between ray and plane */
+	glm::vec3 ipos;
+	if (::intersect(ray, m_plane_pos, m_plane_nor, ipos)) {
+		applyConstraint(ipos);
+
+		m_plane_pos = m_pos;
+		m_delta_pos = m_pos - m_last_pos;
+		m_last_pos = m_pos;
+
+		updateMatrix();
+	}
+}
+
+void Manipulator::applyConstraint(const glm::vec3 &cpos)
+{
+	switch (m_axis) {
+		case X_AXIS:
+		case Y_AXIS:
+		case Z_AXIS:
+			m_pos[m_axis] = cpos[m_axis];
+			break;
+		case XY_PLANE:
+		case XZ_PLANE:
+		case YZ_PLANE:
+			m_pos = cpos;
+			break;
+	}
 }
 
 void Manipulator::render(ViewerContext *context)

@@ -49,6 +49,7 @@ class Viewer : public QGLWidget {
 	QTimer *m_timer;
 	ViewerContext *m_context;
 	Manipulator *m_manipulator;
+	bool m_manipulator_active = false;
 
 	/* Get the world space position of the given point. */
 	glm::vec3 unproject(const glm::vec3 &pos) const;
@@ -74,7 +75,7 @@ public:
 	void setScene(Scene *scene);
 
 	/* Cast a ray in the scene at mouse pos (x, y). */
-	void intersectScene(int x, int y) const;
+	void intersectScene(int x, int y);
 
 	/* Select the object at screen pos (x, y). */
 	void selectObject(int x, int y) const;

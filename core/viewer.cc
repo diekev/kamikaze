@@ -41,6 +41,7 @@
 #include "core/grid.h"
 #include "core/manipulator.h"
 #include "util/util_input.h"
+#include "util/utils.h"
 
 Viewer::Viewer(QWidget *parent)
     : QGLWidget(parent)
@@ -158,7 +159,7 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 	else if (e->buttons() == Qt::LeftButton) {
 		m_mouse_button = MOUSE_LEFT;
 
-		if (m_scene->mode() == SCENE_MODE_SCULPT) {
+		if (/*m_scene->currentObject() != nullptr*/ true) {
 			intersectScene(x, y);
 		}
 		else {
@@ -186,14 +187,23 @@ void Viewer::mouseMoveEvent(QMouseEvent *e)
 
 	m_camera->mouseMoveEvent(m_mouse_button, m_modifier, x, y);
 
-	if (m_scene->mode() == SCENE_MODE_SCULPT && m_mouse_button == MOUSE_LEFT) {
-		intersectScene(x, y);
+	if (/*m_scene->currentObject() != nullptr &&*/ m_manipulator_active) {
+		/* move manipulator */
+		const glm::vec3 start = unproject(glm::vec3(x, m_height - y, 0.0f));
+		const glm::vec3 end = unproject(glm::vec3(x, m_height - y, 1.0f));
+
+		Ray ray;
+		ray.pos = m_camera->pos();
+		ray.dir = glm::normalize(end - start);
+
+		m_manipulator->update(ray);
 	}
 }
 
 void Viewer::mouseReleaseEvent(QMouseEvent */*e*/)
 {
 	m_mouse_button = MOUSE_NONE;
+	m_manipulator_active = false;
 	update();
 }
 
@@ -219,16 +229,42 @@ void Viewer::setScene(Scene *scene)
 	m_scene = scene;
 }
 
-void Viewer::intersectScene(int x, int y) const
+void Viewer::intersectScene(int x, int y)
 {
-	const glm::vec3 start = unproject(glm::vec3(x, m_height - y, 0.0f));
-	const glm::vec3 end = unproject(glm::vec3(x, m_height - y, 1.0f));
+#if 0
+	const auto &mouse_x = (2.0f * x) / static_cast<float>(m_width) - 1.0f;
+	const auto &mouse_y = 1.0f - (2.0f * y) / static_cast<float>(m_height);
+
+	const auto &MV = m_camera->MV();
+	const auto &P = m_camera->P();
+	const auto &inv_MVP = glm::inverse(MV * P);
+	const auto &screen_pos = glm::vec4(mouse_x, -mouse_y, 1.0f, 1.0f);
+	const auto &world_pos = inv_MVP * screen_pos;
+
+	Ray ray;
+	ray.pos = m_camera->pos();
+	ray.dir = glm::normalize(glm::vec3(world_pos));
+#else
+	const auto &mouse_x = x;
+	const auto &mouse_y = y;
+
+	const auto &start = unproject(glm::vec3(x, m_height - y, 0.0f));
+	const auto &end = unproject(glm::vec3(x, m_height - y, 1.0f));
 
 	Ray ray;
 	ray.pos = m_camera->pos();
 	ray.dir = glm::normalize(end - start);
+#endif
 
 	m_scene->intersect(ray);
+
+	auto min = 1000.0f;
+	if (m_manipulator->intersect(ray, min)) {
+		m_manipulator_active = true;
+	}
+
+	std::cerr << "Mouse X, Y: " << mouse_x << ", " << mouse_y << '\n';
+	std::cerr << "Ray pos, dir: " << ray.pos << ", " << ray.dir << '\n';
 }
 
 void Viewer::selectObject(int x, int y) const

@@ -30,6 +30,8 @@
 
 #include <vector>
 
+#include "util_render.h"
+
 class ViewerContext;
 
 class Manipulator {
@@ -45,10 +47,25 @@ class Manipulator {
 
 	bool m_draw_bbox;
 
-	void updateMatrix();
+	glm::vec3 m_last_pos;
+	glm::vec3 m_plane_pos;
+	glm::vec3 m_plane_nor;
+	glm::vec3 m_delta_pos;
+	int m_axis;
 
 public:
 	Manipulator();
 
+	bool intersect(const Ray &ray, float &min);
+
 	void render(ViewerContext *context);
+
+	void pos(const glm::vec3 &p);
+	const glm::vec3 &pos() const;
+
+	void update(const Ray &ray);
+
+private:
+	void updateMatrix();
+	void applyConstraint(const glm::vec3 &cpos);
 };
