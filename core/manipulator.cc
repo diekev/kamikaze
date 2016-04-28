@@ -87,36 +87,107 @@ bool intersect(const Ray &ray, const glm::vec3 &pos, const glm::vec3 &nor, glm::
 	return true;
 }
 
-void add_arrow(std::vector<glm::vec3> &points, const int axis)
+void add_arrow(std::vector<glm::vec3> &points,
+               std::vector<unsigned int> &indices,
+               const int indices_offset,
+               const int axis)
 {
-	const auto osize = points.size();
-
-	/* add line */
-	points.push_back(glm::vec3(-1.0f, 0.0f, 0.0f));
-    points.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
-
-	/* add arrow */
-    points.push_back(glm::vec3(0.95f, 0.0f, -0.05f));
-    points.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
-    points.push_back(glm::vec3(0.95f, 0.0f, 0.05f));
-    points.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
+	auto min = glm::vec3(0.0f, -0.01f, -0.01f);
+	auto max = glm::vec3(2.0f, 0.01f, 0.01f);
 
 	switch (axis) {
 		default:
 		case 0:
-			/* nothing to do */
+			/* Nothing to do. */
 			break;
 		case 1:
-			for (auto i = osize, ie = points.size(); i < ie; ++i) {
-				points[i] = glm::rotateY(points[i], static_cast<float>(M_PI_2));
-			}
+			min = glm::rotateY(min, static_cast<float>(M_PI_2));
+			max = glm::rotateY(max, static_cast<float>(M_PI_2));
 			break;
 		case 2:
-			for (auto i = osize, ie = points.size(); i < ie; ++i) {
-				points[i] = glm::rotateZ(points[i], static_cast<float>(M_PI_2));
-			}
+			min = glm::rotateZ(min, static_cast<float>(M_PI_2));
+			max = glm::rotateZ(max, static_cast<float>(M_PI_2));
 			break;
 	}
+
+	/* cuboid */
+	points.push_back(glm::vec3(min[0], min[1], min[2]));
+	points.push_back(glm::vec3(max[0], min[1], min[2]));
+	points.push_back(glm::vec3(max[0], max[1], min[2]));
+	points.push_back(glm::vec3(min[0], max[1], min[2]));
+	points.push_back(glm::vec3(min[0], min[1], max[2]));
+	points.push_back(glm::vec3(max[0], min[1], max[2]));
+	points.push_back(glm::vec3(max[0], max[1], max[2]));
+	points.push_back(glm::vec3(min[0], max[1], max[2]));
+
+	/* arrowhead */
+	/* TODO */
+
+	unsigned int indexes[24] = {
+	    1, 0, 4, 5,
+	    2, 1, 5, 6,
+	    3, 2, 6, 7,
+	    0, 3, 7, 4,
+	    2, 3, 0, 1,
+	    5, 4, 7, 6,
+	};
+
+	for (int i = 0; i < 6; ++i) {
+		indices.push_back(indexes[4 * i] + indices_offset);
+		indices.push_back(indexes[4 * i + 1] + indices_offset);
+		indices.push_back(indexes[4 * i + 2] + indices_offset);
+		indices.push_back(indexes[4 * i] + indices_offset);
+		indices.push_back(indexes[4 * i + 2] + indices_offset);
+		indices.push_back(indexes[4 * i + 3] + indices_offset);
+	}
+}
+
+void add_plane(std::vector<glm::vec3> &points,
+               std::vector<unsigned int> &indices,
+               const int indices_offset,
+               const int axis)
+{
+	glm::vec3 min, max;
+
+	switch (axis) {
+		default:
+		case XY_PLANE:
+			min = glm::vec3(0.5f, 0.5f, 0.0f);
+			max = glm::vec3(1.5f, 1.5f, 0.0f);
+
+			points.push_back(glm::vec3(min[0], min[1], min[2]));
+			points.push_back(glm::vec3(max[0], min[1], min[2]));
+			points.push_back(glm::vec3(max[0], max[1], max[2]));
+			points.push_back(glm::vec3(min[0], max[1], max[2]));
+			break;
+		case XZ_PLANE:
+			min = glm::vec3(0.5f, 0.0f, -0.5f);
+			max = glm::vec3(1.5f, 0.0f, -1.5f);
+
+			points.push_back(glm::vec3(min[0], min[1], min[2]));
+			points.push_back(glm::vec3(max[0], min[1], min[2]));
+			points.push_back(glm::vec3(max[0], max[1], max[2]));
+			points.push_back(glm::vec3(min[0], max[1], max[2]));
+			break;
+		case YZ_PLANE:
+			min = glm::vec3(0.0f, 0.5f, -0.5f);
+			max = glm::vec3(0.0f, 1.5f, -1.5f);
+
+			/* This one is slightly different than the other two, need to find a
+			 * better order to add points to avoid this kind of duplication. */
+			points.push_back(glm::vec3(min[0], min[1], min[2]));
+			points.push_back(glm::vec3(max[0], min[1], max[2]));
+			points.push_back(glm::vec3(max[0], max[1], max[2]));
+			points.push_back(glm::vec3(min[0], max[1], min[2]));
+			break;
+	}
+
+	indices.push_back(0 + indices_offset);
+	indices.push_back(1 + indices_offset);
+	indices.push_back(2 + indices_offset);
+	indices.push_back(0 + indices_offset);
+	indices.push_back(2 + indices_offset);
+	indices.push_back(3 + indices_offset);
 }
 
 void Manipulator::updateMatrix()
@@ -148,7 +219,7 @@ Manipulator::Manipulator()
 	}
 	m_program.disable();
 
-	m_draw_type = GL_LINES;
+	m_draw_type = GL_TRIANGLES;
 
 	m_min = glm::vec3(0.0f, 0.0f, 0.0f);
 	m_max = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -160,22 +231,27 @@ Manipulator::Manipulator()
 
 	updateMatrix();
 
+	std::vector<unsigned int> indices;
+
 	/* generate vertices */
-	add_arrow(m_vertices, 0);
-	add_arrow(m_vertices, 1);
-	add_arrow(m_vertices, 2);
+	add_arrow(m_vertices, indices, m_vertices.size(), X_AXIS);
+	add_plane(m_vertices, indices, m_vertices.size(), YZ_PLANE);
+	add_arrow(m_vertices, indices, m_vertices.size(), Y_AXIS);
+	add_plane(m_vertices, indices, m_vertices.size(), XZ_PLANE);
+	add_arrow(m_vertices, indices, m_vertices.size(), Z_AXIS);
+	add_plane(m_vertices, indices, m_vertices.size(), XY_PLANE);
 
-	m_elements = m_vertices.size();
+	m_elements = indices.size();
 
-	for (int i = 0; i < m_elements; ++i) {
-		m_vertices[i] = m_vertices[i] * glm::mat3(m_inv_matrix);
+	for (auto &vert : m_vertices) {
+		vert = vert * glm::mat3(m_inv_matrix);
 	}
 
 	/* generate colors */
 	std::vector<glm::vec3> colors;
-	colors.resize(m_elements);
+	colors.resize(m_vertices.size());
 
-	const auto stride = m_elements / 3;
+	const auto stride = m_vertices.size() / 3;
 	for (int i = 0; i < stride; ++i) {
 		colors[i]              = glm::vec3(1.0f, 0.0f, 0.0f);
 		colors[i + stride]     = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -186,8 +262,9 @@ Manipulator::Manipulator()
 	m_buffer_data = ego::BufferObject::create();
 	m_buffer_data->bind();
 	m_buffer_data->generateVertexBuffer(&m_vertices[0][0], m_vertices.size() * sizeof(glm::vec3));
+	m_buffer_data->generateIndexBuffer(&indices[0], indices.size() * sizeof(int));
 	m_buffer_data->attribPointer(m_program["vertex"], 3);
-	m_buffer_data->generateNormalBuffer(&colors[0][0], sizeof(glm::vec3) * m_elements);
+	m_buffer_data->generateNormalBuffer(&colors[0][0], m_vertices.size() * sizeof(glm::vec3));
 	m_buffer_data->attribPointer(m_program["color"], 3);
 	m_buffer_data->unbind();
 }
@@ -219,22 +296,32 @@ bool Manipulator::intersect(const Ray &ray, float &min)
 		return true;
 	}
 
-	/* TODO check XY-Plane */
-	if (false) {
+	/* Check XY-Plane */
+	glm::vec3 dummy;
+	if (::intersect(ray, glm::vec3{ 1.0f, 1.0f, 0.0f }, glm::vec3{ 0.0f, 0.0f, 1.0f }, dummy)) {
 		m_axis = XY_PLANE;
-		m_plane_nor =  glm::vec3{ 0.0f, 0.0f, 1.0f };
+		m_plane_nor =  glm::vec3{ 0.0f, 0.0f, -1.0f };
+		m_plane_pos =  glm::vec3{ 1.0f, 1.0f, 0.0f };
+		std::cerr << "Isect XY Plane\n";
+		return true;
 	}
 
-	/* TODO check XZ-Plane */
-	if (false) {
+	/* Check XZ-Plane */
+	if (::intersect(ray, glm::vec3{ 1.0f, 0.0f, -1.0f }, glm::vec3{ 0.0f, -1.0f, 0.0f }, dummy)) {
 		m_axis = XZ_PLANE;
 		m_plane_nor =  glm::vec3{ 0.0f, 1.0f, 0.0f };
+		m_plane_pos =  glm::vec3{ 1.0f, 0.0f, -1.0f };
+		std::cerr << "Isect XZ Plane\n";
+		return true;
 	}
 
-	/* TODO check YZ-Plane */
-	if (false) {
+	/* Check YZ-Plane */
+	if (::intersect(ray, glm::vec3{ 0.0f, 1.0f, -1.0f }, glm::vec3{ 1.0f, 0.0f, 0.0f }, dummy)) {
 		m_axis = YZ_PLANE;
 		m_plane_nor =  glm::vec3{ 1.0f, 0.0f, 0.0f };
+		m_plane_pos =  glm::vec3{ 0.0f, 1.0f, -1.0f };
+		std::cerr << "Isect YZ Plane\n";
+		return true;
 	}
 
 	m_axis = -1;
@@ -255,7 +342,7 @@ const glm::vec3 &Manipulator::pos() const
 
 void Manipulator::update(const Ray &ray)
 {
-	if (m_axis < 0 || m_axis > 2) {
+	if (m_axis < X_AXIS || m_axis > YZ_PLANE) {
 		return;
 	}
 
@@ -291,18 +378,14 @@ void Manipulator::applyConstraint(const glm::vec3 &cpos)
 void Manipulator::render(ViewerContext *context)
 {
 	if (m_program.isValid()) {
-		glLineWidth(2.0f);
-
 		m_program.enable();
 		m_buffer_data->bind();
 
 		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(m_matrix));
 		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(context->MVP()));
-		glDrawArrays(m_draw_type, 0, m_elements);
+		glDrawElements(m_draw_type, m_elements, GL_UNSIGNED_INT, nullptr);
 
 		m_buffer_data->unbind();
 		m_program.disable();
-
-		glLineWidth(1.0f);
 	}
 }
