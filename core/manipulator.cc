@@ -192,15 +192,8 @@ void add_plane(std::vector<glm::vec3> &points,
 
 void Manipulator::updateMatrix()
 {
-	m_min = m_pos - m_dimensions / 2.0f;
-	m_max = m_min + m_dimensions;
-
-	m_matrix = glm::mat4(1.0f);
-	m_matrix = glm::translate(m_matrix, m_pos);
-	m_matrix = glm::scale(m_matrix, 1.0f * m_dimensions);
-
-	m_inv_matrix = glm::inverse(m_matrix);
-	std::cerr << "Manipulator pos: " << m_pos << '\n';
+	Transformable::update();
+	std::cerr << "Manipulator pos: " << pos() << '\n';
 }
 
 Manipulator::Manipulator()
@@ -224,7 +217,7 @@ Manipulator::Manipulator()
 	m_min = glm::vec3(0.0f, 0.0f, 0.0f);
 	m_max = glm::vec3(1.0f, 1.0f, 1.0f);
 	m_dimensions = m_max - m_min;
-	m_pos = glm::vec3(0.0f, 0.0f, 0.0f);
+
 	m_last_pos = glm::vec3(0.0f, 0.0f, 0.0f);
 	m_delta_pos = glm::vec3(0.0f, 0.0f, 0.0f);
 	m_plane_pos = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -274,7 +267,7 @@ bool Manipulator::intersect(const Ray &ray, float &min)
 	/* Check X-axis. */
 	auto nor = ray.pos - ray.dir;
 	auto xmin = glm::vec3{ -1.0f, -0.05f, -0.05f }, xmax = glm::vec3{ 1.0f, 0.05f, 0.05f };
-	if (::intersect(ray, xmin * glm::mat3(m_matrix), xmax * glm::mat3(m_matrix), min)) {
+	if (::intersect(ray, xmin * glm::mat3(matrix()), xmax * glm::mat3(matrix()), min)) {
 		m_axis = X_AXIS;
 		m_plane_nor = glm::vec3{ 0.0f, nor.y, nor.z };
 		return true;
@@ -282,7 +275,7 @@ bool Manipulator::intersect(const Ray &ray, float &min)
 
 	/* Check Y-axis. */
 	auto ymin = glm::vec3{ -0.05f, -1.0f, -0.05f }, ymax = glm::vec3{ 0.05f, 1.0f, 0.05f };
-	if (::intersect(ray, ymin * glm::mat3(m_matrix), ymax * glm::mat3(m_matrix), min)) {
+	if (::intersect(ray, ymin * glm::mat3(matrix()), ymax * glm::mat3(matrix()), min)) {
 		m_axis = Y_AXIS;
 		m_plane_nor = glm::vec3{ nor.x, 0.0f, nor.z };
 		return true;
@@ -290,7 +283,7 @@ bool Manipulator::intersect(const Ray &ray, float &min)
 
 	/* Check Z-axis. */
 	auto zmin = glm::vec3{ -0.05f, -0.05f, -1.0f }, zmax = glm::vec3{ 0.05f, 0.05f, 1.0f };
-	if (::intersect(ray, zmin * glm::mat3(m_matrix), zmax * glm::mat3(m_matrix), min)) {
+	if (::intersect(ray, zmin * glm::mat3(matrix()), zmax * glm::mat3(matrix()), min)) {
 		m_axis = Z_AXIS;
 		m_plane_nor = glm::vec3{ nor.x, nor.y, 0.0f };
 		return true;
@@ -328,18 +321,6 @@ bool Manipulator::intersect(const Ray &ray, float &min)
 	return false;
 }
 
-void Manipulator::pos(const glm::vec3 &p)
-{
-	m_pos = p;
-	m_plane_pos = p;
-	updateMatrix();
-}
-
-const glm::vec3 &Manipulator::pos() const
-{
-	return m_pos;
-}
-
 void Manipulator::update(const Ray &ray)
 {
 	if (m_axis < X_AXIS || m_axis > YZ_PLANE) {
@@ -351,9 +332,9 @@ void Manipulator::update(const Ray &ray)
 	if (::intersect(ray, m_plane_pos, m_plane_nor, ipos)) {
 		applyConstraint(ipos);
 
-		m_plane_pos = m_pos;
-		m_delta_pos = m_pos - m_last_pos;
-		m_last_pos = m_pos;
+		m_plane_pos = pos();
+		m_delta_pos = pos() - m_last_pos;
+		m_last_pos = pos();
 
 		updateMatrix();
 	}
@@ -370,7 +351,7 @@ void Manipulator::applyConstraint(const glm::vec3 &cpos)
 		case XY_PLANE:
 		case XZ_PLANE:
 		case YZ_PLANE:
-			m_pos = cpos;
+			pos(cpos);
 			break;
 	}
 }
@@ -381,7 +362,7 @@ void Manipulator::render(ViewerContext *context)
 		m_program.enable();
 		m_buffer_data->bind();
 
-		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(m_matrix));
+		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(matrix()));
 		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(context->MVP()));
 		glDrawElements(m_draw_type, m_elements, GL_UNSIGNED_INT, nullptr);
 
