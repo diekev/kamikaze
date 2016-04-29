@@ -78,6 +78,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	connect(m_scene, SIGNAL(nodeAdded(Object *, Node *)), this, SLOT(setupNodeUI(Object *, Node *)));
 	connect(ui->graph_editor, SIGNAL(objectNodeSelected(ObjectNodeItem *)), this, SLOT(setActiveObject(ObjectNodeItem *)));
 	connect(ui->graph_editor, SIGNAL(objectNodeRemoved(ObjectNodeItem *)), this, SLOT(removeObject(ObjectNodeItem *)));
+	connect(ui->graph_editor, SIGNAL(nodeRemoved(QtNode *)), this, SLOT(removeNode(QtNode *)));
 	connect(ui->graph_editor, SIGNAL(nodeSelected(QtNode *)), this, SLOT(setupNodeParamUI(QtNode *)));
 	connect(ui->graph_editor, SIGNAL(nodesConnected(QtNode *, const QString &, QtNode *, const QString &)),
 	        this, SLOT(nodesConnected(QtNode *, const QString &, QtNode *, const QString &)));
@@ -413,6 +414,20 @@ void MainWindow::setActiveObject(ObjectNodeItem *node)
 void MainWindow::removeObject(ObjectNodeItem *node)
 {
 	m_scene->removeObject(node->object());
+}
+
+void MainWindow::removeNode(QtNode *node)
+{
+	auto object = m_scene->currentObject();
+	auto graph = object->graph();
+
+	const auto was_connected = node->getNode()->isLinked();
+
+	graph->remove(node->getNode());
+
+	if (was_connected) {
+		object->evalGraph(true);
+	}
 }
 
 void MainWindow::nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)

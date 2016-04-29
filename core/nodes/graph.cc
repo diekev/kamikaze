@@ -54,6 +54,35 @@ void Graph::add(Node *node)
 	m_nodes.push_back(node);
 }
 
+void Graph::remove(Node *node)
+{
+	auto iter = std::find(m_nodes.begin(), m_nodes.end(), node);
+
+	if (iter == m_nodes.end()) {
+		std::cerr << "Unable to find node in graph!\n";
+		return;
+	}
+
+	/* disconnect inputs */
+	for (InputSocket *input : node->inputs()) {
+		if (input->link) {
+			disconnect(input->link, input);
+		}
+	}
+
+	/* disconnect outputs */
+	for (OutputSocket *output : node->outputs()) {
+		for (InputSocket *input : output->links) {
+			disconnect(output, input);
+		}
+	}
+
+	delete node;
+	m_nodes.erase(iter);
+
+	m_need_update = true;
+}
+
 void Graph::build()
 {
 	if (!m_need_update) {

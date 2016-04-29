@@ -44,6 +44,8 @@ public:
 	~Graph();
 
 	void add(Node *node);
+	void remove(Node *node);
+
 	void connect(OutputSocket *from, InputSocket *to);
 	void disconnect(OutputSocket *from, InputSocket *to);
 

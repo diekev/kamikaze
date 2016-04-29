@@ -90,6 +90,7 @@ private Q_SLOTS:
 	void setupObjectUI(Object *);
 	void setActiveObject(ObjectNodeItem *);
 	void removeObject(ObjectNodeItem *node);
+	void removeNode(QtNode *node);
 	void nodesConnected(QtNode *, const QString &, QtNode *, const QString &);
 	void connectionRemoved(QtNode *, const QString &, QtNode *, const QString &);
 };

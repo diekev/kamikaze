@@ -710,7 +710,7 @@ void QtNodeEditor::removeNode(QtNode *node)
 		Q_EMIT objectNodeRemoved(static_cast<ObjectNodeItem *>(node));
 	}
 	else {
-		Q_EMIT nodeToBeRemoved(node);
+		Q_EMIT nodeRemoved(node);
 	}
 
 	m_current_scene->removeItem(node);

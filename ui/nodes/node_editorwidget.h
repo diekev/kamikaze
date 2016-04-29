@@ -136,7 +136,7 @@ Q_SIGNALS:
 	void nodeAdded(QtNode *);
 
 	/* Emitted when a node is going to be removed from the node editor */
-	void nodeToBeRemoved(QtNode *);
+	void nodeRemoved(QtNode *);
 	void objectNodeRemoved(ObjectNodeItem *);
 
 	/* Emitted when a node is selected */

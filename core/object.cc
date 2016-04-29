@@ -76,6 +76,11 @@ void Object::evalGraph(bool force)
 	auto output_node = m_graph->output();
 	output_node->setPrimitiveCache(&m_cache);
 
+	if (!output_node->isLinked()) {
+		m_primitive = nullptr;
+		return;
+	}
+
 	m_graph->build();
 
 	/* XXX */

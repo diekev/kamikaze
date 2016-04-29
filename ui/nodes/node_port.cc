@@ -183,26 +183,27 @@ void QtPort::deleteConnection(QtConnection *connection, bool erase)
 		return;
 	}
 
-	QtPort *basePort = connection->getBasePort();
-	QtPort *targetPort = connection->getTargetPort();
-
-	if (basePort == this) {
-		/* Inform the target port */
-		if (targetPort) {
-			targetPort->informConnectionDeleted(connection);
-		}
-	}
-	else {
-		/* 'This' port is the target port; call the base port to delete its connection */
-		basePort->deleteConnection(connection);
-	}
+	QtPort *base = connection->getBasePort();
+	QtPort *target = connection->getTargetPort();
 
 	if (erase) {
 		auto iter = std::find(m_connections.begin(), m_connections.end(), connection);
 		m_connections.erase(iter);
 	}
 
-	delete connection;
+	if (base == this) {
+		/* Inform the target port */
+		if (target) {
+			target->informConnectionDeleted(connection);
+		}
+
+		delete connection;
+	}
+	else {
+		/* 'This' port is the target port; call the base port to delete its connection */
+		base->deleteConnection(connection);
+	}
+
 	setPortOpen(m_connections.empty());
 }
 
