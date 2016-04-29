@@ -73,12 +73,21 @@ void Object::evalGraph(bool force)
 		return;
 	}
 
+	auto output_node = m_graph->output();
+	output_node->setPrimitiveCache(&m_cache);
+
 	m_graph->build();
+
+	/* XXX */
+	for (Node *node : m_graph->nodes()) {
+		for (OutputSocket *output : node->outputs()) {
+			output->prim = nullptr;
+		}
+	}
 
 	m_cache.clear();
 	m_graph->execute();
 
-	auto output_node = m_graph->output();
 	m_primitive = output_node->primitive();
 }
 
@@ -106,6 +115,7 @@ void PrimitiveCache::clear()
 		}
 
 		delete primitive;
+		primitive = nullptr;
 	}
 
 	m_primitives.clear();
