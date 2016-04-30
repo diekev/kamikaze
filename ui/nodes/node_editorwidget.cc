@@ -499,9 +499,7 @@ bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 						if (item_Min_X > minX && item_Max_X < maxX &&
 						    item_Min_Y > minY && item_Max_Y < maxY)
 						{
-							connection->setSelected(true);
-							if (!isAlreadySelected(connection))
-								m_selected_connections.append(connection);
+							selectConnection(connection);
 						}
 					}
 				}
@@ -601,10 +599,9 @@ void QtNodeEditor::selectConnection(QtConnection *connection)
 {
 	if (!ctrlPressed()) {
 		deselectAll();
-		m_selected_connections.append(connection);
-		connection->setSelected(true);
 	}
-	else if (!isAlreadySelected(connection)) {
+
+	if (!isAlreadySelected(connection)) {
 		m_selected_connections.append(connection);
 		connection->setSelected(true);
 	}
