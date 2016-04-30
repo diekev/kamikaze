@@ -20,13 +20,13 @@
 
 #pragma once
 
+#include <QGraphicsView>
 #include <QWidget>
 
 class ObjectNodeItem;
 class QGraphicsItem;
 class QGraphicsRectItem;
 class QGraphicsSceneMouseEvent;
-class QGraphicsView;
 class QMenu;
 class QtConnection;
 class QtNode;
@@ -38,10 +38,21 @@ enum {
 	EDITOR_MODE_OBJECT = 1,
 };
 
+class NodeView : public QGraphicsView {
+public:
+	explicit NodeView(QWidget *parent = nullptr);
+	explicit NodeView(QGraphicsScene *scene, QWidget *parent = nullptr);
+
+protected:
+	/* Reimplement wheelEvent to avoid getting conflicts between zooming and
+	 * scrolling. */
+	void wheelEvent(QWheelEvent *event) override;
+};
+
 class QtNodeEditor : public QWidget {
 	Q_OBJECT
 
-	QGraphicsView *m_view;
+	NodeView *m_view;
 	QtNodeGraphicsScene *m_current_scene;
 	QtNodeGraphicsScene *m_scene_scene;
 
@@ -174,8 +185,6 @@ protected:
 
 	bool ctrlPressed();
 	void keyPressEvent(QKeyEvent *event) override;
-
-	void wheelEvent(QWheelEvent *event) override;
 
 	QGraphicsItem *itemAtExceptActiveConnection(const QPointF &pos);
 

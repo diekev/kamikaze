@@ -90,7 +90,7 @@ QtNodeEditor::QtNodeEditor(QWidget *parent)
     : QWidget(parent)
 {
 	QVBoxLayout *mainLayout = new QVBoxLayout;
-	m_view = new QGraphicsView(this);
+	m_view = new NodeView(this);
 
 	m_scene_scene = new QtNodeGraphicsScene();
 	m_scene_scene->installEventFilter(this);
@@ -1143,11 +1143,26 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 	}
 }
 
-//****************************************************************************/
-void QtNodeEditor::wheelEvent(QWheelEvent *event)
+/* ************************************************************************** */
+
+NodeView::NodeView(QWidget *parent)
+    : QGraphicsView(parent)
 {
-	m_view->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+	setDragMode(QGraphicsView::ScrollHandDrag);
+}
+
+NodeView::NodeView(QGraphicsScene *scene, QWidget *parent)
+    : QGraphicsView(scene, parent)
+{
+	setDragMode(QGraphicsView::ScrollHandDrag);
+}
+
+void NodeView::wheelEvent(QWheelEvent *event)
+{
+	this->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
 
 	const auto factor = 1.15f;
-	setZoom((event->delta() > 0) ? factor : 1.0f / factor);
+	const auto zoom = ((event->delta() > 0) ? factor : 1.0f / factor);
+
+	this->scale(zoom, zoom);
 }
