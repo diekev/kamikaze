@@ -27,6 +27,8 @@
 #include <QString>
 #include <vector>
 
+#include <glm/glm.hpp>
+
 class Graph;
 class Node;
 class Primitive;
@@ -48,6 +50,13 @@ class Object {
 	Primitive *m_orig_prim = nullptr;
 	PrimitiveCache m_cache;
 
+	glm::vec3 m_scale = glm::vec3(1.0f);
+	glm::vec3 m_rotation = glm::vec3(0.0f);
+	glm::vec3 m_pos = glm::vec3(0.0f);
+
+	glm::mat4 m_matrix = glm::mat4(0.0f);
+	glm::mat4 m_inv_matrix = glm::mat4(0.0f);
+
 	Graph *m_graph;
 
 	QString m_name;
@@ -59,6 +68,10 @@ public:
 	Primitive *primitive() const;
 	void primitive(Primitive *prim);
 
+	/* Return the object's matrix. */
+	void matrix(const glm::mat4 &m);
+	const glm::mat4 &matrix() const;
+
 	/* Nodes */
 	void addNode(Node *node);
 
@@ -68,4 +81,7 @@ public:
 
 	void name(const QString &name);
 	const QString &name() const;
+
+private:
+	void updateMatrix();
 };

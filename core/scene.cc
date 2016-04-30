@@ -112,6 +112,9 @@ void Scene::render(ViewerContext *context)
 			prim->bbox()->render(context, false);
 		}
 
+		auto primmat = prim->matrix();
+		prim->matrix() = primmat * object->matrix();
+
 		prim->render(context, false);
 
 		if (active_object) {
@@ -120,12 +123,11 @@ void Scene::render(ViewerContext *context)
 			glDisable(GL_DEPTH_TEST);
 
 			/* scale up the object a bit */
-			glm::mat4 obmat = prim->matrix();
-			prim->matrix() = glm::scale(obmat, glm::vec3(1.01f));
+			prim->matrix() = glm::scale(prim->matrix(), glm::vec3(1.01f));
 
 			prim->render(context, true);
 
-			prim->matrix() = obmat;
+			prim->matrix() = primmat;
 
 			/* restore */
 			glStencilFunc(GL_ALWAYS, 1, 0xff);

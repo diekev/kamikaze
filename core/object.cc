@@ -24,13 +24,16 @@
 
 #include "object.h"
 
+#include <glm/gtc/matrix_transform.hpp>
 #include <kamikaze/primitive.h>
 
 #include "nodes/graph.h"
 
 Object::Object()
     : m_graph(new Graph)
-{}
+{
+	updateMatrix();
+}
 
 Object::~Object()
 {
@@ -54,6 +57,16 @@ void Object::primitive(Primitive *prim)
 {
 	m_primitive = prim;
 	m_orig_prim = prim;
+}
+
+void Object::matrix(const glm::mat4 &m)
+{
+	m_matrix = m;
+}
+
+const glm::mat4 &Object::matrix() const
+{
+	return m_matrix;
 }
 
 void Object::addNode(Node *node)
@@ -104,6 +117,18 @@ void Object::name(const QString &name)
 const QString &Object::name() const
 {
 	return m_name;
+}
+
+void Object::updateMatrix()
+{
+	m_matrix = glm::mat4(1.0f);
+	m_matrix = glm::translate(m_matrix, m_pos);
+	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+	m_matrix = glm::scale(m_matrix, m_scale);
+
+	m_inv_matrix = glm::inverse(m_matrix);
 }
 
 void PrimitiveCache::add(Primitive *prim)
