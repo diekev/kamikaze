@@ -546,6 +546,11 @@ void QtNodeEditor::keyPressEvent(QKeyEvent *event)
 	if (event->key() == Qt::Key_Delete) {
 		removeAllSelelected();
 	}
+	else if (event->key() == Qt::Key_A) {
+		if (m_editor_mode == EDITOR_MODE_OBJECT) {
+			m_add_node_menu->popup(QCursor::pos());
+		}
+	}
 }
 
 //****************************************************************************/

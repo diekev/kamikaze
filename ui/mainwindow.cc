@@ -277,6 +277,8 @@ void MainWindow::generateNodeMenu()
 			connect(action, SIGNAL(triggered()), this, SLOT(handleObjectCommand()));
 		}
 	}
+
+	ui->graph_editor->setAddNodeMenu(ui->add_nodes_menu);
 }
 
 void MainWindow::handleCommand()

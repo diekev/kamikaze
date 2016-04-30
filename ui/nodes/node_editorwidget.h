@@ -47,6 +47,7 @@ class QtNodeEditor : public QWidget {
 
 	QMenu *m_context_menu;
 	QMenu *m_zoom_sub_menu;
+	QMenu *m_add_node_menu;
 
 	QGraphicsRectItem *m_rubber_band;
 	QPointF m_last_mouse_position;
@@ -124,6 +125,11 @@ public:
 
 	QtConnection *nodeOverConnection(QtNode *node);
 	QtConnection *lastSelectedConnection() const;
+
+	void setAddNodeMenu(QMenu *menu)
+	{
+		m_add_node_menu = menu;
+	}
 
 public Q_SLOTS:
 	/* Activated when a contextmenu item is selected */
