@@ -515,18 +515,7 @@ bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 					if (item_Min_X > minX && item_Max_X < maxX &&
 					    item_Min_Y > minY && item_Max_Y < maxY)
 					{
-						node->setSelected(true);
-						if (!isAlreadySelected(node))
-							m_selected_nodes.append(node);
-
-						if (is_object_node(node)) {
-							Q_EMIT objectNodeSelected(static_cast<ObjectNodeItem *>(node));
-						}
-						else {
-							Q_EMIT nodeSelected(node);
-						}
-
-						toFront(node);
+						selectNode(node, nullptr);
 					}
 				}
 			}
@@ -580,11 +569,13 @@ void QtNodeEditor::rubberbandSelection(QGraphicsSceneMouseEvent *mouseEvent)
 //****************************************************************************/
 void QtNodeEditor::selectNode(QtNode *node, QGraphicsSceneMouseEvent *mouseEvent)
 {
-	/* pass the node itself also, because this function is also used for other
-	 * purposes than selecting the node itself */
-	node->mouseLeftClickHandler(mouseEvent, node);
+	if (mouseEvent) {
+		/* pass the node itself also, because this function is also used for
+		 * other purposes than selecting the node itself */
+		node->mouseLeftClickHandler(mouseEvent, node);
+	}
 
-	if (!ctrlPressed()) {
+	if (mouseEvent && !ctrlPressed()) {
 		deselectAll();
 		m_selected_nodes.append(node);
 	}
@@ -593,7 +584,8 @@ void QtNodeEditor::selectNode(QtNode *node, QGraphicsSceneMouseEvent *mouseEvent
 		/* Do not call setSelection on the node; the node is selectable, while the connection isn't */
 	}
 
-	/* TODO(kevin): this is weak */
+	node->setSelected(true);
+
 	if (is_object_node(node)) {
 		Q_EMIT objectNodeSelected(static_cast<ObjectNodeItem *>(node));
 	}
