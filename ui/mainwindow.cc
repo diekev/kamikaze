@@ -63,16 +63,10 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
     , m_command_manager(new CommandManager)
     , m_command_factory(new CommandFactory)
     , m_timer_has_started(false)
-    , m_scene_mode_box(new QComboBox(this))
-    , m_scene_mode_list(new QListWidget(m_scene_mode_box))
 {
 	qApp->installEventFilter(this);
 	ui->setupUi(this);
 	ui->m_viewport->setScene(m_scene);
-
-	connect(m_scene, SIGNAL(objectChanged()), this, SLOT(updateObjectTab()));
-	ui->tabWidget->setTabEnabled(0, false);
-	ui->tabWidget->setTabEnabled(3, false);
 
 	connect(m_scene, SIGNAL(objectAdded(Object *)), this, SLOT(setupObjectUI(Object *)));
 	connect(m_scene, SIGNAL(nodeAdded(Object *, Node *)), this, SLOT(setupNodeUI(Object *, Node *)));
@@ -86,20 +80,6 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	        this, SLOT(connectionRemoved(QtNode *, const QString &, QtNode *, const QString &)));
 
 	connect(m_timer, SIGNAL(timeout()), this, SLOT(updateFrame()));
-
-	/* Cannot add widget to toolbar in Qt Designer, do a little hack to disable
-	 * items in the box */
-	ui->toolBar->addWidget(m_scene_mode_box);
-
-	m_scene_mode_list->hide();
-	m_scene_mode_box->setModel(m_scene_mode_list->model());
-
-	m_scene_mode_list->addItem("Object Mode");
-	m_scene_mode_list->addItem("Sculpt Mode");
-
-	disable_list_item(m_scene_mode_list, 1);
-
-	connect(m_scene_mode_box, SIGNAL(currentIndexChanged(int)), this, SLOT(setSceneMode(int)));
 
 	/* Timeline */
 	ui->m_timeline->setMaximum(250);
@@ -162,11 +142,8 @@ void MainWindow::updateObjectTab() const
 	Object *ob = m_scene->currentObject();
 
 	if (ob == nullptr) {
-		ui->tabWidget->setTabEnabled(0, false);
 		return;
 	}
-
-	ui->tabWidget->setTabEnabled(0, true);
 
 	clear_layout(ui->node_param_layout);
 
@@ -175,13 +152,6 @@ void MainWindow::updateObjectTab() const
 	ob->primitive()->setCustomUIParams(&cb);
 
 	cb.setContext(m_scene, SLOT(tagObjectUpdate()));
-
-	if ((ob->primitive()->flags() & object_flags::object_supports_sculpt) != object_flags::object_flags_none) {
-		enable_list_item(m_scene_mode_list, 1);
-	}
-	else {
-		disable_list_item(m_scene_mode_list, 1);
-	}
 
 	m_scene->objectNameList(ui->m_outliner);
 }
@@ -245,12 +215,6 @@ void MainWindow::setEndFrame(int value) const
 	ui->m_timeline->setMaximum(value);
 }
 
-void MainWindow::setSceneMode(int idx) const
-{
-	m_scene->setMode(idx);
-	ui->tabWidget->setTabEnabled(3, idx == SCENE_MODE_SCULPT);
-}
-
 void MainWindow::generateObjectMenu()
 {
 	m_command_factory->registerType("add object", AddObjectCmd::registerSelf);
@@ -259,7 +223,7 @@ void MainWindow::generateObjectMenu()
 		auto action = ui->menuAdd->addAction(key.c_str());
 		action->setData(QVariant::fromValue(QString("add object")));
 
-		connect(action, SIGNAL(triggered()), this, SLOT(handleObjectCommand()));
+		connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
 	}
 }
 
@@ -274,7 +238,7 @@ void MainWindow::generateNodeMenu()
 			auto action = sub_menu->addAction(key.c_str());
 			action->setData(QVariant::fromValue(QString("add node")));
 
-			connect(action, SIGNAL(triggered()), this, SLOT(handleObjectCommand()));
+			connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
 		}
 	}
 
@@ -282,53 +246,6 @@ void MainWindow::generateNodeMenu()
 }
 
 void MainWindow::handleCommand()
-{
-	QAction *action = qobject_cast<QAction *>(sender());
-
-	if (!action) {
-		return;
-	}
-
-	const auto &name = action->text();
-
-	/* create UI */
-	QDialog *dialog = new QDialog();
-	dialog->setPalette(this->palette());
-	dialog->setWindowTitle(name);
-
-	QDialogButtonBox *button_box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-
-	connect(button_box, SIGNAL(accepted()), dialog, SLOT(accept()));
-	connect(button_box, SIGNAL(rejected()), dialog, SLOT(reject()));
-
-	QGridLayout *layout = new QGridLayout();
-
-	dialog->setLayout(layout);
-
-	ParamCallback cb(layout);
-
-	/* get command */
-	Command *cmd = (*m_command_factory)(name.toStdString());
-	cmd->setUIParams(&cb);
-
-	layout->addWidget(button_box);
-
-	/* TODO */
-	EvaluationContext context;
-	context.scene = m_scene;
-
-	if (dialog->exec() == QDialog::Accepted) {
-		m_command_manager->execute(cmd, &context);
-	}
-	else {
-		delete cmd;
-	}
-
-	delete layout;
-	delete dialog;
-}
-
-void MainWindow::handleObjectCommand()
 {
 	QAction *action = qobject_cast<QAction *>(sender());
 

@@ -66,23 +66,3 @@ public:
 	void setUIParams(ParamCallback *cb);
 	static Command *registerSelf();
 };
-
-#if 0
-class LoadFromFileCmd : public Command {
-	Scene *m_scene;
-	Object *m_object;
-	QString m_filename;
-
-	/* TODO */
-	bool m_was_undone;
-
-public:
-	LoadFromFileCmd(Scene *scene, const QString &filename);
-	~LoadFromFileCmd();
-
-	void execute(EvaluationContext *context);
-	void undo();
-	void redo();
-	void setUIParams(ParamCallback *cb) { (void)cb; }
-};
-#endif

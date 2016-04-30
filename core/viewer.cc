@@ -151,13 +151,7 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 	}
 	else if (e->buttons() == Qt::LeftButton) {
 		m_mouse_button = MOUSE_LEFT;
-
-		if (m_scene->mode() == SCENE_MODE_SCULPT) {
-			intersectScene(x, y);
-		}
-		else {
-			selectObject(x, y);
-		}
+		selectObject(x, y);
 	}
 	else if (e->buttons() == Qt::RightButton) {
 		m_mouse_button = MOUSE_RIGHT;
@@ -179,10 +173,6 @@ void Viewer::mouseMoveEvent(QMouseEvent *e)
 	const int y = e->pos().y();
 
 	m_camera->mouseMoveEvent(m_mouse_button, m_modifier, x, y);
-
-	if (m_scene->mode() == SCENE_MODE_SCULPT && m_mouse_button == MOUSE_LEFT) {
-		intersectScene(x, y);
-	}
 }
 
 void Viewer::mouseReleaseEvent(QMouseEvent */*e*/)

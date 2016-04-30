@@ -39,7 +39,6 @@
 
 Scene::Scene()
     : m_active_object(nullptr)
-    , m_mode(SCENE_MODE_OBJECT)
 {}
 
 Scene::~Scene()
@@ -163,16 +162,6 @@ void Scene::selectObject(const glm::vec3 &pos)
 		m_active_object = m_objects[selected_object];
 		Q_EMIT objectChanged();
 	}
-}
-
-int Scene::mode() const
-{
-	return m_mode;
-}
-
-void Scene::setMode(int mode)
-{
-	m_mode = mode;
 }
 
 Object *Scene::currentObject()

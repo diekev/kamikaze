@@ -58,8 +58,6 @@ class MainWindow : public QMainWindow {
 	CommandManager *m_command_manager;
 	CommandFactory *m_command_factory;
 	bool m_timer_has_started;
-	QComboBox *m_scene_mode_box;
-	QListWidget *m_scene_mode_list;
 
 public:
 	explicit MainWindow(Main *main, QWidget *parent = nullptr);
@@ -73,21 +71,26 @@ private:
 	void generateNodeMenu();
 
 private Q_SLOTS:
-	void updateObjectTab() const;
+	/* Timeline */
 	void startAnimation();
 	void updateFrame() const;
 	void setStartFrame(int value) const;
 	void setEndFrame(int value) const;
-	void setSceneMode(int idx) const;
 	void goToStartFrame() const;
 	void goToEndFrame() const;
+
+	/* Undo & commands */
 	void undo() const;
 	void redo() const;
 	void handleCommand();
-	void handleObjectCommand();
+
+	/* Generic object actions */
+	void setupObjectUI(Object *);
+	void updateObjectTab() const;
+
+	/* Nodes */
 	void setupNodeUI(Object *, Node *node);
 	void setupNodeParamUI(QtNode *node_item);
-	void setupObjectUI(Object *);
 	void setActiveObject(ObjectNodeItem *);
 	void removeObject(ObjectNodeItem *node);
 	void removeNode(QtNode *node);
