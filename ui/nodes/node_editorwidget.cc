@@ -1084,11 +1084,6 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 		return;
 	}
 
-	if (action->text() == NODE_ACTION_ZOOM_10) {
-		setZoomForAction(0.1f, action);
-		return;
-	}
-
 	/* ---------------- Collapse action ---------------- */
 	if (action->text() == NODE_ACTION_COLLAPSE_ALL) {
 		QtNode *node;
