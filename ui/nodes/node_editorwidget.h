@@ -123,6 +123,7 @@ public:
 	void setZoom(qreal zoom);
 
 	QtConnection *nodeOverConnection(QtNode *node);
+	QtConnection *lastSelectedConnection() const;
 
 public Q_SLOTS:
 	/* Activated when a contextmenu item is selected */

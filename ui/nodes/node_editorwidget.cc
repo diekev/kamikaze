@@ -677,8 +677,16 @@ void QtNodeEditor::addNode(QtNode *node)
 {
 	node->setEditor(this);
 	node->setScene(m_current_scene);
+
 	m_current_scene->addItem(node);
-	Q_EMIT nodeAdded(node);
+
+	m_hover_connection = lastSelectedConnection();
+
+	if (m_hover_connection != nullptr) {
+		splitConnectionWithNode(node);
+	}
+
+	m_hover_connection = nullptr;
 }
 
 //****************************************************************************/
@@ -846,6 +854,16 @@ QtNode *QtNodeEditor::getLastSelectedNode() const
 const QVector<QtNode *> &QtNodeEditor::selectedNodes() const
 {
 	return m_selected_nodes;
+}
+
+//****************************************************************************/
+QtConnection *QtNodeEditor::lastSelectedConnection() const
+{
+	if (m_selected_connections.empty()) {
+		return nullptr;
+	}
+
+	return m_selected_connections.back();
 }
 
 //****************************************************************************/
