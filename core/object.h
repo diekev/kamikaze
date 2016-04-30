@@ -31,6 +31,7 @@
 
 class Graph;
 class Node;
+class ParamCallback;
 class Primitive;
 
 /**
@@ -82,6 +83,7 @@ public:
 	void name(const QString &name);
 	const QString &name() const;
 
-private:
+	void setUIParams(ParamCallback *cb);
+
 	void updateMatrix();
 };

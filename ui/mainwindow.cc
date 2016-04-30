@@ -148,7 +148,7 @@ void MainWindow::updateObjectTab() const
 	clear_layout(ui->node_param_layout);
 
 	ParamCallback cb(ui->node_param_layout);
-	ob->primitive()->setUIParams(&cb);
+	ob->setUIParams(&cb);
 	ob->primitive()->setCustomUIParams(&cb);
 
 	cb.setContext(m_scene, SLOT(tagObjectUpdate()));
@@ -328,6 +328,7 @@ void MainWindow::setupObjectUI(Object *object)
 void MainWindow::setActiveObject(ObjectNodeItem *node)
 {
 	m_scene->setActiveObject(node->object());
+	updateObjectTab();
 }
 
 void MainWindow::removeObject(ObjectNodeItem *node)

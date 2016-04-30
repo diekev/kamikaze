@@ -26,6 +26,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <kamikaze/primitive.h>
+#include <kamikaze/paramfactory.h>
 
 #include "nodes/graph.h"
 
@@ -117,6 +118,15 @@ void Object::name(const QString &name)
 const QString &Object::name() const
 {
 	return m_name;
+}
+
+void Object::setUIParams(ParamCallback *cb)
+{
+	string_param(cb, "Name", &m_name, "");
+
+	xyz_param(cb, "Position", &m_pos[0], 0.0f, 100.0f);
+	xyz_param(cb, "Scale", &m_scale[0], 0.0f, 100.0f);
+	xyz_param(cb, "Rotation", &m_rotation[0], 0.0f, 360.0f);
 }
 
 void Object::updateMatrix()

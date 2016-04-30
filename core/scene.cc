@@ -113,7 +113,7 @@ void Scene::render(ViewerContext *context)
 		}
 
 		auto primmat = prim->matrix();
-		prim->matrix() = primmat * object->matrix();
+		prim->matrix() = object->matrix() * primmat;
 
 		prim->render(context, false);
 
@@ -196,7 +196,11 @@ void Scene::setObjectName(const QString &name)
 void Scene::tagObjectUpdate()
 {
 	if (m_active_object) {
-		m_active_object->primitive()->tagUpdate();
+		m_active_object->updateMatrix();
+
+		if (m_active_object->primitive()) {
+			m_active_object->primitive()->tagUpdate();
+		}
 	}
 }
 
