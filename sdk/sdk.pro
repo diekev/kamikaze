@@ -55,7 +55,8 @@ HDR_SDK = \
     nodes.h \
     primitive.h \
     geomlists.h \
-    util_parallel.h
+    util_parallel.h \
+    prim_points.h
 
 SOURCES += \
     $$SRC_INTERN \
@@ -67,7 +68,8 @@ SOURCES += \
     primitive.cc \
     mesh.cc \
     attribute.cc \
-    geomlists.cc
+    geomlists.cc \
+    prim_points.cc
 
 HEADERS += \
     $$HDR_SDK \

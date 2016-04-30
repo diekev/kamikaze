@@ -29,13 +29,6 @@
 #include "primitive.h"
 
 class Mesh : public Primitive {
-	std::vector<glm::ivec4> m_quads{};
-	std::vector<glm::ivec3> m_tris{};
-	std::vector<glm::vec3> m_verts{};
-
-	std::vector<glm::vec2> m_uvs{};
-	std::vector<glm::vec3> m_normals{};
-
 	PointList m_point_list;
 	PolygonList m_poly_list;
 
