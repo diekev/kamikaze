@@ -106,6 +106,7 @@ void Scene::render(ViewerContext *context)
 
 		/* update prim before drawing */
 		prim->update();
+		prim->prepareRenderData();
 
 		if (prim->drawBBox()) {
 			prim->bbox()->render(context, false);

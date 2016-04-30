@@ -36,8 +36,6 @@ class PrimPoints : public Primitive {
 	ego::Program m_program;
 	size_t m_elements;
 
-	bool m_need_data_update;
-
 public:
 	PrimPoints();
 	~PrimPoints();
@@ -58,9 +56,9 @@ public:
 
 	void setCustomUIParams(ParamCallback *cb) override;
 
-	void prepareRenderData();
+	void prepareRenderData() override;
+
+	void computeBBox(glm::vec3 &min, glm::vec3 &max) override;
 
 	void loadShader();
-
-	void tag_update();
 };

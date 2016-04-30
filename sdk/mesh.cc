@@ -108,18 +108,12 @@ Attribute *Mesh::addAttribute(const std::string &name, AttributeType type, size_
 void Mesh::update()
 {
 	if (m_need_update) {
-		computeBBox();
+		computeBBox(m_min, m_max);
 		updateMatrix();
 
 		m_bbox.reset(new Cube(m_min, m_max));
 		m_need_update = false;
 	}
-}
-
-void Mesh::tag_update()
-{
-	m_need_update = true;
-	m_need_data_update = true;
 }
 
 Primitive *Mesh::copy() const
@@ -150,8 +144,7 @@ Primitive *Mesh::copy() const
 		mesh->addAttribute(new Attribute(*attr));
 	}
 
-	mesh->update();
-	mesh->generateGPUData();
+	mesh->tagUpdate();
 
 	return mesh;
 }
@@ -176,11 +169,6 @@ void Mesh::loadShader()
 
 void Mesh::render(ViewerContext *context, const bool for_outline)
 {
-	if (m_need_data_update) {
-		generateGPUData();
-		m_need_data_update = false;
-	}
-
 	if (m_program.isValid()) {
 		m_program.enable();
 		m_buffer_data->bind();
@@ -201,8 +189,12 @@ void Mesh::setCustomUIParams(ParamCallback *cb)
 	UNUSED(cb);
 }
 
-void Mesh::generateGPUData()
+void Mesh::prepareRenderData()
 {
+	if (!m_need_data_update) {
+		return;
+	}
+
 	Attribute *normals = this->attribute("normal", ATTR_TYPE_VEC3);
 
 	if (normals->size() != this->points()->size()) {
@@ -244,9 +236,11 @@ void Mesh::generateGPUData()
 	m_buffer_data->unbind();
 
 	ego::util::GPU_check_errors("Unable to create level set buffer");
+
+	m_need_data_update = false;
 }
 
-void Mesh::computeBBox()
+void Mesh::computeBBox(glm::vec3 &min, glm::vec3 &max)
 {
 	for (size_t i = 0, ie = m_point_list.size(); i < ie; ++i) {
 		const auto &vert = m_point_list[i];
@@ -273,6 +267,8 @@ void Mesh::computeBBox()
 		}
 	}
 
+	min = m_min;
+	max = m_max;
 	m_dimensions = m_max - m_min;
 }
 
@@ -343,7 +339,7 @@ static Primitive *create_cube()
 	polys->push_back(glm::ivec4(2, 3, 0, 1));
 	polys->push_back(glm::ivec4(5, 4, 7, 6));
 
-	mesh->tag_update();
+	mesh->tagUpdate();
 
 	return mesh;
 }
@@ -363,7 +359,7 @@ static Primitive *create_plane()
 	PolygonList *polys = mesh->polys();
 	polys->push_back(glm::ivec4(0, 1, 2, 3));
 
-	mesh->tag_update();
+	mesh->tagUpdate();
 
 	return mesh;
 }
@@ -433,7 +429,7 @@ static Primitive *create_torus()
 		}
 	}
 
-	mesh->tag_update();
+	mesh->tagUpdate();
 
 	return mesh;
 }

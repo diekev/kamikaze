@@ -93,15 +93,13 @@ Attribute *PrimPoints::addAttribute(const std::string &name, AttributeType type,
 
 Primitive *PrimPoints::copy() const
 {
-	PrimPoints *mesh = new PrimPoints;
+	PrimPoints *prim = new PrimPoints;
 
-	PointList *points = mesh->points();
+	PointList *points = prim->points();
 	points->resize(this->points()->size());
 
-	mesh->update();
-	mesh->prepareRenderData();
-
-	return mesh;
+	prim->tagUpdate();
+	return prim;
 }
 
 void PrimPoints::loadShader()
@@ -120,24 +118,9 @@ void PrimPoints::loadShader()
 	m_program.disable();
 }
 
-void PrimPoints::tag_update()
-{
-	m_need_update = true;
-	m_need_data_update = true;
-}
-
 void PrimPoints::render(ViewerContext *context, const bool for_outline)
 {
-	if (m_need_data_update) {
-		prepareRenderData();
-		m_need_data_update = false;
-	}
-
-	std::cerr << __func__ << '\n';
-
 	if (m_program.isValid()) {
-		std::cerr << "Valid programm\n";
-
 		glPointSize(2.0f);
 
 		m_program.enable();
@@ -161,6 +144,32 @@ void PrimPoints::setCustomUIParams(ParamCallback *cb)
 }
 
 void PrimPoints::prepareRenderData()
+{
+	if (!m_need_data_update) {
+		return;
+	}
+
+	computeBBox(m_min, m_max);
+	updateMatrix();
+
+	for (size_t i = 0, ie = this->points()->size(); i < ie; ++i) {
+		m_points[i] = m_points[i] * glm::mat3(m_inv_matrix);
+	}
+
+	m_elements = this->points()->size();
+
+	m_buffer_data.reset(new ego::BufferObject());
+	m_buffer_data->bind();
+	m_buffer_data->generateVertexBuffer(m_points.data(), m_points.byte_size());
+	m_buffer_data->attribPointer(m_program["vertex"], 3);
+	m_buffer_data->unbind();
+
+	ego::util::GPU_check_errors("Unable to create level set buffer");
+
+	m_need_data_update = false;
+}
+
+void PrimPoints::computeBBox(glm::vec3 &min, glm::vec3 &max)
 {
 	for (size_t i = 0, ie = this->points()->size(); i < ie; ++i) {
 		auto vert = m_points[i];
@@ -187,21 +196,7 @@ void PrimPoints::prepareRenderData()
 		}
 	}
 
+	min = m_min;
+	max = m_max;
 	m_dimensions = m_max - m_min;
-
-	updateMatrix();
-
-	for (size_t i = 0, ie = this->points()->size(); i < ie; ++i) {
-		m_points[i] = m_points[i] * glm::mat3(m_inv_matrix);
-	}
-
-	m_elements = this->points()->size();
-
-	m_buffer_data.reset(new ego::BufferObject());
-	m_buffer_data->bind();
-	m_buffer_data->generateVertexBuffer(m_points.data(), m_points.byte_size());
-	m_buffer_data->attribPointer(m_program["vertex"], 3);
-	m_buffer_data->unbind();
-
-	ego::util::GPU_check_errors("Unable to create level set buffer");
 }

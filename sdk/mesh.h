@@ -97,21 +97,19 @@ public:
 
 	void update() override;
 
-	void tag_update();
-
 	void render(ViewerContext *context, const bool for_outline) override;
 
 	void setCustomUIParams(ParamCallback *cb) override;
 
-	/* TODO */
-	void generateGPUData();
+	void prepareRenderData() override;
+
+	void computeBBox(glm::vec3 &min, glm::vec3 &max) override;
 
 	static void registerSelf(PrimitiveFactory *factory);
 
 	Primitive *copy() const override;
 
 private:
-	void computeBBox();
 	void computeNormals();
 	void loadShader();
 };

@@ -46,16 +46,6 @@ void new_kamikaze_prims(PrimitiveFactory *factory);
 
 }
 
-enum {
-	DRAW_WIRE = 0,
-	DRAW_SOLID = 1,
-};
-
-enum object_flags {
-	object_flags_none      = 0,
-	object_supports_sculpt = (1 << 0),
-};
-
 class Primitive {
 protected:
 	std::unique_ptr<Cube> m_bbox{};
@@ -77,10 +67,9 @@ protected:
 
 	bool m_draw_bbox = false;
 	bool m_need_update = true;
+	bool m_need_data_update = true;
 
 	int m_refcount = 0;
-
-	object_flags m_flags = object_flags::object_flags_none;
 
 	void updateMatrix();
 
@@ -88,15 +77,41 @@ public:
 	Primitive() = default;
 	virtual ~Primitive() = default;
 
+	/**
+	 * @brief intersect Intersect a ray against this primitive AABB.
+	 * @param ray       The ray to check intersection with.
+	 * @param min       The minimum distance from the ray origin.
+	 * @return          True if the ray intersects this primitive.
+	 */
 	virtual bool intersect(const Ray &ray, float &min) const;
-	virtual void render(ViewerContext *context, const bool for_outline) = 0;
-	void setDrawType(int draw_type);
 
+	/**
+	 * @brief prepareRenderData Prepare the data required for drawing this
+	 *                          primitive inside an OpenGL context.
+	 */
+	virtual void prepareRenderData() = 0;
+
+	/**
+	 * @brief render      Draw this primitive inside of an OpenGL context.
+	 * @param context     The OpenGL context in which the primitive is drawn.
+	 * @param for_outline Flag to indicate that the primitive is selected. If so,
+	 *                    its outline will be drawn highlighted.
+	 */
+	virtual void render(ViewerContext *context, const bool for_outline) = 0;
+
+	/**
+	 * @brief computeBBox Compute the bounding box of this primitive.
+	 * @param min         The minimum position of this bounding box.
+	 * @param max         The maximum position of this bounding box.
+	 */
+	virtual void computeBBox(glm::vec3 &min, glm::vec3 &max) = 0;
+
+	/* todo remove these 3 */
 	void drawBBox(const bool b);
 	bool drawBBox() const;
-
 	Cube *bbox() const;
 
+	/* todo: remove these? */
 	glm::vec3 pos() const;
 	glm::vec3 &pos();
 	glm::vec3 scale() const;
@@ -104,28 +119,34 @@ public:
 	glm::vec3 rotation() const;
 	glm::vec3 &rotation();
 
-	void flags(object_flags flags);
-	object_flags flags() const;
-
 	/* Return the object's matrix, mainly intended for rendering the active object */
 	glm::mat4 matrix() const;
 	glm::mat4 &matrix();
 
 	virtual void update();
 
+	/**
+	 * @brief tagUpdate Tag this primitive for updates.
+	 */
 	void tagUpdate();
 
 	QString name() const;
 	void name(const QString &name);
 
-	/* perform a deep copy of this primitive */
+	/**
+	 * @brief copy Perform a deep copy of this primitive.
+	 * @return     A new primitive with the same data as this primitive.
+	 */
 	virtual Primitive *copy() const = 0;
 
 	/* UI parameters */
 	void setUIParams(ParamCallback *cb);
 	virtual void setCustomUIParams(ParamCallback *cb) = 0;
 
-	/* Reference counting */
+	/* Reference counting, NOT to be used from plugins. They are used to
+	 * indicate that primitives are ready to be deleted.
+	 *
+	 * TODO: Replace with std::shared_ptr? */
 	int refcount() const;
 	void incref();
 	void decref();

@@ -50,19 +50,6 @@ bool Primitive::intersect(const Ray &ray, float &min) const
 	return false;
 }
 
-void Primitive::setDrawType(int draw_type)
-{
-	switch (draw_type) {
-		case DRAW_WIRE:
-			m_draw_type = GL_LINES;
-			break;
-		default:
-		case DRAW_SOLID:
-			m_draw_type = GL_TRIANGLES;
-			break;
-	}
-}
-
 void Primitive::drawBBox(const bool b)
 {
 	m_draw_bbox = b;
@@ -111,16 +98,6 @@ glm::vec3 &Primitive::rotation()
 	return m_rotation;
 }
 
-void Primitive::flags(object_flags flags)
-{
-	m_flags = flags;
-}
-
-object_flags Primitive::flags() const
-{
-	return m_flags;
-}
-
 glm::mat4 Primitive::matrix() const
 {
 	return m_matrix;
@@ -144,6 +121,7 @@ void Primitive::update()
 void Primitive::tagUpdate()
 {
 	m_need_update = true;
+	m_need_data_update = true;
 }
 
 void Primitive::updateMatrix()
