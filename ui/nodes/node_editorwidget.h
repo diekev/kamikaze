@@ -203,12 +203,12 @@ protected:
 
 	QtNode *nodeWithActiveConnection();
 
-	bool isAlreadySelected(QtNode *node);
-	bool isAlreadySelected(QtConnection *connection);
-
 	void showContextMenu(const QPoint &pos);
 	QAction *getActionFromContextMenu(const QString &actionText);
 
 	void setZoomForAction(qreal zoom, QAction *action);
 	void resetZoomSubmenu();
+
+private Q_SLOTS:
+	void connectNodes();
 };

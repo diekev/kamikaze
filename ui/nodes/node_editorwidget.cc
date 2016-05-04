@@ -28,6 +28,7 @@
 #include <QMenu>
 #include <QVBoxLayout>
 
+#include <cassert>
 #include <iostream>
 
 #include "node_compound.h"
@@ -53,6 +54,7 @@ static constexpr auto NODE_ACTION_COLLAPSE_ALL = "Collapse all nodes";
 static constexpr auto NODE_ACTION_EXPAND_ALL = "Expand all nodes";
 static constexpr auto NODE_ENTER_OBJECT = "Enter object";
 static constexpr auto NODE_EXIT_OBJECT = "Exit object";
+static constexpr auto NODE_CONNECT_SELECTED = "Connect selected nodes";
 
 //****************************************************************************/
 static inline bool is_object_node(QGraphicsItem *item)
@@ -158,6 +160,10 @@ QtNodeEditor::QtNodeEditor(QWidget *parent)
 	m_context_menu->addAction(new QAction(NODE_ACTION_EXPAND_ALL, this));
 	m_context_menu->addAction(new QAction(NODE_ACTION_CENTER, this));
 	m_context_menu->addAction(new QAction(NODE_ENTER_OBJECT, this));
+
+	action = new QAction(NODE_CONNECT_SELECTED, this);
+	action->setShortcut(QKeySequence(Qt::Key_C));
+	m_context_menu->addAction(action);
 
 	setMenuZoomEnabled(true);
 	setMenuCollapseExpandEnabled(true);
@@ -559,6 +565,9 @@ void QtNodeEditor::keyPressEvent(QKeyEvent *event)
 			m_add_node_menu->popup(QCursor::pos());
 		}
 	}
+	else if (event->key() == Qt::Key_C) {
+		connectNodes();
+	}
 }
 
 //****************************************************************************/
@@ -590,19 +599,21 @@ void QtNodeEditor::rubberbandSelection(QGraphicsSceneMouseEvent *mouseEvent)
 //****************************************************************************/
 void QtNodeEditor::selectNode(QtNode *node, QGraphicsSceneMouseEvent *mouseEvent)
 {
-	if (mouseEvent) {
+	if (!m_rubberband_selection) {
 		/* pass the node itself also, because this function is also used for
 		 * other purposes than selecting the node itself */
 		node->mouseLeftClickHandler(mouseEvent, node);
 	}
 
-	if (mouseEvent && !ctrlPressed()) {
+	if (!m_rubberband_selection && !ctrlPressed()) {
 		deselectAll();
+		std::cerr << "deselectAll()\n";
 		m_selected_nodes.append(node);
 	}
-	else if (!isAlreadySelected(node)) {
+
+	if (ctrlPressed() && !node->isSelected()) {
 		m_selected_nodes.append(node);
-		/* Do not call setSelection on the node; the node is selectable, while the connection isn't */
+		std::cerr << "node appended to the selection\n";
 	}
 
 	node->setSelected(true);
@@ -624,7 +635,7 @@ void QtNodeEditor::selectConnection(QtConnection *connection)
 		deselectAll();
 	}
 
-	if (!isAlreadySelected(connection)) {
+	if (!connection->isSelected()) {
 		m_selected_connections.append(connection);
 		connection->setSelected(true);
 	}
@@ -825,6 +836,27 @@ void QtNodeEditor::connectionEstablished(QtConnection *connection)
 	                      target.first, target.second->getPortName()));
 }
 
+void QtNodeEditor::connectNodes()
+{
+	if (m_selected_nodes.size() < 2) {
+		return;
+	}
+
+	const auto &node_a = m_selected_nodes.back();
+	const auto &node_b = m_selected_nodes[m_selected_nodes.size() - 2];
+
+	assert(node_a != node_b);
+
+	if (!node_b->hasInputs() || !node_a->hasOutputs()) {
+		return;
+	}
+
+	const auto &port_a = node_a->output(0);
+	const auto &port_b = node_b->input(0);
+
+	connectNodes(node_a, port_a, node_b, port_b);
+}
+
 //****************************************************************************/
 void QtNodeEditor::removeAllSelelected()
 {
@@ -951,26 +983,6 @@ void QtNodeEditor::setZoom(qreal zoom)
 bool QtNodeEditor::ctrlPressed()
 {
 	return (QGuiApplication::keyboardModifiers() & Qt::ControlModifier);
-}
-
-//****************************************************************************/
-bool QtNodeEditor::isAlreadySelected(QtNode *node)
-{
-	auto iter = std::find(m_selected_nodes.begin(),
-	                      m_selected_nodes.end(),
-	                      node);
-
-	return (iter != m_selected_nodes.end());
-}
-
-//****************************************************************************/
-bool QtNodeEditor::isAlreadySelected(QtConnection *connection)
-{
-	auto iter = std::find(m_selected_connections.begin(),
-	                      m_selected_connections.end(),
-	                      connection);
-
-	return (iter != m_selected_connections.end());
 }
 
 //****************************************************************************/
@@ -1156,6 +1168,12 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 
 		action->setText(NODE_ENTER_OBJECT);
 
+		return;
+	}
+
+	/* ---------------- Expand action ---------------- */
+	if (action->text() == NODE_CONNECT_SELECTED) {
+		connectNodes();
 		return;
 	}
 }
