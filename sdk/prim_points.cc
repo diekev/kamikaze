@@ -150,7 +150,6 @@ void PrimPoints::prepareRenderData()
 	}
 
 	computeBBox(m_min, m_max);
-	updateMatrix();
 
 	for (size_t i = 0, ie = this->points()->size(); i < ie; ++i) {
 		m_points[i] = m_points[i] * glm::mat3(m_inv_matrix);

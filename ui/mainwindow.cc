@@ -39,6 +39,7 @@
 #include <QTimer>
 
 #include "core/nodes/graph.h"
+#include "core/nodes/nodes.h"
 #include "core/kamikaze_main.h"
 #include "core/object.h"
 #include "core/object_ops.h"

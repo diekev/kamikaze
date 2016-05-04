@@ -35,6 +35,7 @@ int main(int argc, char *argv[])
 	QCoreApplication::setApplicationName("Kamikaze");
 
 	Main main;
+	main.initTypes();
 	main.loadPlugins();
 
 	MainWindow w(&main);

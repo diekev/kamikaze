@@ -28,6 +28,7 @@
 #include <iostream>
 
 #include "graph_dumper.h"
+#include "nodes.h"
 
 //#define DEBUG_GRAPH
 
@@ -209,26 +210,4 @@ void Graph::disconnect(OutputSocket *from, InputSocket *to)
 	to->link = nullptr;
 
 	m_need_update = true;
-}
-
-/* ****************************** output node ******************************* */
-
-OutputNode::OutputNode(const std::string &name)
-    : Node(name)
-{
-	addInput("Primitive");
-}
-
-Primitive *OutputNode::primitive() const
-{
-	return m_primitive;
-}
-
-void OutputNode::process()
-{
-	m_primitive = getInputPrimitive("Primitive");
-}
-
-void OutputNode::setUIParams(ParamCallback *)
-{
 }

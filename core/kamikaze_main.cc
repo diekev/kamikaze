@@ -32,6 +32,8 @@
 
 #include <dlfcn.h>
 
+#include "nodes/nodes.h"
+
 namespace fs = filesystem;
 
 static std::vector<fs::shared_library> load_plugins(const fs::path &path)
@@ -94,8 +96,11 @@ void Main::loadPlugins()
 			register_node(m_node_factory);
 		}
 	}
+}
 
-	Mesh::registerSelf(m_object_factory);
+void Main::initTypes()
+{
+	register_builtin_nodes(m_node_factory);
 }
 
 PrimitiveFactory *Main::objectFactory() const

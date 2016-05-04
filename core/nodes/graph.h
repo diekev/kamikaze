@@ -56,16 +56,3 @@ public:
 
 	const std::vector<Node *> &nodes() const;
 };
-
-class OutputNode : public Node {
-	Primitive *m_primitive = nullptr;
-
-public:
-	OutputNode(const std::string &name);
-
-	Primitive *primitive() const;
-
-	void process() override;
-
-	void setUIParams(ParamCallback */*cb*/) override;
-};

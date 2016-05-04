@@ -40,6 +40,7 @@ public:
 	Main();
 	~Main();
 
+	void initTypes();
 	void loadPlugins();
 
 	PrimitiveFactory *objectFactory() const;

@@ -24,7 +24,7 @@
 
 #include "paramfactory.h"
 
-#include "ui/paramcallback.h"
+#include "ui/paramcallback.h"  /* XXX - bad level call */
 
 #include "intern/param_widgets.h"
 

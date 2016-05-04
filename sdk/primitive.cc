@@ -28,9 +28,7 @@
 
 #include "paramfactory.h"
 
-#include "ui/paramcallback.h"
-
-#include "util/util_render.h"
+#include "util/util_render.h"  /* XXX - bad level call */
 
 bool Primitive::intersect(const Ray &ray, float &min) const
 {
@@ -98,7 +96,7 @@ glm::vec3 &Primitive::rotation()
 	return m_rotation;
 }
 
-glm::mat4 Primitive::matrix() const
+const glm::mat4 &Primitive::matrix() const
 {
 	return m_matrix;
 }
@@ -108,11 +106,15 @@ glm::mat4 &Primitive::matrix()
 	return m_matrix;
 }
 
+void Primitive::matrix(const glm::mat4 &m)
+{
+	m_matrix = m;
+	m_inv_matrix = glm::inverse(m);
+}
+
 void Primitive::update()
 {
 	if (m_need_update) {
-		updateMatrix();
-
 		m_bbox.reset(new Cube(m_min, m_max));
 		m_need_update = false;
 	}
@@ -122,21 +124,6 @@ void Primitive::tagUpdate()
 {
 	m_need_update = true;
 	m_need_data_update = true;
-}
-
-void Primitive::updateMatrix()
-{
-	m_min = m_pos - m_dimensions / 2.0f;
-	m_max = m_min + m_dimensions;
-
-	m_matrix = glm::mat4(1.0f);
-	m_matrix = glm::translate(m_matrix, m_pos);
-	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-	m_matrix = glm::scale(m_matrix, m_scale * m_dimensions);
-
-	m_inv_matrix = glm::inverse(m_matrix);
 }
 
 QString Primitive::name() const

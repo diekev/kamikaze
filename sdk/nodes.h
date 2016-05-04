@@ -47,6 +47,12 @@ void new_kamikaze_node(NodeFactory *factory);
 
 }
 
+/**
+ * Macro to help registering nodes.
+ */
+#define REGISTER_NODE(category, name, type) \
+	factory->registerType(category, name, []() -> Node* { return new type; })
+
 struct OutputSocket {
 	Node *parent = nullptr;
 	std::vector<InputSocket *> links{};

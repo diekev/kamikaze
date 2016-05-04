@@ -26,7 +26,7 @@
 
 #include <cassert>
 
-#include "../core/object.h"
+#include "../core/object.h"  /* XXX - bad level call */
 #include "primitive.h"
 
 Node::Node(const std::string &name)

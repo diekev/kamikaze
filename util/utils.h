@@ -24,10 +24,7 @@
 #pragma once
 
 #include <cstdio>
-#include <iostream>
 #include <string>
-
-#include <glm/glm.hpp>
 
 /* return current time */
 double time_dt();
@@ -52,11 +49,4 @@ public:
 
 #define Timer(x) \
 	ScopeTimer func(x);
-
-template <typename T, glm::precision P>
-std::ostream &operator<<(std::ostream &os, const glm::detail::tvec3<T, P> &vec)
-{
-	os << "[" << vec[0] << ", " << vec[1] << ", " << vec[2] << "]";
-	return os;
-}
 

@@ -29,6 +29,7 @@
 #include <kamikaze/paramfactory.h>
 
 #include "nodes/graph.h"
+#include "nodes/nodes.h"
 
 Object::Object()
     : m_graph(new Graph)
