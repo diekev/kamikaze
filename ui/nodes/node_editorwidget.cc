@@ -1,4 +1,4 @@
-/****************************************************************************
+﻿/****************************************************************************
 **
 * *Copyright (C) 2014
 **
@@ -83,6 +83,12 @@ static inline bool is_connection(QGraphicsItem *item)
 	}
 
 	return false;
+}
+
+std::ostream &operator<<(std::ostream &os, const QPointF &point)
+{
+	os << '[' << point.x() << ',' << point.y() << ']';
+	return os;
 }
 
 //****************************************************************************/
@@ -245,6 +251,7 @@ QGraphicsItem *QtNodeEditor::itemAtExceptActiveConnection(const QPointF &pos)
 }
 
 //****************************************************************************/
+
 QtConnection *QtNodeEditor::nodeOverConnection(QtNode *node)
 {
 	if (!node->hasInputs() || !node->hasOutputs()) {
@@ -804,6 +811,8 @@ void QtNodeEditor::splitConnectionWithNode(QtNode *node)
 
 	/* connect from first output port in node to target port */
 	connectNodes(node, node->output(0), target.first, target.second);
+
+	offsetNodes(node);
 }
 
 void QtNodeEditor::connectionEstablished(QtConnection *connection)
@@ -1148,6 +1157,113 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 		action->setText(NODE_ENTER_OBJECT);
 
 		return;
+	}
+}
+
+void QtNodeEditor::gatherChildren(QtNode *node, std::vector<QtNode *> &children,
+                                  const QPointF &center_pos, QPointF &min_pos, float &min_dist)
+{
+	for (QtPort *port : node->getPorts()) {
+		if (!port->isConnected()) {
+			continue;
+		}
+
+		if (!port->isOutputPort()) {
+			continue;
+		}
+
+		for (QtConnection *connection : port->getConnections()) {
+			QtPort *other_end = nullptr;
+
+			if (connection->getBasePort() == port) {
+				other_end = connection->getTargetPort();
+			}
+			else if (connection->getTargetPort() == port) {
+				other_end = connection->getBasePort();
+			}
+
+			if (other_end == nullptr) {
+				continue;
+			}
+
+			auto child_node = static_cast<QtNode *>(other_end->parentItem());
+
+			if (std::abs(child_node->scenePos().x() - node->scenePos().x()) < min_dist) {
+				min_dist = (child_node->scenePos().x() - node->scenePos().x());
+			}
+
+			children.push_back(child_node);
+
+			gatherChildren(child_node, children, center_pos, min_pos, min_dist);
+		}
+	}
+}
+
+void QtNodeEditor::gatherParents(QtNode *node, std::vector<QtNode *> &parents,
+                                 const QPointF &center_pos, QPointF &min_pos, float &min_dist)
+{
+	for (QtPort *port : node->getPorts()) {
+		if (!port->isConnected()) {
+			continue;
+		}
+
+		if (port->isOutputPort()) {
+			continue;
+		}
+
+		for (QtConnection *connection : port->getConnections()) {
+			QtPort *other_end = nullptr;
+
+			if (connection->getBasePort() == port) {
+				other_end = connection->getTargetPort();
+			}
+			else if (connection->getTargetPort() == port) {
+				other_end = connection->getBasePort();
+			}
+
+			if (other_end == nullptr) {
+				continue;
+			}
+
+			auto parent_node = static_cast<QtNode *>(other_end->parentItem());
+
+			if (std::abs(parent_node->scenePos().x() - node->scenePos().x()) < min_dist) {
+				min_dist = (parent_node->scenePos().x() - node->scenePos().x());
+			}
+
+			parents.push_back(parent_node);
+
+			gatherParents(parent_node, parents, center_pos, min_pos, min_dist);
+		}
+	}
+}
+
+void QtNodeEditor::offsetNodes(QtNode *node)
+{
+	std::vector<QtNode *> parents, children;
+
+	const auto &center_pos = node->pos();
+	auto closest_child_pos = node->pos() + QPointF(200.0f, 50.0f);
+	auto closest_parent_pos = node->pos() - QPointF(200.0f, 50.0f);
+
+	float min_dist = std::numeric_limits<float>::max();
+
+	gatherParents(node, parents, center_pos, closest_parent_pos, min_dist);
+
+	const auto &parent_offset = QPointF(250.0f - (center_pos.x() - min_dist), 0.0f); //QPointF(250.0f, 50.0f) - (center_pos - closest_parent_pos);
+
+	min_dist = std::numeric_limits<float>::max();
+
+	gatherChildren(node, children, center_pos, closest_child_pos, min_dist);
+
+	const auto &child_offset = QPointF(250.0f - (center_pos.x() - min_dist), 0.0f); //QPointF(250.0f, 50.0f) - (center_pos - closest_child_pos);
+
+	for (QtNode *parent : parents) {
+		parent->setPos(parent->pos() - parent_offset);
+	}
+
+	for (QtNode *child : children) {
+		child->setPos(child->pos() + child_offset);
 	}
 }
 

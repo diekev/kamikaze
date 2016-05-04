@@ -142,6 +142,11 @@ public:
 		m_add_node_menu = menu;
 	}
 
+	void offsetNodes(QtNode *node);
+
+	void gatherParents(QtNode *node, std::vector<QtNode *> &parents, const QPointF &center_pos, QPointF &min_pos, float &min_dist);
+	void gatherChildren(QtNode *node, std::vector<QtNode *> &children, const QPointF &center_pos, QPointF &min_pos, float &min_dist);
+
 public Q_SLOTS:
 	/* Activated when a contextmenu item is selected */
 	void contextMenuItemSelected(QAction *action);
