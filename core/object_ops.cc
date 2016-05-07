@@ -47,8 +47,8 @@ void AddObjectCmd::execute(EvaluationContext *context)
 
 	m_object = new Object;
 
-	Primitive *prim = (*context->object_factory)(m_name);
-	m_object->primitive(prim);
+//	Primitive *prim = (*context->object_factory)(m_name);
+//	m_object->primitive(prim);
 
 	assert(m_object != nullptr);
 	m_object->name(m_name.c_str());

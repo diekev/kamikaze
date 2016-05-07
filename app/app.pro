@@ -36,6 +36,7 @@ LIBS += $$OUT_PWD/../ui/libui.a
 LIBS += $$OUT_PWD/../core/libcore.a
 #LIBS += $$OUT_PWD/../smoke/libsmoke.a
 LIBS += $$OUT_PWD/../util/libutils.a
+LIBS += -ltbb
 
 LIBS += $$EGO_LIBRARIES
 LIBS += $$FILESYSTEM_LIBRARIES

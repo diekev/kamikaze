@@ -31,6 +31,29 @@
 #include "nodes/graph.h"
 #include "nodes/nodes.h"
 
+#include <tbb/task.h>
+
+class GraphEvalTask : public tbb::task {
+	Object *m_object;
+	Graph *m_graph;
+
+public:
+	GraphEvalTask(Object *object, Graph *graph)
+	    : m_object(object)
+	    , m_graph(graph)
+	{}
+
+	tbb::task *execute() override
+	{
+		m_graph->execute();
+
+		auto output_node = m_graph->output();
+		m_object->primitive(output_node->primitive());
+
+		return nullptr;
+	}
+};
+
 Object::Object()
     : m_graph(new Graph)
 {
@@ -40,14 +63,7 @@ Object::Object()
 Object::~Object()
 {
 	delete m_graph;
-
-	if (m_orig_prim != m_primitive) {
-		delete m_orig_prim;
-		m_cache.clear();
-	}
-	else {
-		delete m_primitive;
-	}
+	m_cache.clear();
 }
 
 Primitive *Object::primitive() const
@@ -58,7 +74,6 @@ Primitive *Object::primitive() const
 void Object::primitive(Primitive *prim)
 {
 	m_primitive = prim;
-	m_orig_prim = prim;
 }
 
 void Object::matrix(const glm::mat4 &m)
@@ -106,9 +121,9 @@ void Object::evalGraph(bool force)
 	}
 
 	m_cache.clear();
-	m_graph->execute();
 
-	m_primitive = output_node->primitive();
+	GraphEvalTask *t = new(tbb::task::allocate_root()) GraphEvalTask(this, this->m_graph);
+	tbb::task::enqueue(*t);
 }
 
 void Object::name(const QString &name)

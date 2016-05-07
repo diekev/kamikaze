@@ -150,7 +150,10 @@ void MainWindow::updateObjectTab() const
 
 	ParamCallback cb(ui->node_param_layout);
 	ob->setUIParams(&cb);
-	ob->primitive()->setCustomUIParams(&cb);
+
+	if (ob->primitive()) {
+		ob->primitive()->setCustomUIParams(&cb);
+	}
 
 	cb.setContext(m_scene, SLOT(tagObjectUpdate()));
 
