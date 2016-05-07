@@ -39,7 +39,6 @@ Mesh::Mesh()
     : Primitive()
     , m_need_data_update(true)
 {
-	loadShader();
 	addAttribute("normal", ATTR_TYPE_VEC3);
 	m_need_update = true;
 }
@@ -192,6 +191,10 @@ void Mesh::prepareRenderData()
 {
 	if (!m_need_data_update) {
 		return;
+	}
+
+	if (!m_program.isValid()) {
+		loadShader();
 	}
 
 	Attribute *normals = this->attribute("normal", ATTR_TYPE_VEC3);

@@ -37,7 +37,6 @@
 PrimPoints::PrimPoints()
 {
 	m_draw_type = GL_POINTS;
-	loadShader();
 }
 
 PrimPoints::~PrimPoints()
@@ -147,6 +146,10 @@ void PrimPoints::prepareRenderData()
 {
 	if (!m_need_data_update) {
 		return;
+	}
+
+	if (!m_program.isValid()) {
+		loadShader();
 	}
 
 	computeBBox(m_min, m_max);
