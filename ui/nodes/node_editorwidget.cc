@@ -776,8 +776,7 @@ void QtNodeEditor::removeConnection(QtConnection *connection)
 void QtNodeEditor::connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock)
 {
 	from->createActiveConnection(from_sock, from_sock->pos());
-	const auto &connection = to_sock->createConnection(from->m_active_connection);
-	m_current_scene->addItem(connection);
+	to_sock->createConnection(from->m_active_connection);
 
 	from->m_active_connection = nullptr;
 
@@ -795,8 +794,6 @@ void QtNodeEditor::splitConnectionWithNode(QtNode *node)
 	/* remove connection */
 	Q_EMIT(connectionRemoved(base.first, base.second->getPortName(),
 	                         target.first, target.second->getPortName()));
-
-	m_current_scene->removeItem(connection);
 
 	/* connect from base port to first input port in node */
 	connectNodes(base.first, base.second, node, node->input(0));
