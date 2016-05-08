@@ -101,35 +101,35 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 {
 	if (e->type() == QEvent::KeyPress) {
 		if (obj == ui->m_viewport) {
-			QKeyEvent *keyEvent = static_cast<QKeyEvent *>(e);
+			auto keyEvent = static_cast<QKeyEvent *>(e);
 			ui->m_viewport->keyPressEvent(keyEvent);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::MouseButtonPress) {
 		if (obj == ui->m_viewport) {
-			QMouseEvent *event = static_cast<QMouseEvent *>(e);
+			auto event = static_cast<QMouseEvent *>(e);
 			ui->m_viewport->mousePressEvent(event);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::MouseMove) {
 		if (obj == ui->m_viewport) {
-			QMouseEvent *event = static_cast<QMouseEvent *>(e);
+			auto event = static_cast<QMouseEvent *>(e);
 			ui->m_viewport->mouseMoveEvent(event);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::MouseButtonRelease) {
 		if (obj == ui->m_viewport) {
-			QMouseEvent *event = static_cast<QMouseEvent *>(e);
+			auto event = static_cast<QMouseEvent *>(e);
 			ui->m_viewport->mouseReleaseEvent(event);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::Wheel) {
 		if (obj == ui->m_viewport) {
-			QWheelEvent *event = static_cast<QWheelEvent *>(e);
+			auto event = static_cast<QWheelEvent *>(e);
 			ui->m_viewport->wheelEvent(event);
 			return true;
 		}
@@ -140,7 +140,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 
 void MainWindow::updateObjectTab() const
 {
-	Object *ob = m_scene->currentObject();
+	auto ob = m_scene->currentObject();
 
 	if (ob == nullptr) {
 		return;
@@ -251,7 +251,7 @@ void MainWindow::generateNodeMenu()
 
 void MainWindow::handleCommand()
 {
-	QAction *action = qobject_cast<QAction *>(sender());
+	auto action = qobject_cast<QAction *>(sender());
 
 	if (!action) {
 		return;
@@ -261,7 +261,7 @@ void MainWindow::handleCommand()
 	const auto &data = action->data().toString().toStdString();
 
 	/* get command */
-	Command *cmd = (*m_command_factory)(data);
+	auto cmd = (*m_command_factory)(data);
 	cmd->setName(name);
 
 	/* TODO */
@@ -305,7 +305,7 @@ void MainWindow::setupNodeParamUI(QtNode *node_item)
 
 void MainWindow::setupObjectUI(Object *object)
 {
-	ObjectNodeItem *obnode_item = new ObjectNodeItem(object, object->name());
+	auto obnode_item = new ObjectNodeItem(object, object->name());
 	obnode_item->setTitleColor(Qt::white);
 	obnode_item->alignTitle(ALIGNED_CENTER);
 

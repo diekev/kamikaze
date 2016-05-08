@@ -149,7 +149,6 @@ void QtNode::adjustWidthForTitle()
 	auto offset = 0.5f * (NODE_HEADER_HEIGHT - NODE_HEADER_ICON_SIZE);
 	m_font_header.setPointSize(NODE_HEADER_TITLE_FONT_SIZE);
 	m_title_label->setFont(m_font_header);
-	//qreal unzoomedTitleWidth = mTitleLabel->boundingRect().width();
 	auto spaceLeft = m_normalized_width;
 
 	if (m_header_title_icon->isVisible()) {
@@ -231,7 +230,7 @@ void QtNode::redraw()
 	}
 
 	/* Redraw ports */
-	for (QtPort *port : m_port_list) {
+	for (auto port : m_port_list) {
 		port->redraw();
 
 		if (port->isVisible()) {
@@ -266,7 +265,7 @@ void QtNode::setPortNameColor(const QColor &color)
 {
 	m_port_name_color = color;
 
-	for (QtPort *port : m_port_list) {
+	for (auto port : m_port_list) {
 		port->setNameColor(color);
 	}
 }
@@ -354,7 +353,7 @@ void QtNode::setHeaderTitleIcon(const QString &fileNameIcon)
 
 void QtNode::setAction1Icon(const QString &fileNameIcon)
 {
-	QPixmap pixmap (fileNameIcon);
+	QPixmap pixmap(fileNameIcon);
 	m_action_1_icon->setPixmap(pixmap);
 
 	if (pixmap.width() != 0) {
@@ -367,7 +366,7 @@ void QtNode::setAction1Icon(const QString &fileNameIcon)
 
 void QtNode::setAction2Icon(const QString &fileNameIcon)
 {
-	QPixmap pixmap (fileNameIcon);
+	QPixmap pixmap(fileNameIcon);
 	m_action_2_icon->setPixmap(pixmap);
 
 	if (pixmap.width() != 0) {
@@ -388,7 +387,7 @@ bool QtNode::mouseLeftClickHandler(QGraphicsSceneMouseEvent *mouseEvent,
                                    unsigned int action,
                                    QtConnection *activeConnection)
 {
-	int type = 0;
+	auto type = 0;
 
 	if (item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).isValid()) {
 		type = item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).toInt();
@@ -397,7 +396,7 @@ bool QtNode::mouseLeftClickHandler(QGraphicsSceneMouseEvent *mouseEvent,
 	switch (type) {
 		case NODE_VALUE_TYPE_PORT:
 		{
-			QtPort *port = static_cast<QtPort *>(item);
+			auto port = static_cast<QtPort *>(item);
 
 			/* Check wether the port is available; if not, return false. Only
 			 * applies to input ports for now. */
@@ -412,7 +411,7 @@ bool QtNode::mouseLeftClickHandler(QGraphicsSceneMouseEvent *mouseEvent,
 			else if (action == NODE_ACTION_TARGET && activeConnection) {
 				/* Check wether the connection is allowed; if not, return false */
 				/* This node is the target node (with the target port) */
-				QtPort *basePort = activeConnection->getBasePort();
+				auto basePort = activeConnection->getBasePort();
 
 				if (!is_connection_allowed(port, basePort)) {
 					return false;
@@ -430,12 +429,12 @@ bool QtNode::mouseLeftClickHandler(QGraphicsSceneMouseEvent *mouseEvent,
 			break;
 		}
 		case NODE_VALUE_TYPE_ACTION_1_ICON:
-			Q_EMIT action1Clicked(this);
+			Q_EMIT(action1Clicked(this));
 			mouseLeftClickAction1ButtonHandler(mouseEvent, item);
 			break;
 
 		case NODE_VALUE_TYPE_ACTION_2_ICON:
-			Q_EMIT action2Clicked(this);
+			Q_EMIT(action2Clicked(this));
 			mouseLeftClickAction2ButtonHandler(mouseEvent, item);
 			break;
 	}
@@ -502,7 +501,7 @@ void QtNode::collapse()
 	m_body->setVisible(false);
 
 	/* Set visibility of the ports */
-	for (QtPort *port : m_port_list) {
+	for (auto port : m_port_list) {
 		if (port->isVisible()) {
 			port->collapse();
 		}
@@ -518,7 +517,7 @@ void QtNode::expand()
 	m_body->setVisible(true);
 
 	/* Set visibility of the ports */
-	for (QtPort *port : m_port_list) {
+	for (auto port : m_port_list) {
 		if (!port->isVisible()) {
 			port->expand();
 		}
@@ -560,7 +559,7 @@ void QtNode::createActiveConnection(QtPort *port, QPointF pos)
 void QtNode::deleteActiveConnection()
 {
 	if (m_active_connection) {
-		QtPort *port = m_active_connection->getBasePort();
+		auto port = m_active_connection->getBasePort();
 		m_scene->removeItem(m_active_connection);
 		port->deleteConnection(m_active_connection);
 		m_active_connection = nullptr;
@@ -569,8 +568,8 @@ void QtNode::deleteActiveConnection()
 
 void QtNode::deleteAllConnections()
 {
-	for (QtPort *port : m_port_list) {
-		for (QtConnection *connection : port->getConnections()) {
+	for (auto port : m_port_list) {
+		for (auto connection : port->getConnections()) {
 			m_scene->removeItem(connection);
 		}
 
@@ -580,8 +579,8 @@ void QtNode::deleteAllConnections()
 
 void QtNode::selectConnections(bool selected)
 {
-	for (QtPort *port : m_port_list) {
-		for (QtConnection *connection : port->getConnections()) {
+	for (auto port : m_port_list) {
+		for (auto connection : port->getConnections()) {
 			if (connection && (connection != m_active_connection)) {
 				connection->setSelected(selected);
 			}
@@ -612,8 +611,8 @@ void QtNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
 	painter->drawPath(path());
 
 	/* Only update the connection if it is not the active one. */
-	for (QtPort *port : m_port_list) {
-		for (QtConnection *connection : port->getConnections()) {
+	for (auto port : m_port_list) {
+		for (auto connection : port->getConnections()) {
 			if (connection != m_active_connection) {
 				connection->updatePath();
 			}
@@ -656,7 +655,7 @@ QtPort *QtNode::createPort(const QString &portName,
                            Alignment alignement,
                            QColor connectionColor)
 {
-	QtPort *port = new QtPort(portName, type, portColour, connectionColor, portShape, alignement, this);
+	auto port = new QtPort(portName, type, portColour, connectionColor, portShape, alignement, this);
 	port->setNameColor(m_port_name_color);
 	port->setData(NODE_KEY_GRAPHIC_ITEM_TYPE, QVariant(NODE_VALUE_TYPE_PORT));
 	m_port_list.append(port);
@@ -673,7 +672,7 @@ QtPort *QtNode::createPort(const QString &portName,
 		m_body_height = m_normalized_body_height;
 
 		/* Adjust width of the node (if needed) to fit the port */
-		qreal normalized = port->getNormalizedWidth() + 2.5f * NODE_PORT_OFFSET;
+		auto normalized = port->getNormalizedWidth() + 2.5f * NODE_PORT_OFFSET;
 		if (normalized > m_normalized_width)
 			m_normalized_width = normalized;
 		m_width = m_normalized_width;
@@ -762,7 +761,7 @@ QtPort *QtNode::getPort(const QString &portName, unsigned int occurence)
 	/* 1. Run through all of the ports in this node
 	 * 2. Return the n-th occurence of the port with the same name */
 	unsigned int count = 1;
-	for (QtPort *port : m_port_list) {
+	for (auto port : m_port_list) {
 		if (port->getPortName() == portName) {
 			if (count == occurence)
 				return port;
@@ -810,8 +809,8 @@ bool QtNode::isPortOfThisNode(const QString &portName)
 
 bool QtNode::isConnectionConnectedToThisNode(QtConnection *connection)
 {
-	for (QtPort *port : m_port_list) {
-		for (QtConnection *co : port->getConnections()) {
+	for (auto port : m_port_list) {
+		for (auto co : port->getConnections()) {
 			if (co == connection) {
 				return true;
 			}
@@ -847,52 +846,49 @@ bool QtNode::isConnectionConnectedToThisNode(QtConnection *connection)
  * 2. If there is a connected port, return its parent node */
 QtNode *QtNode::getNodeConnectedToPort(QtPort *port)
 {
-	QtNode *node = nullptr;
-	QtPort *connectedPort = getPortConnectedToPort(port);
+	auto connectedPort = getPortConnectedToPort(port);
 
 	if (connectedPort != nullptr) {
-		node = static_cast<QtNode *>(connectedPort->parentItem());
+		return static_cast<QtNode *>(connectedPort->parentItem());
 	}
 
-	return node;
+	return nullptr;
 }
 
 /* 1. Get the port that is connected to the given port (of this node)
  * 2. If there is a connected port, return its parent node */
 QtNode *QtNode::getNodeConnectedToPort(const QString &portName)
 {
-	QtNode *node = nullptr;
-	QtPort *connectedPort = getPortConnectedToPort(portName);
+	auto connectedPort = getPortConnectedToPort(portName);
 
 	if (connectedPort != nullptr) {
-		node = static_cast<QtNode *>(connectedPort->parentItem());
+		return static_cast<QtNode *>(connectedPort->parentItem());
 	}
 
-	return node;
+	return nullptr;
 }
 
 /* 1. Get the n-th occurence of the port that is connected with the port of this node
  * 2. Return its parent node */
 QtNode *QtNode::getNodeConnectedToPort(const QString &portName, unsigned int occurence)
 {
-	QtNode *node = nullptr;
-	QtPort *connectedPort = getPortConnectedToPort(portName, occurence);
+	auto connectedPort = getPortConnectedToPort(portName, occurence);
 
 	if (connectedPort != nullptr) {
-		node = static_cast<QtNode *>(connectedPort->parentItem());
+		return static_cast<QtNode *>(connectedPort->parentItem());
 	}
 
-	return node;
+	return nullptr;
 }
 
 /* 1. Get all ports that are connected to the ports (with the same name) of this node
  * 2. Append their parent nodes to the vector */
 QVector<QtNode *> QtNode::getNodesConnectedToPorts(const QString &portName)
 {
-	QVector<QtNode *> connectedNodes;
-	QVector<QtPort *> connectedPorts = getPortsConnectedToPorts(portName);
+	auto connectedNodes = QVector<QtNode *>{};
+	auto connectedPorts = getPortsConnectedToPorts(portName);
 
-	for (QtPort *connectPort : connectedPorts) {
+	for (auto connectPort : connectedPorts) {
 		connectedNodes.append(static_cast<QtNode *>(connectPort->parentItem()));
 	}
 
@@ -902,20 +898,20 @@ QVector<QtNode *> QtNode::getNodesConnectedToPorts(const QString &portName)
 QtPort *QtNode::getCheckedPortConnectedToPort(QtPort *port)
 {
 	/* Assume that the port is part of 'this' node */
-	for (QtConnection *connection : port->getConnections()) {
+	for (auto connection : port->getConnections()) {
 		if (!connection) {
 			continue;
 		}
 
 		/* There is a connection; determine whether it is a finalished (established) connection */
 		/* Both ports must exist */
-		QtPort *basePort = connection->getBasePort();
+		auto basePort = connection->getBasePort();
 
 		if (!basePort) {
 			continue;
 		}
 
-		QtPort *targetPort = connection->getTargetPort();
+		auto targetPort = connection->getTargetPort();
 
 		if (!targetPort) {
 			continue;
@@ -947,7 +943,7 @@ QtPort *QtNode::getPortConnectedToPort(QtPort *port)
 
 QtPort *QtNode::getPortConnectedToPort(const QString &portName)
 {
-	QtPort *port = getPort(portName);
+	auto port = getPort(portName);
 
 	if (!port) {
 		return nullptr;
@@ -958,7 +954,7 @@ QtPort *QtNode::getPortConnectedToPort(const QString &portName)
 
 QtPort *QtNode::getPortConnectedToPort(const QString &portName, unsigned int occurence)
 {
-	QtPort *port = getPort(portName, occurence);
+	auto port = getPort(portName, occurence);
 
 	if (!port) {
 		return nullptr;
@@ -971,10 +967,10 @@ QtPort *QtNode::getPortConnectedToPort(const QString &portName, unsigned int occ
  * 2. Get for each port the connected port */
 QVector<QtPort *> QtNode::getPortsConnectedToPorts(const QString &portName)
 {
-	QVector<QtPort *> ports = getPorts(portName);
-	QVector<QtPort *> connectedPorts;
+	auto connectedPorts = QVector<QtPort *>{};
+	auto ports = getPorts(portName);
 
-	for (QtPort *port : ports) {
+	for (auto port : ports) {
 		connectedPorts.append(getCheckedPortConnectedToPort(port));
 	}
 
@@ -984,8 +980,8 @@ QVector<QtPort *> QtNode::getPortsConnectedToPorts(const QString &portName)
 void QtNode::setVisible(bool visible)
 {
 	/* Also make the connected nodes visible/invisible */
-	for (QtPort *port : m_port_list) {
-		for (QtConnection *connection : port->getConnections()) {
+	for (auto port : m_port_list) {
+		for (auto connection : port->getConnections()) {
 			connection->setVisible(visible);
 		}
 	}

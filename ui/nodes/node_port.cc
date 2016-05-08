@@ -81,7 +81,7 @@ void QtPort::redraw()
 	QPen pen(m_port_colour);
 	pen.setWidth(NODE_PORT_PEN_SIZE);
 	setPen(pen);
-	qreal shapeSize = NODE_PORT_SHAPE_SIZE;
+	auto shapeSize = NODE_PORT_SHAPE_SIZE;
 
 	switch (m_port_shape) {
 		case PORT_SHAPE_CIRCLE:
@@ -108,7 +108,7 @@ qreal QtPort::getNormalizedWidth()
 	/* Set the fontsize of the text to zoom = 1 and get the boundingRect().width() of the text and the shape */
 	m_font.setPointSize(NODE_PORT_FONT_SIZE);
 	m_label->setFont(m_font);
-	qreal width = m_label->boundingRect().width() + NODE_PORT_SHAPE_SIZE + NODE_PORT_WIDTH_MARGIN;
+	auto width = m_label->boundingRect().width() + NODE_PORT_SHAPE_SIZE + NODE_PORT_WIDTH_MARGIN;
 	m_font.setPointSize(NODE_PORT_FONT_SIZE);
 	m_label->setFont(m_font);
 
@@ -121,7 +121,7 @@ qreal QtPort::getNormalizedHeight()
 	/* Set the fontsize of the text to zoom = 1 and get the boundingRect().heigth() of the text and the shape */
 	m_font.setPointSize(NODE_PORT_FONT_SIZE);
 	m_label->setFont(m_font);
-	qreal height = m_label->boundingRect().height();
+	auto height = m_label->boundingRect().height();
 
 	if (height < NODE_PORT_SHAPE_SIZE) {
 		height = NODE_PORT_SHAPE_SIZE; /* In case the text is smaller than the port shape */
@@ -183,8 +183,8 @@ void QtPort::deleteConnection(QtConnection *connection, bool erase)
 		return;
 	}
 
-	QtPort *base = connection->getBasePort();
-	QtPort *target = connection->getTargetPort();
+	auto base = connection->getBasePort();
+	auto target = connection->getTargetPort();
 
 	if (erase) {
 		auto iter = std::find(m_connections.begin(), m_connections.end(), connection);
@@ -244,7 +244,7 @@ void QtPort::collapse()
 {
 	setVisible(false);
 	m_original_pos = pos();
-	qreal y = 0.5 * parentItem()->boundingRect().height();
+	auto y = 0.5 * parentItem()->boundingRect().height();
 	setAlignedPos(m_original_pos.x(), y);
 
 	for (auto &connection : m_connections) {

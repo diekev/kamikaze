@@ -32,13 +32,13 @@
 
 bool Primitive::intersect(const Ray &ray, float &min) const
 {
-	glm::vec3 inv_dir = 1.0f / ray.dir;
-	glm::vec3 t_min = (m_min - ray.pos) * inv_dir;
-	glm::vec3 t_max = (m_max - ray.pos) * inv_dir;
-	glm::vec3 t1 = glm::min(t_min, t_max);
-	glm::vec3 t2 = glm::max(t_min, t_max);
-	float t_near = glm::max(t1.x, glm::max(t1.y, t1.z));
-	float t_far = glm::min(t2.x, glm::min(t2.y, t2.z));
+	const auto inv_dir = 1.0f / ray.dir;
+	const auto t_min = (m_min - ray.pos) * inv_dir;
+	const auto t_max = (m_max - ray.pos) * inv_dir;
+	const auto t1 = glm::min(t_min, t_max);
+	const auto t2 = glm::max(t_min, t_max);
+	const auto t_near = glm::max(t1.x, glm::max(t1.y, t1.z));
+	const auto t_far = glm::min(t2.x, glm::min(t2.y, t2.z));
 
 	if (t_near < t_far && t_near < min) {
 		min = t_near;

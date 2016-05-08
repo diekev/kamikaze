@@ -92,9 +92,9 @@ Attribute *PrimPoints::addAttribute(const std::string &name, AttributeType type,
 
 Primitive *PrimPoints::copy() const
 {
-	PrimPoints *prim = new PrimPoints;
+	auto prim = new PrimPoints;
 
-	PointList *points = prim->points();
+	auto points = prim->points();
 	points->resize(this->points()->size());
 
 	prim->tagUpdate();

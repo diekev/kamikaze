@@ -43,7 +43,7 @@ void FloatParam::valuePtr(float *ptr)
 void FloatParam::updateValuePtr(double value)
 {
 	*m_value_ptr = static_cast<float>(value);
-	Q_EMIT paramChanged();
+	Q_EMIT(paramChanged());
 }
 
 /* ********************************** */
@@ -65,7 +65,7 @@ void IntParam::valuePtr(int *ptr)
 void IntParam::updateValuePtr(int value)
 {
 	*m_value_ptr = value;
-	Q_EMIT paramChanged();
+	Q_EMIT(paramChanged());
 }
 
 /* ********************************** */
@@ -87,7 +87,7 @@ void BoolParam::valuePtr(bool *ptr)
 void BoolParam::updateValuePtr(bool value)
 {
 	*m_value_ptr = value;
-	Q_EMIT paramChanged();
+	Q_EMIT(paramChanged());
 }
 
 /* ********************************** */
@@ -107,7 +107,7 @@ void EnumParam::valuePtr(int *ptr)
 void EnumParam::updateValuePtr(int value)
 {
 	*m_value_ptr = value;
-	Q_EMIT paramChanged();
+	Q_EMIT(paramChanged());
 }
 
 /* ********************************** */
@@ -127,7 +127,7 @@ void StringParam::valuePtr(QString *ptr)
 void StringParam::updateValuePtr(const QString &value)
 {
 	*m_value_ptr = value;
-	Q_EMIT paramChanged();
+	Q_EMIT(paramChanged());
 }
 
 /* ********************************** */
@@ -148,7 +148,7 @@ void XYZParam::valuePtr(float ptr[3])
 void XYZParam::updateValuePtr(double value, int axis)
 {
 	m_value_ptr[axis] = static_cast<float>(value);
-	Q_EMIT paramChanged();
+	Q_EMIT(paramChanged());
 }
 
 /* ********************************** */
@@ -168,5 +168,5 @@ void FileParam::valuePtr(std::string *ptr)
 void FileParam::updateValuePtr(const QString &value)
 {
 	*m_value_ptr = value.toStdString();
-	Q_EMIT paramChanged();
+	Q_EMIT(paramChanged());
 }

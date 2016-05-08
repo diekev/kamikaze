@@ -116,19 +116,19 @@ void Mesh::update()
 
 Primitive *Mesh::copy() const
 {
-	Mesh *mesh = new Mesh;
+	auto mesh = new Mesh;
 
-	PointList *points = mesh->points();
+	auto points = mesh->points();
 	points->resize(this->points()->size());
 
-	for (size_t i = 0; i < points->size(); ++i) {
+	for (auto i = 0ul; i < points->size(); ++i) {
 		(*points)[i] = m_point_list[i];
 	}
 
-	PolygonList *polys = mesh->polys();
+	auto polys = mesh->polys();
 	polys->resize(this->polys()->size());
 
-	for (size_t i = 0; i < polys->size(); ++i) {
+	for (auto i = 0ul; i < polys->size(); ++i) {
 		(*polys)[i] = m_poly_list[i];
 	}
 
@@ -197,7 +197,7 @@ void Mesh::prepareRenderData()
 		loadShader();
 	}
 
-	Attribute *normals = this->attribute("normal", ATTR_TYPE_VEC3);
+	auto normals = this->attribute("normal", ATTR_TYPE_VEC3);
 
 	if (normals->size() != this->points()->size()) {
 		computeNormals();
@@ -207,19 +207,19 @@ void Mesh::prepareRenderData()
 		m_point_list[i] = m_point_list[i] * glm::mat3(m_inv_matrix);
 	}
 
-	std::vector<unsigned int> indices;
+	auto indices = std::vector<unsigned int>{};
 	indices.reserve(this->polys()->size());
 
-	PolygonList *polys = this->polys();
+	auto polys = this->polys();
 
-	for (size_t i = 0, ie = polys->size(); i < ie; ++i) {
+	for (auto i = 0ul, ie = polys->size(); i < ie; ++i) {
 		const auto &quad = (*polys)[i];
 
 		indices.push_back(quad[0]);
 		indices.push_back(quad[1]);
 		indices.push_back(quad[2]);
 
-		if (quad[3] != std::numeric_limits<int>::max()) {
+		if (quad[3] != INVALID_INDEX) {
 			indices.push_back(quad[0]);
 			indices.push_back(quad[2]);
 			indices.push_back(quad[3]);
@@ -284,15 +284,15 @@ static inline glm::vec3 get_normal(const glm::vec3 &v0, const glm::vec3 &v1, con
 
 void Mesh::computeNormals()
 {
-	Attribute *normals = this->attribute("normal", ATTR_TYPE_VEC3);
+	auto normals = this->attribute("normal", ATTR_TYPE_VEC3);
 	normals->resize(this->points()->size());
 
-	PolygonList *polys = this->polys();
+	auto polys = this->polys();
 
 	parallel_for(tbb::blocked_range<size_t>(0, polys->size()),
 	             [&](const tbb::blocked_range<size_t> &r)
 	{
-		for (size_t i = r.begin(), ie = r.end(); i < ie ; ++i) {
+		for (auto i = r.begin(), ie = r.end(); i < ie ; ++i) {
 			const auto &quad = (*polys)[i];
 
 			const auto v0 = m_point_list[quad[0]];
@@ -305,7 +305,7 @@ void Mesh::computeNormals()
 			normals->vec3(quad[1], normals->vec3(quad[1]) + normal);
 			normals->vec3(quad[2], normals->vec3(quad[2]) + normal);
 
-			if (quad[3] != std::numeric_limits<unsigned int>::max()) {
+			if (quad[3] != INVALID_INDEX) {
 				normals->vec3(quad[3], normals->vec3(quad[3]) + normal);
 			}
 		}

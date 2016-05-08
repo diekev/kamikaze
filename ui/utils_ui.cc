@@ -29,13 +29,13 @@
 
 void disable_list_item(QListWidget *list, int index)
 {
-	QListWidgetItem *item = list->item(index);
+	auto item = list->item(index);
 	item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
 }
 
 void enable_list_item(QListWidget *list, int index)
 {
-	QListWidgetItem *item = list->item(index);
+	auto item = list->item(index);
 	item->setFlags(item->flags() | Qt::ItemIsEnabled);
 }
 

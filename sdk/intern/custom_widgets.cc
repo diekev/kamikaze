@@ -64,7 +64,7 @@ void FloatSpinBox::ValueChanged()
 	const auto value = m_slider->value();
 	const float fvalue = value / m_scale;
 	m_spin_box->setValue(fvalue);
-	Q_EMIT valueChanged(fvalue);
+	Q_EMIT(valueChanged(fvalue));
 }
 
 void FloatSpinBox::updateLabel(int value)
@@ -120,7 +120,7 @@ void IntSpinBox::ValueChanged()
 {
 	const auto value = m_slider->value();
 	m_spin_box->setValue(value);
-	Q_EMIT valueChanged(value);
+	Q_EMIT(valueChanged(value));
 }
 
 void IntSpinBox::updateLabel(int value)
@@ -166,17 +166,17 @@ XYZSpinBox::XYZSpinBox(QWidget *parent)
 
 void XYZSpinBox::xValueChanged(double value)
 {
-	Q_EMIT valueChanged(value, AXIS_X);
+	Q_EMIT(valueChanged(value, AXIS_X));
 }
 
 void XYZSpinBox::yValueChanged(double value)
 {
-	Q_EMIT valueChanged(value, AXIS_Y);
+	Q_EMIT(valueChanged(value, AXIS_Y));
 }
 
 void XYZSpinBox::zValueChanged(double value)
 {
-	Q_EMIT valueChanged(value, AXIS_Z);
+	Q_EMIT(valueChanged(value, AXIS_Z));
 }
 
 void XYZSpinBox::setValue(float *value)
@@ -223,10 +223,10 @@ void FileSelector::setValue(const QString &text)
 
 void FileSelector::setChoosenFile()
 {
-	auto filename = QFileDialog::getSaveFileName(this);
+	const auto filename = QFileDialog::getSaveFileName(this);
 
 	if (!filename.isEmpty()) {
 		m_line_edit->setText(filename);
-		Q_EMIT textChanged(filename);
+		Q_EMIT(textChanged(filename));
 	}
 }
