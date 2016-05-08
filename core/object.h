@@ -48,7 +48,6 @@ public:
 
 class Object {
 	Primitive *m_primitive = nullptr;
-	Primitive *m_orig_prim = nullptr;
 	PrimitiveCache m_cache;
 
 	glm::vec3 m_scale = glm::vec3(1.0f);
