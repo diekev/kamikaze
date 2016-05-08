@@ -256,16 +256,22 @@ QtConnection *QtNodeEditor::nodeOverConnection(QtNode *node)
 		return nullptr;
 	}
 
-	qreal halfWidth;
-
 	auto check_hover = [&](QtNode *nitem, QtConnection *citem)
 	{
-		halfWidth = 0.5 * citem->boundingRect().width();
+		const auto &bport_pos_x = citem->getBasePort()->scenePos().x();
+		const auto &bport_pos_y = citem->getBasePort()->scenePos().y();
+		const auto &tport_pos_x = citem->getTargetPort()->scenePos().x();
+		const auto &tport_pos_y = citem->getTargetPort()->scenePos().y();
 
-		return (nitem->scenePos().x() > citem->scenePos().x() - halfWidth &&
-		        nitem->scenePos().x() < citem->scenePos().x() + halfWidth &&
-		        nitem->scenePos().y() > citem->scenePos().y() &&
-		        nitem->scenePos().y() < citem->scenePos().y() + citem->boundingRect().height());
+		const auto &min_x = std::min(bport_pos_x, tport_pos_x);
+		const auto &min_y = std::min(bport_pos_y, tport_pos_y);
+		const auto &max_x = std::max(bport_pos_x, tport_pos_x);
+		const auto &max_y = std::max(bport_pos_y, tport_pos_y);
+
+		const auto &pos_x = nitem->pos().x();
+		const auto &pos_y = nitem->pos().y();
+
+		return (min_x < pos_x && max_x > pos_x) && (min_y < pos_y && max_y > pos_y);
 	};
 
 	if (m_hover_connection && check_hover(node, m_hover_connection)) {
@@ -288,8 +294,6 @@ QtConnection *QtNodeEditor::nodeOverConnection(QtNode *node)
 		if (node->isConnectionConnectedToThisNode(connection)) {
 			continue;
 		}
-
-		halfWidth = 0.5 * connection->boundingRect().width();
 
 		if (check_hover(node, connection)) {
 			return connection;
