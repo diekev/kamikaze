@@ -120,6 +120,7 @@ void Object::evalGraph(bool force)
 		}
 	}
 
+	this->m_primitive = nullptr;
 	m_cache.clear();
 
 	GraphEvalTask *t = new(tbb::task::allocate_root()) GraphEvalTask(this, this->m_graph);
