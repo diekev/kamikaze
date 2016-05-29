@@ -77,12 +77,13 @@ public:
 
 	Graph *graph() const;
 
-	void evalGraph(bool force = false);
-
 	void name(const QString &name);
 	const QString &name() const;
 
 	void setUIParams(ParamCallback *cb);
 
 	void updateMatrix();
+	void clearCache();
 };
+
+void eval_graph(Object *ob, bool force);

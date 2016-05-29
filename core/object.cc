@@ -97,36 +97,6 @@ Graph *Object::graph() const
 	return m_graph;
 }
 
-void Object::evalGraph(bool force)
-{
-	if (!force) {
-		return;
-	}
-
-	auto output_node = m_graph->output();
-	output_node->setPrimitiveCache(&m_cache);
-
-	if (!output_node->isLinked()) {
-		m_primitive = nullptr;
-		return;
-	}
-
-	m_graph->build();
-
-	/* XXX */
-	for (Node *node : m_graph->nodes()) {
-		for (OutputSocket *output : node->outputs()) {
-			output->prim = nullptr;
-		}
-	}
-
-	this->m_primitive = nullptr;
-	m_cache.clear();
-
-	GraphEvalTask *t = new(tbb::task::allocate_root()) GraphEvalTask(this, this->m_graph);
-	tbb::task::enqueue(*t);
-}
-
 void Object::name(const QString &name)
 {
 	m_name = name;
@@ -158,6 +128,11 @@ void Object::updateMatrix()
 	m_inv_matrix = glm::inverse(m_matrix);
 }
 
+void Object::clearCache()
+{
+	m_cache.clear();
+}
+
 void PrimitiveCache::add(Primitive *prim)
 {
 	m_primitives.push_back(prim);
@@ -176,4 +151,35 @@ void PrimitiveCache::clear()
 	}
 
 	m_primitives.clear();
+}
+
+void eval_graph(Object *ob, bool force)
+{
+	if (!force) {
+		return;
+	}
+
+	auto graph = ob->graph();
+	auto output_node = graph->output();
+
+	if (!output_node->isLinked()) {
+		output_node->input(0)->prim = nullptr;
+		ob->primitive(nullptr);
+		return;
+	}
+
+	graph->build();
+
+	/* XXX */
+	for (Node *node : graph->nodes()) {
+		for (OutputSocket *output : node->outputs()) {
+			output->prim = nullptr;
+		}
+	}
+
+	ob->primitive(nullptr);
+	ob->clearCache();
+
+	GraphEvalTask *t = new(tbb::task::allocate_root()) GraphEvalTask(ob, graph);
+	tbb::task::enqueue(*t);
 }

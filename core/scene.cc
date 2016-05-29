@@ -207,7 +207,7 @@ void Scene::tagObjectUpdate()
 void Scene::evalObjectGraph()
 {
 	if (m_active_object) {
-		m_active_object->evalGraph(true);
+		eval_graph(m_active_object, true);
 	}
 }
 
@@ -262,7 +262,7 @@ void Scene::updateForNewFrame()
 	/* TODO: dependency graph */
 
 	for (Object *object : m_objects) {
-		/* TODO: replace with proper update method? */
-		object->evalGraph();
+		/* TODO: replace with proper update method */
+		eval_graph(object, false);
 	}
 }

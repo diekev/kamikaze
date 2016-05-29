@@ -223,12 +223,19 @@ void MainWindow::generateObjectMenu()
 {
 	m_command_factory->registerType("add object", AddObjectCmd::registerSelf);
 
+	auto action = ui->menuAdd->addAction("Empty Object");
+	action->setData(QVariant::fromValue(QString("add object")));
+
+	connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
+
+#if 0
 	for (const auto &key : m_main->objectFactory()->keys()) {
 		auto action = ui->menuAdd->addAction(key.c_str());
 		action->setData(QVariant::fromValue(QString("add object")));
 
 		connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
 	}
+#endif
 }
 
 void MainWindow::generateNodeMenu()
@@ -350,7 +357,7 @@ void MainWindow::removeNode(QtNode *node)
 	graph->remove(node->getNode());
 
 	if (was_connected) {
-		object->evalGraph(true);
+		eval_graph(object, true);
 	}
 }
 
@@ -369,7 +376,7 @@ void MainWindow::nodesConnected(QtNode *from, const QString &socket_from, QtNode
 
 	graph->connect(output_socket, input_socket);
 
-	object->evalGraph(true);
+	eval_graph(object, true);
 }
 
 void MainWindow::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
@@ -387,5 +394,5 @@ void MainWindow::connectionRemoved(QtNode *from, const QString &socket_from, QtN
 
 	graph->disconnect(output_socket, input_socket);
 
-	object->evalGraph(true);
+	eval_graph(object, true);
 }
