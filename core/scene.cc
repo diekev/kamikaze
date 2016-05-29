@@ -204,13 +204,6 @@ void Scene::tagObjectUpdate()
 	}
 }
 
-void Scene::evalObjectGraph()
-{
-	if (m_active_object) {
-		eval_graph(m_active_object, true);
-	}
-}
-
 void Scene::emitNodeAdded(Object *ob, Node *node)
 {
 	Q_EMIT(nodeAdded(ob, node));
@@ -263,6 +256,6 @@ void Scene::updateForNewFrame()
 
 	for (Object *object : m_objects) {
 		/* TODO: replace with proper update method */
-		eval_graph(object, false);
+		eval_graph(nullptr, object, false);
 	}
 }

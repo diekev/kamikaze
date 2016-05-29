@@ -88,6 +88,11 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	/* TODO: find another place to do this */
 	generateObjectMenu();
 	generateNodeMenu();
+
+	m_progress_bar = new QProgressBar(this);
+	ui->statusBar->addWidget(m_progress_bar);
+	m_progress_bar->setRange(0, 100);
+	m_progress_bar->setVisible(false);
 }
 
 MainWindow::~MainWindow()
@@ -95,6 +100,22 @@ MainWindow::~MainWindow()
 	delete ui;
 	delete m_command_manager;
 	delete m_command_factory;
+}
+
+void MainWindow::taskStarted()
+{
+	m_progress_bar->setValue(0);
+	m_progress_bar->setVisible(true);
+}
+
+void MainWindow::updateProgress(float progress)
+{
+	m_progress_bar->setValue(progress);
+}
+
+void MainWindow::taskEnded()
+{
+	m_progress_bar->setVisible(false);
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *e)
@@ -306,8 +327,14 @@ void MainWindow::setupNodeParamUI(QtNode *node_item)
 
 	/* Only update/evaluate the graph if the node is connected. */
 	if (node->isLinked()) {
-		cb.setContext(m_scene, SLOT(evalObjectGraph()));
+		cb.setContext(this, SLOT(evalObjectGraph()));
 	}
+}
+
+/* TODO: evaluation system */
+void MainWindow::evalObjectGraph()
+{
+	eval_graph(this, m_scene->currentObject(), true);
 }
 
 void MainWindow::setupObjectUI(Object *object)
@@ -357,7 +384,7 @@ void MainWindow::removeNode(QtNode *node)
 	graph->remove(node->getNode());
 
 	if (was_connected) {
-		eval_graph(object, true);
+		eval_graph(this, object, true);
 	}
 }
 
@@ -376,7 +403,7 @@ void MainWindow::nodesConnected(QtNode *from, const QString &socket_from, QtNode
 
 	graph->connect(output_socket, input_socket);
 
-	eval_graph(object, true);
+	eval_graph(this, object, true);
 }
 
 void MainWindow::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
@@ -394,5 +421,5 @@ void MainWindow::connectionRemoved(QtNode *from, const QString &socket_from, QtN
 
 	graph->disconnect(output_socket, input_socket);
 
-	eval_graph(object, true);
+	eval_graph(this, object, true);
 }

@@ -171,12 +171,9 @@ void Graph::topology_sort()
 	}
 }
 
-void Graph::execute()
+const std::vector<Node *> &Graph::finished_stack() const
 {
-	for (auto iter = m_stack.rbegin(); iter != m_stack.rend(); ++iter) {
-		Node *node = *iter;
-		node->process();
-	}
+	return m_stack;
 }
 
 OutputNode *Graph::output() const

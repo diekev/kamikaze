@@ -50,7 +50,8 @@ SOURCES += \
     nodes/graph.cc \
     object.cc \
     nodes/graph_dumper.cc \
-    nodes/nodes.cc
+    nodes/nodes.cc \
+    task.cc
 
 HEADERS += \
     grid.h \
@@ -65,7 +66,8 @@ HEADERS += \
     nodes/graph.h \
     object.h \
     nodes/graph_dumper.h \
-    nodes/nodes.h
+    nodes/nodes.h \
+    task.h
 
 OTHER_FILES += \
     shaders/flat_shader.frag \

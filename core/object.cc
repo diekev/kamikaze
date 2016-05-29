@@ -24,6 +24,8 @@
 
 #include "object.h"
 
+#include <QObject>
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <kamikaze/primitive.h>
 #include <kamikaze/paramfactory.h>
@@ -31,28 +33,7 @@
 #include "nodes/graph.h"
 #include "nodes/nodes.h"
 
-#include <tbb/task.h>
-
-class GraphEvalTask : public tbb::task {
-	Object *m_object;
-	Graph *m_graph;
-
-public:
-	GraphEvalTask(Object *object, Graph *graph)
-	    : m_object(object)
-	    , m_graph(graph)
-	{}
-
-	tbb::task *execute() override
-	{
-		m_graph->execute();
-
-		auto output_node = m_graph->output();
-		m_object->primitive(output_node->primitive());
-
-		return nullptr;
-	}
-};
+#include "task.h"
 
 Object::Object()
     : m_graph(new Graph)
@@ -133,6 +114,8 @@ void Object::clearCache()
 	m_cache.clear();
 }
 
+/* ********************************************* */
+
 void PrimitiveCache::add(Primitive *prim)
 {
 	m_primitives.push_back(prim);
@@ -153,7 +136,46 @@ void PrimitiveCache::clear()
 	m_primitives.clear();
 }
 
-void eval_graph(Object *ob, bool force)
+/* ********************************************* */
+
+class GraphEvalTask : public Task {
+	Object *m_object;
+	Graph *m_graph;
+
+public:
+	GraphEvalTask(Object *object, Graph *graph, MainWindow *window);
+
+	void start() override;
+};
+
+GraphEvalTask::GraphEvalTask(Object *object, Graph *graph, MainWindow *window)
+    : Task(window)
+    , m_object(object)
+    , m_graph(graph)
+{}
+
+void GraphEvalTask::start()
+{
+	auto stack = m_graph->finished_stack();
+
+	const auto size = static_cast<float>(stack.size());
+	auto index = 0;
+
+	m_notifier->signalProgressUpdate(0.0f);
+
+	for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter) {
+		Node *node = *iter;
+		node->process();
+
+		const float progress = (++index / size) * 100.0f;
+		m_notifier->signalProgressUpdate(progress);
+	}
+
+	auto output_node = m_graph->output();
+	m_object->primitive(output_node->primitive());
+}
+
+void eval_graph(MainWindow *window, Object *ob, bool force)
 {
 	if (!force) {
 		return;
@@ -180,6 +202,6 @@ void eval_graph(Object *ob, bool force)
 	ob->primitive(nullptr);
 	ob->clearCache();
 
-	GraphEvalTask *t = new(tbb::task::allocate_root()) GraphEvalTask(ob, graph);
+	GraphEvalTask *t = new(tbb::task::allocate_root()) GraphEvalTask(ob, graph, window);
 	tbb::task::enqueue(*t);
 }

@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * The Original Code is Copyright (C) 2015 Kévin Dietrich.
+ * The Original Code is Copyright (C) 2016 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
@@ -24,35 +24,40 @@
 
 #pragma once
 
-#include <kamikaze/nodes.h>
-#include <vector>
+#include <memory>
+#include <QObject>
+#include <tbb/task.h>
 
-class InputSocket;
-class OutputNode;
-class OutputSocket;
+class MainWindow;
 
-class Graph {
-	std::vector<Node *> m_nodes;
-	std::vector<Node *> m_stack;
-
-	bool m_need_update;
-
-	void topology_sort();
+/* Apparently we can not have a class derived from both a QObject and a
+ * tbb::task so this class is to be used in conjunction with a tbb::task derived
+ * class to notify the UI about certain events.
+ */
+class TaskNotifier : public QObject {
+	Q_OBJECT
 
 public:
-	Graph();
-	~Graph();
+	explicit TaskNotifier(MainWindow *window);
 
-	void add(Node *node);
-	void remove(Node *node);
+	void signalStart();
+	void signalProgressUpdate(float progress);
+	void signalEnd();
 
-	void connect(OutputSocket *from, InputSocket *to);
-	void disconnect(OutputSocket *from, InputSocket *to);
+Q_SIGNALS:
+	void startTask();
+	void updateProgress(float progress);
+	void endTask();
+};
 
-	void build();
+class Task : public tbb::task {
+protected:
+	std::unique_ptr<TaskNotifier> m_notifier;
 
-	OutputNode *output() const;
+public:
+	Task(MainWindow *window);
 
-	const std::vector<Node *> &nodes() const;
-	const std::vector<Node *> &finished_stack() const;
+	tbb::task *execute() override;
+
+	virtual void start() = 0;
 };

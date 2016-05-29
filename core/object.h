@@ -28,11 +28,15 @@
 #include <vector>
 
 #include <glm/glm.hpp>
+#include <memory>
 
 class Graph;
 class Node;
 class ParamCallback;
 class Primitive;
+class MainWindow;
+
+#include "ui/mainwindow.h"
 
 /**
  * This class is used to gather and release the primitives created inside of an
@@ -86,4 +90,4 @@ public:
 	void clearCache();
 };
 
-void eval_graph(Object *ob, bool force);
+void eval_graph(MainWindow *window, Object *ob, bool force);
