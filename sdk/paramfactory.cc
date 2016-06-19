@@ -105,9 +105,18 @@ void xyz_param(ParamCallback *cb, const char *name, float ptr[3], float min, flo
 	cb->addWidget(param, name);
 }
 
-void file_param(ParamCallback *cb, const char *name, std::string *ptr)
+void input_file_param(ParamCallback *cb, const char *name, std::string *ptr)
 {
-	auto param = new FileParam;
+	auto param = new FileParam(true);
+	param->valuePtr(ptr);
+	param->setValue(ptr->c_str());
+
+	cb->addWidget(param, name);
+}
+
+void output_file_param(ParamCallback *cb, const char *name, std::string *ptr)
+{
+	auto param = new FileParam(false);
 	param->valuePtr(ptr);
 	param->setValue(ptr->c_str());
 

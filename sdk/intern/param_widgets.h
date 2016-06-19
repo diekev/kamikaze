@@ -165,7 +165,7 @@ class FileParam final : public FileSelector {
 	std::string *m_value_ptr;
 
 public:
-	explicit FileParam(QWidget *parent = nullptr);
+	explicit FileParam(bool input, QWidget *parent = nullptr);
 	~FileParam() = default;
 
 	void valuePtr(std::string *ptr);

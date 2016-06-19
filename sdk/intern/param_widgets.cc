@@ -153,8 +153,8 @@ void XYZParam::updateValuePtr(double value, int axis)
 
 /* ********************************** */
 
-FileParam::FileParam(QWidget *parent)
-    : FileSelector(parent)
+FileParam::FileParam(bool input, QWidget *parent)
+    : FileSelector(input, parent)
     , m_value_ptr(nullptr)
 {
 	connect(this, SIGNAL(textChanged(const QString &)), this, SLOT(updateValuePtr(const QString &)));
