@@ -52,6 +52,7 @@
 #include "node_scene.h"
 
 #include "paramcallback.h"
+#include "paramfactory.h"
 #include "ui_mainwindow.h"
 #include "utils_ui.h"
 
@@ -323,7 +324,73 @@ void MainWindow::setupNodeParamUI(QtNode *node_item)
 	clear_layout(ui->node_param_layout);
 
 	ParamCallback cb(ui->node_param_layout);
-	node->setUIParams(&cb);
+
+	node->update_properties();
+
+	ParamCallback *callback = &cb;
+
+	for (Property &prop : node->props()) {
+		if (!prop.visible) {
+			continue;
+		}
+
+		assert(!prop.data.empty());
+
+		switch (prop.type) {
+			case property_type::prop_bool:
+				bool_param(callback,
+				           prop.name.c_str(),
+				           any_cast<bool>(&prop.data),
+				           any_cast<bool>(prop.data));
+				break;
+			case property_type::prop_float:
+				float_param(callback,
+				            prop.name.c_str(),
+				            any_cast<float>(&prop.data),
+				            prop.min, prop.max,
+				            any_cast<float>(prop.data));
+				break;
+			case property_type::prop_int:
+				int_param(callback,
+				          prop.name.c_str(),
+				          any_cast<int>(&prop.data),
+				          prop.min, prop.max,
+				          any_cast<int>(prop.data));
+				break;
+			case property_type::prop_enum:
+				enum_param(callback,
+				           prop.name.c_str(),
+				           any_cast<int>(&prop.data),
+				           prop.enum_items,
+				           any_cast<int>(prop.data));
+				break;
+			case property_type::prop_vec3:
+				xyz_param(callback,
+				          prop.name.c_str(),
+				          &(any_cast<glm::vec3>(&prop.data)->x));
+				break;
+			case property_type::prop_input_file:
+				input_file_param(callback,
+				                 prop.name.c_str(),
+				                 any_cast<std::string>(&prop.data));
+				break;
+			case property_type::prop_output_file:
+				output_file_param(callback,
+				                  prop.name.c_str(),
+				                  any_cast<std::string>(&prop.data));
+				break;
+			case property_type::prop_string:
+				string_param(callback,
+				             prop.name.c_str(),
+				             any_cast<std::string>(&prop.data),
+				             any_cast<std::string>(prop.data).c_str());
+				break;
+		}
+
+		if (!prop.tooltip.empty()) {
+			param_tooltip(callback, prop.tooltip.c_str());
+		}
+	}
 
 	/* Only update/evaluate the graph if the node is connected. */
 	if (node->isLinked()) {

@@ -27,7 +27,8 @@
 #include <kamikaze/context.h>
 #include <kamikaze/nodes.h>
 #include <kamikaze/primitive.h>
-#include <kamikaze/paramfactory.h>
+
+#include "ui/paramfactory.h"
 
 #include "object.h"
 #include "scene.h"

@@ -34,17 +34,14 @@ ObjectNodeItem::ObjectNodeItem(Object *object, const QString &title, QGraphicsIt
 
 ObjectNodeItem::~ObjectNodeItem()
 {
-	delete m_node_scene;
-}
-
-void ObjectNodeItem::prepareDelete()
-{
 	/* First release the nodes */
 	for (QtNode *node : m_node_list) {
 		removeNode(node);
 	}
 
 	m_node_list.clear();
+
+	delete m_node_scene;
 }
 
 void ObjectNodeItem::addNode(QtNode *node)

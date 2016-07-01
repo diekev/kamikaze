@@ -28,10 +28,11 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <kamikaze/primitive.h>
-#include <kamikaze/paramfactory.h>
 
 #include "nodes/graph.h"
 #include "nodes/nodes.h"
+
+#include "ui/paramfactory.h"
 
 #include "task.h"
 
@@ -80,12 +81,12 @@ Graph *Object::graph() const
 
 void Object::name(const QString &name)
 {
-	m_name = name;
+	m_name = name.toStdString();
 }
 
-const QString &Object::name() const
+const QString Object::name() const
 {
-	return m_name;
+	return QString::fromStdString(m_name);
 }
 
 void Object::setUIParams(ParamCallback *cb)

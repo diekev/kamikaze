@@ -122,13 +122,13 @@ Q_SIGNALS:
 class StringParam final : public QLineEdit {
 	Q_OBJECT
 
-	QString *m_value_ptr;
+	std::string *m_value_ptr;
 
 public:
 	explicit StringParam(QWidget *parent = nullptr);
 	~StringParam() = default;
 
-	void valuePtr(QString *ptr);
+	void valuePtr(std::string *ptr);
 
 private Q_SLOTS:
 	void updateValuePtr(const QString &value);

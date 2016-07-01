@@ -33,12 +33,12 @@ class QtPort;
  * established.
  ***************************************************************************/
 class QtConnection : public QGraphicsPathItem {
-	QtPort *m_base_port;
-	QtPort *m_target_port;
-	QColor m_color;
+	QtPort *m_base_port = nullptr;
+	QtPort *m_target_port = nullptr;
+	QColor m_color = Qt::black;
 
 public:
-	QtConnection(QtPort *basePort, QGraphicsPathItem *parent = nullptr);
+	explicit QtConnection(QtPort *basePort, QGraphicsPathItem *parent = nullptr);
 	~QtConnection() = default;
 
 	void setSelected(bool selected); /* TEST */

@@ -119,14 +119,14 @@ StringParam::StringParam(QWidget *parent)
 	connect(this, SIGNAL(textChanged(const QString &)), this, SLOT(updateValuePtr(const QString &)));
 }
 
-void StringParam::valuePtr(QString *ptr)
+void StringParam::valuePtr(std::string *ptr)
 {
 	m_value_ptr = ptr;
 }
 
 void StringParam::updateValuePtr(const QString &value)
 {
-	*m_value_ptr = value;
+	*m_value_ptr = value.toStdString();
 	Q_EMIT(paramChanged());
 }
 

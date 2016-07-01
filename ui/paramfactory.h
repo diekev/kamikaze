@@ -26,6 +26,7 @@
 
 #include <string>
 
+class EnumProperty;
 class ParamCallback;
 class QString;
 
@@ -63,7 +64,7 @@ void float_param(ParamCallback *cb, const char *name, float *ptr, float min, flo
  *              The last item needs to be set to null.
  * @param default_value The default value of the parameter.
  */
-void enum_param(ParamCallback *cb, const char *name, int *ptr, const char *items[], int default_value);
+void enum_param(ParamCallback *cb, const char *name, int *ptr, const EnumProperty &prop, int default_value);
 
 /**
  * @brief string_param Add a UI parameter for a string property.
@@ -73,7 +74,7 @@ void enum_param(ParamCallback *cb, const char *name, int *ptr, const char *items
  * @param ptr  The pointer to the string property.
  * @param default_value Default string used as placeholder text.
  */
-void string_param(ParamCallback *cb, const char *name, QString *ptr, const char *default_value);
+void string_param(ParamCallback *cb, const char *name, std::string *ptr, const char *default_value);
 
 /**
  * @brief bool_param Add a UI parameter for a boolean property.
@@ -102,6 +103,24 @@ void xyz_param(ParamCallback *cb, const char *name, float ptr[3], float min = 0.
  * @param ptr  The pointer to the file name property.
  */
 void file_param(ParamCallback *cb, const char *name, std::string *ptr);
+
+/**
+ * @brief file_param Add a UI parameter for displaying a file selector.
+ *
+ * @param cb   The callback used to create the parameter.
+ * @param name The UI name of the parameter.
+ * @param ptr  The pointer to the file name property.
+ */
+void input_file_param(ParamCallback *cb, const char *name, std::string *ptr);
+
+/**
+ * @brief file_param Add a UI parameter for displaying a file selector.
+ *
+ * @param cb   The callback used to create the parameter.
+ * @param name The UI name of the parameter.
+ * @param ptr  The pointer to the file name property.
+ */
+void output_file_param(ParamCallback *cb, const char *name, std::string *ptr);
 
 /**
  * @brief param_tooltip Set the tooltip for the last added parameter.

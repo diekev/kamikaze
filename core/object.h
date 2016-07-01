@@ -63,7 +63,7 @@ class Object {
 
 	Graph *m_graph;
 
-	QString m_name;
+	std::string m_name;
 
 public:
 	Object();
@@ -82,7 +82,7 @@ public:
 	Graph *graph() const;
 
 	void name(const QString &name);
-	const QString &name() const;
+	const QString name() const;
 
 	void setUIParams(ParamCallback *cb);
 

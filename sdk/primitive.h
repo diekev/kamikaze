@@ -63,7 +63,7 @@ protected:
 	glm::mat4 m_matrix = glm::mat4(1.0f);
 	glm::mat4 m_inv_matrix = glm::mat4(1.0f);
 
-	QString m_name{};
+	std::string m_name{};
 
 	bool m_draw_bbox = false;
 	bool m_need_update = true;
