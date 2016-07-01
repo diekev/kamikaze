@@ -50,9 +50,9 @@ public:
 	void disconnect(OutputSocket *from, InputSocket *to);
 
 	void build();
-	void execute();
 
 	OutputNode *output() const;
 
 	const std::vector<Node *> &nodes() const;
+	const std::vector<Node *> &finished_stack() const;
 };

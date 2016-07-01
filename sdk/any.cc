@@ -22,49 +22,76 @@
  *
  */
 
-#pragma once
+#include "any.h"
 
-#include <glm/glm.hpp>
+any::any(const any &other)
+    : any()
+{
+	if (other.dt) {
+		dt = other.dt->copy();
+	}
+}
 
-#include <kamikaze/nodes.h>
+any::any(any &&other) noexcept
+    : any()
+{
+	std::swap(this->dt, other.dt);
+}
 
-void register_builtin_nodes(NodeFactory *factory);
+any::~any()
+{
+	clear();
+}
 
-class OutputNode : public Node {
-	Primitive *m_primitive = nullptr;
+any &any::operator=(any &&other) noexcept
+{
+	this->swap(other);
+	return *this;
+}
 
-public:
-	OutputNode(const std::string &name);
+void any::clear()
+{
+	delete dt;
+	dt = nullptr;
+}
 
-	Primitive *primitive() const;
+void any::swap(any &other) noexcept
+{
+	std::swap(this->dt, other.dt);
+}
 
-	void process() override;
-};
+bool any::empty() const noexcept
+{
+	return dt == nullptr;
+}
 
-class TransformNode : public Node {
-public:
-	TransformNode();
+const std::type_info &any::type() const noexcept
+{
+	if (this->empty()) {
+		return typeid(void);
+	}
 
-	void process() override;
-};
+	return dt->type();
+}
 
-class CreateBoxNode : public Node {
-public:
-	CreateBoxNode();
+any &any::operator=(const any &other)
+{
+	if (&other == this) {
+		return *this;
+	}
 
-	void process() override;
-};
+	if (!this->empty()) {
+		this->clear();
+	}
 
-class CreateTorusNode : public Node {
-public:
-	CreateTorusNode();
+	if (other.dt) {
+		this->dt = other.dt->copy();
+	}
 
-	void process() override;
-};
+	return *this;
+}
 
-class CreateGridNode : public Node {
-public:
-	CreateGridNode();
-
-	void process() override;
-};
+const char *bad_any_cast::what() const noexcept
+{
+	return "Bad any_cast\n";
+}

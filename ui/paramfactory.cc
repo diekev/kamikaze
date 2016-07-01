@@ -24,12 +24,13 @@
 
 #include "paramfactory.h"
 
-#include "ui/paramcallback.h"  /* XXX - bad level call */
+#include <QLabel>
+#include <QGridLayout>
+#include <kamikaze/models.h>
 
 #include "intern/param_widgets.h"
 
-#include <QLabel>
-#include <QGridLayout>
+#include "paramcallback.h"
 
 /* ********************************** */
 
@@ -53,13 +54,13 @@ void float_param(ParamCallback *cb, const char *name, float *ptr, float min, flo
 	cb->addWidget(param, name);
 }
 
-void enum_param(ParamCallback *cb, const char *name, int *ptr, const char *items[], int default_value)
+void enum_param(ParamCallback *cb, const char *name, int *ptr, const EnumProperty &prop, int default_value)
 {
 	auto param = new EnumParam;
 	param->valuePtr(ptr);
 
-	while (*items != nullptr) {
-		param->addItem(*items++);
+	for (const auto &item : prop.m_props) {
+		param->addItem(item.name.c_str());
 	}
 
 	param->setCurrentIndex(default_value);
@@ -67,7 +68,7 @@ void enum_param(ParamCallback *cb, const char *name, int *ptr, const char *items
 	cb->addWidget(param, name);
 }
 
-void string_param(ParamCallback *cb, const char *name, QString *ptr, const char *default_value)
+void string_param(ParamCallback *cb, const char *name, std::string *ptr, const char *default_value)
 {
 	auto param = new StringParam;
 	param->valuePtr(ptr);
@@ -76,7 +77,7 @@ void string_param(ParamCallback *cb, const char *name, QString *ptr, const char 
 		param->setPlaceholderText(default_value);
 	}
 	else {
-		param->setText(*ptr);
+		param->setText(ptr->c_str());
 	}
 
 	cb->addWidget(param, name);
@@ -105,9 +106,18 @@ void xyz_param(ParamCallback *cb, const char *name, float ptr[3], float min, flo
 	cb->addWidget(param, name);
 }
 
-void file_param(ParamCallback *cb, const char *name, std::string *ptr)
+void input_file_param(ParamCallback *cb, const char *name, std::string *ptr)
 {
-	auto param = new FileParam;
+	auto param = new FileParam(true);
+	param->valuePtr(ptr);
+	param->setValue(ptr->c_str());
+
+	cb->addWidget(param, name);
+}
+
+void output_file_param(ParamCallback *cb, const char *name, std::string *ptr)
+{
+	auto param = new FileParam(false);
 	param->valuePtr(ptr);
 	param->setValue(ptr->c_str());
 

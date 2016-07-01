@@ -52,6 +52,7 @@
 #include "node_scene.h"
 
 #include "paramcallback.h"
+#include "paramfactory.h"
 #include "ui_mainwindow.h"
 #include "utils_ui.h"
 
@@ -88,6 +89,11 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	/* TODO: find another place to do this */
 	generateObjectMenu();
 	generateNodeMenu();
+
+	m_progress_bar = new QProgressBar(this);
+	ui->statusBar->addWidget(m_progress_bar);
+	m_progress_bar->setRange(0, 100);
+	m_progress_bar->setVisible(false);
 }
 
 MainWindow::~MainWindow()
@@ -95,6 +101,22 @@ MainWindow::~MainWindow()
 	delete ui;
 	delete m_command_manager;
 	delete m_command_factory;
+}
+
+void MainWindow::taskStarted()
+{
+	m_progress_bar->setValue(0);
+	m_progress_bar->setVisible(true);
+}
+
+void MainWindow::updateProgress(float progress)
+{
+	m_progress_bar->setValue(progress);
+}
+
+void MainWindow::taskEnded()
+{
+	m_progress_bar->setVisible(false);
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *e)
@@ -223,12 +245,19 @@ void MainWindow::generateObjectMenu()
 {
 	m_command_factory->registerType("add object", AddObjectCmd::registerSelf);
 
+	auto action = ui->menuAdd->addAction("Empty Object");
+	action->setData(QVariant::fromValue(QString("add object")));
+
+	connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
+
+#if 0
 	for (const auto &key : m_main->objectFactory()->keys()) {
 		auto action = ui->menuAdd->addAction(key.c_str());
 		action->setData(QVariant::fromValue(QString("add object")));
 
 		connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
 	}
+#endif
 }
 
 void MainWindow::generateNodeMenu()
@@ -295,12 +324,84 @@ void MainWindow::setupNodeParamUI(QtNode *node_item)
 	clear_layout(ui->node_param_layout);
 
 	ParamCallback cb(ui->node_param_layout);
-	node->setUIParams(&cb);
+
+	node->update_properties();
+
+	ParamCallback *callback = &cb;
+
+	for (Property &prop : node->props()) {
+		if (!prop.visible) {
+			continue;
+		}
+
+		assert(!prop.data.empty());
+
+		switch (prop.type) {
+			case property_type::prop_bool:
+				bool_param(callback,
+				           prop.name.c_str(),
+				           any_cast<bool>(&prop.data),
+				           any_cast<bool>(prop.data));
+				break;
+			case property_type::prop_float:
+				float_param(callback,
+				            prop.name.c_str(),
+				            any_cast<float>(&prop.data),
+				            prop.min, prop.max,
+				            any_cast<float>(prop.data));
+				break;
+			case property_type::prop_int:
+				int_param(callback,
+				          prop.name.c_str(),
+				          any_cast<int>(&prop.data),
+				          prop.min, prop.max,
+				          any_cast<int>(prop.data));
+				break;
+			case property_type::prop_enum:
+				enum_param(callback,
+				           prop.name.c_str(),
+				           any_cast<int>(&prop.data),
+				           prop.enum_items,
+				           any_cast<int>(prop.data));
+				break;
+			case property_type::prop_vec3:
+				xyz_param(callback,
+				          prop.name.c_str(),
+				          &(any_cast<glm::vec3>(&prop.data)->x));
+				break;
+			case property_type::prop_input_file:
+				input_file_param(callback,
+				                 prop.name.c_str(),
+				                 any_cast<std::string>(&prop.data));
+				break;
+			case property_type::prop_output_file:
+				output_file_param(callback,
+				                  prop.name.c_str(),
+				                  any_cast<std::string>(&prop.data));
+				break;
+			case property_type::prop_string:
+				string_param(callback,
+				             prop.name.c_str(),
+				             any_cast<std::string>(&prop.data),
+				             any_cast<std::string>(prop.data).c_str());
+				break;
+		}
+
+		if (!prop.tooltip.empty()) {
+			param_tooltip(callback, prop.tooltip.c_str());
+		}
+	}
 
 	/* Only update/evaluate the graph if the node is connected. */
 	if (node->isLinked()) {
-		cb.setContext(m_scene, SLOT(evalObjectGraph()));
+		cb.setContext(this, SLOT(evalObjectGraph()));
 	}
+}
+
+/* TODO: evaluation system */
+void MainWindow::evalObjectGraph()
+{
+	eval_graph(this, m_scene->currentObject(), true);
 }
 
 void MainWindow::setupObjectUI(Object *object)
@@ -350,7 +451,7 @@ void MainWindow::removeNode(QtNode *node)
 	graph->remove(node->getNode());
 
 	if (was_connected) {
-		object->evalGraph(true);
+		eval_graph(this, object, true);
 	}
 }
 
@@ -369,7 +470,7 @@ void MainWindow::nodesConnected(QtNode *from, const QString &socket_from, QtNode
 
 	graph->connect(output_socket, input_socket);
 
-	object->evalGraph(true);
+	eval_graph(this, object, true);
 }
 
 void MainWindow::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
@@ -387,5 +488,5 @@ void MainWindow::connectionRemoved(QtNode *from, const QString &socket_from, QtN
 
 	graph->disconnect(output_socket, input_socket);
 
-	object->evalGraph(true);
+	eval_graph(this, object, true);
 }

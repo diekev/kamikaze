@@ -24,47 +24,40 @@
 
 #pragma once
 
-#include <glm/glm.hpp>
+#include <memory>
+#include <QObject>
+#include <tbb/task.h>
 
-#include <kamikaze/nodes.h>
+class MainWindow;
 
-void register_builtin_nodes(NodeFactory *factory);
-
-class OutputNode : public Node {
-	Primitive *m_primitive = nullptr;
+/* Apparently we can not have a class derived from both a QObject and a
+ * tbb::task so this class is to be used in conjunction with a tbb::task derived
+ * class to notify the UI about certain events.
+ */
+class TaskNotifier : public QObject {
+	Q_OBJECT
 
 public:
-	OutputNode(const std::string &name);
+	explicit TaskNotifier(MainWindow *window);
 
-	Primitive *primitive() const;
+	void signalStart();
+	void signalProgressUpdate(float progress);
+	void signalEnd();
 
-	void process() override;
+Q_SIGNALS:
+	void startTask();
+	void updateProgress(float progress);
+	void endTask();
 };
 
-class TransformNode : public Node {
+class Task : public tbb::task {
+protected:
+	std::unique_ptr<TaskNotifier> m_notifier;
+
 public:
-	TransformNode();
+	Task(MainWindow *window);
 
-	void process() override;
-};
+	tbb::task *execute() override;
 
-class CreateBoxNode : public Node {
-public:
-	CreateBoxNode();
-
-	void process() override;
-};
-
-class CreateTorusNode : public Node {
-public:
-	CreateTorusNode();
-
-	void process() override;
-};
-
-class CreateGridNode : public Node {
-public:
-	CreateGridNode();
-
-	void process() override;
+	virtual void start() = 0;
 };

@@ -37,22 +37,17 @@ class QtNodeEditor;
 /****************************************************************************
 	QtNode represents a Node-class which is visualised in a QGraphicsScene.
 	***************************************************************************/
-class QtNode : public QObject, public QGraphicsPathItem {
-	Q_OBJECT
-
+class QtNode : public QGraphicsPathItem {
 	Node *m_data;
 
-	bool m_auto_size;
+	bool m_auto_size = true;
 	qreal m_icon_size;
-	qreal m_width;
 	qreal m_normalized_width;
+	qreal m_width;
 	qreal m_normalized_body_height;
 	qreal m_header_height;
 	qreal m_body_height;
 	QGraphicsPathItem *m_body;
-	QGraphicsPixmapItem *m_header_title_icon;
-	QGraphicsPixmapItem *m_action_1_icon;
-	QGraphicsPixmapItem *m_action_2_icon;
 	QBrush m_header_brush;
 	QPen m_pen;
 	QtNodeEditor *m_editor;
@@ -68,15 +63,12 @@ class QtNode : public QObject, public QGraphicsPathItem {
 
 	QColor m_port_name_color;
 	QGraphicsItem *m_original_parent;
-	QPixmap m_image;
-	QGraphicsPixmapItem *m_pixmap_item;
-	bool m_image_set;
 
 public:
 	QtConnection *m_active_connection;
 
 	QtNode(const QString &title, QGraphicsItem *parent = nullptr);
-	virtual ~QtNode() = default;
+	virtual ~QtNode();
 
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
@@ -99,57 +91,11 @@ public:
 	/* Called from the QNodeEditor; used for removing a node from a compound */
 	void restoreOriginalParentItem();
 
-	/* To be called just before the node is removed from the scene */
-	virtual void prepareDelete();
-
-	/* Set the node - including its connections - visible / invisible */
-	void setVisible(bool visible);
-
-	/* Determines whether a node is automatically sized when ports are added etc. */
-	void setAutoSize(bool autoSize);
-	bool isAutoSize() const;
-
-	/* Return the title of the node */
-	const QString &getTitle() const;
-
-	/* Although the width of the node is automatically adjusted to its content,
-	 * it is possible to change (override) the width manually */
-	void setWidth(qreal width);
-
-	/* Set the height of the header */
-	void setHeaderHeight(qreal headerHeight);
-
-	/* Although the body height of the node is automatically adjusted to its
-	 * content, it is possible to change (override) the body height manually. */
-	void setBodyHeight(qreal bodyHeight);
-
-	/* Get the dimensions of the node (width and total height) */
-	qreal getWidth() const;
-	qreal getHeigth() const;
-
-	/* Set the color of the header; this results in a gradient with grey */
-	void setHeaderColor(const QColor &color);
-
 	/* Set the color of the title in the header */
 	void setTitleColor(const QColor &color);
 
-	/* Set the color of the name of all ports */
-	void setPortNameColor(const QColor &color);
-
 	/* Align the text of the header (default is center) */
 	void alignTitle(Alignment alignment);
-
-	/* Set the size of the icon in the header */
-	void setIconSize(qreal size);
-
-	/* Set the icon, associated with the title in the nodes' header */
-	void setHeaderTitleIcon(const QString &fileNameIcon);
-
-	/* Set the icon, associated with action 1 */
-	void setAction1Icon(const QString &fileNameIcon);
-
-	/* Set the icon, associated with action 2 */
-	void setAction2Icon(const QString &fileNameIcon);
 
 	/* Create a port
 	 * portId:          Identification (handle) of the port.
@@ -167,78 +113,11 @@ public:
 	QtPort *createPort(const QString &portName,
 	                   int type,
 	                   QColor portColour,
-	                   QtPortShape portShape,
 	                   Alignment alignement,
 	                   QColor connectionColor = Qt::black);
 
-	/* Add an image to the node; the image is adjusted to the size of the node
-	 * and position at the top (under the header) */
-	void setImage(const QString &fileNameImage);
-	void setImage(const QPixmap &pixMap);
-
-	/* Add an image to the node; the node is adjusted to the size of the image */
-	void createImage(const QString &fileNameImage, QSize size);
-
-	/* Return the port, based on the name */
-	QtPort *getPort(const QString &portName);
-
-	/* Return the port, based on the name.
-	 * In case there are multiple ports with the same name, the first occurence
-	 * is returned; use the occurence argument in case of more than one port
-	 * with the same name; occurence starts with 1 */
-	QtPort *getPort(const QString &portName, unsigned int occurence);
-
-	/* Return all ports of a node */
-	QVector<QtPort *> getPorts();
-
-	/* If there are multiple ports with the same name, they can also be returned
-	 * as a vector */
-	QVector<QtPort *> getPorts(const QString &portName);
-
-	/* Returns true, if a given port is part of 'this' node */
-	bool isPortOfThisNode(QtPort *port);
-	bool isPortOfThisNode(const QString &portName);
-
 	/* Returns true, if a given connection is connected to a port of 'this' node */
 	bool isConnectionConnectedToThisNode(QtConnection *connection);
-
-	/* Return the node that is connected to 'this' node by means of a given port
-	 * (identified by its name or a pointer to the port).
-	 * Returns 0 if there is no connection */
-	QtNode *getNodeConnectedToPort(QtPort *port);
-
-	/* Return the node that is connected to 'this' node by means of a given portName */
-	/* Returns 0 if there is no connection */
-	QtNode *getNodeConnectedToPort(const QString &portName);
-
-	/* Return the node that is connected to 'this' node by means of a given
-	 * portName. In case there are multiple ports with the same name, the first
-	 * occurence is returned; use the occurence argument in case of more than
-	 * one port with the same name; occurence starts with 1.
-	 * Returns nullptr if there is no connection */
-	QtNode *getNodeConnectedToPort(const QString &portName, unsigned int occurence);
-
-	/* If there are multiple ports with the same name, the nodes can also be
-	 * returned as a vector */
-	QVector<QtNode*> getNodesConnectedToPorts(const QString &portName);
-
-	/* Return the port that is connected to the port of 'this' node.
-	 * Returns nullptr if there is no connection */
-	QtPort *getPortConnectedToPort(QtPort *port);
-
-	/* Return the port that is connected to the port of 'this' node.
-	 * Returns nullptr if there is no connection */
-	QtPort *getPortConnectedToPort(const QString &portName);
-
-	/* Return the port that is connected to the port of 'this' node.
-	 * In case there are multiple ports with the same name, the first occurence
-	 * is returned; use the occurence argument in case of more than one port
-	 * with the same name; occurence starts with 1.
-	 * Returns nullptr if there is no connection */
-	QtPort *getPortConnectedToPort(const QString &portName, unsigned int occurence);
-
-	/* If there are multiple ports with the same name, the ports can also be returned as a vector */
-	QVector<QtPort *> getPortsConnectedToPorts(const QString &portName);
 
 	/* Create an active connection that must be connected to another node (using
 	 * the mouse).
@@ -253,18 +132,6 @@ public:
 	/* Delete all connections, connected to this node */
 	void deleteAllConnections();
 
-	/* Select or deselect all connections; this only applies to finalized
-	 * (established) connections */
-	void selectConnections(bool selected);
-
-	/* Called from the QNodeEditor when either a left mouse click on the action1
-	 * or action2 button has been done. This handler function performs default
-	 * behaviour, but it is possible to overload these functions.
-	 * mouseLeftClickAction1ButtonHandler: Toggle collapse and expand the node
-	 * mouseLeftClickAction2ButtonHandler: Close (delete) the node */
-	virtual void mouseLeftClickAction1ButtonHandler(QGraphicsSceneMouseEvent *mouseEvent, QGraphicsItem *item);
-	virtual void mouseLeftClickAction2ButtonHandler(QGraphicsSceneMouseEvent *mouseEvent, QGraphicsItem *item);
-
 	/* Called from the QNodeEditor when either a left mouse click on the QtNode
 	 * has taken place, or on one of its child QGraphicsItems. The
 	 * mouseLeftClickHandler function performs default behaviour, but it is
@@ -273,22 +140,6 @@ public:
 	                                   QGraphicsItem *item,
 	                                   unsigned int action = 0,
 	                                   QtConnection *activeConnection = nullptr);
-
-	/* Called from the QNodeEditor when either a right mouse click on the QtNode
-	 * has taken place, or on one of its child QGraphicsItems. */
-	virtual bool mouseRightClickHandler(QGraphicsSceneMouseEvent *mouseEvent,
-	                                    QGraphicsItem *item,
-	                                    unsigned int action = 0,
-	                                    QtConnection *activeConnection = nullptr);
-
-	/* Called from the QNodeEditor when either a double click on the QtNode has
-	 * taken place, or on one of its child QGraphicsItems. The
-	 * mouseDoubleClickHandler function performs default behaviour, but it is
-	 * possible to overload this function. */
-	virtual bool mouseDoubleClickHandler(QGraphicsSceneMouseEvent *mouseEvent, QGraphicsItem *item);
-
-	/* Called from the QNodeEditor. */
-	virtual bool mouseMoveHandler(QGraphicsSceneMouseEvent *mouseEvent, QGraphicsItem *item);
 
 	/* Collapse the node (and hide the ports) */
 	void collapse();
@@ -302,18 +153,11 @@ public:
 	QtPort *input(int index) const;
 	QtPort *output(int index) const;
 
-Q_SIGNALS:
-	/* Emitted when the action 1 icon is clicked */
-	void action1Clicked(QtNode*);
-
-	/* Emitted when the action 2 icon is clicked */
-	void action2Clicked(QtNode*);
+	QVector<QtPort *> getPorts() const;
 
 protected:
 	void setTitlePosition();
 	void adjustWidthForTitle();
 	void setPortAlignedPos(QtPort *port, qreal height);
 	void redraw();
-
-	QtPort *getCheckedPortConnectedToPort(QtPort *port);
 };

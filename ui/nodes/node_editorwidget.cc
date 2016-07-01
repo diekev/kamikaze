@@ -56,7 +56,6 @@ static constexpr auto NODE_ENTER_OBJECT = "Enter object";
 static constexpr auto NODE_EXIT_OBJECT = "Exit object";
 static constexpr auto NODE_CONNECT_SELECTED = "Connect selected nodes";
 
-//****************************************************************************/
 static inline bool is_object_node(QGraphicsItem *item)
 {
 	if (item->data(NODE_KEY_GRAPHIC_ITEM_SUBTYPE).isValid()) {
@@ -93,7 +92,6 @@ std::ostream &operator<<(std::ostream &os, const QPointF &point)
 	return os;
 }
 
-//****************************************************************************/
 QtNodeEditor::QtNodeEditor(QWidget *parent)
     : QWidget(parent)
 {
@@ -177,19 +175,16 @@ QtNodeEditor::~QtNodeEditor()
 	delete m_scene_scene;
 }
 
-//****************************************************************************/
 void QtNodeEditor::setContextMenuEnabled(bool enabled)
 {
 	m_context_menu_enabled = enabled;
 }
 
-//****************************************************************************/
 bool QtNodeEditor::isContextMenuEnabled()
 {
 	return m_context_menu_enabled;
 }
 
-//****************************************************************************/
 void QtNodeEditor::setMenuZoomEnabled(bool enabled)
 {
 	m_menu_zoom_enabled = enabled;
@@ -201,13 +196,11 @@ void QtNodeEditor::setMenuZoomEnabled(bool enabled)
 	}
 }
 
-//****************************************************************************/
 bool QtNodeEditor::isMenuZoomEnabled()
 {
 	return m_menu_zoom_enabled;
 }
 
-//****************************************************************************/
 void QtNodeEditor::setMenuCollapseExpandEnabled(bool enabled)
 {
 	m_menu_collapse_expand_enabled = enabled;
@@ -225,13 +218,11 @@ void QtNodeEditor::setMenuCollapseExpandEnabled(bool enabled)
 	}
 }
 
-//****************************************************************************/
 bool QtNodeEditor::isMenuCollapseExpandEnabled()
 {
 	return m_menu_collapse_expand_enabled;
 }
 
-//****************************************************************************/
 QGraphicsItem *QtNodeEditor::itemAtExceptActiveConnection(const QPointF &pos)
 {
 	const auto &items = m_current_scene->items(QRectF(pos - QPointF(1, 1), QSize(3, 3)));
@@ -255,8 +246,6 @@ QGraphicsItem *QtNodeEditor::itemAtExceptActiveConnection(const QPointF &pos)
 
 	return nullptr;
 }
-
-//****************************************************************************/
 
 QtConnection *QtNodeEditor::nodeOverConnection(QtNode *node)
 {
@@ -320,7 +309,6 @@ QtConnection *QtNodeEditor::nodeOverConnection(QtNode *node)
 	return nullptr;
 }
 
-//****************************************************************************/
 bool QtNodeEditor::eventFilter(QObject *object, QEvent *event)
 {
 	auto mouseEvent = static_cast<QGraphicsSceneMouseEvent *>(event);
@@ -343,7 +331,6 @@ bool QtNodeEditor::eventFilter(QObject *object, QEvent *event)
 	return QObject::eventFilter(object, event);
 }
 
-//****************************************************************************/
 bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 {
 	switch (static_cast<int>(mouseEvent->button())) {
@@ -441,7 +428,6 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 	return true;
 }
 
-//****************************************************************************/
 bool QtNodeEditor::mouseDoubleClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 {
 	Q_UNUSED(mouseEvent);
@@ -449,7 +435,6 @@ bool QtNodeEditor::mouseDoubleClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 	return true;
 }
 
-//****************************************************************************/
 bool QtNodeEditor::mouseMoveHandler(QGraphicsSceneMouseEvent *mouseEvent)
 {
 	/* If there was a rubberband selection started, update its rectangle */
@@ -469,10 +454,6 @@ bool QtNodeEditor::mouseMoveHandler(QGraphicsSceneMouseEvent *mouseEvent)
 		}
 	}
 
-	for (const auto &node : selectedNodes()) {
-		node->mouseMoveHandler(mouseEvent, nullptr);
-	}
-
 	if (m_active_connection) {
 		m_active_connection->updatePath(mouseEvent->scenePos());
 	}
@@ -483,7 +464,6 @@ bool QtNodeEditor::mouseMoveHandler(QGraphicsSceneMouseEvent *mouseEvent)
 	return true;
 }
 
-//****************************************************************************/
 bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 {
 	/* Determine whether a node has been dropped on a connection. */
@@ -554,7 +534,6 @@ bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 	return true;
 }
 
-//****************************************************************************/
 void QtNodeEditor::keyPressEvent(QKeyEvent *event)
 {
 	if (event->key() == Qt::Key_Delete) {
@@ -570,7 +549,6 @@ void QtNodeEditor::keyPressEvent(QKeyEvent *event)
 	}
 }
 
-//****************************************************************************/
 void QtNodeEditor::rubberbandSelection(QGraphicsSceneMouseEvent *mouseEvent)
 {
 	/* Mouse is pressed and moves => draw rubberband */
@@ -596,7 +574,6 @@ void QtNodeEditor::rubberbandSelection(QGraphicsSceneMouseEvent *mouseEvent)
 	m_rubber_band->setRect(minX, minY, maxX - minX, maxY - minY);
 }
 
-//****************************************************************************/
 void QtNodeEditor::selectNode(QtNode *node, QGraphicsSceneMouseEvent *mouseEvent)
 {
 	if (!m_rubberband_selection) {
@@ -628,7 +605,6 @@ void QtNodeEditor::selectNode(QtNode *node, QGraphicsSceneMouseEvent *mouseEvent
 	toFront(node);
 }
 
-//****************************************************************************/
 void QtNodeEditor::selectConnection(QtConnection *connection)
 {
 	if (!ctrlPressed()) {
@@ -641,7 +617,6 @@ void QtNodeEditor::selectConnection(QtConnection *connection)
 	}
 }
 
-//****************************************************************************/
 void QtNodeEditor::deselectAll()
 {
 	setCursor(Qt::ArrowCursor);
@@ -650,7 +625,6 @@ void QtNodeEditor::deselectAll()
 	deselectNodes();
 }
 
-//****************************************************************************/
 void QtNodeEditor::deleteAllActiveConnections()
 {
 	const auto &items = m_current_scene->items();
@@ -666,7 +640,6 @@ void QtNodeEditor::deleteAllActiveConnections()
 	m_active_connection = nullptr;
 }
 
-//****************************************************************************/
 void QtNodeEditor::deselectConnections()
 {
 	for (const auto &connection : m_selected_connections) {
@@ -678,7 +651,6 @@ void QtNodeEditor::deselectConnections()
 	m_selected_connections.clear();
 }
 
-//****************************************************************************/
 void QtNodeEditor::deselectNodes()
 {
 	for (const auto &node : m_selected_nodes) {
@@ -690,7 +662,6 @@ void QtNodeEditor::deselectNodes()
 	m_selected_nodes.clear();
 }
 
-//****************************************************************************/
 QtNode *QtNodeEditor::nodeWithActiveConnection()
 {
 	if (!m_active_connection) {
@@ -700,7 +671,6 @@ QtNode *QtNodeEditor::nodeWithActiveConnection()
 	return static_cast<QtNode *>(m_active_connection->getBasePort()->parentItem());
 }
 
-//****************************************************************************/
 void QtNodeEditor::addNode(QtNode *node)
 {
 	node->setEditor(this);
@@ -717,7 +687,6 @@ void QtNodeEditor::addNode(QtNode *node)
 	m_hover_connection = nullptr;
 }
 
-//****************************************************************************/
 QVector<QtNode *> QtNodeEditor::getNodes() const
 {
 	const auto &items = m_current_scene->items();
@@ -735,14 +704,11 @@ QVector<QtNode *> QtNodeEditor::getNodes() const
 	return nodeList;
 }
 
-//****************************************************************************/
 void QtNodeEditor::removeNode(QtNode *node)
 {
 	if (!node) {
 		return;
 	}
-
-	node->prepareDelete();
 
 	if (is_object_node(node)) {
 		Q_EMIT(objectNodeRemoved(static_cast<ObjectNodeItem *>(node)));
@@ -755,8 +721,6 @@ void QtNodeEditor::removeNode(QtNode *node)
 
 	delete node;
 }
-
-//****************************************************************************/
 
 using node_port_pair = std::pair<QtNode *, QtPort *>;
 
@@ -857,7 +821,6 @@ void QtNodeEditor::connectNodes()
 	connectNodes(node_a, port_a, node_b, port_b);
 }
 
-//****************************************************************************/
 void QtNodeEditor::removeAllSelelected()
 {
 	for (auto &connection : m_selected_connections) {
@@ -873,7 +836,6 @@ void QtNodeEditor::removeAllSelelected()
 	m_selected_nodes.clear();
 }
 
-//****************************************************************************/
 void QtNodeEditor::center()
 {
 	const auto &items = m_current_scene->items();
@@ -885,13 +847,11 @@ void QtNodeEditor::center()
 	}
 }
 
-//****************************************************************************/
 void QtNodeEditor::clear()
 {
 	m_current_scene->clear(); /* removes + deletes all items in the scene */
 }
 
-//****************************************************************************/
 QtNode *QtNodeEditor::getLastSelectedNode() const
 {
 	if (m_selected_nodes.empty()) {
@@ -901,13 +861,11 @@ QtNode *QtNodeEditor::getLastSelectedNode() const
 	return m_selected_nodes.back();
 }
 
-//****************************************************************************/
 const QVector<QtNode *> &QtNodeEditor::selectedNodes() const
 {
 	return m_selected_nodes;
 }
 
-//****************************************************************************/
 QtConnection *QtNodeEditor::lastSelectedConnection() const
 {
 	if (m_selected_connections.empty()) {
@@ -917,13 +875,11 @@ QtConnection *QtNodeEditor::lastSelectedConnection() const
 	return m_selected_connections.back();
 }
 
-//****************************************************************************/
 const QVector<QtConnection *> &QtNodeEditor::selectedConnections() const
 {
 	return m_selected_connections;
 }
 
-//****************************************************************************/
 void QtNodeEditor::toFront(QtNode *node)
 {
 	if (!node) {
@@ -956,7 +912,6 @@ void QtNodeEditor::toFront(QtNode *node)
 	}
 }
 
-//****************************************************************************/
 void QtNodeEditor::toBack(QtNode *node)
 {
 	if (!node) {
@@ -973,19 +928,16 @@ void QtNodeEditor::toBack(QtNode *node)
 	}
 }
 
-//****************************************************************************/
 void QtNodeEditor::setZoom(qreal zoom)
 {
 	m_view->scale(zoom, zoom);
 }
 
-//****************************************************************************/
 bool QtNodeEditor::ctrlPressed()
 {
 	return (QGuiApplication::keyboardModifiers() & Qt::ControlModifier);
 }
 
-//****************************************************************************/
 void QtNodeEditor::showContextMenu(const QPoint &pos)
 {
 	if (!m_context_menu) {
@@ -1015,7 +967,6 @@ void QtNodeEditor::showContextMenu(const QPoint &pos)
 	m_context_menu->popup(pos);
 }
 
-//****************************************************************************/
 QAction *QtNodeEditor::getActionFromContextMenu(const QString &actionText)
 {
 	if (!m_context_menu) {
@@ -1032,7 +983,6 @@ QAction *QtNodeEditor::getActionFromContextMenu(const QString &actionText)
 	return nullptr;
 }
 
-//****************************************************************************/
 void QtNodeEditor::setZoomForAction(qreal zoom, QAction *action)
 {
 	setZoom(zoom);
@@ -1040,7 +990,6 @@ void QtNodeEditor::setZoomForAction(qreal zoom, QAction *action)
 	action->setChecked(true);
 }
 
-//****************************************************************************/
 void QtNodeEditor::resetZoomSubmenu()
 {
 	const auto &actions = m_zoom_sub_menu->actions();
@@ -1050,7 +999,6 @@ void QtNodeEditor::resetZoomSubmenu()
 	}
 }
 
-//****************************************************************************/
 void QtNodeEditor::contextMenuItemSelected(QAction *action)
 {
 	/* ---------------- Delete action ---------------- */

@@ -25,9 +25,9 @@
 #include "nodes.h"
 
 #include <kamikaze/mesh.h>
-#include <kamikaze/paramfactory.h>
 #include <kamikaze/primitive.h>
 
+#include "ui/paramfactory.h"
 #include "util/utils_glm.h"
 
 /* ************************************************************************** */
@@ -48,10 +48,6 @@ void OutputNode::process()
 	m_primitive = getInputPrimitive("Primitive");
 }
 
-void OutputNode::setUIParams(ParamCallback *)
-{
-}
-
 /* ************************************************************************** */
 
 TransformNode::TransformNode()
@@ -59,6 +55,43 @@ TransformNode::TransformNode()
 {
 	addInput("Prim");
 	addOutput("Prim");
+
+	EnumProperty xform_enum_prop;
+	xform_enum_prop.insert("Pre Transform", 0);
+	xform_enum_prop.insert("Post Transform", 1);
+
+	add_prop("Transform Order", property_type::prop_enum);
+	set_prop_enum_values(xform_enum_prop);
+
+	EnumProperty rot_enum_prop;
+	rot_enum_prop.insert("X Y Z", 0);
+	rot_enum_prop.insert("X Z Y", 1);
+	rot_enum_prop.insert("Y X Z", 2);
+	rot_enum_prop.insert("Y Z X", 3);
+	rot_enum_prop.insert("Z X Y", 4);
+	rot_enum_prop.insert("Z Y X", 5);
+
+	add_prop("Rotation Order", property_type::prop_enum);
+	set_prop_enum_values(rot_enum_prop);
+
+	add_prop("Translate", property_type::prop_vec3);
+	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
+
+	add_prop("Rotate", property_type::prop_vec3);
+	set_prop_min_max(0.0f, 360.0f);
+	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
+
+	add_prop("Scale", property_type::prop_vec3);
+	set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
+
+	add_prop("Pivot", property_type::prop_vec3);
+	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
+
+	add_prop("Uniform Scale", property_type::prop_float);
+	set_prop_min_max(0.0f, 1000.0f);
+	set_prop_default_value_float(1.0f);
+
+	add_prop("Invert Transformation", property_type::prop_bool);
 }
 
 void TransformNode::process()
@@ -70,7 +103,13 @@ void TransformNode::process()
 		return;
 	}
 
-	auto scale = m_scale * m_uniform_scale;
+	const auto translate = eval_vec3("Translate");
+	const auto rotate = eval_vec3("Rotate");
+	const auto scale = eval_vec3("Scale");
+	const auto pivot = eval_vec3("Pivot");
+	const auto uniform_scale = eval_float("Uniform Scale");
+	const auto transform_type = eval_int("Transform Order");
+	const auto rot_order = eval_int("Rotation Order");
 
 	/* determine the rotatation order */
 	int rot_ord[6][3] = {
@@ -88,31 +127,31 @@ void TransformNode::process()
 	    glm::vec3(0.0f, 0.0f, 1.0f),
 	};
 
-	const auto X = rot_ord[m_rot_order][0];
-	const auto Y = rot_ord[m_rot_order][1];
-	const auto Z = rot_ord[m_rot_order][2];
+	const auto X = rot_ord[rot_order][0];
+	const auto Y = rot_ord[rot_order][1];
+	const auto Z = rot_ord[rot_order][2];
 
 	auto matrix = glm::mat4(1.0f);
 
-	switch (m_transform_type) {
+	switch (transform_type) {
 		case 0: /* Pre Transform */
-			matrix = pre_translate(matrix, m_pivot);
-			matrix = pre_rotate(matrix, glm::radians(m_rotate[X]), axis[X]);
-			matrix = pre_rotate(matrix, glm::radians(m_rotate[Y]), axis[Y]);
-			matrix = pre_rotate(matrix, glm::radians(m_rotate[Z]), axis[Z]);
-			matrix = pre_scale(matrix, scale);
-			matrix = pre_translate(matrix, -m_pivot);
-			matrix = pre_translate(matrix, m_translate);
+			matrix = pre_translate(matrix, pivot);
+			matrix = pre_rotate(matrix, glm::radians(rotate[X]), axis[X]);
+			matrix = pre_rotate(matrix, glm::radians(rotate[Y]), axis[Y]);
+			matrix = pre_rotate(matrix, glm::radians(rotate[Z]), axis[Z]);
+			matrix = pre_scale(matrix, scale * uniform_scale);
+			matrix = pre_translate(matrix, -pivot);
+			matrix = pre_translate(matrix, translate);
 			matrix = matrix * prim->matrix();
 			break;
 		case 1: /* Post Transform */
-			matrix = post_translate(matrix, m_pivot);
-			matrix = post_rotate(matrix, glm::radians(m_rotate[X]), axis[X]);
-			matrix = post_rotate(matrix, glm::radians(m_rotate[Y]), axis[Y]);
-			matrix = post_rotate(matrix, glm::radians(m_rotate[Z]), axis[Z]);
-			matrix = post_scale(matrix, scale);
-			matrix = post_translate(matrix, -m_pivot);
-			matrix = post_translate(matrix, m_translate);
+			matrix = post_translate(matrix, pivot);
+			matrix = post_rotate(matrix, glm::radians(rotate[X]), axis[X]);
+			matrix = post_rotate(matrix, glm::radians(rotate[Y]), axis[Y]);
+			matrix = post_rotate(matrix, glm::radians(rotate[Z]), axis[Z]);
+			matrix = post_scale(matrix, scale * uniform_scale);
+			matrix = post_translate(matrix, -pivot);
+			matrix = post_translate(matrix, translate);
 			matrix = prim->matrix() * matrix;
 			break;
 	}
@@ -122,42 +161,22 @@ void TransformNode::process()
 	setOutputPrimitive("Prim", prim);
 }
 
-void TransformNode::setUIParams(ParamCallback *cb)
-{
-	const char *xform_order_items[] = {
-	    "Pre Transform", "Post Transform", nullptr
-	};
-
-	enum_param(cb, "Transform Order", &m_transform_type, xform_order_items, m_transform_type);
-
-	const char *rot_order_items[] = {
-	    "X Y Z",
-	    "X Z Y",
-	    "Y X Z",
-	    "Y Z X",
-	    "Z X Y",
-	    "Z Y X",
-	    nullptr
-	};
-
-	enum_param(cb, "Rotation Order", &m_rot_order, rot_order_items, m_rot_order);
-
-	xyz_param(cb, "Translate", &m_translate[0]);
-	xyz_param(cb, "Rotate", &m_rotate[0], 0.0f, 360.0f);
-	xyz_param(cb, "Scale", &m_scale[0]);
-	xyz_param(cb, "Pivot", &m_pivot[0]);
-
-	float_param(cb, "Uniform Scale", &m_uniform_scale, 0.0f, 1000.0f, m_uniform_scale);
-
-	bool_param(cb, "Invert Transformation", &m_invert, m_invert);
-}
-
 /* ************************************************************************** */
 
 CreateBoxNode::CreateBoxNode()
     : Node("Box")
 {
 	addOutput("Prim");
+
+	add_prop("Size", property_type::prop_vec3);
+	set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
+
+	add_prop("Center", property_type::prop_vec3);
+	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
+
+	add_prop("Uniform Scale", property_type::prop_float);
+	set_prop_min_max(0.0f, 10.0f);
+	set_prop_default_value_float(1.0f);
 }
 
 void CreateBoxNode::process()
@@ -168,6 +187,10 @@ void CreateBoxNode::process()
 	PointList *points = mesh->points();
 	points->reserve(8);
 
+	const auto dimension = eval_vec3("Size");
+	const auto center = eval_vec3("Center");
+	const auto uniform_scale = eval_float("Uniform Scale");
+
 	/* todo: expose this to the UI */
 	const auto &x_div = 2;
 	const auto &y_div = 2;
@@ -175,11 +198,11 @@ void CreateBoxNode::process()
 
 	auto vec = glm::vec3{ 0.0f, 0.0f, 0.0f };
 
-	const auto size = m_size * m_uniform_scale;
+	const auto size = dimension * uniform_scale;
 
-	const auto &start_x = -(size.x / 2.0f) + m_center.x;
-	const auto &start_y = -(size.y / 2.0f) + m_center.y;
-	const auto &start_z = -(size.z / 2.0f) + m_center.z;
+	const auto &start_x = -(size.x / 2.0f) + center.x;
+	const auto &start_y = -(size.y / 2.0f) + center.y;
+	const auto &start_z = -(size.z / 2.0f) + center.z;
 
 	const auto &x_increment = size.x / (x_div - 1);
 	const auto &y_increment = size.y / (y_div - 1);
@@ -213,20 +236,35 @@ void CreateBoxNode::process()
 	setOutputPrimitive("Prim", prim);
 }
 
-void CreateBoxNode::setUIParams(ParamCallback *cb)
-{
-	xyz_param(cb, "Size", &m_size[0]);
-	xyz_param(cb, "Center", &m_center[0]);
-
-	float_param(cb, "Uniform Scale", &m_uniform_scale, 0.0f, 10.0f, m_uniform_scale);
-}
-
 /* ************************************************************************** */
 
 CreateTorusNode::CreateTorusNode()
     : Node("Torus")
 {
 	addOutput("Prim");
+
+	add_prop("Center", property_type::prop_vec3);
+	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
+
+	add_prop("Major Radius", property_type::prop_float);
+	set_prop_min_max(0.0f, 10.0f);
+	set_prop_default_value_float(1.0f);
+
+	add_prop("Minor Radius", property_type::prop_float);
+	set_prop_min_max(0.0f, 10.0f);
+	set_prop_default_value_float(0.25f);
+
+	add_prop("Major Segment", property_type::prop_int);
+	set_prop_min_max(4, 100);
+	set_prop_default_value_int(48);
+
+	add_prop("Minor Segment", property_type::prop_int);
+	set_prop_min_max(4, 100);
+	set_prop_default_value_int(24);
+
+	add_prop("Uniform Scale", property_type::prop_float);
+	set_prop_min_max(0.0f, 10.0f);
+	set_prop_default_value_float(1.0f);
 }
 
 void CreateTorusNode::process()
@@ -234,42 +272,47 @@ void CreateTorusNode::process()
 	Primitive *prim = new Mesh;
 	auto mesh = static_cast<Mesh *>(prim);
 
+	const auto center = eval_vec3("Center");
+	const auto uniform_scale = eval_float("Uniform Scale");
+
+	const auto major_radius = eval_float("Major Radius") * uniform_scale;
+	const auto minor_radius = eval_float("Minor Radius") * uniform_scale;
+	const auto major_segment = eval_int("Major Segment");
+	const auto minor_segment = eval_int("Minor Segment");
+
 	PointList *points = mesh->points();
 	PolygonList *polys = mesh->polys();
 
 	constexpr auto tau = static_cast<float>(M_PI) * 2.0f;
 
-	const auto vertical_angle_stride = tau / static_cast<float>(m_major_segment);
-	const auto horizontal_angle_stride = tau / static_cast<float>(m_minor_segment);
+	const auto vertical_angle_stride = tau / static_cast<float>(major_segment);
+	const auto horizontal_angle_stride = tau / static_cast<float>(minor_segment);
 
 	int f1 = 0, f2, f3, f4;
-	const auto tot_verts = m_major_segment * m_minor_segment;
+	const auto tot_verts = major_segment * minor_segment;
 
 	points->reserve(tot_verts);
 
-	const auto &major_radius = m_major_radius * m_uniform_scale;
-	const auto &minor_radius = m_minor_radius * m_uniform_scale;
-
-	for (int i = 0; i < m_major_segment; ++i) {
+	for (int i = 0; i < major_segment; ++i) {
 		auto theta = vertical_angle_stride * i;
 
-		for (int j = 0; j < m_minor_segment; ++j) {
+		for (int j = 0; j < minor_segment; ++j) {
 			auto phi = horizontal_angle_stride * j;
 
 			auto x = glm::cos(theta) * (major_radius + minor_radius * glm::cos(phi));
 			auto y = minor_radius * glm::sin(phi);
 			auto z = glm::sin(theta) * (major_radius + minor_radius * glm::cos(phi));
 
-			points->push_back(glm::vec3(x, y, z) + m_center);
+			points->push_back(glm::vec3(x, y, z) + center);
 
-			if (j + 1 == m_minor_segment) {
-				f2 = i * m_minor_segment;
-				f3 = f1 + m_minor_segment;
-				f4 = f2 + m_minor_segment;
+			if (j + 1 == minor_segment) {
+				f2 = i * minor_segment;
+				f3 = f1 + minor_segment;
+				f4 = f2 + minor_segment;
 			}
 			else {
 				f2 = f1 + 1;
-				f3 = f1 + m_minor_segment;
+				f3 = f1 + minor_segment;
 				f4 = f3 + 1;
 			}
 
@@ -299,25 +342,26 @@ void CreateTorusNode::process()
 	setOutputPrimitive("Prim", prim);
 }
 
-void CreateTorusNode::setUIParams(ParamCallback *cb)
-{
-	xyz_param(cb, "Center", &m_center[0]);
-
-	float_param(cb, "Major Radius", &m_major_radius, 0.0f, 10.0f, m_major_radius);
-	float_param(cb, "Minor Radius", &m_minor_radius, 0.0f, 10.0f, m_minor_radius);
-
-	int_param(cb, "Major Segment", &m_major_segment, 4, 100, m_major_segment);
-	int_param(cb, "Minor Segment", &m_minor_segment, 4, 100, m_minor_segment);
-
-	float_param(cb, "Uniform Scale", &m_uniform_scale, 0.0f, 10.0f, m_uniform_scale);
-}
-
 /* ************************************************************************** */
 
 CreateGridNode::CreateGridNode()
     : Node("Grid")
 {
 	addOutput("Prim");
+
+	add_prop("Center", property_type::prop_vec3);
+	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
+
+	add_prop("Size", property_type::prop_vec3);
+	set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
+
+	add_prop("Rows", property_type::prop_int);
+	set_prop_min_max(2, 100);
+	set_prop_default_value_int(2);
+
+	add_prop("Columns", property_type::prop_int);
+	set_prop_min_max(2, 100);
+	set_prop_default_value_int(2);
 }
 
 void CreateGridNode::process()
@@ -325,22 +369,28 @@ void CreateGridNode::process()
 	Primitive *prim = new Mesh;
 	auto mesh = static_cast<Mesh *>(prim);
 
-	const auto totpoints = m_rows * m_columns;
+	const auto size = eval_vec3("Size");
+	const auto center = eval_vec3("Center");
+
+	const auto rows = eval_int("Rows");
+	const auto columns = eval_int("Columns");
+
+	const auto totpoints = rows * columns;
 
 	auto points = mesh->points();
 	points->reserve(totpoints);
 
-	auto vec = glm::vec3{ 0.0f, m_center.y, 0.0f };
+	auto vec = glm::vec3{ 0.0f, center.y, 0.0f };
 
-	const auto &x_increment = m_size.x / (m_rows - 1);
-	const auto &y_increment = m_size.y / (m_columns - 1);
-	const auto &start_x = -(m_size.x / 2.0f) + m_center.x;
-	const auto &start_y = -(m_size.y / 2.0f) + m_center.z;
+	const auto &x_increment = size.x / (rows - 1);
+	const auto &y_increment = size.y / (columns - 1);
+	const auto &start_x = -(size.x / 2.0f) + center.x;
+	const auto &start_y = -(size.y / 2.0f) + center.z;
 
-	for (auto y = 0; y < m_columns; ++y) {
+	for (auto y = 0; y < columns; ++y) {
 		vec[2] = start_y + y * y_increment;
 
-		for (auto x = 0; x < m_rows; ++x) {
+		for (auto x = 0; x < rows; ++x) {
 			vec[0] = start_x + x * x_increment;
 
 			points->push_back(vec);
@@ -352,15 +402,15 @@ void CreateGridNode::process()
 	auto quad = glm::ivec4{ 0, 0, 0, 0 };
 
 	/* make a copy for the lambda */
-	const auto xtot = m_rows;
+	const auto xtot = rows;
 
 	auto index = [&xtot](const int x, const int y)
 	{
 		return x + y * xtot;
 	};
 
-	for (auto y = 1; y < m_columns; ++y) {
-		for (auto x = 1; x < m_rows; ++x) {
+	for (auto y = 1; y < columns; ++y) {
+		for (auto x = 1; x < rows; ++x) {
 			quad[0] = index(x - 1, y - 1);
 			quad[1] = index(x,     y - 1);
 			quad[2] = index(x,     y    );
@@ -373,15 +423,6 @@ void CreateGridNode::process()
 	mesh->tagUpdate();
 
 	setOutputPrimitive("Prim", prim);
-}
-
-void CreateGridNode::setUIParams(ParamCallback *cb)
-{
-	xyz_param(cb, "Center", &m_center[0]);
-	xyz_param(cb, "Size", &m_size[0]);
-
-	int_param(cb, "Rows", &m_rows, 2, 100, m_rows);
-	int_param(cb, "Columns", &m_columns, 2, 100, m_columns);
 }
 
 /* ************************************************************************** */

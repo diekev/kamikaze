@@ -23,85 +23,63 @@
 #include "node_node.h"
 #include "node_port.h"
 
-//****************************************************************************/
 QtConnection::QtConnection(QtPort *basePort, QGraphicsPathItem *parent)
     : QGraphicsPathItem(parent)
+    , m_base_port(basePort)
 {
 	setPen(QPen(Qt::black, 3));
 	setBrush(Qt::NoBrush);
-	m_target_port = nullptr;
-	m_base_port = basePort;
-	m_color = Qt::black;
 }
 
-//****************************************************************************/
 void QtConnection::setSelected(bool selected)
 {
-	if (selected) {
-		setPen(QPen(QColor("#cc7800"), 3));
-	}
-	else {
-		setPen(QPen(m_color, 3));
-	}
+	setPen(QPen((selected) ? QColor("#cc7800") : m_color, 3));
 }
 
-//****************************************************************************/
 void QtConnection::setBasePort(QtPort *basePort)
 {
 	m_base_port = basePort;
 }
 
-//****************************************************************************/
 QtPort *QtConnection::getBasePort() const
 {
 	return m_base_port;
 }
 
-//****************************************************************************/
 void QtConnection::setTargetPort(QtPort *targetPort)
 {
 	m_target_port = targetPort;
 }
 
-//****************************************************************************/
 QtPort *QtConnection::getTargetPort() const
 {
 	return m_target_port;
 }
 
-//****************************************************************************/
 void QtConnection::updatePath(const QPointF &altTargetPos)
 {
 	prepareGeometryChange();
 
-	QPointF basePos = m_base_port->scenePos();
-	QPointF targetPos;
-
-	if (m_target_port) {
-		targetPos = m_target_port->scenePos();
-	}
-	else {
-		targetPos = altTargetPos;
-	}
+	const auto &basePos = m_base_port->scenePos();
+	const auto &targetPos = (m_target_port) ? m_target_port->scenePos() : altTargetPos;
+	const auto dx = targetPos.x() - basePos.x();
+	const auto dy = targetPos.y() - basePos.y();
+	const auto ctr1 = QPointF(basePos.x() + dx * 0.45, basePos.y() + dy * 0.1);
+	const auto ctr2 = QPointF(basePos.x() + dx * 0.55, basePos.y() + dy * 0.9);
 
 	QPainterPath p;
 	p.moveTo(basePos);
-	qreal dx = targetPos.x() - basePos.x();
-	qreal dy = targetPos.y() - basePos.y();
-	QPointF ctr1(basePos.x() + dx * 0.45, basePos.y() + dy * 0.1);
-	QPointF ctr2(basePos.x() + dx * 0.55, basePos.y() + dy * 0.9);
 	p.cubicTo(ctr1, ctr2, targetPos);
+
 	setPath(p);
 }
 
-//****************************************************************************/
 void QtConnection::setColor(const QColor &color)
 {
 	m_color = color;
 	setPen(QPen(m_color, 3));
 }
 
-//****************************************************************************/
 bool QtConnection::isNodeConnectedToThisConnection(QtNode *node)
 {
 	if (m_base_port) {

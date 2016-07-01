@@ -119,14 +119,14 @@ StringParam::StringParam(QWidget *parent)
 	connect(this, SIGNAL(textChanged(const QString &)), this, SLOT(updateValuePtr(const QString &)));
 }
 
-void StringParam::valuePtr(QString *ptr)
+void StringParam::valuePtr(std::string *ptr)
 {
 	m_value_ptr = ptr;
 }
 
 void StringParam::updateValuePtr(const QString &value)
 {
-	*m_value_ptr = value;
+	*m_value_ptr = value.toStdString();
 	Q_EMIT(paramChanged());
 }
 
@@ -153,8 +153,8 @@ void XYZParam::updateValuePtr(double value, int axis)
 
 /* ********************************** */
 
-FileParam::FileParam(QWidget *parent)
-    : FileSelector(parent)
+FileParam::FileParam(bool input, QWidget *parent)
+    : FileSelector(input, parent)
     , m_value_ptr(nullptr)
 {
 	connect(this, SIGNAL(textChanged(const QString &)), this, SLOT(updateValuePtr(const QString &)));

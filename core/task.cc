@@ -22,49 +22,51 @@
  *
  */
 
-#pragma once
+#include "task.h"
 
-#include <glm/glm.hpp>
+#include "ui/mainwindow.h"
 
-#include <kamikaze/nodes.h>
+/* ************************ */
 
-void register_builtin_nodes(NodeFactory *factory);
+TaskNotifier::TaskNotifier(MainWindow *window)
+{
+	if (!window) {
+		return;
+	}
 
-class OutputNode : public Node {
-	Primitive *m_primitive = nullptr;
+	connect(this, SIGNAL(startTask()), window, SLOT(taskStarted()));
+	connect(this, SIGNAL(updateProgress(float)), window, SLOT(updateProgress(float)));
+	connect(this, SIGNAL(endTask()), window, SLOT(taskEnded()));
+}
 
-public:
-	OutputNode(const std::string &name);
+void TaskNotifier::signalStart()
+{
+	Q_EMIT(startTask());
+}
 
-	Primitive *primitive() const;
+void TaskNotifier::signalProgressUpdate(float progress)
+{
+	Q_EMIT(updateProgress(progress));
+}
 
-	void process() override;
-};
+void TaskNotifier::signalEnd()
+{
+	Q_EMIT(endTask());
+}
 
-class TransformNode : public Node {
-public:
-	TransformNode();
+/* ************************ */
 
-	void process() override;
-};
+Task::Task(MainWindow *window)
+    : m_notifier(new TaskNotifier(window))
+{}
 
-class CreateBoxNode : public Node {
-public:
-	CreateBoxNode();
+tbb::task *Task::execute()
+{
+	m_notifier->signalStart();
 
-	void process() override;
-};
+	this->start();
 
-class CreateTorusNode : public Node {
-public:
-	CreateTorusNode();
+	m_notifier->signalEnd();
 
-	void process() override;
-};
-
-class CreateGridNode : public Node {
-public:
-	CreateGridNode();
-
-	void process() override;
-};
+	return nullptr;
+}

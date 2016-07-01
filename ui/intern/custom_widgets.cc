@@ -202,11 +202,12 @@ void XYZSpinBox::setMinMax(float min, float max) const
 
 /* ********************************** */
 
-FileSelector::FileSelector(QWidget *parent)
+FileSelector::FileSelector(bool input, QWidget *parent)
     : QWidget(parent)
     , m_layout(new QHBoxLayout(this))
     , m_line_edit(new QLineEdit(this))
     , m_push_button(new QPushButton("Open File", this))
+    , m_input(input)
 {
 	m_layout->addWidget(m_line_edit);
 	m_layout->addWidget(m_push_button);
@@ -223,7 +224,8 @@ void FileSelector::setValue(const QString &text)
 
 void FileSelector::setChoosenFile()
 {
-	const auto filename = QFileDialog::getSaveFileName(this);
+	const auto filename = m_input ? QFileDialog::getOpenFileName(this)
+	                              : QFileDialog::getSaveFileName(this);
 
 	if (!filename.isEmpty()) {
 		m_line_edit->setText(filename);

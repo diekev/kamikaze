@@ -28,11 +28,15 @@
 #include <vector>
 
 #include <glm/glm.hpp>
+#include <memory>
 
 class Graph;
 class Node;
 class ParamCallback;
 class Primitive;
+class MainWindow;
+
+#include "ui/mainwindow.h"
 
 /**
  * This class is used to gather and release the primitives created inside of an
@@ -59,7 +63,7 @@ class Object {
 
 	Graph *m_graph;
 
-	QString m_name;
+	std::string m_name;
 
 public:
 	Object();
@@ -77,12 +81,13 @@ public:
 
 	Graph *graph() const;
 
-	void evalGraph(bool force = false);
-
 	void name(const QString &name);
-	const QString &name() const;
+	const QString name() const;
 
 	void setUIParams(ParamCallback *cb);
 
 	void updateMatrix();
+	void clearCache();
 };
+
+void eval_graph(MainWindow *window, Object *ob, bool force);

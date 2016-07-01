@@ -26,8 +26,6 @@ class Object;
 class QtNodeGraphicsScene;
 
 class ObjectNodeItem : public QtNode {
-	Q_OBJECT
-
 	QVector<QtNode *> m_node_list;
 	QtNodeGraphicsScene *m_node_scene;
 	Object *m_object;
@@ -35,10 +33,7 @@ class ObjectNodeItem : public QtNode {
 public:
 	ObjectNodeItem(Object *object, const QString &title, QGraphicsItem *parent = nullptr);
 
-	virtual ~ObjectNodeItem();
-
-	/* Overridden from parent */
-	virtual void prepareDelete() override;
+	~ObjectNodeItem();
 
 	/* Add a node to the compound; it becomes invisible.
 	 * Nodes that are connected to the added node, remain connected, but via the
@@ -64,16 +59,5 @@ public:
 
 	QtNodeGraphicsScene *nodeScene() const;
 
-	/* Default behaviour is that the added nodes are released and the compound
-	 * deleted. */
-//	virtual void mouseLeftClickAction2ButtonHandler(QGraphicsSceneMouseEvent *mouseEvent, QGraphicsItem *item);
-
 	Object *object() const;
-
-Q_SIGNALS:
-	/* Emitted when the a node is added to the compound. */
-	void nodeAdded(QtNode *);
-
-	/* Emitted when the a node is removed (not deleted) from the compound. */
-	void nodeRemoved(QtNode *);
 };

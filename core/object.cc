@@ -24,35 +24,17 @@
 
 #include "object.h"
 
+#include <QObject>
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <kamikaze/primitive.h>
-#include <kamikaze/paramfactory.h>
 
 #include "nodes/graph.h"
 #include "nodes/nodes.h"
 
-#include <tbb/task.h>
+#include "ui/paramfactory.h"
 
-class GraphEvalTask : public tbb::task {
-	Object *m_object;
-	Graph *m_graph;
-
-public:
-	GraphEvalTask(Object *object, Graph *graph)
-	    : m_object(object)
-	    , m_graph(graph)
-	{}
-
-	tbb::task *execute() override
-	{
-		m_graph->execute();
-
-		auto output_node = m_graph->output();
-		m_object->primitive(output_node->primitive());
-
-		return nullptr;
-	}
-};
+#include "task.h"
 
 Object::Object()
     : m_graph(new Graph)
@@ -97,43 +79,14 @@ Graph *Object::graph() const
 	return m_graph;
 }
 
-void Object::evalGraph(bool force)
-{
-	if (!force) {
-		return;
-	}
-
-	auto output_node = m_graph->output();
-	output_node->setPrimitiveCache(&m_cache);
-
-	if (!output_node->isLinked()) {
-		m_primitive = nullptr;
-		return;
-	}
-
-	m_graph->build();
-
-	/* XXX */
-	for (Node *node : m_graph->nodes()) {
-		for (OutputSocket *output : node->outputs()) {
-			output->prim = nullptr;
-		}
-	}
-
-	m_cache.clear();
-
-	GraphEvalTask *t = new(tbb::task::allocate_root()) GraphEvalTask(this, this->m_graph);
-	tbb::task::enqueue(*t);
-}
-
 void Object::name(const QString &name)
 {
-	m_name = name;
+	m_name = name.toStdString();
 }
 
-const QString &Object::name() const
+const QString Object::name() const
 {
-	return m_name;
+	return QString::fromStdString(m_name);
 }
 
 void Object::setUIParams(ParamCallback *cb)
@@ -157,6 +110,13 @@ void Object::updateMatrix()
 	m_inv_matrix = glm::inverse(m_matrix);
 }
 
+void Object::clearCache()
+{
+	m_cache.clear();
+}
+
+/* ********************************************* */
+
 void PrimitiveCache::add(Primitive *prim)
 {
 	m_primitives.push_back(prim);
@@ -175,4 +135,74 @@ void PrimitiveCache::clear()
 	}
 
 	m_primitives.clear();
+}
+
+/* ********************************************* */
+
+class GraphEvalTask : public Task {
+	Object *m_object;
+	Graph *m_graph;
+
+public:
+	GraphEvalTask(Object *object, Graph *graph, MainWindow *window);
+
+	void start() override;
+};
+
+GraphEvalTask::GraphEvalTask(Object *object, Graph *graph, MainWindow *window)
+    : Task(window)
+    , m_object(object)
+    , m_graph(graph)
+{}
+
+void GraphEvalTask::start()
+{
+	auto stack = m_graph->finished_stack();
+
+	const auto size = static_cast<float>(stack.size());
+	auto index = 0;
+
+	m_notifier->signalProgressUpdate(0.0f);
+
+	for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter) {
+		Node *node = *iter;
+		node->process();
+
+		const float progress = (++index / size) * 100.0f;
+		m_notifier->signalProgressUpdate(progress);
+	}
+
+	auto output_node = m_graph->output();
+	m_object->primitive(output_node->primitive());
+}
+
+void eval_graph(MainWindow *window, Object *ob, bool force)
+{
+	if (!force) {
+		return;
+	}
+
+	auto graph = ob->graph();
+	auto output_node = graph->output();
+
+	if (!output_node->isLinked()) {
+		output_node->input(0)->prim = nullptr;
+		ob->primitive(nullptr);
+		return;
+	}
+
+	graph->build();
+
+	/* XXX */
+	for (Node *node : graph->nodes()) {
+		for (OutputSocket *output : node->outputs()) {
+			output->prim = nullptr;
+		}
+	}
+
+	ob->primitive(nullptr);
+	ob->clearCache();
+
+	GraphEvalTask *t = new(tbb::task::allocate_root()) GraphEvalTask(ob, graph, window);
+	tbb::task::enqueue(*t);
 }
