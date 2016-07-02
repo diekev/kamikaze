@@ -28,18 +28,11 @@
 
 #include "../util/util_render.h"
 
-class Brush;
 class Node;
 class Object;
 class QListWidget;
 class QListWidgetItem;
-//class SmokeSimulation;
 class ViewerContext;
-
-enum {
-	SCENE_MODE_OBJECT = 0,
-	SCENE_MODE_SCULPT = 1,
-};
 
 class Scene : public QObject {
 	Q_OBJECT
@@ -61,7 +54,6 @@ public:
 	void render(ViewerContext *context);
 	void intersect(const Ray &ray);
 
-	int mode() const;
 	void selectObject(const glm::vec3 &pos);
 	void objectNameList(QListWidget *widget) const;
 
@@ -70,11 +62,8 @@ public:
 	void updateForNewFrame();
 
 public Q_SLOTS:
-	void setMode(int mode);
-
 	void setObjectName(const QString &name);
 	void tagObjectUpdate();
-	void evalObjectGraph();
 
 	void setCurrentObject(QListWidgetItem *item);
 	void setActiveObject(Object *object);

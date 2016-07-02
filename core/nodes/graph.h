@@ -44,26 +44,15 @@ public:
 	~Graph();
 
 	void add(Node *node);
+	void remove(Node *node);
+
 	void connect(OutputSocket *from, InputSocket *to);
 	void disconnect(OutputSocket *from, InputSocket *to);
 
 	void build();
-	void execute();
 
 	OutputNode *output() const;
 
 	const std::vector<Node *> &nodes() const;
-};
-
-class OutputNode : public Node {
-	Primitive *m_primitive = nullptr;
-
-public:
-	OutputNode(const std::string &name);
-
-	Primitive *primitive() const;
-
-	void process() override;
-
-	void setUIParams(ParamCallback */*cb*/) override;
+	const std::vector<Node *> &finished_stack() const;
 };

@@ -50,6 +50,12 @@ public:
 	const glm::vec3 &operator[](size_t i) const;
 };
 
+/**
+ * @brief INVALID_INDEX Marker used to indicate that a polygon is a triangle,
+ *                      e.g. poly[3] = INVALID_INDEX.
+ */
+static constexpr auto INVALID_INDEX = std::numeric_limits<unsigned int>::max();
+
 class PolygonList {
 	std::vector<glm::ivec4> m_polys{};
 

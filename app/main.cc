@@ -23,7 +23,7 @@
  */
 
 #include <QApplication>
-#include <QFileInfo>
+#include <QSplashScreen>
 
 #include "core/kamikaze_main.h"
 #include "ui/mainwindow.h"
@@ -34,12 +34,28 @@ int main(int argc, char *argv[])
 	QCoreApplication::setOrganizationName("giraffeenfeu");
 	QCoreApplication::setApplicationName("Kamikaze");
 
+	auto pixmap = QPixmap(600, 600);
+	pixmap.fill(Qt::gray);
+
+	auto splash = new QSplashScreen(pixmap);
+	splash->show();
+
+	qApp->processEvents(QEventLoop::AllEvents);
+
 	Main main;
+
+	splash->showMessage("Initializing types...");
+	main.initTypes();
+
+	splash->showMessage("Loading plugins...");
 	main.loadPlugins();
 
 	MainWindow w(&main);
 	w.setWindowTitle(QCoreApplication::applicationName());
 	w.showMaximized();
+
+	splash->finish(&w);
+	delete splash;
 
 	return a.exec();
 }

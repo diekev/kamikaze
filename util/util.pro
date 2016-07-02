@@ -36,4 +36,5 @@ HEADERS += \
     util_input.h \
     util_render.h \
     util_string.h \
-    util_memory.h
+    util_memory.h \
+    utils_glm.h

@@ -22,27 +22,76 @@
  *
  */
 
-#pragma once
+#include "any.h"
 
-#include <vector>
-#include <utils/filesystem.h>
+any::any(const any &other)
+    : any()
+{
+	if (other.dt) {
+		dt = other.dt->copy();
+	}
+}
 
-class PrimitiveFactory;
-class NodeFactory;
+any::any(any &&other) noexcept
+    : any()
+{
+	std::swap(this->dt, other.dt);
+}
 
-class Main final {
-	PrimitiveFactory *m_object_factory;
-	NodeFactory *m_node_factory;
+any::~any()
+{
+	clear();
+}
 
-	std::vector<filesystem::shared_library> m_plugins;
+any &any::operator=(any &&other) noexcept
+{
+	this->swap(other);
+	return *this;
+}
 
-public:
-	Main();
-	~Main();
+void any::clear()
+{
+	delete dt;
+	dt = nullptr;
+}
 
-	void initTypes();
-	void loadPlugins();
+void any::swap(any &other) noexcept
+{
+	std::swap(this->dt, other.dt);
+}
 
-	PrimitiveFactory *objectFactory() const;
-	NodeFactory *nodeFactory() const;
-};
+bool any::empty() const noexcept
+{
+	return dt == nullptr;
+}
+
+const std::type_info &any::type() const noexcept
+{
+	if (this->empty()) {
+		return typeid(void);
+	}
+
+	return dt->type();
+}
+
+any &any::operator=(const any &other)
+{
+	if (&other == this) {
+		return *this;
+	}
+
+	if (!this->empty()) {
+		this->clear();
+	}
+
+	if (other.dt) {
+		this->dt = other.dt->copy();
+	}
+
+	return *this;
+}
+
+const char *bad_any_cast::what() const noexcept
+{
+	return "Bad any_cast\n";
+}

@@ -25,6 +25,7 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QProgressBar>
 
 #include "core/undo.h"
 
@@ -37,12 +38,13 @@ class QtNode;
 class Command;
 class CommandManager;
 class Main;
-class Primitive;
 class Node;
 class Object;
 class ObjectNodeItem;
+class Primitive;
 class QComboBox;
 class QListWidget;
+class QProgressBar;
 class QTimer;
 class Scene;
 
@@ -50,6 +52,7 @@ class MainWindow : public QMainWindow {
 	Q_OBJECT
 
 	Ui::MainWindow *ui;
+	QProgressBar *m_progress_bar;
 
 	Main *m_main;
 
@@ -58,12 +61,16 @@ class MainWindow : public QMainWindow {
 	CommandManager *m_command_manager;
 	CommandFactory *m_command_factory;
 	bool m_timer_has_started;
-	QComboBox *m_scene_mode_box;
-	QListWidget *m_scene_mode_list;
 
 public:
 	explicit MainWindow(Main *main, QWidget *parent = nullptr);
 	~MainWindow();
+
+public Q_SLOTS:
+	/* Progress Bar */
+	void taskStarted();
+	void updateProgress(float progress);
+	void taskEnded();
 
 protected:
 	bool eventFilter(QObject *obj, QEvent *e);
@@ -71,25 +78,33 @@ protected:
 private:
 	void generateObjectMenu();
 	void generateNodeMenu();
+	void generatePresetMenu();
 
 private Q_SLOTS:
-	void updateObjectTab() const;
+	/* Timeline */
 	void startAnimation();
 	void updateFrame() const;
 	void setStartFrame(int value) const;
 	void setEndFrame(int value) const;
-	void setSceneMode(int idx) const;
 	void goToStartFrame() const;
 	void goToEndFrame() const;
+
+	/* Undo & commands */
 	void undo() const;
 	void redo() const;
 	void handleCommand();
-	void handleObjectCommand();
+
+	/* Generic object actions */
+	void setupObjectUI(Object *);
+	void updateObjectTab() const;
+
+	/* Nodes */
 	void setupNodeUI(Object *, Node *node);
 	void setupNodeParamUI(QtNode *node_item);
-	void setupObjectUI(Object *);
 	void setActiveObject(ObjectNodeItem *);
 	void removeObject(ObjectNodeItem *node);
+	void removeNode(QtNode *node);
 	void nodesConnected(QtNode *, const QString &, QtNode *, const QString &);
 	void connectionRemoved(QtNode *, const QString &, QtNode *, const QString &);
+	void evalObjectGraph();
 };

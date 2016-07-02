@@ -26,21 +26,18 @@
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "paramfactory.h"
-
-#include "ui/paramcallback.h"
-
-#include "util/util_render.h"
+#include "ui/paramfactory.h"  /* XXX - bad level call */
+#include "util/util_render.h"  /* XXX - bad level call */
 
 bool Primitive::intersect(const Ray &ray, float &min) const
 {
-	glm::vec3 inv_dir = 1.0f / ray.dir;
-	glm::vec3 t_min = (m_min - ray.pos) * inv_dir;
-	glm::vec3 t_max = (m_max - ray.pos) * inv_dir;
-	glm::vec3 t1 = glm::min(t_min, t_max);
-	glm::vec3 t2 = glm::max(t_min, t_max);
-	float t_near = glm::max(t1.x, glm::max(t1.y, t1.z));
-	float t_far = glm::min(t2.x, glm::min(t2.y, t2.z));
+	const auto inv_dir = 1.0f / ray.dir;
+	const auto t_min = (m_min - ray.pos) * inv_dir;
+	const auto t_max = (m_max - ray.pos) * inv_dir;
+	const auto t1 = glm::min(t_min, t_max);
+	const auto t2 = glm::max(t_min, t_max);
+	const auto t_near = glm::max(t1.x, glm::max(t1.y, t1.z));
+	const auto t_far = glm::min(t2.x, glm::min(t2.y, t2.z));
 
 	if (t_near < t_far && t_near < min) {
 		min = t_near;
@@ -48,19 +45,6 @@ bool Primitive::intersect(const Ray &ray, float &min) const
 	}
 
 	return false;
-}
-
-void Primitive::setDrawType(int draw_type)
-{
-	switch (draw_type) {
-		case DRAW_WIRE:
-			m_draw_type = GL_LINES;
-			break;
-		default:
-		case DRAW_SOLID:
-			m_draw_type = GL_TRIANGLES;
-			break;
-	}
 }
 
 void Primitive::drawBBox(const bool b)
@@ -111,17 +95,7 @@ glm::vec3 &Primitive::rotation()
 	return m_rotation;
 }
 
-void Primitive::flags(object_flags flags)
-{
-	m_flags = flags;
-}
-
-object_flags Primitive::flags() const
-{
-	return m_flags;
-}
-
-glm::mat4 Primitive::matrix() const
+const glm::mat4 &Primitive::matrix() const
 {
 	return m_matrix;
 }
@@ -131,11 +105,15 @@ glm::mat4 &Primitive::matrix()
 	return m_matrix;
 }
 
+void Primitive::matrix(const glm::mat4 &m)
+{
+	m_matrix = m;
+	m_inv_matrix = glm::inverse(m);
+}
+
 void Primitive::update()
 {
 	if (m_need_update) {
-		updateMatrix();
-
 		m_bbox.reset(new Cube(m_min, m_max));
 		m_need_update = false;
 	}
@@ -144,31 +122,17 @@ void Primitive::update()
 void Primitive::tagUpdate()
 {
 	m_need_update = true;
-}
-
-void Primitive::updateMatrix()
-{
-	m_min = m_pos - m_dimensions / 2.0f;
-	m_max = m_min + m_dimensions;
-
-	m_matrix = glm::mat4(1.0f);
-	m_matrix = glm::translate(m_matrix, m_pos);
-	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-	m_matrix = glm::scale(m_matrix, m_scale * m_dimensions);
-
-	m_inv_matrix = glm::inverse(m_matrix);
+	m_need_data_update = true;
 }
 
 QString Primitive::name() const
 {
-	return m_name;
+	return QString::fromStdString(m_name);
 }
 
 void Primitive::name(const QString &name)
 {
-	m_name = name;
+	m_name = name.toStdString();
 }
 
 void Primitive::setUIParams(ParamCallback *cb)

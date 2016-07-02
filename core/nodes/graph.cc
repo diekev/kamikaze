@@ -28,6 +28,7 @@
 #include <iostream>
 
 #include "graph_dumper.h"
+#include "nodes.h"
 
 //#define DEBUG_GRAPH
 
@@ -54,14 +55,40 @@ void Graph::add(Node *node)
 	m_nodes.push_back(node);
 }
 
+void Graph::remove(Node *node)
+{
+	auto iter = std::find(m_nodes.begin(), m_nodes.end(), node);
+
+	if (iter == m_nodes.end()) {
+		std::cerr << "Unable to find node in graph!\n";
+		return;
+	}
+
+	/* disconnect inputs */
+	for (InputSocket *input : node->inputs()) {
+		if (input->link) {
+			disconnect(input->link, input);
+		}
+	}
+
+	/* disconnect outputs */
+	for (OutputSocket *output : node->outputs()) {
+		for (InputSocket *input : output->links) {
+			disconnect(output, input);
+		}
+	}
+
+	delete node;
+	m_nodes.erase(iter);
+
+	m_need_update = true;
+}
+
 void Graph::build()
 {
 	if (!m_need_update) {
 		return;
 	}
-
-	m_stack.clear();
-	m_stack.reserve(m_nodes.size());
 
 	topology_sort();
 
@@ -82,32 +109,34 @@ void Graph::build()
 
 void Graph::topology_sort()
 {
+	m_stack.clear();
+	m_stack.reserve(m_nodes.size());
+
 	/* 1. store each node degree in an array */
 	std::vector<Node *> stack;
+	std::unordered_map<Node *, std::pair<int, bool>> node_degrees;
 
-	std::vector<int> degrees(m_nodes.size());
-	std::vector<bool> resolved(m_nodes.size());
-	Node *node;
 	int degree;
 
-	for (size_t i = 0; i < m_nodes.size(); ++i) {
-		node = m_nodes[i];
-		degree = 0;
+	for (Node *node : m_nodes) {
+		if (!node->isLinked()) {
+			continue;
+		}
 
 		/* 2. initialize a stack with all out-degree zero nodes */
 		if (node->outputs().size() == 0) {
-			stack.push_back(m_nodes[i]);
-			degrees[i] = -1;
-			resolved[i] = true;
+			stack.push_back(node);
+			node_degrees[node] = std::make_pair(-1, true);
 			continue;
 		}
+
+		degree = 0;
 
 		for (OutputSocket *socket : node->outputs()) {
 			degree += socket->links.size();
 		}
 
-		degrees[i] = degree;
-		resolved[i] = false;
+		node_degrees[node] = std::make_pair(degree, false);
 	}
 
 	/* 3. While there are vertices remaining in the stack:
@@ -115,6 +144,7 @@ void Graph::topology_sort()
 	 *   - Reduce out-degree of all vertices adjacent to it by 1
 	 *   - Enqueue any of these nodes whose out-degree became zero
 	 */
+	Node *node;
 	while (!stack.empty()) {
 		node = stack.back();
 		m_stack.push_back(node);
@@ -125,34 +155,25 @@ void Graph::topology_sort()
 				continue;
 			}
 
-			auto iter = std::find(m_nodes.begin(), m_nodes.end(), socket->link->parent);
+			auto &degree_pair = node_degrees[socket->link->parent];
 
-			if (iter == m_nodes.end()) {
+			if (degree_pair.second) {
 				continue;
 			}
 
-			auto index = std::distance(m_nodes.begin(), iter);
+			degree_pair.first -= 1;
 
-			if (resolved[index]) {
-				continue;
-			}
-
-			degrees[index] -= 1;
-
-			if (degrees[index] == 0) {
-				stack.push_back(m_nodes[index]);
-				resolved[index] = true;
+			if (degree_pair.first == 0) {
+				stack.push_back(socket->link->parent);
+				degree_pair.second = true;
 			}
 		}
 	}
 }
 
-void Graph::execute()
+const std::vector<Node *> &Graph::finished_stack() const
 {
-	for (auto iter = m_stack.rbegin(); iter != m_stack.rend(); ++iter) {
-		Node *node = *iter;
-		node->process();
-	}
+	return m_stack;
 }
 
 OutputNode *Graph::output() const
@@ -186,26 +207,4 @@ void Graph::disconnect(OutputSocket *from, InputSocket *to)
 	to->link = nullptr;
 
 	m_need_update = true;
-}
-
-/* ****************************** output node ******************************* */
-
-OutputNode::OutputNode(const std::string &name)
-    : Node(name)
-{
-	addInput("Primitive");
-}
-
-Primitive *OutputNode::primitive() const
-{
-	return m_primitive;
-}
-
-void OutputNode::process()
-{
-	m_primitive = getInputPrimitive("Primitive");
-}
-
-void OutputNode::setUIParams(ParamCallback *)
-{
 }

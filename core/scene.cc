@@ -39,7 +39,6 @@
 
 Scene::Scene()
     : m_active_object(nullptr)
-    , m_mode(SCENE_MODE_OBJECT)
 {}
 
 Scene::~Scene()
@@ -78,7 +77,7 @@ void Scene::removeObject(Object *ob)
 		m_active_object = nullptr;
 	}
 
-	Q_EMIT objectChanged();
+	Q_EMIT(objectChanged());
 }
 
 void Scene::addObject(Object *object)
@@ -91,7 +90,7 @@ void Scene::addObject(Object *object)
 	m_objects.push_back(object);
 	m_active_object = object;
 
-	Q_EMIT objectAdded(object);
+	Q_EMIT(objectAdded(object));
 }
 
 void Scene::render(ViewerContext *context)
@@ -107,10 +106,14 @@ void Scene::render(ViewerContext *context)
 
 		/* update prim before drawing */
 		prim->update();
+		prim->prepareRenderData();
 
 		if (prim->drawBBox()) {
 			prim->bbox()->render(context, false);
 		}
+
+		auto primmat = prim->matrix();
+		prim->matrix() = object->matrix() * primmat;
 
 		prim->render(context, false);
 
@@ -120,12 +123,11 @@ void Scene::render(ViewerContext *context)
 			glDisable(GL_DEPTH_TEST);
 
 			/* scale up the object a bit */
-			glm::mat4 obmat = prim->matrix();
-			prim->matrix() = glm::scale(obmat, glm::vec3(1.01f));
+			prim->matrix() = glm::scale(prim->matrix(), glm::vec3(1.01f));
 
 			prim->render(context, true);
 
-			prim->matrix() = obmat;
+			prim->matrix() = primmat;
 
 			/* restore */
 			glStencilFunc(GL_ALWAYS, 1, 0xff);
@@ -161,18 +163,8 @@ void Scene::selectObject(const glm::vec3 &pos)
 
 	if (selected_object != -1 && m_active_object != m_objects[selected_object]) {
 		m_active_object = m_objects[selected_object];
-		Q_EMIT objectChanged();
+		Q_EMIT(objectChanged());
 	}
-}
-
-int Scene::mode() const
-{
-	return m_mode;
-}
-
-void Scene::setMode(int mode)
-{
-	m_mode = mode;
 }
 
 Object *Scene::currentObject()
@@ -194,7 +186,7 @@ void Scene::setObjectName(const QString &name)
 
 	if (name_changed) {
 		m_active_object->name(copy);
-		Q_EMIT objectChanged(); // XXX - hack to update the tab and outliner
+		Q_EMIT(objectChanged()); // XXX - hack to update the tab and outliner
 	}
 	else {
 		m_active_object->name(name);
@@ -204,20 +196,17 @@ void Scene::setObjectName(const QString &name)
 void Scene::tagObjectUpdate()
 {
 	if (m_active_object) {
-		m_active_object->primitive()->tagUpdate();
-	}
-}
+		m_active_object->updateMatrix();
 
-void Scene::evalObjectGraph()
-{
-	if (m_active_object) {
-		m_active_object->evalGraph(true);
+		if (m_active_object->primitive()) {
+			m_active_object->primitive()->tagUpdate();
+		}
 	}
 }
 
 void Scene::emitNodeAdded(Object *ob, Node *node)
 {
-	Q_EMIT nodeAdded(ob, node);
+	Q_EMIT(nodeAdded(ob, node));
 }
 
 void Scene::objectNameList(QListWidget *widget) const
@@ -252,13 +241,13 @@ void Scene::setCurrentObject(QListWidgetItem *item)
 		}
 	}
 
-	Q_EMIT objectChanged();
+	Q_EMIT(objectChanged());
 }
 
 void Scene::setActiveObject(Object *object)
 {
 	m_active_object = object;
-	Q_EMIT objectChanged();
+	Q_EMIT(objectChanged());
 }
 
 void Scene::updateForNewFrame()
@@ -266,7 +255,7 @@ void Scene::updateForNewFrame()
 	/* TODO: dependency graph */
 
 	for (Object *object : m_objects) {
-		/* TODO: replace with proper update method? */
-		object->evalGraph();
+		/* TODO: replace with proper update method */
+		eval_graph(nullptr, object, false);
 	}
 }

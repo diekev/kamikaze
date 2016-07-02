@@ -27,7 +27,11 @@
 #include <kamikaze/context.h>
 #include <kamikaze/nodes.h>
 #include <kamikaze/primitive.h>
-#include <kamikaze/paramfactory.h>
+
+#include "ui/paramfactory.h"
+
+#include "nodes/graph.h"
+#include "nodes/nodes.h"
 
 #include "object.h"
 #include "scene.h"
@@ -47,8 +51,8 @@ void AddObjectCmd::execute(EvaluationContext *context)
 
 	m_object = new Object;
 
-	Primitive *prim = (*context->object_factory)(m_name);
-	m_object->primitive(prim);
+//	Primitive *prim = (*context->object_factory)(m_name);
+//	m_object->primitive(prim);
 
 	assert(m_object != nullptr);
 	m_object->name(m_name.c_str());
@@ -112,87 +116,38 @@ Command *AddNodeCmd::registerSelf()
 	return new AddNodeCmd;
 }
 
-/* *************************** load object command ************************** */
+/* **************************** add torus command **************************** */
 
-# if 0
-LoadFromFileCmd::LoadFromFileCmd(Scene *scene, const QString &filename)
-    : m_scene(scene)
-    , m_object(nullptr)
-    , m_filename(filename)
-    , m_was_undone(false)
-{}
-
-LoadFromFileCmd::~LoadFromFileCmd()
-{
-	if (m_was_undone) {
-		delete m_object;
-	}
-}
-
-void LoadFromFileCmd::execute(EvaluationContext *context)
+void AddPresetObjectCmd::execute(EvaluationContext *context)
 {
 	m_scene = context->scene;
+	m_object = new Object;
 
-	using openvdb::FloatGrid;
-	using openvdb::Vec3s;
+	assert(m_object != nullptr);
 
-	openvdb::initialize();
-	openvdb::io::File file(m_filename.toStdString());
+	m_object->name(m_name.c_str());
 
-	if (!file.open()) {
-		std::cerr << "Unable to open file \'" << m_filename.toStdString() << "\'\n";
-		return;
-	}
+	auto node = (*context->node_factory)(m_name);
+	m_object->addNode(node);
 
-	FloatGrid::Ptr grid;
-
-	if (file.hasGrid(openvdb::Name("Density"))) {
-		grid = openvdb::gridPtrCast<FloatGrid>(file.readGrid(openvdb::Name("Density")));
-	}
-	else if (file.hasGrid(openvdb::Name("density"))) {
-		grid = openvdb::gridPtrCast<FloatGrid>(file.readGrid(openvdb::Name("density")));
-	}
-	else {
-		openvdb::GridPtrVecPtr grids = file.getGrids();
-		grid = openvdb::gridPtrCast<FloatGrid>((*grids)[0]);
-	}
-
-	auto meta_map = file.getMetadata();
-
-	file.close();
-
-	if ((*meta_map)["creator"]) {
-		auto creator = (*meta_map)["creator"]->str();
-
-		/* If the grid comes from Blender (Z-up), rotate it so it is Y-up */
-		if (creator == "Blender/Smoke") {
-			Timer("Transform Blender Grid");
-			grid = transform_grid(*grid, Vec3s(-M_PI_2, 0.0f, 0.0f),
-			                      Vec3s(1.0f), Vec3s(0.0f), Vec3s(0.0f));
-		}
-	}
-
-	if (grid->getGridClass() == openvdb::GRID_LEVEL_SET) {
-		m_object = new LevelSet(grid);
-	}
-	else {
-		m_object = new Volume(grid);
-	}
-
-	m_object->name(grid->getName().c_str());
 	m_scene->addObject(m_object);
 }
 
-void LoadFromFileCmd::undo()
+void AddPresetObjectCmd::undo()
 {
-	m_scene->removeObject(m_object);
-	m_was_undone = true;
+	/* TODO */
 }
 
-void LoadFromFileCmd::redo()
+void AddPresetObjectCmd::redo()
 {
-	m_scene->addObject(m_object);
-	m_was_undone = false;
+	/* TODO */
 }
 
-#endif
+void AddPresetObjectCmd::setUIParams(ParamCallback */*cb*/)
+{
+}
+
+Command *AddPresetObjectCmd::registerSelf()
+{
+	return new AddPresetObjectCmd;
+}

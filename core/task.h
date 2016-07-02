@@ -24,25 +24,40 @@
 
 #pragma once
 
-#include <vector>
-#include <utils/filesystem.h>
+#include <memory>
+#include <QObject>
+#include <tbb/task.h>
 
-class PrimitiveFactory;
-class NodeFactory;
+class MainWindow;
 
-class Main final {
-	PrimitiveFactory *m_object_factory;
-	NodeFactory *m_node_factory;
-
-	std::vector<filesystem::shared_library> m_plugins;
+/* Apparently we can not have a class derived from both a QObject and a
+ * tbb::task so this class is to be used in conjunction with a tbb::task derived
+ * class to notify the UI about certain events.
+ */
+class TaskNotifier : public QObject {
+	Q_OBJECT
 
 public:
-	Main();
-	~Main();
+	explicit TaskNotifier(MainWindow *window);
 
-	void initTypes();
-	void loadPlugins();
+	void signalStart();
+	void signalProgressUpdate(float progress);
+	void signalEnd();
 
-	PrimitiveFactory *objectFactory() const;
-	NodeFactory *nodeFactory() const;
+Q_SIGNALS:
+	void startTask();
+	void updateProgress(float progress);
+	void endTask();
+};
+
+class Task : public tbb::task {
+protected:
+	std::unique_ptr<TaskNotifier> m_notifier;
+
+public:
+	Task(MainWindow *window);
+
+	tbb::task *execute() override;
+
+	virtual void start() = 0;
 };

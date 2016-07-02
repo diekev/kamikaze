@@ -29,13 +29,6 @@
 #include "primitive.h"
 
 class Mesh : public Primitive {
-	std::vector<glm::ivec4> m_quads{};
-	std::vector<glm::ivec3> m_tris{};
-	std::vector<glm::vec3> m_verts{};
-
-	std::vector<glm::vec2> m_uvs{};
-	std::vector<glm::vec3> m_normals{};
-
 	PointList m_point_list;
 	PolygonList m_poly_list;
 
@@ -104,21 +97,17 @@ public:
 
 	void update() override;
 
-	void tag_update();
-
 	void render(ViewerContext *context, const bool for_outline) override;
 
 	void setCustomUIParams(ParamCallback *cb) override;
 
-	/* TODO */
-	void generateGPUData();
+	void prepareRenderData() override;
 
-	static void registerSelf(PrimitiveFactory *factory);
+	void computeBBox(glm::vec3 &min, glm::vec3 &max) override;
 
 	Primitive *copy() const override;
 
 private:
-	void computeBBox();
 	void computeNormals();
 	void loadShader();
 };

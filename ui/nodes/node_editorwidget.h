@@ -20,13 +20,13 @@
 
 #pragma once
 
+#include <QGraphicsView>
 #include <QWidget>
 
 class ObjectNodeItem;
 class QGraphicsItem;
 class QGraphicsRectItem;
 class QGraphicsSceneMouseEvent;
-class QGraphicsView;
 class QMenu;
 class QtConnection;
 class QtNode;
@@ -38,15 +38,27 @@ enum {
 	EDITOR_MODE_OBJECT = 1,
 };
 
+class NodeView : public QGraphicsView {
+public:
+	explicit NodeView(QWidget *parent = nullptr);
+	explicit NodeView(QGraphicsScene *scene, QWidget *parent = nullptr);
+
+protected:
+	/* Reimplement wheelEvent to avoid getting conflicts between zooming and
+	 * scrolling. */
+	void wheelEvent(QWheelEvent *event) override;
+};
+
 class QtNodeEditor : public QWidget {
 	Q_OBJECT
 
-	QGraphicsView *m_view;
+	NodeView *m_view;
 	QtNodeGraphicsScene *m_current_scene;
 	QtNodeGraphicsScene *m_scene_scene;
 
 	QMenu *m_context_menu;
 	QMenu *m_zoom_sub_menu;
+	QMenu *m_add_node_menu;
 
 	QGraphicsRectItem *m_rubber_band;
 	QPointF m_last_mouse_position;
@@ -123,6 +135,15 @@ public:
 	void setZoom(qreal zoom);
 
 	QtConnection *nodeOverConnection(QtNode *node);
+	QtConnection *lastSelectedConnection() const;
+
+	void setAddNodeMenu(QMenu *menu)
+	{
+		m_add_node_menu = menu;
+	}
+
+	/* Called for creating new connections, e.g. during node dropping. */
+	void connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock);
 
 public Q_SLOTS:
 	/* Activated when a contextmenu item is selected */
@@ -136,7 +157,7 @@ Q_SIGNALS:
 	void nodeAdded(QtNode *);
 
 	/* Emitted when a node is going to be removed from the node editor */
-	void nodeToBeRemoved(QtNode *);
+	void nodeRemoved(QtNode *);
 	void objectNodeRemoved(ObjectNodeItem *);
 
 	/* Emitted when a node is selected */
@@ -153,9 +174,6 @@ private:
 	/* Called when a node is dropped on a connection. */
 	void splitConnectionWithNode(QtNode *node);
 
-	/* Called for creating new connections, e.g. during node dropping. */
-	void connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock);
-
 protected:
 	/* Event handling */
 	bool eventFilter(QObject *object, QEvent *event) override;
@@ -167,8 +185,6 @@ protected:
 
 	bool ctrlPressed();
 	void keyPressEvent(QKeyEvent *event) override;
-
-	void wheelEvent(QWheelEvent *event) override;
 
 	QGraphicsItem *itemAtExceptActiveConnection(const QPointF &pos);
 

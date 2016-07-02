@@ -39,6 +39,7 @@
 #include <QTimer>
 
 #include "core/nodes/graph.h"
+#include "core/nodes/nodes.h"
 #include "core/kamikaze_main.h"
 #include "core/object.h"
 #include "core/object_ops.h"
@@ -51,6 +52,7 @@
 #include "node_scene.h"
 
 #include "paramcallback.h"
+#include "paramfactory.h"
 #include "ui_mainwindow.h"
 #include "utils_ui.h"
 
@@ -63,21 +65,16 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
     , m_command_manager(new CommandManager)
     , m_command_factory(new CommandFactory)
     , m_timer_has_started(false)
-    , m_scene_mode_box(new QComboBox(this))
-    , m_scene_mode_list(new QListWidget(m_scene_mode_box))
 {
 	qApp->installEventFilter(this);
 	ui->setupUi(this);
 	ui->m_viewport->setScene(m_scene);
 
-	connect(m_scene, SIGNAL(objectChanged()), this, SLOT(updateObjectTab()));
-	ui->tabWidget->setTabEnabled(0, false);
-	ui->tabWidget->setTabEnabled(3, false);
-
 	connect(m_scene, SIGNAL(objectAdded(Object *)), this, SLOT(setupObjectUI(Object *)));
 	connect(m_scene, SIGNAL(nodeAdded(Object *, Node *)), this, SLOT(setupNodeUI(Object *, Node *)));
 	connect(ui->graph_editor, SIGNAL(objectNodeSelected(ObjectNodeItem *)), this, SLOT(setActiveObject(ObjectNodeItem *)));
 	connect(ui->graph_editor, SIGNAL(objectNodeRemoved(ObjectNodeItem *)), this, SLOT(removeObject(ObjectNodeItem *)));
+	connect(ui->graph_editor, SIGNAL(nodeRemoved(QtNode *)), this, SLOT(removeNode(QtNode *)));
 	connect(ui->graph_editor, SIGNAL(nodeSelected(QtNode *)), this, SLOT(setupNodeParamUI(QtNode *)));
 	connect(ui->graph_editor, SIGNAL(nodesConnected(QtNode *, const QString &, QtNode *, const QString &)),
 	        this, SLOT(nodesConnected(QtNode *, const QString &, QtNode *, const QString &)));
@@ -86,26 +83,18 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 
 	connect(m_timer, SIGNAL(timeout()), this, SLOT(updateFrame()));
 
-	/* Cannot add widget to toolbar in Qt Designer, do a little hack to disable
-	 * items in the box */
-	ui->toolBar->addWidget(m_scene_mode_box);
-
-	m_scene_mode_list->hide();
-	m_scene_mode_box->setModel(m_scene_mode_list->model());
-
-	m_scene_mode_list->addItem("Object Mode");
-	m_scene_mode_list->addItem("Sculpt Mode");
-
-	disable_list_item(m_scene_mode_list, 1);
-
-	connect(m_scene_mode_box, SIGNAL(currentIndexChanged(int)), this, SLOT(setSceneMode(int)));
-
 	/* Timeline */
 	ui->m_timeline->setMaximum(250);
 
 	/* TODO: find another place to do this */
 	generateObjectMenu();
 	generateNodeMenu();
+	generatePresetMenu();
+
+	m_progress_bar = new QProgressBar(this);
+	ui->statusBar->addWidget(m_progress_bar);
+	m_progress_bar->setRange(0, 100);
+	m_progress_bar->setVisible(false);
 }
 
 MainWindow::~MainWindow()
@@ -115,39 +104,55 @@ MainWindow::~MainWindow()
 	delete m_command_factory;
 }
 
+void MainWindow::taskStarted()
+{
+	m_progress_bar->setValue(0);
+	m_progress_bar->setVisible(true);
+}
+
+void MainWindow::updateProgress(float progress)
+{
+	m_progress_bar->setValue(progress);
+}
+
+void MainWindow::taskEnded()
+{
+	m_progress_bar->setVisible(false);
+}
+
 bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 {
 	if (e->type() == QEvent::KeyPress) {
 		if (obj == ui->m_viewport) {
-			QKeyEvent *keyEvent = static_cast<QKeyEvent *>(e);
+			auto keyEvent = static_cast<QKeyEvent *>(e);
 			ui->m_viewport->keyPressEvent(keyEvent);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::MouseButtonPress) {
 		if (obj == ui->m_viewport) {
-			QMouseEvent *event = static_cast<QMouseEvent *>(e);
+			auto event = static_cast<QMouseEvent *>(e);
 			ui->m_viewport->mousePressEvent(event);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::MouseMove) {
 		if (obj == ui->m_viewport) {
-			QMouseEvent *event = static_cast<QMouseEvent *>(e);
+			auto event = static_cast<QMouseEvent *>(e);
 			ui->m_viewport->mouseMoveEvent(event);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::MouseButtonRelease) {
 		if (obj == ui->m_viewport) {
-			QMouseEvent *event = static_cast<QMouseEvent *>(e);
+			auto event = static_cast<QMouseEvent *>(e);
 			ui->m_viewport->mouseReleaseEvent(event);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::Wheel) {
 		if (obj == ui->m_viewport) {
-			QWheelEvent *event = static_cast<QWheelEvent *>(e);
+			auto event = static_cast<QWheelEvent *>(e);
 			ui->m_viewport->wheelEvent(event);
 			return true;
 		}
@@ -158,29 +163,22 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 
 void MainWindow::updateObjectTab() const
 {
-	Object *ob = m_scene->currentObject();
+	auto ob = m_scene->currentObject();
 
 	if (ob == nullptr) {
-		ui->tabWidget->setTabEnabled(0, false);
 		return;
 	}
-
-	ui->tabWidget->setTabEnabled(0, true);
 
 	clear_layout(ui->node_param_layout);
 
 	ParamCallback cb(ui->node_param_layout);
-	ob->primitive()->setUIParams(&cb);
-	ob->primitive()->setCustomUIParams(&cb);
+	ob->setUIParams(&cb);
+
+	if (ob->primitive()) {
+		ob->primitive()->setCustomUIParams(&cb);
+	}
 
 	cb.setContext(m_scene, SLOT(tagObjectUpdate()));
-
-	if ((ob->primitive()->flags() & object_flags::object_supports_sculpt) != object_flags::object_flags_none) {
-		enable_list_item(m_scene_mode_list, 1);
-	}
-	else {
-		disable_list_item(m_scene_mode_list, 1);
-	}
 
 	m_scene->objectNameList(ui->m_outliner);
 }
@@ -244,22 +242,23 @@ void MainWindow::setEndFrame(int value) const
 	ui->m_timeline->setMaximum(value);
 }
 
-void MainWindow::setSceneMode(int idx) const
-{
-	m_scene->setMode(idx);
-	ui->tabWidget->setTabEnabled(3, idx == SCENE_MODE_SCULPT);
-}
-
 void MainWindow::generateObjectMenu()
 {
 	m_command_factory->registerType("add object", AddObjectCmd::registerSelf);
 
+	auto action = ui->menuAdd->addAction("Empty Object");
+	action->setData(QVariant::fromValue(QString("add object")));
+
+	connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
+
+#if 0
 	for (const auto &key : m_main->objectFactory()->keys()) {
 		auto action = ui->menuAdd->addAction(key.c_str());
 		action->setData(QVariant::fromValue(QString("add object")));
 
-		connect(action, SIGNAL(triggered()), this, SLOT(handleObjectCommand()));
+		connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
 	}
+#endif
 }
 
 void MainWindow::generateNodeMenu()
@@ -273,61 +272,35 @@ void MainWindow::generateNodeMenu()
 			auto action = sub_menu->addAction(key.c_str());
 			action->setData(QVariant::fromValue(QString("add node")));
 
-			connect(action, SIGNAL(triggered()), this, SLOT(handleObjectCommand()));
+			connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
 		}
+	}
+
+	ui->graph_editor->setAddNodeMenu(ui->add_nodes_menu);
+}
+
+void MainWindow::generatePresetMenu()
+{
+	m_command_factory->registerType("add preset", AddPresetObjectCmd::registerSelf);
+
+	const char *icons[] = {
+	    "icons/icon_grid.png",
+	    "icons/icon_box.png",
+	    "icons/icon_torus.png",
+	};
+
+	auto i = 0;
+	for (const auto &name : { "Grid", "Box", "Torus" }) {
+		auto action = ui->toolBar->addAction(QIcon(icons[i++]), name);
+		action->setData(QVariant::fromValue(QString("add preset")));
+
+		connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
 	}
 }
 
 void MainWindow::handleCommand()
 {
-	QAction *action = qobject_cast<QAction *>(sender());
-
-	if (!action) {
-		return;
-	}
-
-	const auto &name = action->text();
-
-	/* create UI */
-	QDialog *dialog = new QDialog();
-	dialog->setPalette(this->palette());
-	dialog->setWindowTitle(name);
-
-	QDialogButtonBox *button_box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-
-	connect(button_box, SIGNAL(accepted()), dialog, SLOT(accept()));
-	connect(button_box, SIGNAL(rejected()), dialog, SLOT(reject()));
-
-	QGridLayout *layout = new QGridLayout();
-
-	dialog->setLayout(layout);
-
-	ParamCallback cb(layout);
-
-	/* get command */
-	Command *cmd = (*m_command_factory)(name.toStdString());
-	cmd->setUIParams(&cb);
-
-	layout->addWidget(button_box);
-
-	/* TODO */
-	EvaluationContext context;
-	context.scene = m_scene;
-
-	if (dialog->exec() == QDialog::Accepted) {
-		m_command_manager->execute(cmd, &context);
-	}
-	else {
-		delete cmd;
-	}
-
-	delete layout;
-	delete dialog;
-}
-
-void MainWindow::handleObjectCommand()
-{
-	QAction *action = qobject_cast<QAction *>(sender());
+	auto action = qobject_cast<QAction *>(sender());
 
 	if (!action) {
 		return;
@@ -337,7 +310,7 @@ void MainWindow::handleObjectCommand()
 	const auto &data = action->data().toString().toStdString();
 
 	/* get command */
-	Command *cmd = (*m_command_factory)(data);
+	auto cmd = (*m_command_factory)(data);
 	cmd->setName(name);
 
 	/* TODO */
@@ -371,33 +344,123 @@ void MainWindow::setupNodeParamUI(QtNode *node_item)
 	clear_layout(ui->node_param_layout);
 
 	ParamCallback cb(ui->node_param_layout);
-	node->setUIParams(&cb);
+
+	node->update_properties();
+
+	ParamCallback *callback = &cb;
+
+	for (Property &prop : node->props()) {
+		if (!prop.visible) {
+			continue;
+		}
+
+		assert(!prop.data.empty());
+
+		switch (prop.type) {
+			case property_type::prop_bool:
+				bool_param(callback,
+				           prop.name.c_str(),
+				           any_cast<bool>(&prop.data),
+				           any_cast<bool>(prop.data));
+				break;
+			case property_type::prop_float:
+				float_param(callback,
+				            prop.name.c_str(),
+				            any_cast<float>(&prop.data),
+				            prop.min, prop.max,
+				            any_cast<float>(prop.data));
+				break;
+			case property_type::prop_int:
+				int_param(callback,
+				          prop.name.c_str(),
+				          any_cast<int>(&prop.data),
+				          prop.min, prop.max,
+				          any_cast<int>(prop.data));
+				break;
+			case property_type::prop_enum:
+				enum_param(callback,
+				           prop.name.c_str(),
+				           any_cast<int>(&prop.data),
+				           prop.enum_items,
+				           any_cast<int>(prop.data));
+				break;
+			case property_type::prop_vec3:
+				xyz_param(callback,
+				          prop.name.c_str(),
+				          &(any_cast<glm::vec3>(&prop.data)->x));
+				break;
+			case property_type::prop_input_file:
+				input_file_param(callback,
+				                 prop.name.c_str(),
+				                 any_cast<std::string>(&prop.data));
+				break;
+			case property_type::prop_output_file:
+				output_file_param(callback,
+				                  prop.name.c_str(),
+				                  any_cast<std::string>(&prop.data));
+				break;
+			case property_type::prop_string:
+				string_param(callback,
+				             prop.name.c_str(),
+				             any_cast<std::string>(&prop.data),
+				             any_cast<std::string>(prop.data).c_str());
+				break;
+		}
+
+		if (!prop.tooltip.empty()) {
+			param_tooltip(callback, prop.tooltip.c_str());
+		}
+	}
 
 	/* Only update/evaluate the graph if the node is connected. */
 	if (node->isLinked()) {
-		cb.setContext(m_scene, SLOT(evalObjectGraph()));
+		cb.setContext(this, SLOT(evalObjectGraph()));
 	}
+}
+
+/* TODO: evaluation system */
+void MainWindow::evalObjectGraph()
+{
+	eval_graph(this, m_scene->currentObject(), true);
 }
 
 void MainWindow::setupObjectUI(Object *object)
 {
-	ObjectNodeItem *obnode_item = new ObjectNodeItem(object, object->name());
+	auto obnode_item = new ObjectNodeItem(object, object->name());
 	obnode_item->setTitleColor(Qt::white);
 	obnode_item->alignTitle(ALIGNED_CENTER);
 
 	/* add node item for the object's graph output node */
 	{
 		auto graph = object->graph();
-		auto node = graph->output();
+		auto output_node = graph->output();
 
-		QtNode *node_item = new QtNode(node->name().c_str());
-		node_item->setTitleColor(Qt::white);
-		node_item->alignTitle(ALIGNED_LEFT);
-		node_item->setNode(node);
-		node_item->setScene(obnode_item->nodeScene());
-		node_item->setEditor(ui->graph_editor);
+		QtNode *out_node_item = new QtNode(output_node->name().c_str());
+		out_node_item->setTitleColor(Qt::white);
+		out_node_item->alignTitle(ALIGNED_LEFT);
+		out_node_item->setNode(output_node);
+		out_node_item->setScene(obnode_item->nodeScene());
+		out_node_item->setEditor(ui->graph_editor);
 
-		obnode_item->addNode(node_item);
+		obnode_item->addNode(out_node_item);
+
+		/* TODO: this is just when adding an object from a preset. */
+		if (graph->nodes().size() > 1) {
+			Node *node = graph->nodes().back();
+
+			QtNode *node_item = new QtNode(node->name().c_str());
+			node_item->setTitleColor(Qt::white);
+			node_item->alignTitle(ALIGNED_LEFT);
+			node_item->setNode(node);
+			node_item->setScene(obnode_item->nodeScene());
+			node_item->setEditor(ui->graph_editor);
+			node_item->setPos(out_node_item->pos() - QPointF(200, 100));
+
+			obnode_item->addNode(node_item);
+
+			ui->graph_editor->connectNodes(node_item, node_item->output(0),
+			                               out_node_item, out_node_item->input(0));
+		}
 	}
 
 	ui->graph_editor->addNode(obnode_item);
@@ -408,11 +471,26 @@ void MainWindow::setupObjectUI(Object *object)
 void MainWindow::setActiveObject(ObjectNodeItem *node)
 {
 	m_scene->setActiveObject(node->object());
+	updateObjectTab();
 }
 
 void MainWindow::removeObject(ObjectNodeItem *node)
 {
 	m_scene->removeObject(node->object());
+}
+
+void MainWindow::removeNode(QtNode *node)
+{
+	auto object = m_scene->currentObject();
+	auto graph = object->graph();
+
+	const auto was_connected = node->getNode()->isLinked();
+
+	graph->remove(node->getNode());
+
+	if (was_connected) {
+		eval_graph(this, object, true);
+	}
 }
 
 void MainWindow::nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
@@ -430,7 +508,7 @@ void MainWindow::nodesConnected(QtNode *from, const QString &socket_from, QtNode
 
 	graph->connect(output_socket, input_socket);
 
-	object->evalGraph(true);
+	eval_graph(this, object, true);
 }
 
 void MainWindow::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
@@ -448,5 +526,5 @@ void MainWindow::connectionRemoved(QtNode *from, const QString &socket_from, QtN
 
 	graph->disconnect(output_socket, input_socket);
 
-	object->evalGraph(true);
+	eval_graph(this, object, true);
 }

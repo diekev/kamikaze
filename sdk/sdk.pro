@@ -37,41 +37,34 @@ LIBS += -ltbb
 
 DEFINES += GLM_FORCE_RADIANS
 
-SRC_INTERN = \
-    intern/param_widgets.cc \
-    intern/custom_widgets.cc
-
-HDR_INTERN = \
-    intern/param_widgets.h \
-    intern/custom_widgets.h
-
 HDR_SDK = \
+    any.h \
     attribute.h \
     context.h \
 	cube.h \
-    paramfactory.h \
     mesh.h \
+    models.h \
     noise.h \
     nodes.h \
     primitive.h \
     geomlists.h \
-    util_parallel.h
+    util_parallel.h \
+    prim_points.h
 
 SOURCES += \
-    $$SRC_INTERN \
     context.cc \
 	cube.cc \
-    paramfactory.cc \
     noise.cc \
     nodes.cc \
     primitive.cc \
     mesh.cc \
     attribute.cc \
-    geomlists.cc
+    geomlists.cc \
+    prim_points.cc \
+    any.cc
 
 HEADERS += \
-    $$HDR_SDK \
-    $$HDR_INTERN
+    $$HDR_SDK
 
 unix {
 	target.path = /opt/lib/kamikaze/lib

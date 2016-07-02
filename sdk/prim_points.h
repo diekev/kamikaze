@@ -24,25 +24,41 @@
 
 #pragma once
 
-#include <vector>
-#include <utils/filesystem.h>
+#include "attribute.h"
+#include "geomlists.h"
+#include "primitive.h"
 
-class PrimitiveFactory;
-class NodeFactory;
+class PrimPoints : public Primitive {
+	PointList m_points;
+	std::vector<Attribute *> m_attributes;
 
-class Main final {
-	PrimitiveFactory *m_object_factory;
-	NodeFactory *m_node_factory;
-
-	std::vector<filesystem::shared_library> m_plugins;
+	ego::BufferObject::Ptr m_buffer_data;
+	ego::Program m_program;
+	size_t m_elements;
 
 public:
-	Main();
-	~Main();
+	PrimPoints();
+	~PrimPoints();
 
-	void initTypes();
-	void loadPlugins();
+	PointList *points();
 
-	PrimitiveFactory *objectFactory() const;
-	NodeFactory *nodeFactory() const;
+	const PointList *points() const;
+
+	Attribute *attribute(const std::string &name, AttributeType type);
+
+	void addAttribute(Attribute *attr);
+
+	Attribute *addAttribute(const std::string &name, AttributeType type, size_t size);
+
+	Primitive *copy() const override;
+
+	void render(ViewerContext *context, const bool for_outline) override;
+
+	void setCustomUIParams(ParamCallback *cb) override;
+
+	void prepareRenderData() override;
+
+	void computeBBox(glm::vec3 &min, glm::vec3 &max) override;
+
+	void loadShader();
 };

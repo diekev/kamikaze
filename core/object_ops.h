@@ -67,22 +67,18 @@ public:
 	static Command *registerSelf();
 };
 
-#if 0
-class LoadFromFileCmd : public Command {
-	Scene *m_scene;
-	Object *m_object;
-	QString m_filename;
-
-	/* TODO */
-	bool m_was_undone;
+class AddPresetObjectCmd : public Command {
+	Object *m_object = nullptr;
+	Scene *m_scene = nullptr;
 
 public:
-	LoadFromFileCmd(Scene *scene, const QString &filename);
-	~LoadFromFileCmd();
+	AddPresetObjectCmd() = default;
+	AddPresetObjectCmd(const QString &name);
+	~AddPresetObjectCmd() = default;
 
 	void execute(EvaluationContext *context);
 	void undo();
 	void redo();
-	void setUIParams(ParamCallback *cb) { (void)cb; }
+	void setUIParams(ParamCallback *cb);
+	static Command *registerSelf();
 };
-#endif

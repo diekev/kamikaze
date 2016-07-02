@@ -50,6 +50,8 @@ SOURCES += \
     nodes/graph.cc \
     object.cc \
     nodes/graph_dumper.cc \
+    nodes/nodes.cc \
+    task.cc \
     manipulator.cc
 
 HEADERS += \
@@ -65,6 +67,8 @@ HEADERS += \
     nodes/graph.h \
     object.h \
     nodes/graph_dumper.h \
+    nodes/nodes.h \
+    task.h \
     manipulator.h
 
 OTHER_FILES += \

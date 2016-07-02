@@ -41,16 +41,21 @@ INCLUDEPATH += $$KAMIKAZE_SDK_INCLUDE_DIR
 
 SOURCES += \
     mainwindow.cc \
+    intern/param_widgets.cc \
+    intern/custom_widgets.cc \
     nodes/node_compound.cc \
     nodes/node_connection.cc \
     nodes/node_editorwidget.cc \
     nodes/node_node.cc \
     nodes/node_port.cc \
+    paramfactory.cc \
     paramcallback.cc \
     utils_ui.cc
 
 HEADERS += \
     mainwindow.h \
+    intern/param_widgets.h \
+    intern/custom_widgets.h \
     nodes/node_compound.h \
     nodes/node_connection.h \
     nodes/node_constants.h \
@@ -58,6 +63,7 @@ HEADERS += \
     nodes/node_node.h \
     nodes/node_port.h \
     nodes/node_scene.h \
+    paramfactory.h \
     paramcallback.h \
     utils_ui.h
 

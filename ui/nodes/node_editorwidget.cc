@@ -54,7 +54,6 @@ static constexpr auto NODE_ACTION_EXPAND_ALL = "Expand all nodes";
 static constexpr auto NODE_ENTER_OBJECT = "Enter object";
 static constexpr auto NODE_EXIT_OBJECT = "Exit object";
 
-//****************************************************************************/
 static inline bool is_object_node(QGraphicsItem *item)
 {
 	if (item->data(NODE_KEY_GRAPHIC_ITEM_SUBTYPE).isValid()) {
@@ -85,12 +84,13 @@ static inline bool is_connection(QGraphicsItem *item)
 	return false;
 }
 
-//****************************************************************************/
+/* ************************************************************************** */
+
 QtNodeEditor::QtNodeEditor(QWidget *parent)
     : QWidget(parent)
 {
 	QVBoxLayout *mainLayout = new QVBoxLayout;
-	m_view = new QGraphicsView(this);
+	m_view = new NodeView(this);
 
 	m_scene_scene = new QtNodeGraphicsScene();
 	m_scene_scene->installEventFilter(this);
@@ -165,60 +165,62 @@ QtNodeEditor::~QtNodeEditor()
 	delete m_scene_scene;
 }
 
-//****************************************************************************/
 void QtNodeEditor::setContextMenuEnabled(bool enabled)
 {
 	m_context_menu_enabled = enabled;
 }
 
-//****************************************************************************/
 bool QtNodeEditor::isContextMenuEnabled()
 {
 	return m_context_menu_enabled;
 }
 
-//****************************************************************************/
 void QtNodeEditor::setMenuZoomEnabled(bool enabled)
 {
 	m_menu_zoom_enabled = enabled;
-	QAction *action = getActionFromContextMenu(NODE_ACTION_ZOOM);
-	if (action)
+
+	const auto &action = getActionFromContextMenu(NODE_ACTION_ZOOM);
+
+	if (action) {
 		action->setVisible(enabled);
+	}
 }
 
-//****************************************************************************/
 bool QtNodeEditor::isMenuZoomEnabled()
 {
 	return m_menu_zoom_enabled;
 }
 
-//****************************************************************************/
 void QtNodeEditor::setMenuCollapseExpandEnabled(bool enabled)
 {
 	m_menu_collapse_expand_enabled = enabled;
-	QAction *action = getActionFromContextMenu(NODE_ACTION_EXPAND_ALL);
-	if (action)
+
+	auto action = getActionFromContextMenu(NODE_ACTION_EXPAND_ALL);
+
+	if (action) {
 		action->setVisible(enabled);
+	}
+
 	action = getActionFromContextMenu(NODE_ACTION_COLLAPSE_ALL);
-	if (action)
+
+	if (action){
 		action->setVisible(enabled);
+	}
 }
 
-//****************************************************************************/
 bool QtNodeEditor::isMenuCollapseExpandEnabled()
 {
 	return m_menu_collapse_expand_enabled;
 }
 
-//****************************************************************************/
 QGraphicsItem *QtNodeEditor::itemAtExceptActiveConnection(const QPointF &pos)
 {
-	auto items = m_current_scene->items(QRectF(pos - QPointF(1, 1), QSize(3, 3)));
-	const bool is_active = (m_active_connection != nullptr);
+	const auto &items = m_current_scene->items(QRectF(pos - QPointF(1, 1), QSize(3, 3)));
+	const auto is_active = (m_active_connection != nullptr);
 
 	/* If there is an active connection, it is not returned as a selected item.
 	 * Finalized (established) connections are returned. */
-	for (QGraphicsItem *item : items) {
+	for (const auto &item : items) {
 		if (!item->isVisible()) {
 			continue;
 		}
@@ -235,7 +237,6 @@ QGraphicsItem *QtNodeEditor::itemAtExceptActiveConnection(const QPointF &pos)
 	return nullptr;
 }
 
-//****************************************************************************/
 QtConnection *QtNodeEditor::nodeOverConnection(QtNode *node)
 {
 	if (!node->hasInputs() || !node->hasOutputs()) {
@@ -247,16 +248,22 @@ QtConnection *QtNodeEditor::nodeOverConnection(QtNode *node)
 		return nullptr;
 	}
 
-	qreal halfWidth;
-
 	auto check_hover = [&](QtNode *nitem, QtConnection *citem)
 	{
-		halfWidth = 0.5 * citem->boundingRect().width();
+		const auto &bport_pos_x = citem->getBasePort()->scenePos().x();
+		const auto &bport_pos_y = citem->getBasePort()->scenePos().y();
+		const auto &tport_pos_x = citem->getTargetPort()->scenePos().x();
+		const auto &tport_pos_y = citem->getTargetPort()->scenePos().y();
 
-		return (nitem->scenePos().x() > citem->scenePos().x() - halfWidth &&
-		        nitem->scenePos().x() < citem->scenePos().x() + halfWidth &&
-		        nitem->scenePos().y() > citem->scenePos().y() &&
-		        nitem->scenePos().y() < citem->scenePos().y() + citem->boundingRect().height());
+		const auto &min_x = std::min(bport_pos_x, tport_pos_x);
+		const auto &min_y = std::min(bport_pos_y, tport_pos_y);
+		const auto &max_x = std::max(bport_pos_x, tport_pos_x);
+		const auto &max_y = std::max(bport_pos_y, tport_pos_y);
+
+		const auto &pos_x = nitem->pos().x();
+		const auto &pos_y = nitem->pos().y();
+
+		return (min_x < pos_x && max_x > pos_x) && (min_y < pos_y && max_y > pos_y);
 	};
 
 	if (m_hover_connection && check_hover(node, m_hover_connection)) {
@@ -265,7 +272,7 @@ QtConnection *QtNodeEditor::nodeOverConnection(QtNode *node)
 
 	QtConnection *connection;
 
-	for (QGraphicsItem *item : m_current_scene->items()) {
+	for (const auto &item : m_current_scene->items()) {
 		if (!is_connection(item)) {
 			continue;
 		}
@@ -280,8 +287,6 @@ QtConnection *QtNodeEditor::nodeOverConnection(QtNode *node)
 			continue;
 		}
 
-		halfWidth = 0.5 * connection->boundingRect().width();
-
 		if (check_hover(node, connection)) {
 			return connection;
 		}
@@ -294,12 +299,11 @@ QtConnection *QtNodeEditor::nodeOverConnection(QtNode *node)
 	return nullptr;
 }
 
-//****************************************************************************/
 bool QtNodeEditor::eventFilter(QObject *object, QEvent *event)
 {
 	auto mouseEvent = static_cast<QGraphicsSceneMouseEvent *>(event);
 
-	switch ((int) event->type()) {
+	switch (static_cast<int>(event->type())) {
 		case QEvent::GraphicsSceneMousePress:
 			mouseClickHandler(mouseEvent);
 			break;
@@ -317,13 +321,13 @@ bool QtNodeEditor::eventFilter(QObject *object, QEvent *event)
 	return QObject::eventFilter(object, event);
 }
 
-//****************************************************************************/
 bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 {
-	switch ((int) mouseEvent->button()) {
+	switch (static_cast<int>(mouseEvent->button())) {
 		case Qt::LeftButton:
 		{
-			QGraphicsItem *item = itemAtExceptActiveConnection(mouseEvent->scenePos());
+			const auto &item = itemAtExceptActiveConnection(mouseEvent->scenePos());
+
 			if (!item) {
 				/* Left-click on the canvas, but no item clicked, so deselect nodes and connections */
 				deselectAll();
@@ -337,12 +341,12 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 
 			/* Delegate to the node; either the node itself is clicked, one of its children or a connection */
 			if (item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).isValid()) {
-				int type = item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).toInt();
+				auto type = item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).toInt();
 				QtNode *node;
 
 				if (NODE_VALUE_TYPE_CONNECTION == type) {
 					/* ======================= Handle selected connection ======================= */
-					QtConnection *connection = static_cast<QtConnection *>(item);
+					auto connection = static_cast<QtConnection *>(item);
 					selectConnection(connection);
 				}
 				else if (NODE_VALUE_TYPE_NODE == type) {
@@ -364,7 +368,7 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 					if (NODE_VALUE_TYPE_PORT == type) {
 						/* ======================= Port is clicked ======================= */
 						/* Either make a connection to another port, or create a new connection */
-						QtNode *baseNode = nodeWithActiveConnection();
+						auto baseNode = nodeWithActiveConnection();
 						if (m_active_connection == nullptr) {
 							/* There is no active connection, so start one */
 							node->mouseLeftClickHandler(mouseEvent, item, NODE_ACTION_BASE);
@@ -414,7 +418,6 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 	return true;
 }
 
-//****************************************************************************/
 bool QtNodeEditor::mouseDoubleClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 {
 	Q_UNUSED(mouseEvent);
@@ -422,7 +425,6 @@ bool QtNodeEditor::mouseDoubleClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 	return true;
 }
 
-//****************************************************************************/
 bool QtNodeEditor::mouseMoveHandler(QGraphicsSceneMouseEvent *mouseEvent)
 {
 	/* If there was a rubberband selection started, update its rectangle */
@@ -442,10 +444,6 @@ bool QtNodeEditor::mouseMoveHandler(QGraphicsSceneMouseEvent *mouseEvent)
 		}
 	}
 
-	for (QtNode *node : selectedNodes()) {
-		node->mouseMoveHandler(mouseEvent, nullptr);
-	}
-
 	if (m_active_connection) {
 		m_active_connection->updatePath(mouseEvent->scenePos());
 	}
@@ -456,7 +454,6 @@ bool QtNodeEditor::mouseMoveHandler(QGraphicsSceneMouseEvent *mouseEvent)
 	return true;
 }
 
-//****************************************************************************/
 bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 {
 	/* Determine whether a node has been dropped on a connection. */
@@ -473,20 +470,20 @@ bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 
 	if (mouseEvent->button() & Qt::LeftButton) {
 		if (m_rubber_band) {
-			qreal minX = qMin(m_last_mouse_position.x(), mouseEvent->lastScenePos().x());
-			qreal maxX = qMax(m_last_mouse_position.x(), mouseEvent->lastScenePos().x());
-			qreal minY = qMin(m_last_mouse_position.y(), mouseEvent->lastScenePos().y());
-			qreal maxY = qMax(m_last_mouse_position.y(), mouseEvent->lastScenePos().y());
+			auto minX = qMin(m_last_mouse_position.x(), mouseEvent->lastScenePos().x());
+			auto maxX = qMax(m_last_mouse_position.x(), mouseEvent->lastScenePos().x());
+			auto minY = qMin(m_last_mouse_position.y(), mouseEvent->lastScenePos().y());
+			auto maxY = qMax(m_last_mouse_position.y(), mouseEvent->lastScenePos().y());
 			qreal item_Min_X;
 			qreal item_Max_X;
 			qreal item_Min_Y;
 			qreal item_Max_Y;
 
 			/* Select the items */
-			QList<QGraphicsItem*> items = m_current_scene->items();
+			const auto &items = m_current_scene->items();
 			QtNode *node;
 			QtConnection *connection;
-			for (QGraphicsItem *item : items) {
+			for (const auto &item : items) {
 				if (is_connection(item) && item->isVisible()) {
 					connection = static_cast<QtConnection *>(item);
 
@@ -499,9 +496,7 @@ bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 						if (item_Min_X > minX && item_Max_X < maxX &&
 						    item_Min_Y > minY && item_Max_Y < maxY)
 						{
-							connection->setSelected(true);
-							if (!isAlreadySelected(connection))
-								m_selected_connections.append(connection);
+							selectConnection(connection);
 						}
 					}
 				}
@@ -515,18 +510,7 @@ bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 					if (item_Min_X > minX && item_Max_X < maxX &&
 					    item_Min_Y > minY && item_Max_Y < maxY)
 					{
-						node->setSelected(true);
-						if (!isAlreadySelected(node))
-							m_selected_nodes.append(node);
-
-						if (is_object_node(node)) {
-							Q_EMIT objectNodeSelected(static_cast<ObjectNodeItem *>(node));
-						}
-						else {
-							Q_EMIT nodeSelected(node);
-						}
-
-						toFront(node);
+						selectNode(node, nullptr);
 					}
 				}
 			}
@@ -540,20 +524,23 @@ bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 	return true;
 }
 
-//****************************************************************************/
 void QtNodeEditor::keyPressEvent(QKeyEvent *event)
 {
 	if (event->key() == Qt::Key_Delete) {
 		removeAllSelelected();
 	}
+	else if (event->key() == Qt::Key_A) {
+		if (m_editor_mode == EDITOR_MODE_OBJECT) {
+			m_add_node_menu->popup(QCursor::pos());
+		}
+	}
 }
 
-//****************************************************************************/
 void QtNodeEditor::rubberbandSelection(QGraphicsSceneMouseEvent *mouseEvent)
 {
 	/* Mouse is pressed and moves => draw rubberband */
-	qreal x = mouseEvent->lastScenePos().x();
-	qreal y = mouseEvent->lastScenePos().y();
+	const auto x = mouseEvent->lastScenePos().x();
+	const auto y = mouseEvent->lastScenePos().y();
 
 	if (!m_rubber_band) {
 		m_rubber_band = new QGraphicsRectItem(m_last_mouse_position.x(), m_last_mouse_position.y(), 0.0f, 0.0f);
@@ -565,21 +552,24 @@ void QtNodeEditor::rubberbandSelection(QGraphicsSceneMouseEvent *mouseEvent)
 	}
 
 	m_rubber_band->show();
-	qreal minX = qMin((qreal)m_last_mouse_position.x(), x);
-	qreal maxX = qMax((qreal)m_last_mouse_position.x(), x);
-	qreal minY = qMin((qreal)m_last_mouse_position.y(), y);
-	qreal maxY = qMax((qreal)m_last_mouse_position.y(), y);
+
+	const auto minX = std::min(static_cast<qreal>(m_last_mouse_position.x()), x);
+	const auto maxX = std::max(static_cast<qreal>(m_last_mouse_position.x()), x);
+	const auto minY = std::min(static_cast<qreal>(m_last_mouse_position.y()), y);
+	const auto maxY = std::max(static_cast<qreal>(m_last_mouse_position.y()), y);
+
 	m_rubber_band->setRect(minX, minY, maxX - minX, maxY - minY);
 }
 
-//****************************************************************************/
 void QtNodeEditor::selectNode(QtNode *node, QGraphicsSceneMouseEvent *mouseEvent)
 {
-	/* pass the node itself also, because this function is also used for other
-	 * purposes than selecting the node itself */
-	node->mouseLeftClickHandler(mouseEvent, node);
+	if (mouseEvent) {
+		/* pass the node itself also, because this function is also used for
+		 * other purposes than selecting the node itself */
+		node->mouseLeftClickHandler(mouseEvent, node);
+	}
 
-	if (!ctrlPressed()) {
+	if (mouseEvent && !ctrlPressed()) {
 		deselectAll();
 		m_selected_nodes.append(node);
 	}
@@ -588,32 +578,30 @@ void QtNodeEditor::selectNode(QtNode *node, QGraphicsSceneMouseEvent *mouseEvent
 		/* Do not call setSelection on the node; the node is selectable, while the connection isn't */
 	}
 
-	/* TODO(kevin): this is weak */
+	node->setSelected(true);
+
 	if (is_object_node(node)) {
-		Q_EMIT objectNodeSelected(static_cast<ObjectNodeItem *>(node));
+		Q_EMIT(objectNodeSelected(static_cast<ObjectNodeItem *>(node)));
 	}
 	else {
-		Q_EMIT nodeSelected(node);
+		Q_EMIT(nodeSelected(node));
 	}
 
 	toFront(node);
 }
 
-//****************************************************************************/
 void QtNodeEditor::selectConnection(QtConnection *connection)
 {
 	if (!ctrlPressed()) {
 		deselectAll();
-		m_selected_connections.append(connection);
-		connection->setSelected(true);
 	}
-	else if (!isAlreadySelected(connection)) {
+
+	if (!isAlreadySelected(connection)) {
 		m_selected_connections.append(connection);
 		connection->setSelected(true);
 	}
 }
 
-//****************************************************************************/
 void QtNodeEditor::deselectAll()
 {
 	setCursor(Qt::ArrowCursor);
@@ -622,13 +610,12 @@ void QtNodeEditor::deselectAll()
 	deselectNodes();
 }
 
-//****************************************************************************/
 void QtNodeEditor::deleteAllActiveConnections()
 {
+	const auto &items = m_current_scene->items();
 	QtNode *node;
-	QList<QGraphicsItem*> items = m_current_scene->items();
 
-	for (QGraphicsItem *item : items) {
+	for (const auto &item : items) {
 		if (is_node(item) && item->isVisible()) {
 			node = static_cast<QtNode *>(item);
 			node->deleteActiveConnection();
@@ -638,10 +625,9 @@ void QtNodeEditor::deleteAllActiveConnections()
 	m_active_connection = nullptr;
 }
 
-//****************************************************************************/
 void QtNodeEditor::deselectConnections()
 {
-	for (QtConnection *connection : m_selected_connections) {
+	for (const auto &connection : m_selected_connections) {
 		if (connection->isVisible()) {
 			connection->setSelected(false);
 		}
@@ -650,10 +636,9 @@ void QtNodeEditor::deselectConnections()
 	m_selected_connections.clear();
 }
 
-//****************************************************************************/
 void QtNodeEditor::deselectNodes()
 {
-	for (QtNode *node : m_selected_nodes) {
+	for (const auto &node : m_selected_nodes) {
 		if (node->isVisible()) {
 			node->setSelected(false);
 		}
@@ -662,7 +647,6 @@ void QtNodeEditor::deselectNodes()
 	m_selected_nodes.clear();
 }
 
-//****************************************************************************/
 QtNode *QtNodeEditor::nodeWithActiveConnection()
 {
 	if (!m_active_connection) {
@@ -672,22 +656,30 @@ QtNode *QtNodeEditor::nodeWithActiveConnection()
 	return static_cast<QtNode *>(m_active_connection->getBasePort()->parentItem());
 }
 
-//****************************************************************************/
 void QtNodeEditor::addNode(QtNode *node)
 {
 	node->setEditor(this);
 	node->setScene(m_current_scene);
+
 	m_current_scene->addItem(node);
-	Q_EMIT nodeAdded(node);
+
+	m_hover_connection = lastSelectedConnection();
+
+	if (m_hover_connection != nullptr) {
+		splitConnectionWithNode(node);
+	}
+
+	m_hover_connection = nullptr;
 }
 
-//****************************************************************************/
 QVector<QtNode *> QtNodeEditor::getNodes() const
 {
-	QVector<QtNode *> nodeList;
+	const auto &items = m_current_scene->items();
+	auto nodeList = QVector<QtNode *>{};
+
 	QtNode *node;
-	QList<QGraphicsItem*> items = m_current_scene->items();
-	for (QGraphicsItem *item : items) {
+
+	for (const auto &item : items) {
 		if (is_node(item) && item->isVisible()) {
 			node = static_cast<QtNode *>(item);
 			nodeList.append(node);
@@ -697,20 +689,17 @@ QVector<QtNode *> QtNodeEditor::getNodes() const
 	return nodeList;
 }
 
-//****************************************************************************/
 void QtNodeEditor::removeNode(QtNode *node)
 {
 	if (!node) {
 		return;
 	}
 
-	node->prepareDelete();
-
 	if (is_object_node(node)) {
-		Q_EMIT objectNodeRemoved(static_cast<ObjectNodeItem *>(node));
+		Q_EMIT(objectNodeRemoved(static_cast<ObjectNodeItem *>(node)));
 	}
 	else {
-		Q_EMIT nodeToBeRemoved(node);
+		Q_EMIT(nodeRemoved(node));
 	}
 
 	m_current_scene->removeItem(node);
@@ -718,14 +707,12 @@ void QtNodeEditor::removeNode(QtNode *node)
 	delete node;
 }
 
-//****************************************************************************/
-
 using node_port_pair = std::pair<QtNode *, QtPort *>;
 
 std::pair<node_port_pair, node_port_pair> get_base_target_pairs(QtConnection *connection, bool remove)
 {
-	QtPort *base_port = connection->getBasePort();
-	QtPort *target_port = connection->getTargetPort();
+	auto base_port = connection->getBasePort();
+	auto target_port = connection->getTargetPort();
 
 	if (remove) {
 		base_port->deleteConnection(connection);
@@ -736,8 +723,8 @@ std::pair<node_port_pair, node_port_pair> get_base_target_pairs(QtConnection *co
 		std::swap(base_port, target_port);
 	}
 
-	auto base_node = static_cast<QtNode *>(base_port->parentItem());
-	auto target_node = static_cast<QtNode *>(target_port->parentItem());
+	const auto &base_node = static_cast<QtNode *>(base_port->parentItem());
+	const auto &target_node = static_cast<QtNode *>(target_port->parentItem());
 
 	return {
 		{ base_node, base_port },
@@ -747,12 +734,12 @@ std::pair<node_port_pair, node_port_pair> get_base_target_pairs(QtConnection *co
 
 void QtNodeEditor::removeConnection(QtConnection *connection)
 {
-	auto pairs = get_base_target_pairs(connection, true);
-	auto base = pairs.first;
-	auto target = pairs.second;
+	const auto &pairs = get_base_target_pairs(connection, true);
+	const auto &base = pairs.first;
+	const auto &target = pairs.second;
 
-	Q_EMIT connectionRemoved(base.first, base.second->getPortName(),
-	                         target.first, target.second->getPortName());
+	Q_EMIT(connectionRemoved(base.first, base.second->getPortName(),
+	                         target.first, target.second->getPortName()));
 
 	m_current_scene->removeItem(connection);
 }
@@ -760,27 +747,24 @@ void QtNodeEditor::removeConnection(QtConnection *connection)
 void QtNodeEditor::connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock)
 {
 	from->createActiveConnection(from_sock, from_sock->pos());
-	auto connection = to_sock->createConnection(from->m_active_connection);
-	m_current_scene->addItem(connection);
+	to_sock->createConnection(from->m_active_connection);
 
 	from->m_active_connection = nullptr;
 
-	Q_EMIT nodesConnected(from, from_sock->getPortName(), to, to_sock->getPortName());
+	Q_EMIT(nodesConnected(from, from_sock->getPortName(), to, to_sock->getPortName()));
 }
 
 void QtNodeEditor::splitConnectionWithNode(QtNode *node)
 {
-	auto connection = m_hover_connection;
+	const auto &connection = m_hover_connection;
 
-	auto pairs = get_base_target_pairs(connection, true);
-	auto base = pairs.first;
-	auto target = pairs.second;
+	const auto &pairs = get_base_target_pairs(connection, true);
+	const auto &base = pairs.first;
+	const auto &target = pairs.second;
 
 	/* remove connection */
-	Q_EMIT connectionRemoved(base.first, base.second->getPortName(),
-	                         target.first, target.second->getPortName());
-
-	m_current_scene->removeItem(connection);
+	Q_EMIT(connectionRemoved(base.first, base.second->getPortName(),
+	                         target.first, target.second->getPortName()));
 
 	/* connect from base port to first input port in node */
 	connectNodes(base.first, base.second, node, node->input(0));
@@ -791,48 +775,45 @@ void QtNodeEditor::splitConnectionWithNode(QtNode *node)
 
 void QtNodeEditor::connectionEstablished(QtConnection *connection)
 {
-	auto pairs = get_base_target_pairs(connection, false);
-	auto base = pairs.first;
-	auto target = pairs.second;
+	const auto &pairs = get_base_target_pairs(connection, false);
+	const auto &base = pairs.first;
+	const auto &target = pairs.second;
 
-	Q_EMIT nodesConnected(base.first, base.second->getPortName(),
-	                      target.first, target.second->getPortName());
+	Q_EMIT(nodesConnected(base.first, base.second->getPortName(),
+	                      target.first, target.second->getPortName()));
 }
 
-//****************************************************************************/
 void QtNodeEditor::removeAllSelelected()
 {
-	for (QtConnection *selectedConnection : m_selected_connections) {
-		removeConnection(selectedConnection);
+	for (auto &connection : m_selected_connections) {
+		removeConnection(connection);
 	}
 
 	m_selected_connections.clear();
 
-	for (QtNode *selectedNode : m_selected_nodes) {
-		removeNode(selectedNode);
+	for (auto &node : m_selected_nodes) {
+		removeNode(node);
 	}
 
 	m_selected_nodes.clear();
 }
 
-//****************************************************************************/
 void QtNodeEditor::center()
 {
-	QList<QGraphicsItem*> items = m_current_scene->items();
-	for (QGraphicsItem *item : items) {
+	const auto &items = m_current_scene->items();
+
+	for (const auto &item : items) {
 		if (is_node(item)) {
 			item->setPos(0, 0);
 		}
 	}
 }
 
-//****************************************************************************/
 void QtNodeEditor::clear()
 {
 	m_current_scene->clear(); /* removes + deletes all items in the scene */
 }
 
-//****************************************************************************/
 QtNode *QtNodeEditor::getLastSelectedNode() const
 {
 	if (m_selected_nodes.empty()) {
@@ -842,41 +823,47 @@ QtNode *QtNodeEditor::getLastSelectedNode() const
 	return m_selected_nodes.back();
 }
 
-//****************************************************************************/
 const QVector<QtNode *> &QtNodeEditor::selectedNodes() const
 {
 	return m_selected_nodes;
 }
 
-//****************************************************************************/
+QtConnection *QtNodeEditor::lastSelectedConnection() const
+{
+	if (m_selected_connections.empty()) {
+		return nullptr;
+	}
+
+	return m_selected_connections.back();
+}
+
 const QVector<QtConnection *> &QtNodeEditor::selectedConnections() const
 {
 	return m_selected_connections;
 }
 
-//****************************************************************************/
 void QtNodeEditor::toFront(QtNode *node)
 {
 	if (!node) {
 		return;
 	}
 
-	QList<QGraphicsItem *> items = m_current_scene->items();
+	const auto &items = m_current_scene->items();
 
 	/* First set the node in front of all other nodes */
-	for (QGraphicsItem *item : items) {
+	for (const auto &item : items) {
 		if (node != item && is_node(item) && item->isVisible()) {
 			item->stackBefore(node);
 		}
 	}
 
 	/* Put the connections of the node in front of the node and the other connections behind the node */
-	for (QGraphicsItem *item : items) {
+	for (const auto &item : items) {
 		if (!is_node(item)) {
 			continue;
 		}
 
-		QtConnection *connection = static_cast<QtConnection *>(item);
+		const auto &connection = static_cast<QtConnection *>(item);
 
 		if (node->isConnectionConnectedToThisNode(connection)) {
 			node->stackBefore(item);
@@ -887,35 +874,32 @@ void QtNodeEditor::toFront(QtNode *node)
 	}
 }
 
-//****************************************************************************/
 void QtNodeEditor::toBack(QtNode *node)
 {
-	if (!node)
+	if (!node) {
 		return;
+	}
 
-	QList<QGraphicsItem*> items = m_current_scene->items();
+	const auto &items = m_current_scene->items();
 
 	/* Set all other nodes in front of this node */
-	for (QGraphicsItem *item : items) {
+	for (const auto &item : items) {
 		if (node != item && is_node(item) && item->isVisible()) {
 			node->stackBefore(item);
 		}
 	}
 }
 
-//****************************************************************************/
 void QtNodeEditor::setZoom(qreal zoom)
 {
 	m_view->scale(zoom, zoom);
 }
 
-//****************************************************************************/
 bool QtNodeEditor::ctrlPressed()
 {
 	return (QGuiApplication::keyboardModifiers() & Qt::ControlModifier);
 }
 
-//****************************************************************************/
 bool QtNodeEditor::isAlreadySelected(QtNode *node)
 {
 	auto iter = std::find(m_selected_nodes.begin(),
@@ -925,7 +909,6 @@ bool QtNodeEditor::isAlreadySelected(QtNode *node)
 	return (iter != m_selected_nodes.end());
 }
 
-//****************************************************************************/
 bool QtNodeEditor::isAlreadySelected(QtConnection *connection)
 {
 	auto iter = std::find(m_selected_connections.begin(),
@@ -935,16 +918,15 @@ bool QtNodeEditor::isAlreadySelected(QtConnection *connection)
 	return (iter != m_selected_connections.end());
 }
 
-//****************************************************************************/
 void QtNodeEditor::showContextMenu(const QPoint &pos)
 {
 	if (!m_context_menu) {
 		return;
 	}
 
-	QList<QAction *> actions = m_context_menu->actions();
-	const bool nodesSelected = !m_selected_nodes.isEmpty();
-	const bool itemsSelected = nodesSelected || !m_selected_connections.isEmpty();
+	const auto &actions = m_context_menu->actions();
+	const auto &nodesSelected = !m_selected_nodes.isEmpty();
+	const auto &itemsSelected = nodesSelected || !m_selected_connections.isEmpty();
 
 	QFont font;
 	/* Italic when no selected items available */
@@ -965,15 +947,14 @@ void QtNodeEditor::showContextMenu(const QPoint &pos)
 	m_context_menu->popup(pos);
 }
 
-//****************************************************************************/
 QAction *QtNodeEditor::getActionFromContextMenu(const QString &actionText)
 {
 	if (!m_context_menu) {
 		return nullptr;
 	}
 
-	QList<QAction*> actions = m_context_menu->actions();
-	for (QAction *action : actions) {
+	const auto &actions = m_context_menu->actions();
+	for (auto &action : actions) {
 		if (action->text() == actionText) {
 			return action;
 		}
@@ -982,7 +963,6 @@ QAction *QtNodeEditor::getActionFromContextMenu(const QString &actionText)
 	return nullptr;
 }
 
-//****************************************************************************/
 void QtNodeEditor::setZoomForAction(qreal zoom, QAction *action)
 {
 	setZoom(zoom);
@@ -990,15 +970,15 @@ void QtNodeEditor::setZoomForAction(qreal zoom, QAction *action)
 	action->setChecked(true);
 }
 
-//****************************************************************************/
 void QtNodeEditor::resetZoomSubmenu()
 {
-	QList<QAction*> actions = m_zoom_sub_menu->actions();
-	for (QAction *action : actions)
+	const auto &actions = m_zoom_sub_menu->actions();
+
+	for (auto &action : actions) {
 		action->setChecked(false);
+	}
 }
 
-//****************************************************************************/
 void QtNodeEditor::contextMenuItemSelected(QAction *action)
 {
 	/* ---------------- Delete action ---------------- */
@@ -1066,17 +1046,12 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 		return;
 	}
 
-	if (action->text() == NODE_ACTION_ZOOM_10) {
-		setZoomForAction(0.1f, action);
-		return;
-	}
-
 	/* ---------------- Collapse action ---------------- */
 	if (action->text() == NODE_ACTION_COLLAPSE_ALL) {
 		QtNode *node;
-		QList<QGraphicsItem*> items = m_current_scene->items();
+		const auto &items = m_current_scene->items();
 
-		for (QGraphicsItem *item : items) {
+		for (const auto &item : items) {
 			if (is_node(item) && item->isVisible()) {
 				node = static_cast<QtNode*>(item);
 				node->collapse();
@@ -1089,9 +1064,9 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 	/* ---------------- Expand action ---------------- */
 	if (action->text() == NODE_ACTION_EXPAND_ALL) {
 		QtNode *node;
-		QList<QGraphicsItem*> items = m_current_scene->items();
+		const auto &items = m_current_scene->items();
 
-		for (QGraphicsItem *item : items) {
+		for (const auto &item : items) {
 			if (is_node(item) && item->isVisible()) {
 				node = static_cast<QtNode *>(item);
 				node->expand();
@@ -1103,7 +1078,7 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 
 	/* ---------------- Enter object action ---------------- */
 	if (action->text() == NODE_ENTER_OBJECT) {
-		auto node = static_cast<ObjectNodeItem *>(getLastSelectedNode());
+		const auto &node = static_cast<ObjectNodeItem *>(getLastSelectedNode());
 		m_current_scene = node->nodeScene();
 		m_current_scene->installEventFilter(this);
 		m_editor_mode = EDITOR_MODE_OBJECT;
@@ -1125,11 +1100,26 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 	}
 }
 
-//****************************************************************************/
-void QtNodeEditor::wheelEvent(QWheelEvent *event)
+/* ************************************************************************** */
+
+NodeView::NodeView(QWidget *parent)
+    : QGraphicsView(parent)
 {
-	m_view->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+	setDragMode(QGraphicsView::ScrollHandDrag);
+}
+
+NodeView::NodeView(QGraphicsScene *scene, QWidget *parent)
+    : QGraphicsView(scene, parent)
+{
+	setDragMode(QGraphicsView::ScrollHandDrag);
+}
+
+void NodeView::wheelEvent(QWheelEvent *event)
+{
+	this->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
 
 	const auto factor = 1.15f;
-	setZoom((event->delta() > 0) ? factor : 1.0f / factor);
+	const auto zoom = ((event->delta() > 0) ? factor : 1.0f / factor);
+
+	this->scale(zoom, zoom);
 }

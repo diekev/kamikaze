@@ -26,7 +26,7 @@
 
 #include <cassert>
 
-#include "../core/object.h"
+#include "../core/object.h"  /* XXX - bad level call */
 #include "primitive.h"
 
 Node::Node(const std::string &name)
@@ -51,14 +51,14 @@ const std::string &Node::name() const noexcept
 
 void Node::addInput(const std::string &sname)
 {
-	InputSocket *in = new InputSocket(sname);
+	auto in = new InputSocket(sname);
 	in->parent = this;
 	m_inputs.push_back(in);
 }
 
 void Node::addOutput(const std::string &sname)
 {
-	OutputSocket *out = new OutputSocket(sname);
+	auto out = new OutputSocket(sname);
 	out->parent = this;
 	m_outputs.push_back(out);
 }
@@ -112,7 +112,7 @@ bool Node::isLinked() const
 
 bool Node::hasLinkedInput() const
 {
-	bool linked_input = false;
+	auto linked_input = false;
 
 	for (const auto &input : m_inputs) {
 		if (input->link != nullptr) {
@@ -126,7 +126,7 @@ bool Node::hasLinkedInput() const
 
 bool Node::hasLinkedOutput() const
 {
-	bool linked_output = false;
+	auto linked_output = false;
 
 	for (const auto &output : m_outputs) {
 		if (!output->links.empty()) {
@@ -242,4 +242,9 @@ std::vector<std::string> NodeFactory::categories() const
 	}
 
 	return v;
+}
+
+void swap(any &&lhs, any &&rhs)
+{
+	lhs.swap(rhs);
 }

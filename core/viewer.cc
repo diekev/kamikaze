@@ -73,7 +73,7 @@ Viewer::~Viewer()
 void Viewer::initializeGL()
 {
 	glewExperimental = GL_TRUE;
-	GLenum err = glewInit();
+	const auto &err = glewInit();
 
 	if (err != GLEW_OK) {
 		std::cerr << "Error: " << glewGetErrorString(err) << "\n";
@@ -285,7 +285,7 @@ glm::vec3 Viewer::unproject(const glm::vec3 &pos) const
 
 void Viewer::changeBackground()
 {
-	QColor color = QColorDialog::getColor();
+	const auto &color = QColorDialog::getColor();
 
 	if (color.isValid()) {
 		m_bg = glm::vec4(color.redF(), color.greenF(), color.blueF(), 1.0f);
