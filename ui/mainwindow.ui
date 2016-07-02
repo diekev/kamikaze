@@ -613,7 +613,7 @@
           <x>0</x>
           <y>0</y>
           <width>276</width>
-          <height>102</height>
+          <height>98</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -768,6 +768,17 @@
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+  </widget>
   <action name="m_open_file_act">
    <property name="text">
     <string>Open VDB File</string>

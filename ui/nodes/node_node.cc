@@ -20,6 +20,7 @@
 
 #include "node_node.h"
 
+#include <kamikaze/nodes.h>
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>

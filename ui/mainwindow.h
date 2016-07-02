@@ -78,6 +78,7 @@ protected:
 private:
 	void generateObjectMenu();
 	void generateNodeMenu();
+	void generatePresetMenu();
 
 private Q_SLOTS:
 	/* Timeline */
