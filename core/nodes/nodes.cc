@@ -427,10 +427,338 @@ void CreateGridNode::process()
 
 /* ************************************************************************** */
 
+class CreateCircleNode : public Node {
+public:
+	CreateCircleNode();
+
+	void process() override;
+};
+
+CreateCircleNode::CreateCircleNode()
+    : Node("Circle")
+{
+	addOutput("Primitive");
+
+	add_prop("Vertices", property_type::prop_int);
+	set_prop_min_max(3, 500);
+	set_prop_default_value_int(32);
+
+	add_prop("Radius", property_type::prop_float);
+	set_prop_min_max(0.0f, 10.0f);
+	set_prop_default_value_float(1.0f);
+}
+
+void CreateCircleNode::process()
+{
+	Primitive *prim = new Mesh;
+	auto mesh = static_cast<Mesh *>(prim);
+
+	const auto segs = eval_int("Vertices");
+	const auto dia = eval_float("Radius");
+
+	const auto phid = 2.0f * static_cast<float>(M_PI) / segs;
+	auto phi = 0.0f;
+
+	PointList *points = mesh->points();
+	points->reserve(segs + 1);
+
+	glm::vec3 vec(0.0f, 0.0f, 0.0f);
+
+	points->push_back(vec);
+
+	for (int a = 0; a < segs; ++a, phi += phid) {
+		/* Going this way ends up with normal(s) upward */
+		vec[0] = -dia * std::sin(phi);
+		vec[2] = dia * std::cos(phi);
+
+		points->push_back(vec);
+	}
+
+	PolygonList *polys = mesh->polys();
+
+	auto index = points->size() - 1;
+	glm::ivec4 poly(0, 0, 0, INVALID_INDEX);
+
+	for (auto i = 1; i < points->size(); ++i) {
+		poly[1] = index;
+		poly[2] = i;
+
+		polys->push_back(poly);
+
+		index = i;
+	}
+
+	mesh->tagUpdate();
+
+	setOutputPrimitive("Primitive", prim);
+}
+
+/* ************************************************************************** */
+
+static void create_cylinder(PointList *points, PolygonList *polys, int segs, float dia1, float dia2, float depth)
+{
+	const auto phid = 2.0f * static_cast<float>(M_PI) / segs;
+	auto phi = 0.0f;
+
+	points->reserve((dia2 != 0.0f) ? segs * 2 + 2 : segs + 2);
+
+	glm::vec3 vec(0.0f, 0.0f, 0.0f);
+
+	const auto cent1 = 0;
+	vec[1] = -depth;
+	points->push_back(vec);
+
+	const auto cent2 = 1;
+	vec[1] = depth;
+	points->push_back(vec);
+
+	auto firstv1 = 0;
+	auto firstv2 = 0;
+	auto lastv1 = 0;
+	auto lastv2 = 0;
+	auto v1 = 0;
+	auto v2 = 0;
+
+	for (int a = 0; a < segs; ++a, phi += phid) {
+		/* Going this way ends up with normal(s) upward */
+		vec[0] = -dia1 * std::sin(phi);
+		vec[1] = -depth;
+		vec[2] = dia1 * std::cos(phi);
+
+		v1 = points->size();
+		points->push_back(vec);
+
+		vec[0] = -dia2 * std::sin(phi);
+		vec[1] = depth;
+		vec[2] = dia2 * std::cos(phi);
+
+		v2 = points->size();
+		points->push_back(vec);
+
+		if (a > 0) {
+			/* Poly for the bottom cap. */
+			polys->push_back(glm::ivec4{ cent1, lastv1, v1, INVALID_INDEX });
+
+			/* Poly for the top cap. */
+			polys->push_back(glm::ivec4{ cent2, v2, lastv2, INVALID_INDEX });
+
+			/* Poly for the side. */
+			polys->push_back(glm::ivec4{ lastv1, lastv2, v2, v1 });
+		}
+		else {
+			firstv1 = v1;
+			firstv2 = v2;
+		}
+
+		lastv1 = v1;
+		lastv2 = v2;
+	}
+
+	/* Poly for the bottom cap. */
+	polys->push_back(glm::ivec4{ cent1, v1, firstv1, INVALID_INDEX });
+
+	/* Poly for the top cap. */
+	polys->push_back(glm::ivec4{ cent2, firstv2, v2, INVALID_INDEX });
+
+	/* Poly for the side. */
+	polys->push_back(glm::ivec4{ v1, v2, firstv2, firstv1 });
+}
+
+class CreateTubeNode : public Node {
+public:
+	CreateTubeNode();
+
+	void process() override;
+};
+
+CreateTubeNode::CreateTubeNode()
+    : Node("Tube")
+{
+	addOutput("Primitive");
+
+	add_prop("Vertices", property_type::prop_int);
+	set_prop_min_max(3, 500);
+	set_prop_default_value_int(32);
+
+	add_prop("Radius", property_type::prop_float);
+	set_prop_min_max(0.0f, 10.0f);
+	set_prop_default_value_float(1.0f);
+
+	add_prop("Depth", property_type::prop_float);
+	set_prop_min_max(0.0f, 10.0f);
+	set_prop_default_value_float(1.0f);
+}
+
+void CreateTubeNode::process()
+{
+	Primitive *prim = new Mesh;
+	auto mesh = static_cast<Mesh *>(prim);
+
+	const auto segs = eval_int("Vertices");
+	const auto dia = eval_float("Radius");
+	const auto depth = eval_float("Depth");
+
+	create_cylinder(mesh->points(), mesh->polys(), segs, dia, dia, depth);
+
+	mesh->tagUpdate();
+
+	setOutputPrimitive("Primitive", prim);
+}
+
+/* ************************************************************************** */
+
+class CreateConeNode : public Node {
+public:
+	CreateConeNode();
+
+	void process() override;
+};
+
+CreateConeNode::CreateConeNode()
+    : Node("Cone")
+{
+	addOutput("Primitive");
+
+	add_prop("Vertices", property_type::prop_int);
+	set_prop_min_max(3, 500);
+	set_prop_default_value_int(32);
+
+	add_prop("Minor Radius", property_type::prop_float);
+	set_prop_min_max(0.0f, 10.0f);
+	set_prop_default_value_float(0.0f);
+
+	add_prop("Major Radius", property_type::prop_float);
+	set_prop_min_max(0.0f, 10.0f);
+	set_prop_default_value_float(1.0f);
+
+	add_prop("Depth", property_type::prop_float);
+	set_prop_min_max(0.0f, 10.0f);
+	set_prop_default_value_float(1.0f);
+}
+
+void CreateConeNode::process()
+{
+	Primitive *prim = new Mesh;
+	auto mesh = static_cast<Mesh *>(prim);
+
+	const auto segs = eval_int("Vertices");
+	const auto dia1 = eval_float("Major Radius");
+	const auto dia2 = eval_float("Minor Radius");
+	const auto depth = eval_float("Depth");
+
+	create_cylinder(mesh->points(), mesh->polys(), segs, dia1, dia2, depth);
+
+	mesh->tagUpdate();
+
+	setOutputPrimitive("Primitive", prim);
+}
+
+/* ************************************************************************** */
+
+static const float icovert[12][3] = {
+	{0.0f, 0.0f, -200.0f},
+	{144.72f, -105.144f, -89.443f},
+	{-55.277f, -170.128, -89.443f},
+	{-178.885f, 0.0f, -89.443f},
+	{-55.277f, 170.128f, -89.443f},
+	{144.72f, 105.144f, -89.443f},
+	{55.277f, -170.128f, 89.443f},
+	{-144.72f, -105.144f, 89.443f},
+	{-144.72f, 105.144f, 89.443f},
+	{55.277f, 170.128f, 89.443f},
+	{178.885f, 0.0f, 89.443f},
+	{0.0f, 0.0f, 200.0f}
+};
+
+static const short icoface[20][3] = {
+	{0, 1, 2},
+	{1, 0, 5},
+	{0, 2, 3},
+	{0, 3, 4},
+	{0, 4, 5},
+	{1, 5, 10},
+	{2, 1, 6},
+	{3, 2, 7},
+	{4, 3, 8},
+	{5, 4, 9},
+	{1, 10, 6},
+	{2, 6, 7},
+	{3, 7, 8},
+	{4, 8, 9},
+	{5, 9, 10},
+	{6, 10, 11},
+	{7, 6, 11},
+	{8, 7, 11},
+	{9, 8, 11},
+	{10, 9, 11}
+};
+
+class CreateIcoSphereNode : public Node {
+public:
+	CreateIcoSphereNode();
+
+	void process() override;
+};
+
+CreateIcoSphereNode::CreateIcoSphereNode()
+    : Node("IcoSphere")
+{
+	addOutput("Primitive");
+
+	add_prop("Radius", property_type::prop_float);
+	set_prop_min_max(0.0f, 10.0f);
+	set_prop_default_value_float(1.0f);
+}
+
+void CreateIcoSphereNode::process()
+{
+	Primitive *prim = new Mesh;
+	auto mesh = static_cast<Mesh *>(prim);
+
+	const auto dia = eval_float("Radius");
+	const auto dia_div = dia / 200.0f;
+
+	PointList *points = mesh->points();
+	points->reserve(12);
+
+	glm::vec3 vec(0.0f, 0.0f, 0.0f);
+
+	for (int a = 0; a < 12; a++) {
+		vec[0] = dia_div * icovert[a][0];
+		vec[1] = dia_div * icovert[a][2];
+		vec[2] = dia_div * icovert[a][1];
+
+		points->push_back(vec);
+	}
+
+	PolygonList *polys = mesh->polys();
+	polys->reserve(20);
+
+	glm::ivec4 poly(0, 0, 0, INVALID_INDEX);
+
+	for (auto i = 0; i < 20; ++i) {
+		poly[0] = icoface[i][0];
+		poly[1] = icoface[i][1];
+		poly[2] = icoface[i][2];
+
+		polys->push_back(poly);
+	}
+
+	mesh->tagUpdate();
+
+	setOutputPrimitive("Primitive", prim);
+}
+
+/* ************************************************************************** */
+
 void register_builtin_nodes(NodeFactory *factory)
 {
 	REGISTER_NODE("Geometry", "Box", CreateBoxNode);
 	REGISTER_NODE("Geometry", "Grid", CreateGridNode);
 	REGISTER_NODE("Geometry", "Torus", CreateTorusNode);
 	REGISTER_NODE("Geometry", "Transform", TransformNode);
+	REGISTER_NODE("Geometry", "Circle", CreateCircleNode);
+	REGISTER_NODE("Geometry", "Tube", CreateTubeNode);
+	REGISTER_NODE("Geometry", "IcoSphere", CreateIcoSphereNode);
+	REGISTER_NODE("Geometry", "Cone", CreateConeNode);
 }

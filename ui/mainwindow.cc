@@ -279,19 +279,27 @@ void MainWindow::generateNodeMenu()
 	ui->graph_editor->setAddNodeMenu(ui->add_nodes_menu);
 }
 
+struct UIProp {
+	const char *name;
+	const char *icon_path;
+};
+
 void MainWindow::generatePresetMenu()
 {
 	m_command_factory->registerType("add preset", AddPresetObjectCmd::registerSelf);
 
-	const char *icons[] = {
-	    "icons/icon_grid.png",
-	    "icons/icon_box.png",
-	    "icons/icon_torus.png",
+	UIProp props[] = {
+	    { "Grid", "icons/icon_grid.png" },
+	    { "Box", "icons/icon_box.png" },
+	    { "Circle", "icons/icon_circle.png" },
+	    { "IcoSphere", "icons/icon_icosphere.png" },
+	    { "Tube", "icons/icon_tube.png" },
+	    { "Cone", "icons/icon_cone.png" },
+	    { "Torus", "icons/icon_torus.png" },
 	};
 
-	auto i = 0;
-	for (const auto &name : { "Grid", "Box", "Torus" }) {
-		auto action = ui->toolBar->addAction(QIcon(icons[i++]), name);
+	for (const auto &prop : props) {
+		auto action = ui->toolBar->addAction(QIcon(prop.icon_path), prop.name);
 		action->setData(QVariant::fromValue(QString("add preset")));
 
 		connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
