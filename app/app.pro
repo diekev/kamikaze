@@ -36,6 +36,7 @@ LIBS += $$OUT_PWD/../ui/libui.a
 LIBS += $$OUT_PWD/../core/libcore.a
 #LIBS += $$OUT_PWD/../smoke/libsmoke.a
 LIBS += $$OUT_PWD/../util/libutils.a
+LIBS += -ltbb
 
 LIBS += $$EGO_LIBRARIES
 LIBS += $$FILESYSTEM_LIBRARIES
@@ -43,7 +44,8 @@ LIBS += $$KAMIKAZE_SDK_LIBRARY
 
 unix {
 	copy_files.commands = cp -r $$PWD/../core/shaders/ .
+	copy_icons.commands = cp -r $$PWD/../core/icons/ .
 }
 
-QMAKE_EXTRA_TARGETS += copy_files
-POST_TARGETDEPS += copy_files
+QMAKE_EXTRA_TARGETS += copy_files copy_icons
+POST_TARGETDEPS += copy_files copy_icons

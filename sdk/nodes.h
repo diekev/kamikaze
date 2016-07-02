@@ -28,6 +28,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "models.h"
+
 class InputSocket;
 class Node;
 class NodeFactory;
@@ -46,6 +48,12 @@ extern "C" {
 void new_kamikaze_node(NodeFactory *factory);
 
 }
+
+/**
+ * Macro to help registering nodes.
+ */
+#define REGISTER_NODE(category, name, type) \
+	factory->registerType(category, name, []() -> Node* { return new type; })
 
 struct OutputSocket {
 	Node *parent = nullptr;
@@ -72,7 +80,16 @@ struct InputSocket {
 	{}
 };
 
-class Node {
+/* ********************************** */
+
+struct NodeState {
+	std::vector<InputSocket *> inputs;
+	std::vector<OutputSocket *> outputs;
+};
+
+using NodeWatcher = Watcher<NodeState>;
+
+class Node : public Watched<NodeWatcher> {
 protected:
 	std::vector<InputSocket *> m_inputs;
 	std::vector<OutputSocket *> m_outputs;
@@ -151,11 +168,6 @@ public:
 	virtual void process() = 0;
 
 	/**
-	 * Set the UI parameters.
-	 */
-	virtual void setUIParams(ParamCallback *cb) = 0;
-
-	/**
 	 * Get the primitive at the given input name.
 	 */
 	Primitive *getInputPrimitive(const std::string &name);
@@ -169,6 +181,14 @@ public:
 	 * Set the primitive cache.
 	 */
 	void setPrimitiveCache(PrimitiveCache *cache);
+
+	NodeState getState() const
+	{
+		NodeState s;
+		s.inputs = this->m_inputs;
+		s.outputs = this->m_outputs;
+		return s;
+	}
 };
 
 class NodeFactory final {

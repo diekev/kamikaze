@@ -12,41 +12,59 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
+ * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * The Original Code is Copyright (C) 2015 Kévin Dietrich.
+ * The Original Code is Copyright (C) 2016 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
+ *
  */
 
 #pragma once
 
-#include <cstdio>
-#include <string>
+#include <glm/glm.hpp>
 
-/* return current time */
-double time_dt();
+#include <kamikaze/nodes.h>
 
-/* A utility class to print the time elapsed during its lifetime, usefull for e.g.
- * timing the overall execution time of a function */
-class ScopeTimer {
-	double m_start;
-	std::string m_message;
+void register_builtin_nodes(NodeFactory *factory);
+
+class OutputNode : public Node {
+	Primitive *m_primitive = nullptr;
 
 public:
-	explicit ScopeTimer(const std::string &message)
-	    : m_start(time_dt())
-	    , m_message(message)
-	{}
+	OutputNode(const std::string &name);
 
-	~ScopeTimer()
-	{
-		printf("%s: %fs\n", m_message.c_str(), time_dt() - m_start);
-	}
+	Primitive *primitive() const;
+
+	void process() override;
 };
 
-#define Timer(x) \
-	ScopeTimer func(x);
+class TransformNode : public Node {
+public:
+	TransformNode();
 
+	void process() override;
+};
+
+class CreateBoxNode : public Node {
+public:
+	CreateBoxNode();
+
+	void process() override;
+};
+
+class CreateTorusNode : public Node {
+public:
+	CreateTorusNode();
+
+	void process() override;
+};
+
+class CreateGridNode : public Node {
+public:
+	CreateGridNode();
+
+	void process() override;
+};

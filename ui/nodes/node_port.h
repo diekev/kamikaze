@@ -25,11 +25,6 @@
 #include "node_connection.h"
 #include "node_constants.h"
 
-enum QtPortShape {
-	PORT_SHAPE_CIRCLE,
-	PORT_SHAPE_SQUARE
-};
-
 static constexpr auto NODE_PORT_TYPE_INPUT = 1; /* Reserved for input port */
 static constexpr auto NODE_PORT_TYPE_OUTPUT = 2; /* Reserved for output port */
 
@@ -49,7 +44,6 @@ class QtPort : public QGraphicsPathItem {
 	int m_port_type;
 	QColor m_port_colour;
 	QColor m_connection_colour;
-	QtPortShape m_port_shape;
 	Alignment m_alignment;
 	QGraphicsTextItem *m_label;
 	QFont m_font;
@@ -60,9 +54,8 @@ class QtPort : public QGraphicsPathItem {
 public:
 	QtPort(const QString &portName,
 	       int portType,
-	       QColor portColour,
-	       QColor connectionColour,
-	       QtPortShape portShape,
+	       const QColor &portColour,
+	       const QColor &connectionColour,
 	       Alignment alignment,
 	       QGraphicsItem *parent = nullptr);
 

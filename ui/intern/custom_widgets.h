@@ -120,8 +120,10 @@ class FileSelector : public QWidget {
 	QLineEdit *m_line_edit;
 	QPushButton *m_push_button;
 
+	bool m_input;
+
 public:
-	explicit FileSelector(QWidget *parent = nullptr);
+	explicit FileSelector(bool input, QWidget *parent = nullptr);
 
 	~FileSelector() = default;
 

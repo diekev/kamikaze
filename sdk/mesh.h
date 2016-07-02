@@ -105,8 +105,6 @@ public:
 
 	void computeBBox(glm::vec3 &min, glm::vec3 &max) override;
 
-	static void registerSelf(PrimitiveFactory *factory);
-
 	Primitive *copy() const override;
 
 private:

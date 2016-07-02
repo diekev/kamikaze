@@ -28,6 +28,7 @@
 #include <iostream>
 
 #include "graph_dumper.h"
+#include "nodes.h"
 
 //#define DEBUG_GRAPH
 
@@ -170,12 +171,9 @@ void Graph::topology_sort()
 	}
 }
 
-void Graph::execute()
+const std::vector<Node *> &Graph::finished_stack() const
 {
-	for (auto iter = m_stack.rbegin(); iter != m_stack.rend(); ++iter) {
-		Node *node = *iter;
-		node->process();
-	}
+	return m_stack;
 }
 
 OutputNode *Graph::output() const
@@ -209,26 +207,4 @@ void Graph::disconnect(OutputSocket *from, InputSocket *to)
 	to->link = nullptr;
 
 	m_need_update = true;
-}
-
-/* ****************************** output node ******************************* */
-
-OutputNode::OutputNode(const std::string &name)
-    : Node(name)
-{
-	addInput("Primitive");
-}
-
-Primitive *OutputNode::primitive() const
-{
-	return m_primitive;
-}
-
-void OutputNode::process()
-{
-	m_primitive = getInputPrimitive("Primitive");
-}
-
-void OutputNode::setUIParams(ParamCallback *)
-{
 }

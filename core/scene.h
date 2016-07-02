@@ -64,7 +64,6 @@ public:
 public Q_SLOTS:
 	void setObjectName(const QString &name);
 	void tagObjectUpdate();
-	void evalObjectGraph();
 
 	void setCurrentObject(QListWidgetItem *item);
 	void setActiveObject(Object *object);

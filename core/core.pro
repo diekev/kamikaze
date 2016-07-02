@@ -49,7 +49,9 @@ SOURCES += \
     kamikaze_main.cc \
     nodes/graph.cc \
     object.cc \
-    nodes/graph_dumper.cc
+    nodes/graph_dumper.cc \
+    nodes/nodes.cc \
+    task.cc
 
 HEADERS += \
     grid.h \
@@ -63,7 +65,9 @@ HEADERS += \
     kamikaze_main.h \
     nodes/graph.h \
     object.h \
-    nodes/graph_dumper.h
+    nodes/graph_dumper.h \
+    nodes/nodes.h \
+    task.h
 
 OTHER_FILES += \
     shaders/flat_shader.frag \

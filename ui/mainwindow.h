@@ -25,6 +25,7 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QProgressBar>
 
 #include "core/undo.h"
 
@@ -37,13 +38,14 @@ class QtNode;
 class Command;
 class CommandManager;
 class Main;
-class Primitive;
 class Node;
 class Object;
 class ObjectNodeItem;
 class GraphicsViewer;
+class Primitive;
 class QComboBox;
 class QListWidget;
+class QProgressBar;
 class QTimer;
 class Scene;
 
@@ -51,6 +53,7 @@ class MainWindow : public QMainWindow {
 	Q_OBJECT
 
 	Ui::MainWindow *ui;
+	QProgressBar *m_progress_bar;
 
 	Main *m_main;
 
@@ -69,12 +72,19 @@ public:
 	explicit MainWindow(Main *main, QWidget *parent = nullptr);
 	~MainWindow();
 
+public Q_SLOTS:
+	/* Progress Bar */
+	void taskStarted();
+	void updateProgress(float progress);
+	void taskEnded();
+
 protected:
 	bool eventFilter(QObject *obj, QEvent *e);
 
 private:
 	void generateObjectMenu();
 	void generateNodeMenu();
+	void generatePresetMenu();
 
 private Q_SLOTS:
 	/* Timeline */
@@ -102,4 +112,5 @@ private Q_SLOTS:
 	void removeNode(QtNode *node);
 	void nodesConnected(QtNode *, const QString &, QtNode *, const QString &);
 	void connectionRemoved(QtNode *, const QString &, QtNode *, const QString &);
+	void evalObjectGraph();
 };

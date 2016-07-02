@@ -37,7 +37,6 @@
 PrimPoints::PrimPoints()
 {
 	m_draw_type = GL_POINTS;
-	loadShader();
 }
 
 PrimPoints::~PrimPoints()
@@ -93,9 +92,9 @@ Attribute *PrimPoints::addAttribute(const std::string &name, AttributeType type,
 
 Primitive *PrimPoints::copy() const
 {
-	PrimPoints *prim = new PrimPoints;
+	auto prim = new PrimPoints;
 
-	PointList *points = prim->points();
+	auto points = prim->points();
 	points->resize(this->points()->size());
 
 	prim->tagUpdate();
@@ -149,8 +148,11 @@ void PrimPoints::prepareRenderData()
 		return;
 	}
 
+	if (!m_program.isValid()) {
+		loadShader();
+	}
+
 	computeBBox(m_min, m_max);
-	updateMatrix();
 
 	for (size_t i = 0, ie = this->points()->size(); i < ie; ++i) {
 		m_points[i] = m_points[i] * glm::mat3(m_inv_matrix);

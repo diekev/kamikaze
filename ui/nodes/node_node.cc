@@ -21,7 +21,6 @@
 #include "node_node.h"
 
 #include <kamikaze/nodes.h>
-
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
@@ -39,133 +38,65 @@ static constexpr auto NODE_BODY_HEIGHT = 32.0f;
 static constexpr auto NODE_PEN_WIDTH_UNSELECTED = 1;
 static constexpr auto NODE_PEN_WIDTH_SELECTED = 1;
 
-static constexpr auto NODE_IMAGE_FRACTION = 0.95f;
-
 QtNode::QtNode(const QString &title, QGraphicsItem *parent)
     : QGraphicsPathItem(parent)
+    , m_data(nullptr)
+    , m_auto_size(true)
+    , m_icon_size(NODE_HEADER_ICON_SIZE)
+    , m_normalized_width(NODE_WIDTH)
+    , m_width(m_normalized_width)
+    , m_normalized_body_height(NODE_BODY_HEIGHT)
+    , m_header_height(NODE_HEADER_HEIGHT)
+    , m_body_height(m_normalized_body_height)
+    , m_body(new QGraphicsPathItem(this))  /* MUST be a child of QtNode */
+    , m_title(title)
+    , m_title_label(new QGraphicsTextItem(this))
+    , m_title_alignment(ALIGNED_CENTER)
+    , m_port_name_color(Qt::white)
+    , m_active_connection(nullptr)
 {
 	/* Header */
-	m_active_connection = 0;
-	m_data = nullptr;
-	m_pixmap_item = new QGraphicsPixmapItem(this);
-	m_image_set = false;
-	m_auto_size = true;
-	m_icon_size = NODE_HEADER_ICON_SIZE;
-	m_normalized_width = NODE_WIDTH;
-	m_normalized_body_height = NODE_BODY_HEIGHT;
-	m_width = m_normalized_width;
-	m_header_height = NODE_HEADER_HEIGHT;
-	m_body_height = m_normalized_body_height;
-	m_port_name_color = Qt::white;
 
 	QLinearGradient linearGrad(0, 0, 300, NODE_HEADER_HEIGHT);
 	linearGrad.setColorAt(0, QColor("#945555"));
 	linearGrad.setColorAt(0.2, QColor("#3e3e3e"));
 	m_header_brush = QBrush(linearGrad);
+
 	setFlag(QGraphicsItem::ItemIsMovable);
 	setFlag(QGraphicsItem::ItemIsSelectable);
 
-	/* Add icons to the header */
-	m_header_title_icon = new QGraphicsPixmapItem(this); /* MUST be a child of QtNode */
-	m_action_1_icon = new QGraphicsPixmapItem(this); /* MUST be a child of QtNode */
-	m_action_2_icon = new QGraphicsPixmapItem(this); /* MUST be a child of QtNode */
-	m_header_title_icon->setScale(0.0f);
-	m_action_1_icon->setScale(0.0f);
-	m_action_2_icon->setScale(0.0f);
-	m_header_title_icon->setVisible(false);
-	m_action_1_icon->setVisible(false);
-	m_action_2_icon->setVisible(false);
-
 	/* Body */
-	m_body = new QGraphicsPathItem(this); /* MUST be a child of QtNode */
+
 	m_body->setBrush(QColor("#3e3e3e"));
 	m_body->setFlag(QGraphicsItem::ItemStacksBehindParent);
 
 	/* Generic */
+
 	setData(NODE_KEY_GRAPHIC_ITEM_TYPE, QVariant(NODE_VALUE_TYPE_NODE));
-	m_header_title_icon->setData(NODE_KEY_GRAPHIC_ITEM_TYPE, QVariant(NODE_VALUE_TYPE_HEADER_ICON));
-	m_action_1_icon->setData(NODE_KEY_GRAPHIC_ITEM_TYPE, QVariant(NODE_VALUE_TYPE_ACTION_1_ICON));
-	m_action_2_icon->setData(NODE_KEY_GRAPHIC_ITEM_TYPE, QVariant(NODE_VALUE_TYPE_ACTION_2_ICON));
 	m_body->setData(NODE_KEY_GRAPHIC_ITEM_TYPE, QVariant(NODE_VALUE_TYPE_NODE_BODY));
 
 	/* Set title */
-	m_title = title;
-	m_title_label = new QGraphicsTextItem(this);
+
 	m_title_label->setData(NODE_KEY_GRAPHIC_ITEM_TYPE, QVariant(NODE_VALUE_TYPE_HEADER_TITLE));
 	m_title_label->setPlainText(m_title);
 	m_font_header.setPointSize(NODE_HEADER_TITLE_FONT_SIZE);
 	m_title_label->setFont(m_font_header);
-	m_title_alignment = ALIGNED_CENTER;
+
 	adjustWidthForTitle();
 }
 
-void QtNode::setAutoSize(bool autoSize)
+QtNode::~QtNode()
 {
-	m_auto_size = autoSize;
-}
-
-bool QtNode::isAutoSize() const
-{
-	return m_auto_size;
-}
-
-const QString &QtNode::getTitle() const
-{
-	return m_title;
-}
-
-void QtNode::setWidth(qreal width)
-{
-	m_width = width;
-	redraw();
-}
-
-void QtNode::setHeaderHeight(qreal headerHeight)
-{
-	m_header_height = headerHeight;
-	redraw();
-}
-
-void QtNode::setBodyHeight(qreal bodyHeight)
-{
-	m_body_height = bodyHeight;
-	redraw();
-}
-
-qreal QtNode::getWidth() const
-{
-	return m_width;
-}
-
-qreal QtNode::getHeigth() const
-{
-	return (m_body->isVisible()) ? m_body_height : m_header_height;
+	deleteAllConnections();
 }
 
 /* Adjust the width of the node, depending on total width of the title and the
  * icons. Calculate using zoom factor 1.0 */
 void QtNode::adjustWidthForTitle()
 {
-	auto offset = 0.5f * (NODE_HEADER_HEIGHT - NODE_HEADER_ICON_SIZE);
 	m_font_header.setPointSize(NODE_HEADER_TITLE_FONT_SIZE);
 	m_title_label->setFont(m_font_header);
-	//qreal unzoomedTitleWidth = mTitleLabel->boundingRect().width();
-	auto spaceLeft = m_normalized_width;
-
-	if (m_header_title_icon->isVisible()) {
-		spaceLeft -= NODE_HEADER_ICON_SIZE;
-		spaceLeft -= offset;
-	}
-
-	if (m_action_1_icon->isVisible()) {
-		spaceLeft -= NODE_HEADER_ICON_SIZE;
-		spaceLeft -= offset;
-	}
-
-	if (m_action_2_icon->isVisible()) {
-		spaceLeft -= NODE_HEADER_ICON_SIZE;
-		spaceLeft -= offset;
-	}
+	const auto spaceLeft = m_normalized_width;
 
 	if (m_title_label->boundingRect().width() > spaceLeft) {
 		m_normalized_width += m_title_label->boundingRect().width() - spaceLeft;
@@ -175,63 +106,33 @@ void QtNode::adjustWidthForTitle()
 	m_font_header.setPointSize(NODE_HEADER_TITLE_FONT_SIZE);
 	m_title_label->setFont(m_font_header);
 	m_width = m_normalized_width;
+
 	redraw();
 }
 
 void QtNode::redraw()
 {
 	/* Redraw the node */
-	auto halfWidth = 0.5f * m_width;
-	auto offset = 0.5f * (m_header_height - m_icon_size);
+	const auto halfWidth = 0.5f * m_width;
 
-	QPainterPath p;
+	auto p = QPainterPath{};
 	p.addRoundedRect(-halfWidth, 0, m_width, m_header_height, 4, 5);
 	setPath(p);
 
-	QPainterPath bodyPath;
+	auto bodyPath = QPainterPath{};
 	bodyPath.addRoundedRect(-halfWidth, 0, m_width, m_body_height, 4, 5);
 	m_body->setPath(bodyPath);
 
 	m_font_header.setPointSize(NODE_HEADER_TITLE_FONT_SIZE);
 	m_title_label->setFont(m_font_header);
 
-	if (m_header_title_icon->isVisible()) {
-		/* Scale may only be set if visible */
-		m_header_title_icon->setScale(m_icon_size/m_header_title_icon->pixmap().width());
-	}
-
-	if (m_action_1_icon->isVisible()) {
-		/* Scale may only be set if visible */
-		m_action_1_icon->setScale(m_icon_size/m_action_1_icon->pixmap().width());
-	}
-
-	if (m_action_2_icon->isVisible()) {
-		/* Scale may only be set if visible */
-		m_action_2_icon->setScale(m_icon_size/m_action_2_icon->pixmap().width());
-	}
-
-	m_header_title_icon->setPos(-halfWidth + offset, offset);
-	m_action_1_icon->setPos(halfWidth - 2 * (m_icon_size + offset), offset);
-	m_action_2_icon->setPos(halfWidth - (m_icon_size + offset), offset);
 	setTitlePosition();
 
 	/* Redraw image */
 	auto height = NODE_BODY_HEIGHT;
 
-	if (m_image_set) {
-		auto scale = NODE_IMAGE_FRACTION * (m_width / m_image.width());
-
-		if (m_pixmap_item->isVisible()) {
-			/* Scale may only be set if visible */
-			m_pixmap_item->setScale(scale);
-		}
-
-		m_pixmap_item->setPos(-0.5 * NODE_IMAGE_FRACTION * m_width, height);
-		height = height + NODE_IMAGE_FRACTION * m_normalized_width;
-	}
-
 	/* Redraw ports */
-	for (QtPort *port : m_port_list) {
+	for (auto port : m_port_list) {
 		port->redraw();
 
 		if (port->isVisible()) {
@@ -249,26 +150,9 @@ void QtNode::redraw()
 	}
 }
 
-void QtNode::setHeaderColor(const QColor &color)
-{
-	QLinearGradient linearGrad(0, 0, 300, NODE_HEADER_HEIGHT);
-	linearGrad.setColorAt(0, color);
-	linearGrad.setColorAt(0.2, QColor("#3e3e3e"));
-	m_header_brush = QBrush(linearGrad);
-}
-
 void QtNode::setTitleColor(const QColor &color)
 {
 	m_title_label->setDefaultTextColor(color);
-}
-
-void QtNode::setPortNameColor(const QColor &color)
-{
-	m_port_name_color = color;
-
-	for (QtPort *port : m_port_list) {
-		port->setNameColor(color);
-	}
 }
 
 void QtNode::alignTitle(Alignment alignment)
@@ -279,51 +163,30 @@ void QtNode::alignTitle(Alignment alignment)
 
 void QtNode::setTitlePosition()
 {
-	auto halfWidth = 0.5f * m_width;
-	auto offset = 0.5f * (m_header_height - m_icon_size);
+	const auto halfWidth = 0.5f * m_width;
+	const auto offset = 0.5f * (m_header_height - m_icon_size);
 
 	switch (m_title_alignment) {
 		case ALIGNED_LEFT:
 		{
-			if (m_header_title_icon->isVisible()) {
-				/* Position it right to the icon */
-				m_title_label->setPos(-halfWidth + m_icon_size + offset,
-				                    0.5 * (m_header_height - m_title_label->boundingRect().height()));
-			}
-			else {
-				/* Position it where the icon should be */
-				m_title_label->setPos(-halfWidth + offset,
-				                    0.5 * (m_header_height - m_title_label->boundingRect().height()));
-			}
+			/* Position it where the icon should be */
+			m_title_label->setPos(-halfWidth + offset,
+			                      0.5 * (m_header_height - m_title_label->boundingRect().height()));
 
 			break;
 		}
 		case ALIGNED_RIGHT:
 		{
-			if (m_action_1_icon->isVisible()) {
-				/* Position it left from action1 icon */
-				m_title_label->setPos(halfWidth - 2 * (offset + m_icon_size) - m_title_label->boundingRect().width(),
-				                    0.5 * (m_header_height - m_title_label->boundingRect().height()));
-			}
-			else {
-				if (m_action_2_icon->isVisible()) {
-					/* Position it left from action2 icon */
-					m_title_label->setPos(halfWidth - offset - m_icon_size - m_title_label->boundingRect().width(),
-					                    0.5 * (m_header_height - m_title_label->boundingRect().height()));
-				}
-				else {
-					/* Position it right */
-					m_title_label->setPos(halfWidth - offset - m_title_label->boundingRect().width(),
-					                    0.5 * (m_header_height - m_title_label->boundingRect().height()));
-				}
-			}
+			/* Position it right */
+			m_title_label->setPos(halfWidth - offset - m_title_label->boundingRect().width(),
+			                      0.5 * (m_header_height - m_title_label->boundingRect().height()));
 
 			break;
 		}
 		case ALIGNED_CENTER:
 		{
 			m_title_label->setPos(-0.5 * m_title_label->boundingRect().width(),
-			                    0.5 * (m_header_height - m_title_label->boundingRect().height()));
+			                      0.5 * (m_header_height - m_title_label->boundingRect().height()));
 			break;
 		}
 	}
@@ -339,56 +202,12 @@ void QtNode::setScene(QGraphicsScene *scene)
 	m_scene = scene;
 }
 
-void QtNode::setHeaderTitleIcon(const QString &fileNameIcon)
-{
-	QPixmap pixmap(fileNameIcon);
-	m_header_title_icon->setPixmap(pixmap);
-
-	if (pixmap.width() != 0) {
-		m_header_title_icon->setScale(m_icon_size/pixmap.width());
-		m_header_title_icon->setVisible(true);
-	}
-
-	adjustWidthForTitle();
-}
-
-void QtNode::setAction1Icon(const QString &fileNameIcon)
-{
-	QPixmap pixmap (fileNameIcon);
-	m_action_1_icon->setPixmap(pixmap);
-
-	if (pixmap.width() != 0) {
-		m_action_1_icon->setScale(m_icon_size/pixmap.width());
-		m_action_1_icon->setVisible(true);
-	}
-
-	adjustWidthForTitle();
-}
-
-void QtNode::setAction2Icon(const QString &fileNameIcon)
-{
-	QPixmap pixmap (fileNameIcon);
-	m_action_2_icon->setPixmap(pixmap);
-
-	if (pixmap.width() != 0) {
-		m_action_2_icon->setScale(m_icon_size/pixmap.width());
-		m_action_2_icon->setVisible(true);
-	}
-
-	adjustWidthForTitle();
-}
-
-void QtNode::setIconSize(qreal size)
-{
-	m_icon_size = size;
-}
-
 bool QtNode::mouseLeftClickHandler(QGraphicsSceneMouseEvent *mouseEvent,
                                    QGraphicsItem *item,
                                    unsigned int action,
                                    QtConnection *activeConnection)
 {
-	int type = 0;
+	auto type = 0;
 
 	if (item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).isValid()) {
 		type = item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).toInt();
@@ -397,7 +216,7 @@ bool QtNode::mouseLeftClickHandler(QGraphicsSceneMouseEvent *mouseEvent,
 	switch (type) {
 		case NODE_VALUE_TYPE_PORT:
 		{
-			QtPort *port = static_cast<QtPort *>(item);
+			auto port = static_cast<QtPort *>(item);
 
 			/* Check wether the port is available; if not, return false. Only
 			 * applies to input ports for now. */
@@ -412,7 +231,7 @@ bool QtNode::mouseLeftClickHandler(QGraphicsSceneMouseEvent *mouseEvent,
 			else if (action == NODE_ACTION_TARGET && activeConnection) {
 				/* Check wether the connection is allowed; if not, return false */
 				/* This node is the target node (with the target port) */
-				QtPort *basePort = activeConnection->getBasePort();
+				auto basePort = activeConnection->getBasePort();
 
 				if (!is_connection_allowed(port, basePort)) {
 					return false;
@@ -429,65 +248,8 @@ bool QtNode::mouseLeftClickHandler(QGraphicsSceneMouseEvent *mouseEvent,
 
 			break;
 		}
-		case NODE_VALUE_TYPE_ACTION_1_ICON:
-			Q_EMIT action1Clicked(this);
-			mouseLeftClickAction1ButtonHandler(mouseEvent, item);
+		default:
 			break;
-
-		case NODE_VALUE_TYPE_ACTION_2_ICON:
-			Q_EMIT action2Clicked(this);
-			mouseLeftClickAction2ButtonHandler(mouseEvent, item);
-			break;
-	}
-
-	return true;
-}
-
-void QtNode::mouseLeftClickAction1ButtonHandler(QGraphicsSceneMouseEvent *mouseEvent, QGraphicsItem *item)
-{
-	Q_UNUSED(mouseEvent);
-	Q_UNUSED(item);
-
-	return ((m_body->isVisible()) ? collapse() : expand());
-}
-
-void QtNode::mouseLeftClickAction2ButtonHandler(QGraphicsSceneMouseEvent *mouseEvent, QGraphicsItem *item)
-{
-	Q_UNUSED(mouseEvent);
-	Q_UNUSED(item);
-
-	/* Delegate to the editor */
-	m_editor->removeNode(this);
-}
-
-bool QtNode::mouseRightClickHandler(QGraphicsSceneMouseEvent *mouseEvent,
-                                    QGraphicsItem *item,
-                                    unsigned int action,
-                                    QtConnection *activeConnection)
-{
-	Q_UNUSED(mouseEvent);
-	Q_UNUSED(item);
-	Q_UNUSED(action);
-	Q_UNUSED(activeConnection);
-	/* TODO */
-	return true;
-}
-
-bool QtNode::mouseDoubleClickHandler(QGraphicsSceneMouseEvent *mouseEvent, QGraphicsItem *item)
-{
-	Q_UNUSED(mouseEvent);
-	Q_UNUSED(item);
-	/* TODO */
-	return true;
-}
-
-bool QtNode::mouseMoveHandler(QGraphicsSceneMouseEvent *mouseEvent, QGraphicsItem *item)
-{
-	Q_UNUSED(item);
-
-	if (m_active_connection) {
-		/* There is an active connection, so the connection is dragged with the mouse cursor */
-		m_active_connection->updatePath(mouseEvent->scenePos());
 	}
 
 	return true;
@@ -495,14 +257,11 @@ bool QtNode::mouseMoveHandler(QGraphicsSceneMouseEvent *mouseEvent, QGraphicsIte
 
 void QtNode::collapse()
 {
-	/* Set visibility of the image */
-	m_pixmap_item->setVisible(false);
-
 	/* Set visibility of the body */
 	m_body->setVisible(false);
 
 	/* Set visibility of the ports */
-	for (QtPort *port : m_port_list) {
+	for (auto port : m_port_list) {
 		if (port->isVisible()) {
 			port->collapse();
 		}
@@ -511,22 +270,14 @@ void QtNode::collapse()
 
 void QtNode::expand()
 {
-	/* Set visibility of the image */
-	m_pixmap_item->setVisible(true);
-
 	/* Set visibility of the body */
 	m_body->setVisible(true);
 
 	/* Set visibility of the ports */
-	for (QtPort *port : m_port_list) {
+	for (auto port : m_port_list) {
 		if (!port->isVisible()) {
 			port->expand();
 		}
-	}
-
-	if (m_image_set) {
-		/* Needed to scale the image (image does not scale if not visible) */
-		redraw();
 	}
 }
 
@@ -560,7 +311,7 @@ void QtNode::createActiveConnection(QtPort *port, QPointF pos)
 void QtNode::deleteActiveConnection()
 {
 	if (m_active_connection) {
-		QtPort *port = m_active_connection->getBasePort();
+		auto port = m_active_connection->getBasePort();
 		m_scene->removeItem(m_active_connection);
 		port->deleteConnection(m_active_connection);
 		m_active_connection = nullptr;
@@ -569,23 +320,12 @@ void QtNode::deleteActiveConnection()
 
 void QtNode::deleteAllConnections()
 {
-	for (QtPort *port : m_port_list) {
-		for (QtConnection *connection : port->getConnections()) {
+	for (auto port : m_port_list) {
+		for (auto connection : port->getConnections()) {
 			m_scene->removeItem(connection);
 		}
 
 		port->deleteAllConnections();
-	}
-}
-
-void QtNode::selectConnections(bool selected)
-{
-	for (QtPort *port : m_port_list) {
-		for (QtConnection *connection : port->getConnections()) {
-			if (connection && (connection != m_active_connection)) {
-				connection->setSelected(selected);
-			}
-		}
 	}
 }
 
@@ -612,8 +352,8 @@ void QtNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
 	painter->drawPath(path());
 
 	/* Only update the connection if it is not the active one. */
-	for (QtPort *port : m_port_list) {
-		for (QtConnection *connection : port->getConnections()) {
+	for (auto port : m_port_list) {
+		for (auto connection : port->getConnections()) {
 			if (connection != m_active_connection) {
 				connection->updatePath();
 			}
@@ -629,7 +369,6 @@ void QtNode::setNode(Node *node)
 		createPort(input->name.c_str(),
 		           NODE_PORT_TYPE_INPUT,
 		           QColor(95, 95, 95),
-		           PORT_SHAPE_CIRCLE,
 		           ALIGNED_LEFT,
 		           QColor(95, 95, 95));
 	}
@@ -638,7 +377,6 @@ void QtNode::setNode(Node *node)
 		createPort(output->name.c_str(),
 		           NODE_PORT_TYPE_OUTPUT,
 		           QColor(95, 95, 95),
-		           PORT_SHAPE_CIRCLE,
 		           ALIGNED_RIGHT,
 		           QColor(95, 95, 95));
 	}
@@ -652,11 +390,10 @@ Node *QtNode::getNode() const
 QtPort *QtNode::createPort(const QString &portName,
                            int type,
                            QColor portColour,
-                           QtPortShape portShape,
                            Alignment alignement,
                            QColor connectionColor)
 {
-	QtPort *port = new QtPort(portName, type, portColour, connectionColor, portShape, alignement, this);
+	auto port = new QtPort(portName, type, portColour, connectionColor, alignement, this);
 	port->setNameColor(m_port_name_color);
 	port->setData(NODE_KEY_GRAPHIC_ITEM_TYPE, QVariant(NODE_VALUE_TYPE_PORT));
 	m_port_list.append(port);
@@ -673,7 +410,7 @@ QtPort *QtNode::createPort(const QString &portName,
 		m_body_height = m_normalized_body_height;
 
 		/* Adjust width of the node (if needed) to fit the port */
-		qreal normalized = port->getNormalizedWidth() + 2.5f * NODE_PORT_OFFSET;
+		auto normalized = port->getNormalizedWidth() + 2.5f * NODE_PORT_OFFSET;
 		if (normalized > m_normalized_width)
 			m_normalized_width = normalized;
 		m_width = m_normalized_width;
@@ -683,28 +420,6 @@ QtPort *QtNode::createPort(const QString &portName,
 	redraw();
 
 	return port;
-}
-
-void QtNode::setImage(const QString &fileNameImage)
-{
-	m_image = QPixmap(fileNameImage);
-	setImage(m_image);
-}
-
-void QtNode::setImage(const QPixmap &pixMap)
-{
-	m_image = pixMap;
-	m_pixmap_item->setPixmap(m_image);
-
-	if (m_auto_size) {
-		if (!m_image_set) {
-			m_normalized_body_height += NODE_IMAGE_FRACTION * m_normalized_width;
-			m_body_height = m_normalized_body_height;
-		}
-	}
-
-	m_image_set = true;
-	redraw();
 }
 
 void QtNode::setPortAlignedPos(QtPort *port, qreal height)
@@ -738,80 +453,10 @@ void QtNode::restoreOriginalParentItem()
 	setParentItem(m_original_parent);
 }
 
-void QtNode::prepareDelete()
-{
-	deleteAllConnections();
-}
-
-QtPort *QtNode::getPort(const QString &portName)
-{
-	auto iter = std::find_if(m_port_list.begin(), m_port_list.end(), [&](QtPort *port)
-	{
-		return port->getPortName() == portName;
-	});
-
-	if (iter != m_port_list.end()) {
-		return *iter;
-	}
-
-	return nullptr;
-}
-
-QtPort *QtNode::getPort(const QString &portName, unsigned int occurence)
-{
-	/* 1. Run through all of the ports in this node
-	 * 2. Return the n-th occurence of the port with the same name */
-	unsigned int count = 1;
-	for (QtPort *port : m_port_list) {
-		if (port->getPortName() == portName) {
-			if (count == occurence)
-				return port;
-
-			++count;
-		}
-	}
-
-	return nullptr;
-}
-
-QVector<QtPort *> QtNode::getPorts()
-{
-	return m_port_list;
-}
-
-/* 1. Run through all of the ports in this node
- * 2. Append all the ports with the same name to a vector
- * 3. Return the vector */
-QVector<QtPort *> QtNode::getPorts(const QString &portName)
-{
-	QVector<QtPort *> ports;
-	ports.reserve(m_port_list.size());
-
-	std::copy_if(m_port_list.begin(), m_port_list.end(), ports.begin(), [&](QtPort *port)
-	{
-		return port->getPortName() == portName;
-	});
-
-	return ports;
-}
-
-/* 1. Run through all of the ports in this node
- * 2. Return true if a port in this list is the same as the port passed as an argument */
-bool QtNode::isPortOfThisNode(QtPort *port)
-{
-	auto iter = std::find(m_port_list.begin(), m_port_list.end(), port);
-	return (iter != m_port_list.end());
-}
-
-bool QtNode::isPortOfThisNode(const QString &portName)
-{
-	return getPort(portName) != nullptr;
-}
-
 bool QtNode::isConnectionConnectedToThisNode(QtConnection *connection)
 {
-	for (QtPort *port : m_port_list) {
-		for (QtConnection *co : port->getConnections()) {
+	for (auto port : m_port_list) {
+		for (auto co : port->getConnections()) {
 			if (co == connection) {
 				return true;
 			}
@@ -841,154 +486,4 @@ bool QtNode::isConnectionConnectedToThisNode(QtConnection *connection)
 
 	return false;
 #endif
-}
-
-/* 1. Get the port that is connected to the given port (of this node)
- * 2. If there is a connected port, return its parent node */
-QtNode *QtNode::getNodeConnectedToPort(QtPort *port)
-{
-	QtNode *node = nullptr;
-	QtPort *connectedPort = getPortConnectedToPort(port);
-
-	if (connectedPort != nullptr) {
-		node = static_cast<QtNode *>(connectedPort->parentItem());
-	}
-
-	return node;
-}
-
-/* 1. Get the port that is connected to the given port (of this node)
- * 2. If there is a connected port, return its parent node */
-QtNode *QtNode::getNodeConnectedToPort(const QString &portName)
-{
-	QtNode *node = nullptr;
-	QtPort *connectedPort = getPortConnectedToPort(portName);
-
-	if (connectedPort != nullptr) {
-		node = static_cast<QtNode *>(connectedPort->parentItem());
-	}
-
-	return node;
-}
-
-/* 1. Get the n-th occurence of the port that is connected with the port of this node
- * 2. Return its parent node */
-QtNode *QtNode::getNodeConnectedToPort(const QString &portName, unsigned int occurence)
-{
-	QtNode *node = nullptr;
-	QtPort *connectedPort = getPortConnectedToPort(portName, occurence);
-
-	if (connectedPort != nullptr) {
-		node = static_cast<QtNode *>(connectedPort->parentItem());
-	}
-
-	return node;
-}
-
-/* 1. Get all ports that are connected to the ports (with the same name) of this node
- * 2. Append their parent nodes to the vector */
-QVector<QtNode *> QtNode::getNodesConnectedToPorts(const QString &portName)
-{
-	QVector<QtNode *> connectedNodes;
-	QVector<QtPort *> connectedPorts = getPortsConnectedToPorts(portName);
-
-	for (QtPort *connectPort : connectedPorts) {
-		connectedNodes.append(static_cast<QtNode *>(connectPort->parentItem()));
-	}
-
-	return connectedNodes;
-}
-
-QtPort *QtNode::getCheckedPortConnectedToPort(QtPort *port)
-{
-	/* Assume that the port is part of 'this' node */
-	for (QtConnection *connection : port->getConnections()) {
-		if (!connection) {
-			continue;
-		}
-
-		/* There is a connection; determine whether it is a finalished (established) connection */
-		/* Both ports must exist */
-		QtPort *basePort = connection->getBasePort();
-
-		if (!basePort) {
-			continue;
-		}
-
-		QtPort *targetPort = connection->getTargetPort();
-
-		if (!targetPort) {
-			continue;
-		}
-
-		/* The port of 'this' node is the base port; use the target port */
-		if (port == basePort) {
-			return targetPort;
-		}
-
-		/* The port of 'this' node is the target port; use the base port */
-		if (port == targetPort) {
-			return basePort;
-		}
-	}
-
-	return nullptr;
-}
-
-QtPort *QtNode::getPortConnectedToPort(QtPort *port)
-{
-	/* First check whether the port is part of this node */
-	if (!isPortOfThisNode(port)) {
-		return nullptr;
-	}
-
-	return getCheckedPortConnectedToPort(port);
-}
-
-QtPort *QtNode::getPortConnectedToPort(const QString &portName)
-{
-	QtPort *port = getPort(portName);
-
-	if (!port) {
-		return nullptr;
-	}
-
-	return getCheckedPortConnectedToPort(port);
-}
-
-QtPort *QtNode::getPortConnectedToPort(const QString &portName, unsigned int occurence)
-{
-	QtPort *port = getPort(portName, occurence);
-
-	if (!port) {
-		return nullptr;
-	}
-
-	return getCheckedPortConnectedToPort(port);
-}
-
-/* 1. Get the ports of this node with the same name.
- * 2. Get for each port the connected port */
-QVector<QtPort *> QtNode::getPortsConnectedToPorts(const QString &portName)
-{
-	QVector<QtPort *> ports = getPorts(portName);
-	QVector<QtPort *> connectedPorts;
-
-	for (QtPort *port : ports) {
-		connectedPorts.append(getCheckedPortConnectedToPort(port));
-	}
-
-	return connectedPorts;
-}
-
-void QtNode::setVisible(bool visible)
-{
-	/* Also make the connected nodes visible/invisible */
-	for (QtPort *port : m_port_list) {
-		for (QtConnection *connection : port->getConnections()) {
-			connection->setVisible(visible);
-		}
-	}
-
-	QGraphicsPathItem::setVisible(visible);
 }

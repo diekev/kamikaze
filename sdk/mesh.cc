@@ -39,7 +39,6 @@ Mesh::Mesh()
     : Primitive()
     , m_need_data_update(true)
 {
-	loadShader();
 	addAttribute("normal", ATTR_TYPE_VEC3);
 	m_need_update = true;
 }
@@ -109,7 +108,6 @@ void Mesh::update()
 {
 	if (m_need_update) {
 		computeBBox(m_min, m_max);
-		updateMatrix();
 
 		m_bbox.reset(new Cube(m_min, m_max));
 		m_need_update = false;
@@ -118,19 +116,19 @@ void Mesh::update()
 
 Primitive *Mesh::copy() const
 {
-	Mesh *mesh = new Mesh;
+	auto mesh = new Mesh;
 
-	PointList *points = mesh->points();
+	auto points = mesh->points();
 	points->resize(this->points()->size());
 
-	for (size_t i = 0; i < points->size(); ++i) {
+	for (auto i = 0ul; i < points->size(); ++i) {
 		(*points)[i] = m_point_list[i];
 	}
 
-	PolygonList *polys = mesh->polys();
+	auto polys = mesh->polys();
 	polys->resize(this->polys()->size());
 
-	for (size_t i = 0; i < polys->size(); ++i) {
+	for (auto i = 0ul; i < polys->size(); ++i) {
 		(*polys)[i] = m_poly_list[i];
 	}
 
@@ -195,7 +193,11 @@ void Mesh::prepareRenderData()
 		return;
 	}
 
-	Attribute *normals = this->attribute("normal", ATTR_TYPE_VEC3);
+	if (!m_program.isValid()) {
+		loadShader();
+	}
+
+	auto normals = this->attribute("normal", ATTR_TYPE_VEC3);
 
 	if (normals->size() != this->points()->size()) {
 		computeNormals();
@@ -205,19 +207,19 @@ void Mesh::prepareRenderData()
 		m_point_list[i] = m_point_list[i] * glm::mat3(m_inv_matrix);
 	}
 
-	std::vector<unsigned int> indices;
+	auto indices = std::vector<unsigned int>{};
 	indices.reserve(this->polys()->size());
 
-	PolygonList *polys = this->polys();
+	auto polys = this->polys();
 
-	for (size_t i = 0, ie = polys->size(); i < ie; ++i) {
+	for (auto i = 0ul, ie = polys->size(); i < ie; ++i) {
 		const auto &quad = (*polys)[i];
 
 		indices.push_back(quad[0]);
 		indices.push_back(quad[1]);
 		indices.push_back(quad[2]);
 
-		if (quad[3] != std::numeric_limits<int>::max()) {
+		if (quad[3] != INVALID_INDEX) {
 			indices.push_back(quad[0]);
 			indices.push_back(quad[2]);
 			indices.push_back(quad[3]);
@@ -282,15 +284,15 @@ static inline glm::vec3 get_normal(const glm::vec3 &v0, const glm::vec3 &v1, con
 
 void Mesh::computeNormals()
 {
-	Attribute *normals = this->attribute("normal", ATTR_TYPE_VEC3);
+	auto normals = this->attribute("normal", ATTR_TYPE_VEC3);
 	normals->resize(this->points()->size());
 
-	PolygonList *polys = this->polys();
+	auto polys = this->polys();
 
 	parallel_for(tbb::blocked_range<size_t>(0, polys->size()),
 	             [&](const tbb::blocked_range<size_t> &r)
 	{
-		for (size_t i = r.begin(), ie = r.end(); i < ie ; ++i) {
+		for (auto i = r.begin(), ie = r.end(); i < ie ; ++i) {
 			const auto &quad = (*polys)[i];
 
 			const auto v0 = m_point_list[quad[0]];
@@ -303,7 +305,7 @@ void Mesh::computeNormals()
 			normals->vec3(quad[1], normals->vec3(quad[1]) + normal);
 			normals->vec3(quad[2], normals->vec3(quad[2]) + normal);
 
-			if (quad[3] != std::numeric_limits<unsigned int>::max()) {
+			if (quad[3] != INVALID_INDEX) {
 				normals->vec3(quad[3], normals->vec3(quad[3]) + normal);
 			}
 		}
@@ -312,131 +314,4 @@ void Mesh::computeNormals()
 	for (size_t i = 0, ie = this->points()->size(); i < ie ; ++i) {
 		normals->vec3(i, -glm::normalize(normals->vec3(i)));
 	}
-}
-
-static Primitive *create_cube()
-{
-	Mesh *mesh = new Mesh;
-
-	PointList *points = mesh->points();
-	points->reserve(8);
-
-	points->push_back(glm::vec3(-0.5f, -0.5f, -0.5f));
-	points->push_back(glm::vec3( 0.5f, -0.5f, -0.5f));
-	points->push_back(glm::vec3( 0.5f, -0.5f,  0.5f));
-	points->push_back(glm::vec3(-0.5f, -0.5f,  0.5f));
-	points->push_back(glm::vec3(-0.5f,  0.5f, -0.5f));
-	points->push_back(glm::vec3( 0.5f,  0.5f, -0.5f));
-	points->push_back(glm::vec3( 0.5f,  0.5f,  0.5f));
-	points->push_back(glm::vec3(-0.5f,  0.5f,  0.5f));
-
-	PolygonList *polys = mesh->polys();
-	polys->resize(6);
-	polys->push_back(glm::ivec4(1, 0, 4, 5));
-	polys->push_back(glm::ivec4(2, 1, 5, 6));
-	polys->push_back(glm::ivec4(3, 2, 6, 7));
-	polys->push_back(glm::ivec4(0, 3, 7, 4));
-	polys->push_back(glm::ivec4(2, 3, 0, 1));
-	polys->push_back(glm::ivec4(5, 4, 7, 6));
-
-	mesh->tagUpdate();
-
-	return mesh;
-}
-
-static Primitive *create_plane()
-{
-	Mesh *mesh = new Mesh;
-
-	PointList *points = mesh->points();
-	points->reserve(4);
-
-	points->push_back(glm::vec3(-1.0f,  0.0f, -1.0f));
-	points->push_back(glm::vec3( 1.0f,  0.0f, -1.0f));
-	points->push_back(glm::vec3( 1.0f,  0.0f,  1.0f));
-	points->push_back(glm::vec3(-1.0f,  0.0f,  1.0f));
-
-	PolygonList *polys = mesh->polys();
-	polys->push_back(glm::ivec4(0, 1, 2, 3));
-
-	mesh->tagUpdate();
-
-	return mesh;
-}
-
-static Primitive *create_torus()
-{
-	Mesh *mesh = new Mesh;
-	PointList *points = mesh->points();
-	PolygonList *polys = mesh->polys();
-
-	const auto major_segment = 48;
-	const auto minor_segment = 24;
-	const auto major_radius = 1.0f;
-	const auto minor_radius = 0.25f;
-
-	constexpr auto tau = static_cast<float>(M_PI) * 2.0f;
-
-	const auto vertical_angle_stride = tau / static_cast<float>(major_segment);
-	const auto horizontal_angle_stride = tau / static_cast<float>(minor_segment);
-
-	int f1 = 0, f2, f3, f4;
-	const auto tot_verts = major_segment * minor_segment;
-
-	points->reserve(tot_verts);
-
-	for (int i = 0; i < major_segment; ++i) {
-		auto theta = vertical_angle_stride * i;
-
-		for (int j = 0; j < minor_segment; ++j) {
-			auto phi = horizontal_angle_stride * j;
-
-			auto x = glm::cos(theta) * (major_radius + minor_radius * glm::cos(phi));
-			auto y = minor_radius * glm::sin(phi);
-			auto z = glm::sin(theta) * (major_radius + minor_radius * glm::cos(phi));
-
-			points->push_back(glm::vec3(x, y, z));
-
-			if (j + 1 == minor_segment) {
-				f2 = i * minor_segment;
-				f3 = f1 + minor_segment;
-				f4 = f2 + minor_segment;
-			}
-			else {
-				f2 = f1 + 1;
-				f3 = f1 + minor_segment;
-				f4 = f3 + 1;
-			}
-
-			if (f2 >= tot_verts) {
-				f2 -= tot_verts;
-			}
-			if (f3 >= tot_verts) {
-				f3 -= tot_verts;
-			}
-			if (f4 >= tot_verts) {
-				f4 -= tot_verts;
-			}
-
-			if (f2 > 0) {
-				polys->push_back(glm::ivec4(f1, f3, f4, f2));
-			}
-			else {
-				polys->push_back(glm::ivec4(f2, f1, f3, f4));
-			}
-
-			++f1;
-		}
-	}
-
-	mesh->tagUpdate();
-
-	return mesh;
-}
-
-void Mesh::registerSelf(PrimitiveFactory *factory)
-{
-	factory->registerType("Box Mesh", create_cube);
-	factory->registerType("Plane Mesh", create_plane);
-	factory->registerType("Torus Mesh", create_torus);
 }

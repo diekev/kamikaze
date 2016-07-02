@@ -51,7 +51,7 @@ protected:
 	std::unique_ptr<Cube> m_bbox{};
 	unsigned int m_draw_type = 0x0004;  /* GL_TRIANGLES */
 
-	glm::vec3 m_dimensions = glm::vec3(0.0f);
+	glm::vec3 m_dimensions = glm::vec3(1.0f);
 	glm::vec3 m_scale = glm::vec3(1.0f);
 	glm::vec3 m_inv_size = glm::vec3(0.0f);
 	glm::vec3 m_rotation = glm::vec3(0.0f);
@@ -60,18 +60,16 @@ protected:
 	glm::vec3 m_max = glm::vec3(0.0f);
 	glm::vec3 m_pos = glm::vec3(0.0f);
 
-	glm::mat4 m_matrix = glm::mat4(0.0f);
-	glm::mat4 m_inv_matrix = glm::mat4(0.0f);
+	glm::mat4 m_matrix = glm::mat4(1.0f);
+	glm::mat4 m_inv_matrix = glm::mat4(1.0f);
 
-	QString m_name{};
+	std::string m_name{};
 
 	bool m_draw_bbox = false;
 	bool m_need_update = true;
 	bool m_need_data_update = true;
 
 	int m_refcount = 0;
-
-	void updateMatrix();
 
 public:
 	Primitive() = default;
@@ -120,8 +118,9 @@ public:
 	glm::vec3 &rotation();
 
 	/* Return the object's matrix, mainly intended for rendering the active object */
-	glm::mat4 matrix() const;
+	const glm::mat4 &matrix() const;
 	glm::mat4 &matrix();
+	void matrix(const glm::mat4 &m);
 
 	virtual void update();
 

@@ -77,7 +77,7 @@ void Scene::removeObject(Object *ob)
 		m_active_object = nullptr;
 	}
 
-	Q_EMIT objectChanged();
+	Q_EMIT(objectChanged());
 }
 
 void Scene::addObject(Object *object)
@@ -90,7 +90,7 @@ void Scene::addObject(Object *object)
 	m_objects.push_back(object);
 	m_active_object = object;
 
-	Q_EMIT objectAdded(object);
+	Q_EMIT(objectAdded(object));
 }
 
 void Scene::render(ViewerContext *context)
@@ -163,7 +163,7 @@ void Scene::selectObject(const glm::vec3 &pos)
 
 	if (selected_object != -1 && m_active_object != m_objects[selected_object]) {
 		m_active_object = m_objects[selected_object];
-		Q_EMIT objectChanged();
+		Q_EMIT(objectChanged());
 	}
 }
 
@@ -186,7 +186,7 @@ void Scene::setObjectName(const QString &name)
 
 	if (name_changed) {
 		m_active_object->name(copy);
-		Q_EMIT objectChanged(); // XXX - hack to update the tab and outliner
+		Q_EMIT(objectChanged()); // XXX - hack to update the tab and outliner
 	}
 	else {
 		m_active_object->name(name);
@@ -204,16 +204,9 @@ void Scene::tagObjectUpdate()
 	}
 }
 
-void Scene::evalObjectGraph()
-{
-	if (m_active_object) {
-		m_active_object->evalGraph(true);
-	}
-}
-
 void Scene::emitNodeAdded(Object *ob, Node *node)
 {
-	Q_EMIT nodeAdded(ob, node);
+	Q_EMIT(nodeAdded(ob, node));
 }
 
 void Scene::objectNameList(QListWidget *widget) const
@@ -248,13 +241,13 @@ void Scene::setCurrentObject(QListWidgetItem *item)
 		}
 	}
 
-	Q_EMIT objectChanged();
+	Q_EMIT(objectChanged());
 }
 
 void Scene::setActiveObject(Object *object)
 {
 	m_active_object = object;
-	Q_EMIT objectChanged();
+	Q_EMIT(objectChanged());
 }
 
 void Scene::updateForNewFrame()
@@ -262,7 +255,7 @@ void Scene::updateForNewFrame()
 	/* TODO: dependency graph */
 
 	for (Object *object : m_objects) {
-		/* TODO: replace with proper update method? */
-		object->evalGraph();
+		/* TODO: replace with proper update method */
+		eval_graph(nullptr, object, false);
 	}
 }

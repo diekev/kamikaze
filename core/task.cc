@@ -22,27 +22,51 @@
  *
  */
 
-#pragma once
+#include "task.h"
 
-#include <vector>
-#include <utils/filesystem.h>
+#include "ui/mainwindow.h"
 
-class PrimitiveFactory;
-class NodeFactory;
+/* ************************ */
 
-class Main final {
-	PrimitiveFactory *m_object_factory;
-	NodeFactory *m_node_factory;
+TaskNotifier::TaskNotifier(MainWindow *window)
+{
+	if (!window) {
+		return;
+	}
 
-	std::vector<filesystem::shared_library> m_plugins;
+	connect(this, SIGNAL(startTask()), window, SLOT(taskStarted()));
+	connect(this, SIGNAL(updateProgress(float)), window, SLOT(updateProgress(float)));
+	connect(this, SIGNAL(endTask()), window, SLOT(taskEnded()));
+}
 
-public:
-	Main();
-	~Main();
+void TaskNotifier::signalStart()
+{
+	Q_EMIT(startTask());
+}
 
-	void initTypes();
-	void loadPlugins();
+void TaskNotifier::signalProgressUpdate(float progress)
+{
+	Q_EMIT(updateProgress(progress));
+}
 
-	PrimitiveFactory *objectFactory() const;
-	NodeFactory *nodeFactory() const;
-};
+void TaskNotifier::signalEnd()
+{
+	Q_EMIT(endTask());
+}
+
+/* ************************ */
+
+Task::Task(MainWindow *window)
+    : m_notifier(new TaskNotifier(window))
+{}
+
+tbb::task *Task::execute()
+{
+	m_notifier->signalStart();
+
+	this->start();
+
+	m_notifier->signalEnd();
+
+	return nullptr;
+}
