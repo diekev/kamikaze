@@ -326,6 +326,8 @@ void MainWindow::handleCommand()
 	context.scene = m_scene;
 	context.object_factory = m_main->objectFactory();
 	context.node_factory = m_main->nodeFactory();
+	/* TODO: handle this in a better way. */
+	context.edit_mode = (ui->graph_editor->editor_mode() == EDITOR_MODE_OBJECT);
 
 	/* Create node */
 	m_command_manager->execute(cmd, &context);

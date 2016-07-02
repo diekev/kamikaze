@@ -121,16 +121,27 @@ Command *AddNodeCmd::registerSelf()
 void AddPresetObjectCmd::execute(EvaluationContext *context)
 {
 	m_scene = context->scene;
-	m_object = new Object;
+
+	auto node = (*context->node_factory)(m_name);
+
+	if (context->edit_mode) {
+		m_object = m_scene->currentObject();
+	}
+	else {
+		m_object = new Object;
+		m_object->name(m_name.c_str());
+	}
 
 	assert(m_object != nullptr);
 
-	m_object->name(m_name.c_str());
-
-	auto node = (*context->node_factory)(m_name);
 	m_object->addNode(node);
 
-	m_scene->addObject(m_object);
+	if (!context->edit_mode) {
+		m_scene->addObject(m_object);
+	}
+	else {
+		m_scene->emitNodeAdded(m_object, node);
+	}
 }
 
 void AddPresetObjectCmd::undo()

@@ -34,6 +34,9 @@ struct EvaluationContext {
 	Scene *scene;
 	PrimitiveFactory *object_factory;
 	NodeFactory *node_factory;
+
+	/** Whether we are currently editing the graph of an object. */
+	bool edit_mode;
 };
 
 class ViewerContext {

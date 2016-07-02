@@ -1093,6 +1093,7 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 	if (action->text() == NODE_EXIT_OBJECT) {
 		m_current_scene = m_scene_scene;
 		m_view->setScene(m_current_scene);
+		m_editor_mode = EDITOR_MODE_SCENE;
 
 		action->setText(NODE_ENTER_OBJECT);
 

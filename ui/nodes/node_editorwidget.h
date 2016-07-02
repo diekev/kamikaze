@@ -145,6 +145,11 @@ public:
 	/* Called for creating new connections, e.g. during node dropping. */
 	void connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock);
 
+	int editor_mode() const
+	{
+		return m_editor_mode;
+	}
+
 public Q_SLOTS:
 	/* Activated when a contextmenu item is selected */
 	void contextMenuItemSelected(QAction *action);
