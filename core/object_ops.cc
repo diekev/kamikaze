@@ -50,11 +50,6 @@ void AddObjectCmd::execute(EvaluationContext *context)
 	m_scene = context->scene;
 
 	m_object = new Object;
-
-//	Primitive *prim = (*context->object_factory)(m_name);
-//	m_object->primitive(prim);
-
-	assert(m_object != nullptr);
 	m_object->name(m_name.c_str());
 
 	assert(m_scene != nullptr);
@@ -71,10 +66,6 @@ void AddObjectCmd::redo()
 {
 	m_scene->addObject(m_object);
 	m_was_undone = false;
-}
-
-void AddObjectCmd::setUIParams(ParamCallback */*cb*/)
-{
 }
 
 Command *AddObjectCmd::registerSelf()
@@ -105,10 +96,6 @@ void AddNodeCmd::undo()
 void AddNodeCmd::redo()
 {
 	/* TODO */
-}
-
-void AddNodeCmd::setUIParams(ParamCallback */*cb*/)
-{
 }
 
 Command *AddNodeCmd::registerSelf()
@@ -152,10 +139,6 @@ void AddPresetObjectCmd::undo()
 void AddPresetObjectCmd::redo()
 {
 	/* TODO */
-}
-
-void AddPresetObjectCmd::setUIParams(ParamCallback */*cb*/)
-{
 }
 
 Command *AddPresetObjectCmd::registerSelf()

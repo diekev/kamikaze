@@ -317,7 +317,9 @@ void MainWindow::handleCommand()
 	const auto &name = action->text().toStdString();
 	const auto &data = action->data().toString().toStdString();
 
-	/* get command */
+	/* Get command, and give it the name of the UI button which will be used to
+	 * look up keys in the various creation factories if need be. This could and
+	 * should be handled better. */
 	auto cmd = (*m_command_factory)(data);
 	cmd->setName(name);
 
@@ -329,7 +331,8 @@ void MainWindow::handleCommand()
 	/* TODO: handle this in a better way. */
 	context.edit_mode = (ui->graph_editor->editor_mode() == EDITOR_MODE_OBJECT);
 
-	/* Create node */
+	/* Execute the command in the current context, the manager will push the
+	 * command on the undo stack. */
 	m_command_manager->execute(cmd, &context);
 }
 
