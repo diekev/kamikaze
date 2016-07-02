@@ -283,8 +283,15 @@ void MainWindow::generatePresetMenu()
 {
 	m_command_factory->registerType("add preset", AddPresetObjectCmd::registerSelf);
 
+	const char *icons[] = {
+	    "icons/icon_grid.png",
+	    "icons/icon_box.png",
+	    "icons/icon_torus.png",
+	};
+
+	auto i = 0;
 	for (const auto &name : { "Grid", "Box", "Torus" }) {
-		auto action = ui->toolBar->addAction(name);
+		auto action = ui->toolBar->addAction(QIcon(icons[i++]), name);
 		action->setData(QVariant::fromValue(QString("add preset")));
 
 		connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
