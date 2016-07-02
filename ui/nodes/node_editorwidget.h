@@ -142,10 +142,14 @@ public:
 		m_add_node_menu = menu;
 	}
 
+
 	void offsetNodes(QtNode *node);
 
 	void gatherParents(QtNode *node, std::vector<QtNode *> &parents, const QPointF &center_pos, QPointF &min_pos, float &min_dist);
 	void gatherChildren(QtNode *node, std::vector<QtNode *> &children, const QPointF &center_pos, QPointF &min_pos, float &min_dist);
+
+	/* Called for creating new connections, e.g. during node dropping. */
+	void connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock);
 
 public Q_SLOTS:
 	/* Activated when a contextmenu item is selected */
@@ -175,9 +179,6 @@ Q_SIGNALS:
 private:
 	/* Called when a node is dropped on a connection. */
 	void splitConnectionWithNode(QtNode *node);
-
-	/* Called for creating new connections, e.g. during node dropping. */
-	void connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock);
 
 protected:
 	/* Event handling */

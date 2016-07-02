@@ -30,6 +30,9 @@
 
 #include "ui/paramfactory.h"
 
+#include "nodes/graph.h"
+#include "nodes/nodes.h"
+
 #include "object.h"
 #include "scene.h"
 
@@ -111,4 +114,40 @@ void AddNodeCmd::setUIParams(ParamCallback */*cb*/)
 Command *AddNodeCmd::registerSelf()
 {
 	return new AddNodeCmd;
+}
+
+/* **************************** add torus command **************************** */
+
+void AddPresetObjectCmd::execute(EvaluationContext *context)
+{
+	m_scene = context->scene;
+	m_object = new Object;
+
+	assert(m_object != nullptr);
+
+	m_object->name(m_name.c_str());
+
+	auto node = (*context->node_factory)(m_name);
+	m_object->addNode(node);
+
+	m_scene->addObject(m_object);
+}
+
+void AddPresetObjectCmd::undo()
+{
+	/* TODO */
+}
+
+void AddPresetObjectCmd::redo()
+{
+	/* TODO */
+}
+
+void AddPresetObjectCmd::setUIParams(ParamCallback */*cb*/)
+{
+}
+
+Command *AddPresetObjectCmd::registerSelf()
+{
+	return new AddPresetObjectCmd;
 }

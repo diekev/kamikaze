@@ -66,3 +66,19 @@ public:
 	void setUIParams(ParamCallback *cb);
 	static Command *registerSelf();
 };
+
+class AddPresetObjectCmd : public Command {
+	Object *m_object = nullptr;
+	Scene *m_scene = nullptr;
+
+public:
+	AddPresetObjectCmd() = default;
+	AddPresetObjectCmd(const QString &name);
+	~AddPresetObjectCmd() = default;
+
+	void execute(EvaluationContext *context);
+	void undo();
+	void redo();
+	void setUIParams(ParamCallback *cb);
+	static Command *registerSelf();
+};

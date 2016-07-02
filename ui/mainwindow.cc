@@ -89,6 +89,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	/* TODO: find another place to do this */
 	generateObjectMenu();
 	generateNodeMenu();
+	generatePresetMenu();
 
 	m_progress_bar = new QProgressBar(this);
 	ui->statusBar->addWidget(m_progress_bar);
@@ -278,6 +279,25 @@ void MainWindow::generateNodeMenu()
 	ui->graph_editor->setAddNodeMenu(ui->add_nodes_menu);
 }
 
+void MainWindow::generatePresetMenu()
+{
+	m_command_factory->registerType("add preset", AddPresetObjectCmd::registerSelf);
+
+	const char *icons[] = {
+	    "icons/icon_grid.png",
+	    "icons/icon_box.png",
+	    "icons/icon_torus.png",
+	};
+
+	auto i = 0;
+	for (const auto &name : { "Grid", "Box", "Torus" }) {
+		auto action = ui->toolBar->addAction(QIcon(icons[i++]), name);
+		action->setData(QVariant::fromValue(QString("add preset")));
+
+		connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
+	}
+}
+
 void MainWindow::handleCommand()
 {
 	auto action = qobject_cast<QAction *>(sender());
@@ -413,16 +433,34 @@ void MainWindow::setupObjectUI(Object *object)
 	/* add node item for the object's graph output node */
 	{
 		auto graph = object->graph();
-		auto node = graph->output();
+		auto output_node = graph->output();
 
-		QtNode *node_item = new QtNode(node->name().c_str());
-		node_item->setTitleColor(Qt::white);
-		node_item->alignTitle(ALIGNED_LEFT);
-		node_item->setNode(node);
-		node_item->setScene(obnode_item->nodeScene());
-		node_item->setEditor(ui->graph_editor);
+		QtNode *out_node_item = new QtNode(output_node->name().c_str());
+		out_node_item->setTitleColor(Qt::white);
+		out_node_item->alignTitle(ALIGNED_LEFT);
+		out_node_item->setNode(output_node);
+		out_node_item->setScene(obnode_item->nodeScene());
+		out_node_item->setEditor(ui->graph_editor);
 
-		obnode_item->addNode(node_item);
+		obnode_item->addNode(out_node_item);
+
+		/* TODO: this is just when adding an object from a preset. */
+		if (graph->nodes().size() > 1) {
+			Node *node = graph->nodes().back();
+
+			QtNode *node_item = new QtNode(node->name().c_str());
+			node_item->setTitleColor(Qt::white);
+			node_item->alignTitle(ALIGNED_LEFT);
+			node_item->setNode(node);
+			node_item->setScene(obnode_item->nodeScene());
+			node_item->setEditor(ui->graph_editor);
+			node_item->setPos(out_node_item->pos() - QPointF(200, 100));
+
+			obnode_item->addNode(node_item);
+
+			ui->graph_editor->connectNodes(node_item, node_item->output(0),
+			                               out_node_item, out_node_item->input(0));
+		}
 	}
 
 	ui->graph_editor->addNode(obnode_item);
