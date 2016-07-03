@@ -26,14 +26,16 @@
 
 #include <glm/glm.hpp>
 
+class MainWindow;
 class NodeFactory;
 class PrimitiveFactory;
 class Scene;
 
 struct EvaluationContext {
 	Scene *scene;
-	PrimitiveFactory *object_factory;
+	PrimitiveFactory *primitive_factory;
 	NodeFactory *node_factory;
+	MainWindow *main_window;
 
 	/** Whether we are currently editing the graph of an object. */
 	bool edit_mode;

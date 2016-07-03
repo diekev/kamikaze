@@ -28,6 +28,7 @@
 
 #include "../util/util_render.h"
 
+class EvaluationContext;
 class Node;
 class Object;
 class QListWidget;
@@ -59,7 +60,7 @@ public:
 
 	void emitNodeAdded(Object *ob, Node *node);
 
-	void updateForNewFrame();
+	void updateForNewFrame(const EvaluationContext * const context);
 
 public Q_SLOTS:
 	void setObjectName(const QString &name);

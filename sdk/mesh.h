@@ -107,6 +107,9 @@ public:
 
 	Primitive *copy() const override;
 
+	static size_t id;
+	size_t typeID() const override;
+
 private:
 	void computeNormals();
 	void loadShader();

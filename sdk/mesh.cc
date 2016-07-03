@@ -35,6 +35,8 @@
 #define UNUSED(x) static_cast<void>(x);
 #endif
 
+size_t Mesh::id = -1;
+
 Mesh::Mesh()
     : Primitive()
     , m_need_data_update(true)
@@ -145,6 +147,11 @@ Primitive *Mesh::copy() const
 	mesh->tagUpdate();
 
 	return mesh;
+}
+
+size_t Mesh::typeID() const
+{
+	return Mesh::id;
 }
 
 void Mesh::loadShader()

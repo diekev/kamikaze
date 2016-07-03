@@ -38,14 +38,14 @@ OutputNode::OutputNode(const std::string &name)
 	addInput("Primitive");
 }
 
-Primitive *OutputNode::primitive() const
+PrimitiveCollection *OutputNode::collection() const
 {
-	return m_primitive;
+	return m_collection;
 }
 
 void OutputNode::process()
 {
-	m_primitive = getInputPrimitive("Primitive");
+	m_collection = getInputCollection("Primitive");
 }
 
 /* ************************************************************************** */
@@ -96,13 +96,6 @@ TransformNode::TransformNode()
 
 void TransformNode::process()
 {
-	auto prim = getInputPrimitive("Prim");
-
-	if (!prim) {
-		setOutputPrimitive("Prim", nullptr);
-		return;
-	}
-
 	const auto translate = eval_vec3("Translate");
 	const auto rotate = eval_vec3("Rotate");
 	const auto scale = eval_vec3("Scale");
@@ -131,34 +124,36 @@ void TransformNode::process()
 	const auto Y = rot_ord[rot_order][1];
 	const auto Z = rot_ord[rot_order][2];
 
-	auto matrix = glm::mat4(1.0f);
+	for (auto &prim : primitive_iterator(this->m_collection, Mesh::id)) {
+		std::cerr << "Iter\n";
 
-	switch (transform_type) {
-		case 0: /* Pre Transform */
-			matrix = pre_translate(matrix, pivot);
-			matrix = pre_rotate(matrix, glm::radians(rotate[X]), axis[X]);
-			matrix = pre_rotate(matrix, glm::radians(rotate[Y]), axis[Y]);
-			matrix = pre_rotate(matrix, glm::radians(rotate[Z]), axis[Z]);
-			matrix = pre_scale(matrix, scale * uniform_scale);
-			matrix = pre_translate(matrix, -pivot);
-			matrix = pre_translate(matrix, translate);
-			matrix = matrix * prim->matrix();
-			break;
-		case 1: /* Post Transform */
-			matrix = post_translate(matrix, pivot);
-			matrix = post_rotate(matrix, glm::radians(rotate[X]), axis[X]);
-			matrix = post_rotate(matrix, glm::radians(rotate[Y]), axis[Y]);
-			matrix = post_rotate(matrix, glm::radians(rotate[Z]), axis[Z]);
-			matrix = post_scale(matrix, scale * uniform_scale);
-			matrix = post_translate(matrix, -pivot);
-			matrix = post_translate(matrix, translate);
-			matrix = prim->matrix() * matrix;
-			break;
+		auto matrix = glm::mat4(1.0f);
+
+		switch (transform_type) {
+			case 0: /* Pre Transform */
+				matrix = pre_translate(matrix, pivot);
+				matrix = pre_rotate(matrix, glm::radians(rotate[X]), axis[X]);
+				matrix = pre_rotate(matrix, glm::radians(rotate[Y]), axis[Y]);
+				matrix = pre_rotate(matrix, glm::radians(rotate[Z]), axis[Z]);
+				matrix = pre_scale(matrix, scale * uniform_scale);
+				matrix = pre_translate(matrix, -pivot);
+				matrix = pre_translate(matrix, translate);
+				matrix = matrix * prim->matrix();
+				break;
+			case 1: /* Post Transform */
+				matrix = post_translate(matrix, pivot);
+				matrix = post_rotate(matrix, glm::radians(rotate[X]), axis[X]);
+				matrix = post_rotate(matrix, glm::radians(rotate[Y]), axis[Y]);
+				matrix = post_rotate(matrix, glm::radians(rotate[Z]), axis[Z]);
+				matrix = post_scale(matrix, scale * uniform_scale);
+				matrix = post_translate(matrix, -pivot);
+				matrix = post_translate(matrix, translate);
+				matrix = prim->matrix() * matrix;
+				break;
+		}
+
+		prim->matrix(matrix);
 	}
-
-	prim->matrix(matrix);
-
-	setOutputPrimitive("Prim", prim);
 }
 
 /* ************************************************************************** */
@@ -181,7 +176,7 @@ CreateBoxNode::CreateBoxNode()
 
 void CreateBoxNode::process()
 {
-	Primitive *prim = new Mesh;
+	auto prim = m_collection->build("Mesh");
 	auto mesh = static_cast<Mesh *>(prim);
 
 	PointList *points = mesh->points();
@@ -232,8 +227,6 @@ void CreateBoxNode::process()
 	polys->push_back(glm::ivec4(5, 7, 3, 1));
 
 	mesh->tagUpdate();
-
-	setOutputPrimitive("Prim", prim);
 }
 
 /* ************************************************************************** */
@@ -269,7 +262,7 @@ CreateTorusNode::CreateTorusNode()
 
 void CreateTorusNode::process()
 {
-	Primitive *prim = new Mesh;
+	auto prim = m_collection->build("Mesh");
 	auto mesh = static_cast<Mesh *>(prim);
 
 	const auto center = eval_vec3("Center");
@@ -338,8 +331,6 @@ void CreateTorusNode::process()
 	}
 
 	mesh->tagUpdate();
-
-	setOutputPrimitive("Prim", prim);
 }
 
 /* ************************************************************************** */
@@ -366,7 +357,7 @@ CreateGridNode::CreateGridNode()
 
 void CreateGridNode::process()
 {
-	Primitive *prim = new Mesh;
+	auto prim = m_collection->build("Mesh");
 	auto mesh = static_cast<Mesh *>(prim);
 
 	const auto size = eval_vec3("Size");
@@ -421,8 +412,6 @@ void CreateGridNode::process()
 	}
 
 	mesh->tagUpdate();
-
-	setOutputPrimitive("Prim", prim);
 }
 
 /* ************************************************************************** */
@@ -450,7 +439,7 @@ CreateCircleNode::CreateCircleNode()
 
 void CreateCircleNode::process()
 {
-	Primitive *prim = new Mesh;
+	auto prim = m_collection->build("Mesh");
 	auto mesh = static_cast<Mesh *>(prim);
 
 	const auto segs = eval_int("Vertices");
@@ -489,8 +478,6 @@ void CreateCircleNode::process()
 	}
 
 	mesh->tagUpdate();
-
-	setOutputPrimitive("Primitive", prim);
 }
 
 /* ************************************************************************** */
@@ -591,7 +578,7 @@ CreateTubeNode::CreateTubeNode()
 
 void CreateTubeNode::process()
 {
-	Primitive *prim = new Mesh;
+	auto prim = m_collection->build("Mesh");
 	auto mesh = static_cast<Mesh *>(prim);
 
 	const auto segs = eval_int("Vertices");
@@ -601,8 +588,6 @@ void CreateTubeNode::process()
 	create_cylinder(mesh->points(), mesh->polys(), segs, dia, dia, depth);
 
 	mesh->tagUpdate();
-
-	setOutputPrimitive("Primitive", prim);
 }
 
 /* ************************************************************************** */
@@ -638,7 +623,7 @@ CreateConeNode::CreateConeNode()
 
 void CreateConeNode::process()
 {
-	Primitive *prim = new Mesh;
+	auto prim = m_collection->build("Mesh");
 	auto mesh = static_cast<Mesh *>(prim);
 
 	const auto segs = eval_int("Vertices");
@@ -649,8 +634,6 @@ void CreateConeNode::process()
 	create_cylinder(mesh->points(), mesh->polys(), segs, dia1, dia2, depth);
 
 	mesh->tagUpdate();
-
-	setOutputPrimitive("Primitive", prim);
 }
 
 /* ************************************************************************** */
@@ -712,7 +695,7 @@ CreateIcoSphereNode::CreateIcoSphereNode()
 
 void CreateIcoSphereNode::process()
 {
-	Primitive *prim = new Mesh;
+	auto prim = m_collection->build("Mesh");
 	auto mesh = static_cast<Mesh *>(prim);
 
 	const auto dia = eval_float("Radius");
@@ -745,8 +728,6 @@ void CreateIcoSphereNode::process()
 	}
 
 	mesh->tagUpdate();
-
-	setOutputPrimitive("Primitive", prim);
 }
 
 /* ************************************************************************** */
