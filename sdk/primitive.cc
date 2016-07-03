@@ -146,27 +146,37 @@ void Primitive::setUIParams(ParamCallback *cb)
 	xyz_param(cb, "Rotation", &m_rotation[0]);
 }
 
-int Primitive::refcount() const
+/* ********************************************** */
+
+void PrimitiveCache::add(PrimitiveCollection *collection)
 {
-	return m_refcount;
+	if (collection->refcount() > 0) {
+		return;
+	}
+
+	collection->incref();
+
+	m_collections.push_back(collection);
 }
 
-void Primitive::incref()
+void PrimitiveCache::clear()
 {
-	++m_refcount;
+	for (auto &primitive : m_collections) {
+		delete primitive;
+	}
+
+	m_collections.clear();
 }
 
-void Primitive::decref()
-{
-	--m_refcount;
-}
+/* ********************************************** */
 
-void PrimitiveFactory::registerType(const std::string &name, PrimitiveFactory::factory_func func)
+size_t PrimitiveFactory::registerType(const std::string &name, PrimitiveFactory::factory_func func)
 {
 	const auto iter = m_map.find(name);
 	assert(iter == m_map.end());
 
 	m_map[name] = func;
+	return m_map.size();
 }
 
 Primitive *PrimitiveFactory::operator()(const std::string &name)
@@ -196,4 +206,198 @@ std::vector<std::string> PrimitiveFactory::keys() const
 bool PrimitiveFactory::registered(const std::string &key) const
 {
 	return (m_map.find(key) != m_map.end());
+}
+
+/* ********************************************** */
+
+template <typename OpType>
+bool ensure_unique_name(QString &name, const OpType &op)
+{
+	if (op(name)) {
+		return false;
+	}
+
+	QString temp = name + ".0000";
+	const auto temp_size = temp.size();
+	int number = 0;
+
+	do {
+		++number;
+
+		if (number < 10) {
+			temp[temp_size - 1] = number;
+		}
+		else if (number < 100) {
+			temp[temp_size - 1] = number % 10;
+			temp[temp_size - 2] = number / 10;
+		}
+		else if (number < 1000) {
+			temp[temp_size - 1] = number % 10;
+			temp[temp_size - 2] = (number % 100) / 10;
+			temp[temp_size - 3] = number / 100;
+		}
+		else {
+			temp[temp_size - 1] = number % 10;
+			temp[temp_size - 2] = (number % 100) / 10;
+			temp[temp_size - 3] = (number % 1000) / 100;
+			temp[temp_size - 4] = number / 1000;
+		}
+	} while (!op(temp));
+
+	name = temp;
+	return true;
+}
+
+/* ********************************************** */
+
+PrimitiveCollection::PrimitiveCollection(PrimitiveFactory *factory)
+    : PrimitiveCollection()
+{
+	m_factory = factory;
+}
+
+PrimitiveCollection::~PrimitiveCollection()
+{
+	clear();
+}
+
+Primitive *PrimitiveCollection::build(const std::string &key)
+{
+	assert(m_factory->registered(key));
+	auto prim = (*m_factory)(key);
+
+	this->add(prim);
+
+	return prim;
+}
+
+void PrimitiveCollection::add(Primitive *prim)
+{
+	m_collection.push_back(prim);
+
+	auto name = prim->name();
+
+	bool changed = ensure_unique_name(name, [&](const QString &str)
+	{
+		for (const auto &prim : m_collection) {
+			if (prim->name() == str) {
+				return false;
+			}
+		}
+
+		return true;
+	});
+
+	if (changed) {
+		prim->name(name);
+	}
+}
+
+void PrimitiveCollection::clear()
+{
+	for (auto &prim : m_collection) {
+		delete prim;
+	}
+
+	m_collection.clear();
+}
+
+PrimitiveCollection *PrimitiveCollection::copy() const
+{
+	auto collection = new PrimitiveCollection(this->m_factory);
+
+	for (const auto &prim : this->m_collection) {
+		collection->add(prim->copy());
+	}
+
+	return collection;
+}
+
+const std::vector<Primitive *> &PrimitiveCollection::primitives() const
+{
+	return m_collection;
+}
+
+int PrimitiveCollection::refcount() const
+{
+	return m_ref;
+}
+
+void PrimitiveCollection::incref()
+{
+	++m_ref;
+}
+
+void PrimitiveCollection::decref()
+{
+	--m_ref;
+}
+
+/* ********************************************** */
+
+primitive_iterator::primitive_iterator()
+{
+	collection.add(nullptr);
+	m_iter = collection.primitives().begin();
+	m_end = collection.primitives().end();
+}
+
+primitive_iterator::primitive_iterator(const PrimitiveCollection *collection, int type)
+    : m_type(type)
+{
+	m_iter = collection->primitives().begin();
+	m_end = collection->primitives().end();
+}
+
+primitive_iterator::primitive_iterator(const primitive_iterator &rhs)
+    : m_iter(rhs.m_iter)
+    , m_end(rhs.m_end)
+    , m_type(rhs.m_type)
+{}
+
+primitive_iterator &primitive_iterator::operator++()
+{
+	do {
+		++m_iter;
+	}
+	while (m_iter != m_end && (*m_iter)->typeID() != m_type);
+
+	return *this;
+}
+
+const primitive_iterator::reference primitive_iterator::operator*() const
+{
+	return *m_iter;
+}
+
+const primitive_iterator::pointer primitive_iterator::operator->() const
+{
+	return &(*m_iter);
+}
+
+primitive_iterator::value_type primitive_iterator::get() const
+{
+	return (m_iter != m_end) ? *m_iter : nullptr;
+}
+
+bool operator==(const primitive_iterator &ita, const primitive_iterator &itb) noexcept
+{
+	Primitive *a = ita.get();
+	Primitive *b = itb.get();
+	return a == b;
+}
+
+bool operator!=(const primitive_iterator &ita, const primitive_iterator &itb) noexcept
+{
+	return !(ita == itb);
+}
+
+primitive_iterator begin(const primitive_iterator &iter)
+{
+	return iter;
+}
+
+primitive_iterator end(const primitive_iterator &)
+{
+	return primitive_iterator();
 }

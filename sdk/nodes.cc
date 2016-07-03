@@ -26,7 +26,7 @@
 
 #include <cassert>
 
-#include "../core/object.h"  /* XXX - bad level call */
+#include "context.h"
 #include "primitive.h"
 
 Node::Node(const std::string &name)
@@ -138,55 +138,94 @@ bool Node::hasLinkedOutput() const
 	return linked_output;
 }
 
-Primitive *Node::getInputPrimitive(const std::string &name)
+PrimitiveCollection *Node::getInputCollection(const std::string &name)
 {
 	auto socket = input(name);
+	return getInputCollection(socket);
+}
 
+PrimitiveCollection *Node::getInputCollection(const size_t index)
+{
+	auto socket = input(index);
+	return getInputCollection(socket);
+}
+
+void Node::setOutputCollection(const std::string &name, PrimitiveCollection *collection)
+{
+	auto socket = output(name);
+	setOutputCollection(socket, collection);
+}
+
+void Node::setOutputCollection(const size_t index, PrimitiveCollection *collection)
+{
+	auto socket = output(index);
+	setOutputCollection(socket, collection);
+}
+
+PrimitiveCollection *Node::collection() const
+{
+	return m_collection;
+}
+
+void Node::collection(PrimitiveCollection *coll)
+{
+	m_collection = coll;
+}
+
+void Node::buildCollection(const EvaluationContext * const context)
+{
+#if 0
+	if (m_collection != nullptr) {
+		return;
+	}
+#endif
+
+	m_collection = new PrimitiveCollection(context->primitive_factory);
+}
+
+void Node::setPrimitiveCache(PrimitiveCache *cache)
+{
+	m_cache = cache;
+}
+
+PrimitiveCollection *Node::getInputCollection(InputSocket *socket)
+{
 	if (!socket || !socket->link) {
 		return nullptr;
 	}
 
-	auto prim = socket->link->prim;
+	auto collection = socket->link->collection;
 
-	if (!prim) {
+	if (!collection) {
 		return nullptr;
 	}
 
 	if (socket->link->links.size() > 1) {
-		auto copy = prim->copy();
+		auto copy = collection->copy();
 
 		if (!copy) {
 			return nullptr;
 		}
 
 		m_cache->add(copy);
-		copy->incref();
 
 		return copy;
 	}
 
-	return prim;
+	return collection;
 }
 
-void Node::setOutputPrimitive(const std::string &name, Primitive *prim)
+void Node::setOutputCollection(OutputSocket *socket, PrimitiveCollection *collection)
 {
-	auto socket = output(name);
-
-	if (prim) {
-		m_cache->add(prim);
-		prim->incref();
+	if (collection) {
+		m_cache->add(collection);
 	}
 
 	if (!socket) {
 		return;
 	}
 
-	socket->prim = prim;
-}
-
-void Node::setPrimitiveCache(PrimitiveCache *cache)
-{
-	m_cache = cache;
+	socket->collection = collection;
 }
 
 /* ****************************** node factory ****************************** */

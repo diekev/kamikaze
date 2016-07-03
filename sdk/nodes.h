@@ -30,12 +30,14 @@
 
 #include "models.h"
 
+class EvaluationContext;
 class InputSocket;
 class Node;
 class NodeFactory;
 class ParamCallback;
 class Primitive;
 class PrimitiveCache;
+class PrimitiveCollection;
 
 extern "C" {
 
@@ -59,7 +61,7 @@ struct OutputSocket {
 	Node *parent = nullptr;
 	std::vector<InputSocket *> links{};
 	std::string name = "";
-	Primitive *prim = nullptr;
+	PrimitiveCollection *collection = nullptr;
 
 	explicit OutputSocket(const std::string &sname)
 	    : parent(nullptr)
@@ -71,7 +73,7 @@ struct InputSocket {
 	Node *parent = nullptr;
 	OutputSocket *link = nullptr;
 	std::string name = "";
-	Primitive *prim = nullptr;
+	PrimitiveCollection *collection = nullptr;
 
 	explicit InputSocket(const std::string &sname)
 	    : parent(nullptr)
@@ -91,10 +93,11 @@ using NodeWatcher = Watcher<NodeState>;
 
 class Node : public Watched<NodeWatcher> {
 protected:
-	std::vector<InputSocket *> m_inputs;
-	std::vector<OutputSocket *> m_outputs;
-	std::string m_name;
-	PrimitiveCache *m_cache;
+	std::vector<InputSocket *> m_inputs = {};
+	std::vector<OutputSocket *> m_outputs = {};
+	std::string m_name = "";
+	PrimitiveCache *m_cache = nullptr;
+	PrimitiveCollection *m_collection = nullptr;
 
 public:
 	explicit Node(const std::string &name);
@@ -168,19 +171,55 @@ public:
 	virtual void process() = 0;
 
 	/**
-	 * Get the primitive at the given input name.
+	 * Get the collection at the given input name.
 	 */
-	Primitive *getInputPrimitive(const std::string &name);
+	PrimitiveCollection *getInputCollection(const std::string &name);
 
 	/**
-	 * Set the primitive at the given output name.
+	 * Get the collection at the given input index.
 	 */
-	void setOutputPrimitive(const std::string &name, Primitive *prim);
+	PrimitiveCollection *getInputCollection(const size_t index);
+
+	/**
+	 * Set the collection at the given output name.
+	 */
+	void setOutputCollection(const std::string &name, PrimitiveCollection *collection);
+
+	/**
+	 * Set the collection at the given output index.
+	 */
+	void setOutputCollection(const size_t index, PrimitiveCollection *collection);
+
+	/**
+	 * Return this node's collection.
+	 */
+	PrimitiveCollection *collection() const;
+
+	/**
+	 * Set this node's collection.
+	 */
+	void collection(PrimitiveCollection *coll);
+
+	/**
+	 * Build this node's collection.
+	 */
+	void buildCollection(const EvaluationContext * const context);
 
 	/**
 	 * Set the primitive cache.
 	 */
 	void setPrimitiveCache(PrimitiveCache *cache);
+
+private:
+	/**
+	 * Get the collection at the given input socket.
+	 */
+	PrimitiveCollection *getInputCollection(InputSocket *socket);
+
+	/**
+	 * Set the collection at the given output socket.
+	 */
+	void setOutputCollection(OutputSocket *socket, PrimitiveCollection *collection);
 
 	NodeState getState() const
 	{

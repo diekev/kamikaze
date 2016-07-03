@@ -46,6 +46,16 @@ void new_kamikaze_prims(PrimitiveFactory *factory);
 
 }
 
+/* ********************************************** */
+
+/**
+ * Macro to help registering primitives.
+ */
+#define REGISTER_PRIMITIVE(name, type) \
+	factory->registerType(name, []() -> Primitive* { return new type; })
+
+/* ********************************************** */
+
 class Primitive {
 protected:
 	std::unique_ptr<Cube> m_bbox{};
@@ -68,8 +78,6 @@ protected:
 	bool m_draw_bbox = false;
 	bool m_need_update = true;
 	bool m_need_data_update = true;
-
-	int m_refcount = 0;
 
 public:
 	Primitive() = default;
@@ -142,14 +150,39 @@ public:
 	void setUIParams(ParamCallback *cb);
 	virtual void setCustomUIParams(ParamCallback *cb) = 0;
 
-	/* Reference counting, NOT to be used from plugins. They are used to
-	 * indicate that primitives are ready to be deleted.
+	/**
+	 * @brief typeID The unique ID that is shared between primitives instanced
+	 *               from a type derived from this class.
 	 *
-	 * TODO: Replace with std::shared_ptr? */
-	int refcount() const;
-	void incref();
-	void decref();
+	 * @return The unique ID that is assigned to the primitive class derived
+	 *         from this base class upon registration inside of a primitive
+	 *         factory.
+	 *
+	 * A typical implementation could be:
+	 * @code
+	 * class MyPrimitive : public Primitive {
+	 * public:
+	 *     static size_t id;
+	 *
+	 *     size_t typeID() const override
+	 *     {
+	 *         return MyPrimitive::id;
+	 *     }
+	 * };
+	 *
+	 * // Make sure static is initialized
+	 * size_t MyPrimitive::id = -1;
+	 *
+	 * void new_kamikaze_prims(PrimitiveFactory *factory)
+	 * {
+	 *     MyPrimitive::id = REGISTER_PRIMITIVE("MyPrimitive", MyPrimitive);
+	 * }
+	 * @endcode
+	 */
+	virtual size_t typeID() const = 0;
 };
+
+/* ********************************************** */
 
 class PrimitiveFactory final {
 public:
@@ -160,8 +193,10 @@ public:
 	 *
 	 * @param key The key associate @ func to.
 	 * @param func A function pointer with signature 'Primitive *(void)'.
+	 *
+	 * @return The number of entries after registering the new element.
 	 */
-	void registerType(const std::string &key, factory_func func);
+	size_t registerType(const std::string &key, factory_func func);
 
 	/**
 	 * @brief operator() Create a Primitive based on the given key.
@@ -197,3 +232,127 @@ public:
 private:
 	std::unordered_map<std::string, factory_func> m_map;
 };
+
+/* ********************************************** */
+
+class PrimitiveCollection {
+	std::vector<Primitive *> m_collection = {};
+	PrimitiveFactory *m_factory = nullptr;
+	int m_ref = 0;
+
+	friend class primitive_iterator;
+	PrimitiveCollection() = default;
+
+public:
+	explicit PrimitiveCollection(PrimitiveFactory *factory);
+
+	~PrimitiveCollection();
+
+	/**
+	 * @brief build Build a primitive in this collection.
+	 * @param key   The key of the primitive inside the PrimitiveFactory.
+	 * @return      A pointer to the newly created primitive.
+	 */
+	Primitive *build(const std::string &key);
+
+	/**
+	 * @brief add  Add a primitve to this collection.
+	 * @param prim The primitive to add.
+	 */
+	void add(Primitive *prim);
+
+	/**
+	 * @brief clear Remove and delete all the primitives inside this collection.
+	 */
+	void clear();
+
+	/**
+	 * @brief copy Copy this collection and the primitive that it holds.
+	 * @return  A copy of this collection containing copies of the primitive
+	 *          that this collection holds.
+	 */
+	PrimitiveCollection *copy() const;
+
+	/**
+	 * @brief primitives The primitives contained in this collection.
+	 * @return A vector containing the primitive contained in this collection.
+	 */
+	const std::vector<Primitive *> &primitives() const;
+
+	/* Reference counting, NOT to be used from plugins. They are used to
+	 * indicate that primitives are ready to be deleted.
+	 *
+	 * TODO: Replace with std::shared_ptr? */
+	int refcount() const;
+
+	void incref();
+
+	void decref();
+};
+
+/* ********************************************** */
+
+/**
+ * @brief This class is used to gather and release the collections created
+ *        inside of an object's node graph.
+ */
+class PrimitiveCache {
+	std::vector<PrimitiveCollection *> m_collections;
+
+public:
+	void add(PrimitiveCollection *collection);
+	void clear();
+};
+
+/* ********************************************** */
+
+/**
+ * @brief A C++ standard compliant iterator used to traverse the primitives
+ *        contained in a PrimitiveCollection. Only the primitives whose type ID
+ *        match the type given in the construtor are returned by the iterator.
+ */
+class primitive_iterator {
+	std::vector<Primitive *>::const_iterator m_iter{nullptr}, m_end{nullptr};
+	int m_type = 0;
+	PrimitiveCollection collection{};
+
+public:
+	using value_type = Primitive*;
+	using difference_type = std::ptrdiff_t;
+	using pointer = const value_type *;
+	using reference = const value_type &;
+	using iterator_category = std::input_iterator_tag;
+
+	/**
+	 * @brief primitive_iterator Construct the end iterator.
+	 */
+	primitive_iterator();
+
+	/**
+	 * @brief primitive_iterator Construct the begin iterator.
+	 * @param collection The PrimitiveCollection to traverse.
+	 * @param type       The type ID of the primitive to consider for iteration.
+	 */
+	primitive_iterator(const PrimitiveCollection *collection, int type);
+
+	primitive_iterator(const primitive_iterator &other);
+	primitive_iterator(primitive_iterator &&other);
+
+	~primitive_iterator() noexcept = default;
+
+	primitive_iterator &operator=(const primitive_iterator &other) = default;
+	primitive_iterator &operator=(primitive_iterator &&other) = default;
+
+	primitive_iterator &operator++();
+
+	const reference operator*() const;
+	const pointer operator->() const;
+
+	value_type get() const;
+};
+
+bool operator==(const primitive_iterator &ita, const primitive_iterator &itb) noexcept;
+bool operator!=(const primitive_iterator &ita, const primitive_iterator &itb) noexcept;
+
+primitive_iterator begin(const primitive_iterator &iter);
+primitive_iterator end(const primitive_iterator &);

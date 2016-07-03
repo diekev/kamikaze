@@ -32,9 +32,10 @@
 #include "nodes/graph.h"
 #include "nodes/nodes.h"
 
-#include "ui/paramfactory.h"
-
+#include "scene.h"
 #include "task.h"
+
+#include "ui/paramfactory.h"
 
 Object::Object()
     : m_graph(new Graph)
@@ -48,14 +49,14 @@ Object::~Object()
 	m_cache.clear();
 }
 
-Primitive *Object::primitive() const
+PrimitiveCollection *Object::collection() const
 {
-	return m_primitive;
+	return m_collection;
 }
 
-void Object::primitive(Primitive *prim)
+void Object::collection(PrimitiveCollection *coll)
 {
-	m_primitive = prim;
+	m_collection = coll;
 }
 
 void Object::matrix(const glm::mat4 &m)
@@ -117,47 +118,22 @@ void Object::clearCache()
 
 /* ********************************************* */
 
-void PrimitiveCache::add(Primitive *prim)
-{
-	m_primitives.push_back(prim);
-}
-
-void PrimitiveCache::clear()
-{
-	for (auto &primitive : m_primitives) {
-		if (primitive->refcount() > 1) {
-			primitive->decref();
-			continue;
-		}
-
-		delete primitive;
-		primitive = nullptr;
-	}
-
-	m_primitives.clear();
-}
-
-/* ********************************************* */
-
 class GraphEvalTask : public Task {
-	Object *m_object;
-	Graph *m_graph;
-
 public:
-	GraphEvalTask(Object *object, Graph *graph, MainWindow *window);
+	GraphEvalTask(const EvaluationContext * const context);
 
-	void start() override;
+	void start(const EvaluationContext * const context) override;
 };
 
-GraphEvalTask::GraphEvalTask(Object *object, Graph *graph, MainWindow *window)
-    : Task(window)
-    , m_object(object)
-    , m_graph(graph)
+GraphEvalTask::GraphEvalTask(const EvaluationContext * const context)
+    : Task(context)
 {}
 
-void GraphEvalTask::start()
+void GraphEvalTask::start(const EvaluationContext * const context)
 {
-	auto stack = m_graph->finished_stack();
+	auto object = context->scene->currentObject();
+	auto graph = object->graph();
+	auto stack = graph->finished_stack();
 
 	const auto size = static_cast<float>(stack.size());
 	auto index = 0;
@@ -166,28 +142,40 @@ void GraphEvalTask::start()
 
 	for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter) {
 		Node *node = *iter;
-		node->process();
+
+		if (node->inputs().empty()) {
+			node->buildCollection(context);
+		}
+		else {
+			node->collection(node->getInputCollection(0ul));
+		}
+
+		if (node->collection()) {
+			node->process();
+		}
+
+		if (!node->outputs().empty()) {
+			node->setOutputCollection(0ul, node->collection());
+		}
 
 		const float progress = (++index / size) * 100.0f;
 		m_notifier->signalProgressUpdate(progress);
 	}
 
-	auto output_node = m_graph->output();
-	m_object->primitive(output_node->primitive());
+	auto output_node = graph->output();
+	object->collection(output_node->collection());
 }
 
-void eval_graph(MainWindow *window, Object *ob, bool force)
+void eval_graph(const EvaluationContext * const context)
 {
-	if (!force) {
-		return;
-	}
-
+	auto scene = context->scene;
+	auto ob = scene->currentObject();
 	auto graph = ob->graph();
 	auto output_node = graph->output();
 
 	if (!output_node->isLinked()) {
-		output_node->input(0)->prim = nullptr;
-		ob->primitive(nullptr);
+		output_node->input(0)->collection = nullptr;
+		ob->collection(nullptr);
 		return;
 	}
 
@@ -196,13 +184,13 @@ void eval_graph(MainWindow *window, Object *ob, bool force)
 	/* XXX */
 	for (Node *node : graph->nodes()) {
 		for (OutputSocket *output : node->outputs()) {
-			output->prim = nullptr;
+			output->collection = nullptr;
 		}
 	}
 
-	ob->primitive(nullptr);
+	ob->collection(nullptr);
 	ob->clearCache();
 
-	GraphEvalTask *t = new(tbb::task::allocate_root()) GraphEvalTask(ob, graph, window);
+	GraphEvalTask *t = new(tbb::task::allocate_root()) GraphEvalTask(context);
 	tbb::task::enqueue(*t);
 }

@@ -61,4 +61,7 @@ public:
 	void computeBBox(glm::vec3 &min, glm::vec3 &max) override;
 
 	void loadShader();
+
+	static size_t id;
+	size_t typeID() const override;
 };

@@ -34,6 +34,8 @@
 #define UNUSED(x) static_cast<void>(x);
 #endif
 
+size_t PrimPoints::id = -1;
+
 PrimPoints::PrimPoints()
 {
 	m_draw_type = GL_POINTS;
@@ -115,6 +117,11 @@ void PrimPoints::loadShader()
 		m_program.addUniform("for_outline");
 	}
 	m_program.disable();
+}
+
+size_t PrimPoints::typeID() const
+{
+	return PrimPoints::id;
 }
 
 void PrimPoints::render(ViewerContext *context, const bool for_outline)

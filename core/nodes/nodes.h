@@ -31,12 +31,12 @@
 void register_builtin_nodes(NodeFactory *factory);
 
 class OutputNode : public Node {
-	Primitive *m_primitive = nullptr;
+	PrimitiveCollection *m_collection = nullptr;
 
 public:
 	OutputNode(const std::string &name);
 
-	Primitive *primitive() const;
+	PrimitiveCollection *collection() const;
 
 	void process() override;
 };

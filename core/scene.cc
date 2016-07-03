@@ -96,43 +96,45 @@ void Scene::addObject(Object *object)
 void Scene::render(ViewerContext *context)
 {
 	for (auto &object : m_objects) {
-		if (!object || !object->primitive()) {
+		if (!object || !object->collection()) {
 			continue;
 		}
 
 		const bool active_object = (object == m_active_object);
 
-		auto prim = object->primitive();
+		auto collection = object->collection();
 
-		/* update prim before drawing */
-		prim->update();
-		prim->prepareRenderData();
+		for (auto &prim : collection->primitives()) {
+			/* update prim before drawing */
+			prim->update();
+			prim->prepareRenderData();
 
-		if (prim->drawBBox()) {
-			prim->bbox()->render(context, false);
-		}
+			if (prim->drawBBox()) {
+				prim->bbox()->render(context, false);
+			}
 
-		auto primmat = prim->matrix();
-		prim->matrix() = object->matrix() * primmat;
+			auto primmat = prim->matrix();
+			prim->matrix() = object->matrix() * primmat;
 
-		prim->render(context, false);
+			prim->render(context, false);
 
-		if (active_object) {
-			glStencilFunc(GL_NOTEQUAL, 1, 0xff);
-			glStencilMask(0x00);
-			glDisable(GL_DEPTH_TEST);
+			if (active_object) {
+				glStencilFunc(GL_NOTEQUAL, 1, 0xff);
+				glStencilMask(0x00);
+				glDisable(GL_DEPTH_TEST);
 
-			/* scale up the object a bit */
-			prim->matrix() = glm::scale(prim->matrix(), glm::vec3(1.01f));
+				/* scale up the object a bit */
+				prim->matrix() = glm::scale(prim->matrix(), glm::vec3(1.01f));
 
-			prim->render(context, true);
+				prim->render(context, true);
 
-			prim->matrix() = primmat;
+				prim->matrix() = primmat;
 
-			/* restore */
-			glStencilFunc(GL_ALWAYS, 1, 0xff);
-			glStencilMask(0xff);
-			glEnable(GL_DEPTH_TEST);
+				/* restore */
+				glStencilFunc(GL_ALWAYS, 1, 0xff);
+				glStencilMask(0xff);
+				glEnable(GL_DEPTH_TEST);
+			}
 		}
 	}
 }
@@ -148,14 +150,17 @@ void Scene::selectObject(const glm::vec3 &pos)
 	int selected_object = -1, index = 0;
 
 	for (auto &object : m_objects) {
-		if (!object) {
+		if (!object || !object->collection()) {
 			continue;
 		}
 
-		float dist = glm::distance(object->primitive()->pos(), pos);
-		if (/*dist < 1.0f &&*/ dist < min) {
-			selected_object = index;
-			min = dist;
+		for (const auto &prim : object->collection()->primitives()) {
+			float dist = glm::distance(prim->pos(), pos);
+
+			if (/*dist < 1.0f &&*/ dist < min) {
+				selected_object = index;
+				min = dist;
+			}
 		}
 
 		++index;
@@ -195,11 +200,15 @@ void Scene::setObjectName(const QString &name)
 
 void Scene::tagObjectUpdate()
 {
-	if (m_active_object) {
-		m_active_object->updateMatrix();
+	if (!m_active_object) {
+		return;
+	}
 
-		if (m_active_object->primitive()) {
-			m_active_object->primitive()->tagUpdate();
+	m_active_object->updateMatrix();
+
+	if (m_active_object->collection()) {
+		for (auto &prim : m_active_object->collection()->primitives()) {
+			prim->tagUpdate();
 		}
 	}
 }
@@ -250,12 +259,12 @@ void Scene::setActiveObject(Object *object)
 	Q_EMIT(objectChanged());
 }
 
-void Scene::updateForNewFrame()
+void Scene::updateForNewFrame(const EvaluationContext * const context)
 {
 	/* TODO: dependency graph */
 
-	for (Object *object : m_objects) {
-		/* TODO: replace with proper update method */
-		eval_graph(nullptr, object, false);
-	}
+//	for (Object *object : m_objects) {
+//		/* TODO: replace with proper update method */
+//		eval_graph(context, false);
+//	}
 }
