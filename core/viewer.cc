@@ -134,7 +134,25 @@ void Viewer::paintGL()
 			m_manipulator->pos(m_scene->currentObject()->pos());
 
 			m_context->setMatrix(m_manipulator->matrix());
-			m_manipulator->render(m_context);
+
+			m_manipulator->render(m_context, false);
+
+			if (m_manipulator_active) {
+				glStencilFunc(GL_NOTEQUAL, 1, 0xff);
+				glStencilMask(0x00);
+				glDisable(GL_DEPTH_TEST);
+
+				/* scale up the object a bit */
+				glm::mat4 mat = glm::scale(m_manipulator->matrix(), glm::vec3(1.05f));
+
+				m_context->setMatrix(mat);
+				m_manipulator->render(m_context, true);
+
+				/* restore */
+				glStencilFunc(GL_ALWAYS, 1, 0xff);
+				glStencilMask(0xff);
+				glEnable(GL_DEPTH_TEST);
+			}
 		}
 	}
 }

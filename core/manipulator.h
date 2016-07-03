@@ -35,12 +35,7 @@ class RenderBuffer;
 class ViewerContext;
 
 class Manipulator : public Transformable {
-	RenderBuffer *m_xarrow_buffer;
-	RenderBuffer *m_yarrow_buffer;
-	RenderBuffer *m_zarrow_buffer;
-	RenderBuffer *m_xy_buffer;
-	RenderBuffer *m_xz_buffer;
-	RenderBuffer *m_yz_buffer;
+	RenderBuffer *m_buffer[6];
 
 	std::vector<glm::vec3> m_vertices;
 	glm::vec3 m_dimensions;
@@ -60,7 +55,7 @@ public:
 
 	bool intersect(const Ray &ray, float &min);
 
-	void render(const ViewerContext * const context);
+	void render(const ViewerContext * const context, const bool for_outline);
 
 	glm::vec3 update(const Ray &ray);
 

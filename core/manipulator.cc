@@ -34,6 +34,8 @@
 #include "util/utils_glm.h"
 
 enum {
+	AXIS_NONE = -1,
+
 	X_AXIS = 0,
 	Y_AXIS = 1,
 	Z_AXIS = 2,
@@ -326,12 +328,14 @@ static RenderBuffer *add_arrow_buffer(const int axis)
 	                          ego::util::str_from_file("shaders/tree_topology.frag"));
 
 	buffer->finalize_shader();
+	buffer->can_outline(true);
 
 	ProgramParams params;
 	params.add_attribute("vertex");
 	params.add_attribute("color");
 	params.add_uniform("matrix");
 	params.add_uniform("MVP");
+	params.add_uniform("for_outline");
 
 	buffer->set_shader_params(params);
 
@@ -364,12 +368,14 @@ static RenderBuffer *add_plane_buffer(const int plane)
 	                          ego::util::str_from_file("shaders/tree_topology.frag"));
 
 	buffer->finalize_shader();
+	buffer->can_outline(true);
 
 	ProgramParams params;
 	params.add_attribute("vertex");
 	params.add_attribute("color");
 	params.add_uniform("matrix");
 	params.add_uniform("MVP");
+	params.add_uniform("for_outline");
 
 	buffer->set_shader_params(params);
 
@@ -399,20 +405,24 @@ Manipulator::Manipulator()
 
 	recompute_matrix();
 
-	m_xarrow_buffer = add_arrow_buffer(X_AXIS);
-	m_yarrow_buffer = add_arrow_buffer(Y_AXIS);
-	m_zarrow_buffer = add_arrow_buffer(Z_AXIS);
+	m_buffer[X_AXIS] = add_arrow_buffer(X_AXIS);
+	m_buffer[Y_AXIS] = add_arrow_buffer(Y_AXIS);
+	m_buffer[Z_AXIS] = add_arrow_buffer(Z_AXIS);
 
-	m_xy_buffer = add_plane_buffer(XY_PLANE);
-	m_xz_buffer = add_plane_buffer(XZ_PLANE);
-	m_yz_buffer = add_plane_buffer(YZ_PLANE);
+	m_buffer[XY_PLANE] = add_plane_buffer(XY_PLANE);
+	m_buffer[XZ_PLANE] = add_plane_buffer(XZ_PLANE);
+	m_buffer[YZ_PLANE] = add_plane_buffer(YZ_PLANE);
 }
 
 Manipulator::~Manipulator()
 {
-	delete m_xarrow_buffer;
-	delete m_yarrow_buffer;
-	delete m_zarrow_buffer;
+	delete m_buffer[X_AXIS];
+	delete m_buffer[Y_AXIS];
+	delete m_buffer[Z_AXIS];
+
+	delete m_buffer[XY_PLANE];
+	delete m_buffer[XZ_PLANE];
+	delete m_buffer[YZ_PLANE];
 }
 
 bool Manipulator::intersect(const Ray &ray, float &min)
@@ -422,7 +432,10 @@ bool Manipulator::intersect(const Ray &ray, float &min)
 
 	/* Check X-axis. */
 	auto nor = ray.pos - ray.dir;
-	auto xmin = glm::vec3{ -1.0f, -0.05f, -0.05f }, xmax = glm::vec3{ 1.0f, 0.05f, 0.05f };
+	auto xmin = glm::vec3{ -2.0f, -0.05f, -0.05f }, xmax = glm::vec3{ 2.0f, 0.05f, 0.05f };
+	xmin = xmin * glm::mat3(matrix());
+	xmax = xmax * glm::mat3(matrix());
+
 	if (::intersect(ray, xmin * glm::mat3(matrix()), xmax * glm::mat3(matrix()), min)) {
 		m_axis = X_AXIS;
 		m_plane_nor = glm::vec3{ 0.0f, nor.y, nor.z };
@@ -430,7 +443,10 @@ bool Manipulator::intersect(const Ray &ray, float &min)
 	}
 
 	/* Check Y-axis. */
-	auto ymin = glm::vec3{ -0.05f, -1.0f, -0.05f }, ymax = glm::vec3{ 0.05f, 1.0f, 0.05f };
+	auto ymin = glm::vec3{ -0.05f, -2.0f, -0.05f }, ymax = glm::vec3{ 0.05f, 2.0f, 0.05f };
+	ymin = ymin * glm::mat3(matrix());
+	ymax = ymax * glm::mat3(matrix());
+
 	if (::intersect(ray, ymin * glm::mat3(matrix()), ymax * glm::mat3(matrix()), min)) {
 		m_axis = Y_AXIS;
 		m_plane_nor = glm::vec3{ nor.x, 0.0f, nor.z };
@@ -438,13 +454,16 @@ bool Manipulator::intersect(const Ray &ray, float &min)
 	}
 
 	/* Check Z-axis. */
-	auto zmin = glm::vec3{ -0.05f, -0.05f, -1.0f }, zmax = glm::vec3{ 0.05f, 0.05f, 1.0f };
+	auto zmin = glm::vec3{ -0.05f, -0.05f, -2.0f }, zmax = glm::vec3{ 0.05f, 0.05f, 2.0f };
+	zmin = zmin * glm::mat3(matrix());
+	zmax = zmax * glm::mat3(matrix());
+
 	if (::intersect(ray, zmin * glm::mat3(matrix()), zmax * glm::mat3(matrix()), min)) {
 		m_axis = Z_AXIS;
 		m_plane_nor = glm::vec3{ nor.x, nor.y, 0.0f };
 		return true;
 	}
-
+#if 0
 	/* Check XY-Plane */
 	glm::vec3 dummy;
 	if (::intersect(ray, glm::vec3{ 1.0f, 1.0f, 0.0f }, glm::vec3{ 0.0f, 0.0f, 1.0f }, dummy)) {
@@ -472,8 +491,9 @@ bool Manipulator::intersect(const Ray &ray, float &min)
 		std::cerr << "Isect YZ Plane\n";
 		return true;
 	}
+#endif
 
-	m_axis = -1;
+	m_axis = AXIS_NONE;
 	return false;
 }
 
@@ -518,13 +538,17 @@ void Manipulator::applyConstraint(const glm::vec3 &cpos)
 	}
 }
 
-void Manipulator::render(const ViewerContext * const context)
+void Manipulator::render(const ViewerContext * const context, const bool for_outline)
 {
-	m_xarrow_buffer->render(context, false);
-	m_yarrow_buffer->render(context, false);
-	m_zarrow_buffer->render(context, false);
+	if (for_outline && m_axis != AXIS_NONE) {
+		m_buffer[m_axis]->render(context, for_outline);
+		return;
+	}
 
-	m_xy_buffer->render(context, false);
-	m_xz_buffer->render(context, false);
-	m_yz_buffer->render(context, false);
+	m_buffer[X_AXIS]->render(context, for_outline);
+	m_buffer[Y_AXIS]->render(context, for_outline);
+	m_buffer[Z_AXIS]->render(context, for_outline);
+	m_buffer[XY_PLANE]->render(context, for_outline);
+	m_buffer[XZ_PLANE]->render(context, for_outline);
+	m_buffer[YZ_PLANE]->render(context, for_outline);
 }
