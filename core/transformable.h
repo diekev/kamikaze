@@ -26,6 +26,11 @@
 
 #include <glm/glm.hpp>
 
+/**
+ * @brief The Transformable class defines the interface for an object that can
+ *        be moved, rotated and/or scaled in the 3D view.
+ */
+
 class Transformable {
 protected:
 	glm::vec3 m_pos = glm::vec3(0.0f);
