@@ -44,17 +44,37 @@ public:
 	Transformable() = default;
 	virtual ~Transformable() = default;
 
+	/** Return the matrix of this object, based on its rotation, position and
+	 *  scale. */
 	void recompute_matrix();
 
+	/** Set the position of this object. */
 	void pos(const glm::vec3 &p);
+
+	/** Return the position of this object. */
 	const glm::vec3 &pos() const;
 
+	/** Set the rotation of this object. */
 	void rot(const glm::vec3 &r);
+
+	/** Return the rotation of this object. */
 	const glm::vec3 &rot() const;
 
+	/** Set the scale of this object. */
 	void scale(const glm::vec3 &s);
+
+	/** Return the scale of this object. */
 	const glm::vec3 &scale() const;
 
+	/** Set the matrix of this object. */
 	void matrix(const glm::mat4 &m);
+
+	/** Return the matrix of this object. */
 	const glm::mat4 &matrix() const;
+
+	/** Set the inverse matrix of this object. */
+	void inverse_matrix(const glm::mat4 &m);
+
+	/** Return the inverse matrix of this object. */
+	const glm::mat4 &inverse_matrix() const;
 };

@@ -81,3 +81,14 @@ const glm::mat4 &Transformable::matrix() const
 {
 	return m_matrix;
 }
+
+void Transformable::inverse_matrix(const glm::mat4 &m)
+{
+	m_inv_matrix = m;
+	m_matrix = glm::inverse(m_inv_matrix);
+}
+
+const glm::mat4 &Transformable::inverse_matrix() const
+{
+	return m_inv_matrix;
+}
