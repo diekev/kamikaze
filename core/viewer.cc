@@ -147,10 +147,10 @@ void Viewer::paintGL()
 
 				m_manipulator->render(m_context, true);
 
+				/* Restore state. */
 				glPolygonMode(GL_FRONT, GL_FILL);
 				glLineWidth(1);
 
-				/* restore */
 				glStencilFunc(GL_ALWAYS, 1, 0xff);
 				glStencilMask(0xff);
 				glEnable(GL_DEPTH_TEST);

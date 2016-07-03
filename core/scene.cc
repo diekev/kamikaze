@@ -105,7 +105,7 @@ void Scene::render(ViewerContext *context)
 		auto collection = object->collection();
 
 		for (auto &prim : collection->primitives()) {
-			/* update prim before drawing */
+			/* Update prim before drawing. */
 			prim->update();
 			prim->prepareRenderData();
 
@@ -113,10 +113,8 @@ void Scene::render(ViewerContext *context)
 				prim->bbox()->render(context, false);
 			}
 
-			auto primmat = prim->matrix();
-			prim->matrix() = object->matrix() * primmat;
+			context->setMatrix(object->matrix() * prim->matrix());
 
-			context->setMatrix(prim->matrix());
 			prim->render(context, false);
 
 			if (active_object) {
@@ -129,16 +127,14 @@ void Scene::render(ViewerContext *context)
 
 				prim->render(context, true);
 
+				/* Restore state. */
 				glPolygonMode(GL_FRONT, GL_FILL);
 				glLineWidth(1);
 
-				/* restore */
 				glStencilFunc(GL_ALWAYS, 1, 0xff);
 				glStencilMask(0xff);
 				glEnable(GL_DEPTH_TEST);
 			}
-
-			prim->matrix() = primmat;
 		}
 	}
 }
