@@ -124,11 +124,13 @@ void Scene::render(ViewerContext *context)
 				glStencilMask(0x00);
 				glDisable(GL_DEPTH_TEST);
 
-				/* scale up the object a bit */
-				prim->matrix() = glm::scale(prim->matrix(), glm::vec3(1.01f));
+				glLineWidth(5);
+				glPolygonMode(GL_FRONT, GL_LINE);
 
-				context->setMatrix(prim->matrix());
 				prim->render(context, true);
+
+				glPolygonMode(GL_FRONT, GL_FILL);
+				glLineWidth(1);
 
 				/* restore */
 				glStencilFunc(GL_ALWAYS, 1, 0xff);

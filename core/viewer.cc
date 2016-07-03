@@ -142,11 +142,13 @@ void Viewer::paintGL()
 				glStencilMask(0x00);
 				glDisable(GL_DEPTH_TEST);
 
-				/* scale up the object a bit */
-				glm::mat4 mat = glm::scale(m_manipulator->matrix(), glm::vec3(1.05f));
+				glLineWidth(5);
+				glPolygonMode(GL_FRONT, GL_LINE);
 
-				m_context->setMatrix(mat);
 				m_manipulator->render(m_context, true);
+
+				glPolygonMode(GL_FRONT, GL_FILL);
+				glLineWidth(1);
 
 				/* restore */
 				glStencilFunc(GL_ALWAYS, 1, 0xff);
