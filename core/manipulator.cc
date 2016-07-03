@@ -153,7 +153,7 @@ static void add_plane(std::vector<glm::vec3> &points,
 
 	switch (axis) {
 		default:
-		case XY_PLANE:
+		case YZ_PLANE:
 			min = glm::vec3(0.75f, 0.75f, 0.0f);
 			max = glm::vec3(1.25f, 1.25f, 0.0f);
 
@@ -171,7 +171,7 @@ static void add_plane(std::vector<glm::vec3> &points,
 			points.push_back(glm::vec3(max[0], max[1], max[2]));
 			points.push_back(glm::vec3(min[0], max[1], max[2]));
 			break;
-		case YZ_PLANE:
+		case XY_PLANE:
 			min = glm::vec3(0.0f, 0.75f, -0.75f);
 			max = glm::vec3(0.0f, 1.25f, -1.25f);
 
@@ -309,12 +309,81 @@ static void add_cone(std::vector<glm::vec3> &points,
 	indices.push_back(firstv1 + indices_offset);
 }
 
-void Manipulator::updateMatrix()
+static RenderBuffer *add_arrow_buffer(const int axis)
 {
-	Transformable::recompute_matrix();
-	std::cerr << "Manipulator pos: " << pos() << '\n';
-	std::cerr << "Manipulator size: " << scale() << '\n';
-	std::cerr << "Manipulator rot: " << rot() << '\n';
+	std::vector<glm::vec3> vertices;
+	std::vector<unsigned int> indices;
+
+	add_arrow(vertices, indices, vertices.size(), axis);
+	add_cone(vertices, indices, vertices.size(), axis);
+
+	RenderBuffer *buffer = new RenderBuffer;
+
+	/* Setup shader. */
+	buffer->set_shader_source(ego::VERTEX_SHADER,
+	                          ego::util::str_from_file("shaders/tree_topology.vert"));
+	buffer->set_shader_source(ego::FRAGMENT_SHADER,
+	                          ego::util::str_from_file("shaders/tree_topology.frag"));
+
+	buffer->finalize_shader();
+
+	ProgramParams params;
+	params.add_attribute("vertex");
+	params.add_attribute("color");
+	params.add_uniform("matrix");
+	params.add_uniform("MVP");
+
+	buffer->set_shader_params(params);
+
+	/* Setup vertices buffers. */
+	std::vector<glm::vec3> colors(vertices.size());
+	glm::vec3 color(0.0f, 0.0f, 0.0f);
+	color[axis] = 1.0f;
+
+	std::fill(colors.begin(), colors.end(), color);
+
+	buffer->set_vertex_buffer("vertex", vertices, indices);
+	buffer->set_extra_buffer("color", colors);
+
+	return buffer;
+}
+
+static RenderBuffer *add_plane_buffer(const int plane)
+{
+	std::vector<glm::vec3> vertices;
+	std::vector<unsigned int> indices;
+
+	add_plane(vertices, indices, vertices.size(), plane);
+
+	RenderBuffer *buffer = new RenderBuffer;
+
+	/* Setup shader. */
+	buffer->set_shader_source(ego::VERTEX_SHADER,
+	                          ego::util::str_from_file("shaders/tree_topology.vert"));
+	buffer->set_shader_source(ego::FRAGMENT_SHADER,
+	                          ego::util::str_from_file("shaders/tree_topology.frag"));
+
+	buffer->finalize_shader();
+
+	ProgramParams params;
+	params.add_attribute("vertex");
+	params.add_attribute("color");
+	params.add_uniform("matrix");
+	params.add_uniform("MVP");
+
+	buffer->set_shader_params(params);
+
+	/* Setup vertices buffers. */
+	std::vector<glm::vec3> colors(vertices.size());
+	glm::vec3 color(0.0f, 0.0f, 0.0f);
+	color[plane - XY_PLANE] = 1.0f;
+
+	std::fill(colors.begin(), colors.end(), color);
+
+	buffer->set_vertex_buffer("vertex", vertices, indices);
+	buffer->set_extra_buffer("color", colors);
+
+	return buffer;
 }
 
 Manipulator::Manipulator()
@@ -328,63 +397,22 @@ Manipulator::Manipulator()
 	m_delta_pos = glm::vec3(0.0f, 0.0f, 0.0f);
 	m_plane_pos = glm::vec3(0.0f, 0.0f, 0.0f);
 
-	updateMatrix();
+	recompute_matrix();
 
-	std::vector<unsigned int> indices;
+	m_xarrow_buffer = add_arrow_buffer(X_AXIS);
+	m_yarrow_buffer = add_arrow_buffer(Y_AXIS);
+	m_zarrow_buffer = add_arrow_buffer(Z_AXIS);
 
-	/* generate vertices */
-	add_arrow(m_vertices, indices, m_vertices.size(), X_AXIS);
-	add_cone(m_vertices, indices, m_vertices.size(), X_AXIS);
-	add_plane(m_vertices, indices, m_vertices.size(), YZ_PLANE);
-
-	add_arrow(m_vertices, indices, m_vertices.size(), Y_AXIS);
-	add_cone(m_vertices, indices, m_vertices.size(), Y_AXIS);
-	add_plane(m_vertices, indices, m_vertices.size(), XZ_PLANE);
-
-	add_arrow(m_vertices, indices, m_vertices.size(), Z_AXIS);
-	add_cone(m_vertices, indices, m_vertices.size(), Z_AXIS);
-	add_plane(m_vertices, indices, m_vertices.size(), XY_PLANE);
-
-	for (auto &vert : m_vertices) {
-		vert = vert * glm::mat3(m_inv_matrix);
-	}
-
-	/* generate colors */
-	std::vector<glm::vec3> colors(m_vertices.size());
-
-	const auto stride = m_vertices.size() / 3;
-	for (int i = 0; i < stride; ++i) {
-		colors[i]              = glm::vec3(1.0f, 0.0f, 0.0f);
-		colors[i + stride]     = glm::vec3(0.0f, 1.0f, 0.0f);
-		colors[i + stride * 2] = glm::vec3(0.0f, 0.0f, 1.0f);
-	}
-
-	m_render_buffer = new RenderBuffer;
-
-	/* Setup shader. */
-	m_render_buffer->set_shader_source(ego::VERTEX_SHADER,
-	                                   ego::util::str_from_file("shaders/tree_topology.vert"));
-	m_render_buffer->set_shader_source(ego::FRAGMENT_SHADER,
-	                                   ego::util::str_from_file("shaders/tree_topology.frag"));
-
-	m_render_buffer->finalize_shader();
-
-	ProgramParams params;
-	params.add_attribute("vertex");
-	params.add_attribute("color");
-	params.add_uniform("matrix");
-	params.add_uniform("MVP");
-
-	m_render_buffer->set_shader_params(params);
-
-	/* Setup vertices buffers. */
-	m_render_buffer->set_vertex_buffer("vertex", m_vertices, indices);
-	m_render_buffer->set_extra_buffer("color", colors);
+	m_xy_buffer = add_plane_buffer(XY_PLANE);
+	m_xz_buffer = add_plane_buffer(XZ_PLANE);
+	m_yz_buffer = add_plane_buffer(YZ_PLANE);
 }
 
 Manipulator::~Manipulator()
 {
-	delete m_render_buffer;
+	delete m_xarrow_buffer;
+	delete m_yarrow_buffer;
+	delete m_zarrow_buffer;
 }
 
 bool Manipulator::intersect(const Ray &ray, float &min)
@@ -492,5 +520,11 @@ void Manipulator::applyConstraint(const glm::vec3 &cpos)
 
 void Manipulator::render(ViewerContext *context)
 {
-	m_render_buffer->render(context, false);
+	m_xarrow_buffer->render(context, false);
+	m_yarrow_buffer->render(context, false);
+	m_zarrow_buffer->render(context, false);
+
+	m_xy_buffer->render(context, false);
+	m_xz_buffer->render(context, false);
+	m_yz_buffer->render(context, false);
 }

@@ -35,7 +35,12 @@ class RenderBuffer;
 class ViewerContext;
 
 class Manipulator : public Transformable {
-	RenderBuffer *m_render_buffer;
+	RenderBuffer *m_xarrow_buffer;
+	RenderBuffer *m_yarrow_buffer;
+	RenderBuffer *m_zarrow_buffer;
+	RenderBuffer *m_xy_buffer;
+	RenderBuffer *m_xz_buffer;
+	RenderBuffer *m_yz_buffer;
 
 	std::vector<glm::vec3> m_vertices;
 	glm::vec3 m_dimensions;
@@ -60,6 +65,5 @@ public:
 	glm::vec3 update(const Ray &ray);
 
 private:
-	void updateMatrix();
 	void applyConstraint(const glm::vec3 &cpos);
 };
