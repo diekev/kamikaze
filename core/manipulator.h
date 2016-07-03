@@ -60,7 +60,7 @@ public:
 
 	bool intersect(const Ray &ray, float &min);
 
-	void render(ViewerContext *context);
+	void render(const ViewerContext * const context);
 
 	glm::vec3 update(const Ray &ray);
 

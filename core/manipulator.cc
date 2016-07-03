@@ -518,7 +518,7 @@ void Manipulator::applyConstraint(const glm::vec3 &cpos)
 	}
 }
 
-void Manipulator::render(ViewerContext *context)
+void Manipulator::render(const ViewerContext * const context)
 {
 	m_xarrow_buffer->render(context, false);
 	m_yarrow_buffer->render(context, false);
