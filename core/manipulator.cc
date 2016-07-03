@@ -310,7 +310,7 @@ static void add_cone(std::vector<glm::vec3> &points,
 
 void Manipulator::updateMatrix()
 {
-	Transformable::update();
+	Transformable::recompute_matrix();
 	std::cerr << "Manipulator pos: " << pos() << '\n';
 	std::cerr << "Manipulator size: " << scale() << '\n';
 	std::cerr << "Manipulator rot: " << rot() << '\n';
@@ -452,7 +452,7 @@ bool Manipulator::intersect(const Ray &ray, float &min)
 glm::vec3 Manipulator::update(const Ray &ray)
 {
 	if (m_axis < X_AXIS || m_axis > YZ_PLANE) {
-		return pos();
+		return this->pos();
 	}
 
 	/* find intersectiopn between ray and plane */
@@ -463,15 +463,15 @@ glm::vec3 Manipulator::update(const Ray &ray)
 			m_first = false;
 		}
 
-		applyConstraint(ipos - m_delta_pos);
+		this->applyConstraint(ipos - m_delta_pos);
 
-		m_plane_pos = pos();
-		m_last_pos = pos();
+		m_plane_pos = this->pos();
+		m_last_pos = this->pos();
 
-		updateMatrix();
+		this->recompute_matrix();
 	}
 
-	return pos();
+	return this->pos();
 }
 
 void Manipulator::applyConstraint(const glm::vec3 &cpos)

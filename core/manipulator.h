@@ -30,79 +30,10 @@
 
 #include <vector>
 
+#include "transformable.h"
 #include "util_render.h"
 
 class ViewerContext;
-
-class Transformable {
-protected:
-	glm::vec3 m_pos = glm::vec3(0.0f);
-	glm::vec3 m_rot = glm::vec3(0.0f);
-	glm::vec3 m_scale = glm::vec3(1.0f);
-
-	glm::mat4 m_matrix = glm::mat4(1.0f);
-	glm::mat4 m_inv_matrix = glm::mat4(0.0f);
-
-public:
-	Transformable() = default;
-	virtual ~Transformable() = default;
-
-	void update()
-	{
-		m_matrix = glm::mat4(1.0f);
-		m_matrix = glm::translate(m_matrix, m_pos);
-		m_matrix = glm::rotate(m_matrix, glm::radians(m_rot.x), glm::vec3(1.0f, 0.0f, 0.0f));
-		m_matrix = glm::rotate(m_matrix, glm::radians(m_rot.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		m_matrix = glm::rotate(m_matrix, glm::radians(m_rot.z), glm::vec3(0.0f, 0.0f, 1.0f));
-		m_matrix = glm::scale(m_matrix, m_scale);
-
-		m_inv_matrix = glm::inverse(m_matrix);
-	}
-
-	void pos(const glm::vec3 &p)
-	{
-		m_pos = p;
-		update();
-	}
-
-	const glm::vec3 &pos() const
-	{
-		return m_pos;
-	}
-
-	void rot(const glm::vec3 &r)
-	{
-		m_rot = r;
-		update();
-	}
-
-	const glm::vec3 &rot() const
-	{
-		return m_rot;
-	}
-
-	void scale(const glm::vec3 &s)
-	{
-		m_scale = s;
-		update();
-	}
-
-	const glm::vec3 &scale() const
-	{
-		return m_scale;
-	}
-
-	void matrix(const glm::mat4 &m)
-	{
-		m_matrix = m;
-		m_inv_matrix = glm::inverse(m_matrix);
-	}
-
-	const glm::mat4 &matrix() const
-	{
-		return m_matrix;
-	}
-};
 
 class Manipulator : public Transformable {
 	ego::BufferObject::Ptr m_buffer_data;

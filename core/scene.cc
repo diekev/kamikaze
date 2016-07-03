@@ -209,7 +209,7 @@ void Scene::tagObjectUpdate()
 		return;
 	}
 
-	m_active_object->updateMatrix();
+	m_active_object->recompute_matrix();
 
 	if (m_active_object->collection()) {
 		for (auto &prim : m_active_object->collection()->primitives()) {

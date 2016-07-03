@@ -52,7 +52,8 @@ SOURCES += \
     nodes/graph_dumper.cc \
     nodes/nodes.cc \
     task.cc \
-    manipulator.cc
+    manipulator.cc \
+    transformable.cc
 
 HEADERS += \
     grid.h \
@@ -69,7 +70,8 @@ HEADERS += \
     nodes/graph_dumper.h \
     nodes/nodes.h \
     task.h \
-    manipulator.h
+    manipulator.h \
+    transformable.h
 
 OTHER_FILES += \
     shaders/flat_shader.frag \

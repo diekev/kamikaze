@@ -25,47 +25,31 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <memory>
 
-#include <kamikaze/primitive.h>
+class Transformable {
+protected:
+	glm::vec3 m_pos = glm::vec3(0.0f);
+	glm::vec3 m_rot = glm::vec3(0.0f);
+	glm::vec3 m_scale = glm::vec3(1.0f);
 
-#include "transformable.h"
-
-#include "ui/mainwindow.h"
-
-class Graph;
-class Node;
-class ParamCallback;
-class Primitive;
-class PrimitiveCollection;
-class MainWindow;
-
-class Object : public Transformable {
-	PrimitiveCollection *m_collection = nullptr;
-	PrimitiveCache m_cache;
-
-	Graph *m_graph;
-
-	std::string m_name;
+	glm::mat4 m_matrix = glm::mat4(1.0f);
+	glm::mat4 m_inv_matrix = glm::mat4(0.0f);
 
 public:
-	Object();
-	~Object();
+	Transformable() = default;
+	virtual ~Transformable() = default;
 
-	PrimitiveCollection *collection() const;
-	void collection(PrimitiveCollection *coll);
+	void recompute_matrix();
 
-	/* Nodes */
-	void addNode(Node *node);
+	void pos(const glm::vec3 &p);
+	const glm::vec3 &pos() const;
 
-	Graph *graph() const;
+	void rot(const glm::vec3 &r);
+	const glm::vec3 &rot() const;
 
-	void name(const QString &name);
-	const QString name() const;
+	void scale(const glm::vec3 &s);
+	const glm::vec3 &scale() const;
 
-	void setUIParams(ParamCallback *cb);
-
-	void clearCache();
+	void matrix(const glm::mat4 &m);
+	const glm::mat4 &matrix() const;
 };
-
-void eval_graph(const EvaluationContext * const context);

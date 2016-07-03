@@ -38,9 +38,10 @@
 #include "ui/paramfactory.h"
 
 Object::Object()
-    : m_graph(new Graph)
+    : Transformable()
+    , m_graph(new Graph)
 {
-	updateMatrix();
+	recompute_matrix();
 }
 
 Object::~Object()
@@ -57,16 +58,6 @@ PrimitiveCollection *Object::collection() const
 void Object::collection(PrimitiveCollection *coll)
 {
 	m_collection = coll;
-}
-
-void Object::matrix(const glm::mat4 &m)
-{
-	m_matrix = m;
-}
-
-const glm::mat4 &Object::matrix() const
-{
-	return m_matrix;
 }
 
 void Object::addNode(Node *node)
@@ -96,19 +87,7 @@ void Object::setUIParams(ParamCallback *cb)
 
 	xyz_param(cb, "Position", &m_pos[0], 0.0f, 100.0f);
 	xyz_param(cb, "Scale", &m_scale[0], 0.0f, 100.0f);
-	xyz_param(cb, "Rotation", &m_rotation[0], 0.0f, 360.0f);
-}
-
-void Object::updateMatrix()
-{
-	m_matrix = glm::mat4(1.0f);
-	m_matrix = glm::translate(m_matrix, m_pos);
-	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-	m_matrix = glm::scale(m_matrix, m_scale);
-
-	m_inv_matrix = glm::inverse(m_matrix);
+	xyz_param(cb, "Rotation", &m_rot[0], 0.0f, 360.0f);
 }
 
 void Object::clearCache()
