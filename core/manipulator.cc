@@ -433,8 +433,8 @@ bool Manipulator::intersect(const Ray &ray, float &min)
 	/* Check X-axis. */
 	auto nor = ray.pos - ray.dir;
 	auto xmin = glm::vec3{ -2.0f, -0.05f, -0.05f }, xmax = glm::vec3{ 2.0f, 0.05f, 0.05f };
-	xmin = xmin * glm::mat3(matrix());
-	xmax = xmax * glm::mat3(matrix());
+	xmin = xmin * glm::mat3(matrix()) + pos();
+	xmax = xmax * glm::mat3(matrix()) + pos();
 
 	if (::intersect(ray, xmin * glm::mat3(matrix()), xmax * glm::mat3(matrix()), min)) {
 		m_axis = X_AXIS;
@@ -444,8 +444,8 @@ bool Manipulator::intersect(const Ray &ray, float &min)
 
 	/* Check Y-axis. */
 	auto ymin = glm::vec3{ -0.05f, -2.0f, -0.05f }, ymax = glm::vec3{ 0.05f, 2.0f, 0.05f };
-	ymin = ymin * glm::mat3(matrix());
-	ymax = ymax * glm::mat3(matrix());
+	ymin = ymin * glm::mat3(matrix()) + pos();
+	ymax = ymax * glm::mat3(matrix()) + pos();
 
 	if (::intersect(ray, ymin * glm::mat3(matrix()), ymax * glm::mat3(matrix()), min)) {
 		m_axis = Y_AXIS;
@@ -455,8 +455,8 @@ bool Manipulator::intersect(const Ray &ray, float &min)
 
 	/* Check Z-axis. */
 	auto zmin = glm::vec3{ -0.05f, -0.05f, -2.0f }, zmax = glm::vec3{ 0.05f, 0.05f, 2.0f };
-	zmin = zmin * glm::mat3(matrix());
-	zmax = zmax * glm::mat3(matrix());
+	zmin = zmin * glm::mat3(matrix()) + pos();
+	zmax = zmax * glm::mat3(matrix()) + pos();
 
 	if (::intersect(ray, zmin * glm::mat3(matrix()), zmax * glm::mat3(matrix()), min)) {
 		m_axis = Z_AXIS;
