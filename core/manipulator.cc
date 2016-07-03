@@ -42,7 +42,7 @@ enum {
 	YZ_PLANE = 5,
 };
 
-bool intersect(const Ray &ray, const glm::vec3 &obmin, const glm::vec3 &obmax, float &min)
+static bool intersect(const Ray &ray, const glm::vec3 &obmin, const glm::vec3 &obmax, float &min)
 {
 	glm::vec3 inv_dir = 1.0f / ray.dir;
 	glm::vec3 t_min = (obmin - ray.pos) * inv_dir;
@@ -60,7 +60,7 @@ bool intersect(const Ray &ray, const glm::vec3 &obmin, const glm::vec3 &obmax, f
 	return false;
 }
 
-bool intersect(const Ray &ray, const glm::vec3 &pos, const glm::vec3 &nor, glm::vec3 &ipos)
+static bool intersect(const Ray &ray, const glm::vec3 &pos, const glm::vec3 &nor, glm::vec3 &ipos)
 {
 	const auto &u = ray.dir - ray.pos;
 	const auto &w = ray.pos - pos;
@@ -88,26 +88,26 @@ bool intersect(const Ray &ray, const glm::vec3 &pos, const glm::vec3 &nor, glm::
 	return true;
 }
 
-void add_arrow(std::vector<glm::vec3> &points,
-               std::vector<unsigned int> &indices,
-               const int indices_offset,
-               const int axis)
+static void add_arrow(std::vector<glm::vec3> &points,
+                      std::vector<unsigned int> &indices,
+                      const int indices_offset,
+                      const int axis)
 {
 	auto min = glm::vec3(0.0f, -0.01f, -0.01f);
 	auto max = glm::vec3(2.0f, 0.01f, 0.01f);
 
 	switch (axis) {
 		default:
-		case 0:
+		case X_AXIS:
 			/* Nothing to do. */
 			break;
-		case 1:
-			min = glm::rotateY(min, static_cast<float>(M_PI_2));
-			max = glm::rotateY(max, static_cast<float>(M_PI_2));
-			break;
-		case 2:
+		case Y_AXIS:
 			min = glm::rotateZ(min, static_cast<float>(M_PI_2));
 			max = glm::rotateZ(max, static_cast<float>(M_PI_2));
+			break;
+		case Z_AXIS:
+			min = glm::rotateY(min, static_cast<float>(M_PI_2));
+			max = glm::rotateY(max, static_cast<float>(M_PI_2));
 			break;
 	}
 
@@ -143,18 +143,18 @@ void add_arrow(std::vector<glm::vec3> &points,
 	}
 }
 
-void add_plane(std::vector<glm::vec3> &points,
-               std::vector<unsigned int> &indices,
-               const int indices_offset,
-               const int axis)
+static void add_plane(std::vector<glm::vec3> &points,
+                      std::vector<unsigned int> &indices,
+                      const int indices_offset,
+                      const int axis)
 {
 	glm::vec3 min, max;
 
 	switch (axis) {
 		default:
 		case XY_PLANE:
-			min = glm::vec3(0.5f, 0.5f, 0.0f);
-			max = glm::vec3(1.5f, 1.5f, 0.0f);
+			min = glm::vec3(0.75f, 0.75f, 0.0f);
+			max = glm::vec3(1.25f, 1.25f, 0.0f);
 
 			points.push_back(glm::vec3(min[0], min[1], min[2]));
 			points.push_back(glm::vec3(max[0], min[1], min[2]));
@@ -162,8 +162,8 @@ void add_plane(std::vector<glm::vec3> &points,
 			points.push_back(glm::vec3(min[0], max[1], max[2]));
 			break;
 		case XZ_PLANE:
-			min = glm::vec3(0.5f, 0.0f, -0.5f);
-			max = glm::vec3(1.5f, 0.0f, -1.5f);
+			min = glm::vec3(0.75f, 0.0f, -0.75f);
+			max = glm::vec3(1.25f, 0.0f, -1.25f);
 
 			points.push_back(glm::vec3(min[0], min[1], min[2]));
 			points.push_back(glm::vec3(max[0], min[1], min[2]));
@@ -171,8 +171,8 @@ void add_plane(std::vector<glm::vec3> &points,
 			points.push_back(glm::vec3(min[0], max[1], max[2]));
 			break;
 		case YZ_PLANE:
-			min = glm::vec3(0.0f, 0.5f, -0.5f);
-			max = glm::vec3(0.0f, 1.5f, -1.5f);
+			min = glm::vec3(0.0f, 0.75f, -0.75f);
+			max = glm::vec3(0.0f, 1.25f, -1.25f);
 
 			/* This one is slightly different than the other two, need to find a
 			 * better order to add points to avoid this kind of duplication. */
@@ -189,6 +189,123 @@ void add_plane(std::vector<glm::vec3> &points,
 	indices.push_back(0 + indices_offset);
 	indices.push_back(2 + indices_offset);
 	indices.push_back(3 + indices_offset);
+}
+
+static void add_cone(std::vector<glm::vec3> &points,
+                     std::vector<unsigned int> &indices,
+                     const int indices_offset,
+                     const int axis)
+{
+	const auto &dia1 = 0.1f;
+	const auto &dia2 = 0.0f;
+	const auto &segs = 16;
+	const auto &depth = 0.2f;
+
+	const auto phid = 2.0f * static_cast<float>(M_PI) / segs;
+	auto phi = 0.0f;
+
+	auto rotate_vert = [&axis](const glm::vec3 &vec) -> glm::vec3
+	{
+		switch (axis) {
+			case X_AXIS:
+				return glm::rotateZ(vec, static_cast<float>(-M_PI_2));
+			default:
+			case Y_AXIS:
+				/* Nothing to do. */
+				return vec;
+			case Z_AXIS:
+				return glm::rotateX(vec, static_cast<float>(-M_PI_2));
+		}
+	};
+
+	glm::vec3 vec(0.0f, 0.0f, 0.0f);
+
+	const auto cent1 = 0;
+	vec[1] = 2.0f - depth;
+
+	vec = rotate_vert(vec);
+	points.push_back(vec);
+
+	const auto cent2 = 1;
+	vec[0] = 0.0f;
+	vec[1] = 2.0f + depth;
+	vec[2] = 0.0f;
+
+	vec = rotate_vert(vec);
+	points.push_back(vec);
+
+	auto firstv1 = 0;
+	auto firstv2 = 0;
+	auto lastv1 = 0;
+	auto lastv2 = 0;
+	auto v1 = 0;
+	auto v2 = 0;
+
+	auto index = 2;
+
+	for (int a = 0; a < segs; ++a, phi += phid) {
+		/* Going this way ends up with normal(s) upward */
+		vec[0] = -dia1 * std::sin(phi);
+		vec[1] = 2.0f - depth;
+		vec[2] = dia1 * std::cos(phi);
+		vec = rotate_vert(vec);
+
+		v1 = index++;
+		points.push_back(vec);
+
+		vec[0] = -dia2 * std::sin(phi);
+		vec[1] = 2.0f + depth;
+		vec[2] = dia2 * std::cos(phi);
+		vec = rotate_vert(vec);
+
+		v2 = index++;
+		points.push_back(vec);
+
+		if (a > 0) {
+			/* Poly for the bottom cap. */
+			indices.push_back(cent1 + indices_offset);
+			indices.push_back(lastv1 + indices_offset);
+			indices.push_back(v1 + indices_offset);
+
+			/* Poly for the top cap. */
+			indices.push_back(cent2 + indices_offset);
+			indices.push_back(v2 + indices_offset);
+			indices.push_back(lastv2 + indices_offset);
+
+			/* Poly for the side. */
+			indices.push_back(lastv1 + indices_offset);
+			indices.push_back(lastv2 + indices_offset);
+			indices.push_back(v2 + indices_offset);
+			indices.push_back(lastv1 + indices_offset);
+			indices.push_back(lastv2 + indices_offset);
+			indices.push_back(v1 + indices_offset);
+		}
+		else {
+			firstv1 = v1;
+			firstv2 = v2;
+		}
+
+		lastv1 = v1;
+		lastv2 = v2;
+	}
+
+	/* Poly for the bottom cap. */
+	indices.push_back(cent1 + indices_offset);
+	indices.push_back(v1 + indices_offset);
+	indices.push_back(firstv1 + indices_offset);
+
+	/* Poly for the top cap. */
+	indices.push_back(cent2 + indices_offset);
+	indices.push_back(firstv2 + indices_offset);
+	indices.push_back(v2 + indices_offset);
+
+	/* Poly for the side. */
+	indices.push_back(v1 + indices_offset);
+	indices.push_back(v2 + indices_offset);
+	indices.push_back(firstv2 + indices_offset);
+	indices.push_back(v1 + indices_offset);
+	indices.push_back(firstv2 + indices_offset);
+	indices.push_back(firstv1 + indices_offset);
 }
 
 void Manipulator::updateMatrix()
@@ -232,10 +349,15 @@ Manipulator::Manipulator()
 
 	/* generate vertices */
 	add_arrow(m_vertices, indices, m_vertices.size(), X_AXIS);
+	add_cone(m_vertices, indices, m_vertices.size(), X_AXIS);
 	add_plane(m_vertices, indices, m_vertices.size(), YZ_PLANE);
+
 	add_arrow(m_vertices, indices, m_vertices.size(), Y_AXIS);
+	add_cone(m_vertices, indices, m_vertices.size(), Y_AXIS);
 	add_plane(m_vertices, indices, m_vertices.size(), XZ_PLANE);
+
 	add_arrow(m_vertices, indices, m_vertices.size(), Z_AXIS);
+	add_cone(m_vertices, indices, m_vertices.size(), Z_AXIS);
 	add_plane(m_vertices, indices, m_vertices.size(), XY_PLANE);
 
 	m_elements = indices.size();
@@ -245,8 +367,7 @@ Manipulator::Manipulator()
 	}
 
 	/* generate colors */
-	std::vector<glm::vec3> colors;
-	colors.resize(m_vertices.size());
+	std::vector<glm::vec3> colors(m_vertices.size());
 
 	const auto stride = m_vertices.size() / 3;
 	for (int i = 0; i < stride; ++i) {
