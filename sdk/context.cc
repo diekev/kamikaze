@@ -24,7 +24,7 @@
 
 #include "context.h"
 
-glm::mat4 ViewerContext::projection() const
+const glm::mat4 &ViewerContext::projection() const
 {
 	return m_projection;
 }
@@ -34,7 +34,7 @@ void ViewerContext::setProjection(const glm::mat4 &projection)
 	m_projection = projection;
 }
 
-glm::vec3 ViewerContext::view() const
+const glm::vec3 &ViewerContext::view() const
 {
 	return m_view;
 }
@@ -44,7 +44,7 @@ void ViewerContext::setView(const glm::vec3 &view)
 	m_view = view;
 }
 
-glm::mat3 ViewerContext::normal() const
+const glm::mat3 &ViewerContext::normal() const
 {
 	return m_normal;
 }
@@ -54,7 +54,7 @@ void ViewerContext::setNormal(const glm::mat3 &normal)
 	m_normal = normal;
 }
 
-glm::mat4 ViewerContext::MVP() const
+const glm::mat4 &ViewerContext::MVP() const
 {
 	return m_modelviewprojection;
 }
@@ -64,7 +64,7 @@ void ViewerContext::setMVP(const glm::mat4 &MVP)
 	m_modelviewprojection = MVP;
 }
 
-glm::mat4 ViewerContext::modelview() const
+const glm::mat4 &ViewerContext::modelview() const
 {
 	return m_model_view;
 }
@@ -72,4 +72,14 @@ glm::mat4 ViewerContext::modelview() const
 void ViewerContext::setModelview(const glm::mat4 &model_view)
 {
 	m_model_view = model_view;
+}
+
+const glm::mat4 &ViewerContext::matrix() const
+{
+	return m_matrix;
+}
+
+void ViewerContext::setMatrix(const glm::mat4 &mat)
+{
+	m_matrix = mat;
 }

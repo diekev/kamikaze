@@ -24,8 +24,6 @@
 
 #pragma once
 
-#include <ego/bufferobject.h>
-#include <ego/program.h>
 #include <glm/gtx/rotate_vector.hpp>
 
 #include <vector>
@@ -33,13 +31,11 @@
 #include "transformable.h"
 #include "util_render.h"
 
+class RenderBuffer;
 class ViewerContext;
 
 class Manipulator : public Transformable {
-	ego::BufferObject::Ptr m_buffer_data;
-	ego::Program m_program;
-	size_t m_elements;
-	unsigned int m_draw_type;
+	RenderBuffer *m_render_buffer;
 
 	std::vector<glm::vec3> m_vertices;
 	glm::vec3 m_dimensions;
@@ -55,6 +51,7 @@ class Manipulator : public Transformable {
 
 public:
 	Manipulator();
+	~Manipulator();
 
 	bool intersect(const Ray &ray, float &min);
 

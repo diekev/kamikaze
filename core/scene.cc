@@ -116,6 +116,7 @@ void Scene::render(ViewerContext *context)
 			auto primmat = prim->matrix();
 			prim->matrix() = object->matrix() * primmat;
 
+			context->setMatrix(prim->matrix());
 			prim->render(context, false);
 
 			if (active_object) {
@@ -126,6 +127,7 @@ void Scene::render(ViewerContext *context)
 				/* scale up the object a bit */
 				prim->matrix() = glm::scale(prim->matrix(), glm::vec3(1.01f));
 
+				context->setMatrix(prim->matrix());
 				prim->render(context, true);
 
 				/* restore */

@@ -93,8 +93,9 @@ void Cube::render(ViewerContext *context, const bool /*for_outline*/)
 		m_program.enable();
 		m_buffer_data->bind();
 
-		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(m_matrix));
+		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(context->matrix()));
 		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(context->MVP()));
+
 		glDrawElements(m_draw_type, m_elements, GL_UNSIGNED_SHORT, nullptr);
 
 		m_buffer_data->unbind();

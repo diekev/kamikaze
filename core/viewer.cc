@@ -132,6 +132,8 @@ void Viewer::paintGL()
 
 		if (m_scene->currentObject() != nullptr) {
 			m_manipulator->pos(m_scene->currentObject()->pos());
+
+			m_context->setMatrix(m_manipulator->matrix());
 			m_manipulator->render(m_context);
 		}
 	}

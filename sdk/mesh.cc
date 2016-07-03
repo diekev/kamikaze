@@ -178,10 +178,11 @@ void Mesh::render(ViewerContext *context, const bool for_outline)
 		m_program.enable();
 		m_buffer_data->bind();
 
-		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(m_matrix));
+		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(context->matrix()));
 		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(context->MVP()));
 		glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(context->normal()));
 		glUniform1i(m_program("for_outline"), for_outline);
+
 		glDrawElements(m_draw_type, m_elements, GL_UNSIGNED_INT, nullptr);
 
 		m_buffer_data->unbind();

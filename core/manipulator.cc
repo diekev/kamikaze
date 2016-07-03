@@ -1,4 +1,4 @@
-/*
+﻿/*
  * ***** BEGIN GPL LICENSE BLOCK *****
  *
  * This program is free software; you can redistribute it and/or
@@ -25,10 +25,11 @@
 #include "manipulator.h"
 
 #include <ego/utils.h>
-#include <GL/glew.h>
-#include <glm/gtc/type_ptr.hpp>
 
 #include <kamikaze/context.h>
+
+#include "renderbuffer.h"
+
 #include "util/utils.h"
 #include "util/utils_glm.h"
 
@@ -319,22 +320,6 @@ void Manipulator::updateMatrix()
 Manipulator::Manipulator()
     : Transformable()
 {
-	m_program.load(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/tree_topology.vert"));
-	m_program.load(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/tree_topology.frag"));
-
-	m_program.createAndLinkProgram();
-
-	m_program.enable();
-	{
-		m_program.addAttribute("vertex");
-		m_program.addAttribute("color");
-		m_program.addUniform("matrix");
-		m_program.addUniform("MVP");
-	}
-	m_program.disable();
-
-	m_draw_type = GL_TRIANGLES;
-
 	m_min = glm::vec3(0.0f, 0.0f, 0.0f);
 	m_max = glm::vec3(1.0f, 1.0f, 1.0f);
 	m_dimensions = m_max - m_min;
@@ -360,8 +345,6 @@ Manipulator::Manipulator()
 	add_cone(m_vertices, indices, m_vertices.size(), Z_AXIS);
 	add_plane(m_vertices, indices, m_vertices.size(), XY_PLANE);
 
-	m_elements = indices.size();
-
 	for (auto &vert : m_vertices) {
 		vert = vert * glm::mat3(m_inv_matrix);
 	}
@@ -376,15 +359,32 @@ Manipulator::Manipulator()
 		colors[i + stride * 2] = glm::vec3(0.0f, 0.0f, 1.0f);
 	}
 
-	/* generate buffer */
-	m_buffer_data = ego::BufferObject::create();
-	m_buffer_data->bind();
-	m_buffer_data->generateVertexBuffer(&m_vertices[0][0], m_vertices.size() * sizeof(glm::vec3));
-	m_buffer_data->generateIndexBuffer(&indices[0], indices.size() * sizeof(int));
-	m_buffer_data->attribPointer(m_program["vertex"], 3);
-	m_buffer_data->generateNormalBuffer(&colors[0][0], m_vertices.size() * sizeof(glm::vec3));
-	m_buffer_data->attribPointer(m_program["color"], 3);
-	m_buffer_data->unbind();
+	m_render_buffer = new RenderBuffer;
+
+	/* Setup shader. */
+	m_render_buffer->set_shader_source(ego::VERTEX_SHADER,
+	                                   ego::util::str_from_file("shaders/tree_topology.vert"));
+	m_render_buffer->set_shader_source(ego::FRAGMENT_SHADER,
+	                                   ego::util::str_from_file("shaders/tree_topology.frag"));
+
+	m_render_buffer->finalize_shader();
+
+	ProgramParams params;
+	params.add_attribute("vertex");
+	params.add_attribute("color");
+	params.add_uniform("matrix");
+	params.add_uniform("MVP");
+
+	m_render_buffer->set_shader_params(params);
+
+	/* Setup vertices buffers. */
+	m_render_buffer->set_vertex_buffer("vertex", m_vertices, indices);
+	m_render_buffer->set_extra_buffer("color", colors);
+}
+
+Manipulator::~Manipulator()
+{
+	delete m_render_buffer;
 }
 
 bool Manipulator::intersect(const Ray &ray, float &min)
@@ -492,15 +492,5 @@ void Manipulator::applyConstraint(const glm::vec3 &cpos)
 
 void Manipulator::render(ViewerContext *context)
 {
-	if (m_program.isValid()) {
-		m_program.enable();
-		m_buffer_data->bind();
-
-		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(matrix()));
-		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(context->MVP()));
-		glDrawElements(m_draw_type, m_elements, GL_UNSIGNED_INT, nullptr);
-
-		m_buffer_data->unbind();
-		m_program.disable();
-	}
+	m_render_buffer->render(context, false);
 }

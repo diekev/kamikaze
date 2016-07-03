@@ -42,25 +42,31 @@ struct EvaluationContext {
 };
 
 class ViewerContext {
-	glm::mat4 m_model_view;
-	glm::mat4 m_projection;
-	glm::mat4 m_modelviewprojection;
-	glm::vec3 m_view;
-	glm::mat3 m_normal;
+	glm::mat4 m_model_view = glm::mat4(1.0f);
+	glm::mat4 m_projection = glm::mat4(1.0f);
+	glm::mat4 m_modelviewprojection = glm::mat4(1.0f);
+	glm::vec3 m_view = glm::vec3(1.0f);
+	glm::mat3 m_normal = glm::mat3(1.0f);
+	glm::mat4 m_matrix = glm::mat4(1.0f);
 
 public:
-	glm::mat4 modelview() const;
+	ViewerContext() = default;
+
+	const glm::mat4 &modelview() const;
 	void setModelview(const glm::mat4 &modelview);
 
-	glm::mat4 projection() const;
+	const glm::mat4 &projection() const;
 	void setProjection(const glm::mat4 &projection);
 
-	glm::vec3 view() const;
+	const glm::vec3 &view() const;
 	void setView(const glm::vec3 &view);
 
-	glm::mat3 normal() const;
+	const glm::mat3 &normal() const;
 	void setNormal(const glm::mat3 &normal);
 
-	glm::mat4 MVP() const;
+	const glm::mat4 &MVP() const;
 	void setMVP(const glm::mat4 &MVP);
+
+	const glm::mat4 &matrix() const;
+	void setMatrix(const glm::mat4 &mat);
 };
