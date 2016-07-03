@@ -46,8 +46,8 @@ class Object {
 	glm::vec3 m_rotation = glm::vec3(0.0f);
 	glm::vec3 m_pos = glm::vec3(0.0f);
 
-	glm::mat4 m_matrix = glm::mat4(0.0f);
-	glm::mat4 m_inv_matrix = glm::mat4(0.0f);
+	glm::mat4 m_matrix = glm::mat4(1.0f);
+	glm::mat4 m_inv_matrix = glm::mat4(1.0f);
 
 	Graph *m_graph;
 
@@ -76,6 +76,17 @@ public:
 
 	void updateMatrix();
 	void clearCache();
+
+	const glm::vec3 &pos() const
+	{
+		return m_pos;
+	}
+
+	void pos(const glm::vec3 &p)
+	{
+		m_pos = p;
+		updateMatrix();
+	}
 };
 
 void eval_graph(const EvaluationContext * const context);

@@ -71,6 +71,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 
 	connect(m_scene, SIGNAL(objectAdded(Object *)), this, SLOT(setupObjectUI(Object *)));
 	connect(m_scene, SIGNAL(nodeAdded(Object *, Node *)), this, SLOT(setupNodeUI(Object *, Node *)));
+	connect(m_scene, SIGNAL(objectChanged()), this, SLOT(updateObjectTab()));
 	connect(ui->graph_editor, SIGNAL(objectNodeSelected(ObjectNodeItem *)), this, SLOT(setActiveObject(ObjectNodeItem *)));
 	connect(ui->graph_editor, SIGNAL(objectNodeRemoved(ObjectNodeItem *)), this, SLOT(removeObject(ObjectNodeItem *)));
 	connect(ui->graph_editor, SIGNAL(nodeRemoved(QtNode *)), this, SLOT(removeNode(QtNode *)));

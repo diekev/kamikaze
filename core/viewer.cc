@@ -36,6 +36,7 @@
 #include <QTimer>
 
 #include "camera.h"
+#include "object.h"
 #include "scene.h"
 
 #include "core/grid.h"
@@ -130,6 +131,7 @@ void Viewer::paintGL()
 		m_scene->render(m_context);
 
 		if (m_scene->currentObject() != nullptr) {
+			m_manipulator->pos(m_scene->currentObject()->pos());
 			m_manipulator->render(m_context);
 		}
 	}
@@ -200,7 +202,9 @@ void Viewer::mouseMoveEvent(QMouseEvent *e)
 		ray.pos = m_camera->pos();
 		ray.dir = end - start;
 
-		m_manipulator->update(ray);
+		Object *ob = m_scene->currentObject();
+		ob->pos(m_manipulator->update(ray));
+		m_scene->emitObjectChanged();
 	}
 }
 

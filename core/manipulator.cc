@@ -389,6 +389,9 @@ Manipulator::Manipulator()
 
 bool Manipulator::intersect(const Ray &ray, float &min)
 {
+	m_last_pos = pos();
+	m_first = true;
+
 	/* Check X-axis. */
 	auto nor = ray.pos - ray.dir;
 	auto xmin = glm::vec3{ -1.0f, -0.05f, -0.05f }, xmax = glm::vec3{ 1.0f, 0.05f, 0.05f };
@@ -446,23 +449,29 @@ bool Manipulator::intersect(const Ray &ray, float &min)
 	return false;
 }
 
-void Manipulator::update(const Ray &ray)
+glm::vec3 Manipulator::update(const Ray &ray)
 {
 	if (m_axis < X_AXIS || m_axis > YZ_PLANE) {
-		return;
+		return pos();
 	}
 
 	/* find intersectiopn between ray and plane */
 	glm::vec3 ipos;
 	if (::intersect(ray, m_plane_pos, m_plane_nor, ipos)) {
-		applyConstraint(ipos);
+		if (m_first) {
+			m_delta_pos = ipos - m_last_pos;
+			m_first = false;
+		}
+
+		applyConstraint(ipos - m_delta_pos);
 
 		m_plane_pos = pos();
-		m_delta_pos = pos() - m_last_pos;
 		m_last_pos = pos();
 
 		updateMatrix();
 	}
+
+	return pos();
 }
 
 void Manipulator::applyConstraint(const glm::vec3 &cpos)

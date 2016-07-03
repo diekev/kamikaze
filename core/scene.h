@@ -62,6 +62,7 @@ public:
 
 	void updateForNewFrame(const EvaluationContext * const context);
 
+	void emitObjectChanged();
 public Q_SLOTS:
 	void setObjectName(const QString &name);
 	void tagObjectUpdate();

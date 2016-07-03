@@ -114,7 +114,7 @@ class Manipulator : public Transformable {
 	glm::vec3 m_dimensions;
 	glm::vec3 m_min, m_max;
 
-	bool m_draw_bbox;
+	bool m_first;
 
 	glm::vec3 m_last_pos;
 	glm::vec3 m_plane_pos;
@@ -129,7 +129,7 @@ public:
 
 	void render(ViewerContext *context);
 
-	void update(const Ray &ray);
+	glm::vec3 update(const Ray &ray);
 
 private:
 	void updateMatrix();

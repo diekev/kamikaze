@@ -128,19 +128,24 @@ void Scene::render(ViewerContext *context)
 
 				prim->render(context, true);
 
-				prim->matrix() = primmat;
-
 				/* restore */
 				glStencilFunc(GL_ALWAYS, 1, 0xff);
 				glStencilMask(0xff);
 				glEnable(GL_DEPTH_TEST);
 			}
+
+			prim->matrix() = primmat;
 		}
 	}
 }
 
 void Scene::intersect(const Ray &/*ray*/)
 {
+}
+
+void Scene::emitObjectChanged()
+{
+	Q_EMIT(objectChanged());
 }
 
 /* Select the object which is closest to pos. */
