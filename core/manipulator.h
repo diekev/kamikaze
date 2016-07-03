@@ -38,7 +38,7 @@ class Transformable {
 protected:
 	glm::vec3 m_pos = glm::vec3(0.0f);
 	glm::vec3 m_rot = glm::vec3(0.0f);
-	glm::vec3 m_scale = glm::vec3(0.0f);
+	glm::vec3 m_scale = glm::vec3(1.0f);
 
 	glm::mat4 m_matrix = glm::mat4(1.0f);
 	glm::mat4 m_inv_matrix = glm::mat4(0.0f);

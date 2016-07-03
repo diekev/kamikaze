@@ -30,6 +30,7 @@
 
 #include <kamikaze/context.h>
 #include "util/utils.h"
+#include "util/utils_glm.h"
 
 enum {
 	X_AXIS = 0,
@@ -194,9 +195,12 @@ void Manipulator::updateMatrix()
 {
 	Transformable::update();
 	std::cerr << "Manipulator pos: " << pos() << '\n';
+	std::cerr << "Manipulator size: " << scale() << '\n';
+	std::cerr << "Manipulator rot: " << rot() << '\n';
 }
 
 Manipulator::Manipulator()
+    : Transformable()
 {
 	m_program.load(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/tree_topology.vert"));
 	m_program.load(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/tree_topology.frag"));

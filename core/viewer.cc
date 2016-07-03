@@ -43,6 +43,8 @@
 #include "util/util_input.h"
 #include "util/utils.h"
 
+#include "util/utils_glm.h"
+
 Viewer::Viewer(QWidget *parent)
     : QGLWidget(parent)
     , m_mouse_button(MOUSE_NONE)
@@ -126,9 +128,11 @@ void Viewer::paintGL()
 
 	if (m_scene != nullptr) {
 		m_scene->render(m_context);
-	}
 
-	m_manipulator->render(m_context);
+		if (m_scene->currentObject() != nullptr) {
+			m_manipulator->render(m_context);
+		}
+	}
 }
 
 void Viewer::mousePressEvent(QMouseEvent *e)
@@ -187,14 +191,14 @@ void Viewer::mouseMoveEvent(QMouseEvent *e)
 
 	m_camera->mouseMoveEvent(m_mouse_button, m_modifier, x, y);
 
-	if (/*m_scene->currentObject() != nullptr &&*/ m_manipulator_active) {
-		/* move manipulator */
+	/* move manipulator */
+	if (m_scene->currentObject() != nullptr && m_manipulator_active) {
 		const glm::vec3 start = unproject(glm::vec3(x, m_height - y, 0.0f));
 		const glm::vec3 end = unproject(glm::vec3(x, m_height - y, 1.0f));
 
 		Ray ray;
 		ray.pos = m_camera->pos();
-		ray.dir = glm::normalize(end - start);
+		ray.dir = end - start;
 
 		m_manipulator->update(ray);
 	}
@@ -231,40 +235,20 @@ void Viewer::setScene(Scene *scene)
 
 void Viewer::intersectScene(int x, int y)
 {
-#if 0
-	const auto &mouse_x = (2.0f * x) / static_cast<float>(m_width) - 1.0f;
-	const auto &mouse_y = 1.0f - (2.0f * y) / static_cast<float>(m_height);
-
-	const auto &MV = m_camera->MV();
-	const auto &P = m_camera->P();
-	const auto &inv_MVP = glm::inverse(MV * P);
-	const auto &screen_pos = glm::vec4(mouse_x, -mouse_y, 1.0f, 1.0f);
-	const auto &world_pos = inv_MVP * screen_pos;
-
-	Ray ray;
-	ray.pos = m_camera->pos();
-	ray.dir = glm::normalize(glm::vec3(world_pos));
-#else
-	const auto &mouse_x = x;
-	const auto &mouse_y = y;
-
 	const auto &start = unproject(glm::vec3(x, m_height - y, 0.0f));
 	const auto &end = unproject(glm::vec3(x, m_height - y, 1.0f));
 
 	Ray ray;
 	ray.pos = m_camera->pos();
 	ray.dir = glm::normalize(end - start);
-#endif
-
-	m_scene->intersect(ray);
 
 	auto min = 1000.0f;
 	if (m_manipulator->intersect(ray, min)) {
 		m_manipulator_active = true;
+		return;
 	}
 
-	std::cerr << "Mouse X, Y: " << mouse_x << ", " << mouse_y << '\n';
-	std::cerr << "Ray pos, dir: " << ray.pos << ", " << ray.dir << '\n';
+	m_scene->intersect(ray);
 }
 
 void Viewer::selectObject(int x, int y) const
