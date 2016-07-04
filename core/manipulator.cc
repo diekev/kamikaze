@@ -164,13 +164,13 @@ static bool intersect_quad(const glm::vec3 &v1, const glm::vec3 &v2,
 	return false;
 }
 
-static void add_arrow(std::vector<glm::vec3> &points,
-                      std::vector<unsigned int> &indices,
-                      const int indices_offset,
-                      const int axis)
+static void add_box(std::vector<glm::vec3> &points,
+                    std::vector<unsigned int> &indices,
+                    const int indices_offset,
+                    const int axis)
 {
-	auto min = glm::vec3(0.0f, -0.01f, -0.01f);
-	auto max = glm::vec3(2.0f, 0.01f, 0.01f);
+	auto min = glm::vec3(0.0f, -0.015f, -0.015f);
+	auto max = glm::vec3(2.0f, 0.015f, 0.015f);
 
 	switch (axis) {
 		default:
@@ -187,7 +187,6 @@ static void add_arrow(std::vector<glm::vec3> &points,
 			break;
 	}
 
-	/* cuboid */
 	points.push_back(glm::vec3(min[0], min[1], min[2]));
 	points.push_back(glm::vec3(max[0], min[1], min[2]));
 	points.push_back(glm::vec3(max[0], max[1], min[2]));
@@ -196,9 +195,6 @@ static void add_arrow(std::vector<glm::vec3> &points,
 	points.push_back(glm::vec3(max[0], min[1], max[2]));
 	points.push_back(glm::vec3(max[0], max[1], max[2]));
 	points.push_back(glm::vec3(min[0], max[1], max[2]));
-
-	/* arrowhead */
-	/* TODO */
 
 	unsigned int indexes[24] = {
 	    1, 0, 4, 5,
@@ -389,7 +385,7 @@ static RenderBuffer *add_arrow_buffer(const int axis)
 	std::vector<glm::vec3> vertices;
 	std::vector<unsigned int> indices;
 
-	add_arrow(vertices, indices, vertices.size(), axis);
+	add_box(vertices, indices, vertices.size(), axis);
 	add_cone(vertices, indices, vertices.size(), axis);
 
 	RenderBuffer *buffer = new RenderBuffer;
