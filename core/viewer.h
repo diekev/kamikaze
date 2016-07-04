@@ -74,9 +74,6 @@ public:
 
 	void setScene(Scene *scene);
 
-	/* Cast a ray in the scene at mouse pos (x, y). */
+	/** Cast a ray in the scene at mouse pos (x, y). */
 	void intersectScene(int x, int y);
-
-	/* Select the object at screen pos (x, y). */
-	void selectObject(int x, int y) const;
 };

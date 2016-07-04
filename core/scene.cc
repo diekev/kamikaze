@@ -160,7 +160,7 @@ void Scene::selectObject(const glm::vec3 &pos)
 		}
 
 		for (const auto &prim : object->collection()->primitives()) {
-			float dist = glm::distance(prim->pos(), pos);
+			float dist = glm::distance(prim->pos() + object->pos(), pos);
 
 			if (/*dist < 1.0f &&*/ dist < min) {
 				selected_object = index;

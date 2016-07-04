@@ -186,13 +186,7 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 	}
 	else if (e->buttons() == Qt::LeftButton) {
 		m_mouse_button = MOUSE_LEFT;
-
-		if (/*m_scene->currentObject() != nullptr*/ true) {
-			intersectScene(x, y);
-		}
-		else {
-			selectObject(x, y);
-		}
+		intersectScene(x, y);
 	}
 	else if (e->buttons() == Qt::RightButton) {
 		m_mouse_button = MOUSE_RIGHT;
@@ -261,24 +255,24 @@ void Viewer::setScene(Scene *scene)
 
 void Viewer::intersectScene(int x, int y)
 {
-	const auto &start = unproject(glm::vec3(x, m_height - y, 0.0f));
-	const auto &end = unproject(glm::vec3(x, m_height - y, 1.0f));
+	if (m_scene->currentObject() != nullptr) {
+		const auto &start = unproject(glm::vec3(x, m_height - y, 0.0f));
+		const auto &end = unproject(glm::vec3(x, m_height - y, 1.0f));
 
-	Ray ray;
-	ray.pos = m_camera->pos();
-	ray.dir = glm::normalize(end - start);
+		Ray ray;
+		ray.pos = m_camera->pos();
+		ray.dir = glm::normalize(end - start);
 
-	auto min = 1000.0f;
-	if (m_manipulator->intersect(ray, min)) {
-		m_manipulator_active = true;
-		return;
+		auto min = 1000.0f;
+		if (m_manipulator->intersect(ray, min)) {
+			m_manipulator_active = true;
+			return;
+		}
 	}
 
-	m_scene->intersect(ray);
-}
+	/* Figure out the position of the mouse in the scene to pick the closest
+	 * object. */
 
-void Viewer::selectObject(int x, int y) const
-{
 	float z;
 	glReadPixels(x, m_height - y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &z);
 
