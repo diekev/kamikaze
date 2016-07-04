@@ -505,33 +505,33 @@ bool Manipulator::intersect(const Ray &ray, float &min)
 
 	/* Check X-axis. */
 	auto nor = ray.pos - ray.dir;
-	auto xmin = glm::vec3{ -2.0f, -0.05f, -0.05f }, xmax = glm::vec3{ 2.0f, 0.05f, 0.05f };
+	auto xmin = glm::vec3{ 0.0f, -0.05f, -0.05f }, xmax = glm::vec3{ 2.0f, 0.05f, 0.05f };
 	xmin = xmin * glm::mat3(matrix()) + pos();
 	xmax = xmax * glm::mat3(matrix()) + pos();
 
-	if (::intersect(ray, xmin * glm::mat3(matrix()), xmax * glm::mat3(matrix()), min)) {
+	if (::intersect(ray, xmin, xmax, min)) {
 		m_axis = X_AXIS;
 		m_plane_nor = glm::vec3{ 0.0f, nor.y, nor.z };
 		return true;
 	}
 
 	/* Check Y-axis. */
-	auto ymin = glm::vec3{ -0.05f, -2.0f, -0.05f }, ymax = glm::vec3{ 0.05f, 2.0f, 0.05f };
+	auto ymin = glm::vec3{ -0.05f, 0.0f, -0.05f }, ymax = glm::vec3{ 0.05f, 2.0f, 0.05f };
 	ymin = ymin * glm::mat3(matrix()) + pos();
 	ymax = ymax * glm::mat3(matrix()) + pos();
 
-	if (::intersect(ray, ymin * glm::mat3(matrix()), ymax * glm::mat3(matrix()), min)) {
+	if (::intersect(ray, ymin, ymax, min)) {
 		m_axis = Y_AXIS;
 		m_plane_nor = glm::vec3{ nor.x, 0.0f, nor.z };
 		return true;
 	}
 
 	/* Check Z-axis. */
-	auto zmin = glm::vec3{ -0.05f, -0.05f, -2.0f }, zmax = glm::vec3{ 0.05f, 0.05f, 2.0f };
+	auto zmin = glm::vec3{ -0.05f, -0.05f, -2.0f }, zmax = glm::vec3{ 0.05f, 0.05f, 0.0f };
 	zmin = zmin * glm::mat3(matrix()) + pos();
 	zmax = zmax * glm::mat3(matrix()) + pos();
 
-	if (::intersect(ray, zmin * glm::mat3(matrix()), zmax * glm::mat3(matrix()), min)) {
+	if (::intersect(ray, zmin, zmax, min)) {
 		m_axis = Z_AXIS;
 		m_plane_nor = glm::vec3{ nor.x, nor.y, 0.0f };
 		return true;
@@ -548,9 +548,8 @@ bool Manipulator::intersect(const Ray &ray, float &min)
 
 		if (intersect_quad(v1, v2, v3, v4, ray)) {
 			m_axis = YZ_PLANE;
-			m_plane_nor =  glm::vec3{ 1.0f, 0.0f, 0.0f };
-			m_plane_pos =  glm::vec3{ 0.0f, 1.0f, -1.0f };
-			std::cerr << "Isect YZ Plane\n";
+			m_plane_nor =  glm::vec3{ 0.0f, 0.0f, 1.0f };
+			m_plane_pos =  glm::vec3{ 1.0f, 1.0f, 0.0f };
 			return true;
 		}
 	}
@@ -567,8 +566,7 @@ bool Manipulator::intersect(const Ray &ray, float &min)
 		if (intersect_quad(v1, v2, v3, v4, ray)) {
 			m_axis = XZ_PLANE;
 			m_plane_nor =  glm::vec3{ 0.0f, 1.0f, 0.0f };
-			m_plane_pos =  glm::vec3{ 1.0f, 0.0f, -1.0f };
-			std::cerr << "Isect XZ Plane\n";
+			m_plane_pos =  glm::vec3{ 1.0f, 0.0f, 1.0f };
 			return true;
 		}
 	}
@@ -584,9 +582,8 @@ bool Manipulator::intersect(const Ray &ray, float &min)
 
 		if (intersect_quad(v1, v2, v3, v4, ray)) {
 			m_axis = XY_PLANE;
-			m_plane_nor =  glm::vec3{ 0.0f, 0.0f, 1.0f };
-			m_plane_pos =  glm::vec3{ 1.0f, 1.0f, 0.0f };
-			std::cerr << "Isect XY Plane\n";
+			m_plane_nor =  glm::vec3{ 1.0f, 0.0f, 0.0f };
+			m_plane_pos =  glm::vec3{ 0.0f, 1.0f, 1.0f };
 			return true;
 		}
 	}
@@ -603,7 +600,7 @@ glm::vec3 Manipulator::update(const Ray &ray)
 
 	/* find intersectiopn between ray and plane */
 	glm::vec3 ipos;
-	if (::intersect(ray, m_plane_pos, m_plane_nor, ipos)) {
+	if (::intersect(ray, m_plane_pos * pos(), m_plane_nor, ipos)) {
 		if (m_first) {
 			m_delta_pos = ipos - m_last_pos;
 			m_first = false;
