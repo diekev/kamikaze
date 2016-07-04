@@ -91,6 +91,79 @@ static bool intersect(const Ray &ray, const glm::vec3 &pos, const glm::vec3 &nor
 	return true;
 }
 
+static constexpr auto EPSILON = 1e-6f;
+
+/**
+ * Möller-Trumbore intersection test.
+ * From https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
+ */
+static bool intersect(const glm::vec3 &v1, const glm::vec3 &v2, const glm::vec3 &v3, const Ray &ray)
+{
+	/* Find vectors for two edges sharing v1. */
+	const auto e1 = v2 - v1;
+	const auto e2 = v3 - v1;
+
+	/* Begin calculating determinant - also used to calculate u parameter. */
+	const auto P = glm::cross(ray.dir, e2);
+
+	/* If det is near zero, ray lies in plane of triangle or ray is parallel to
+	 * plane of triangle. */
+	const auto det = glm::dot(e1, P);
+
+	if (det > -EPSILON && det < EPSILON) {
+		return false;
+	}
+
+	const auto inv_det = 1.0f / det;
+
+	/* Calculate distance from V1 to ray origin. */
+	const auto T = ray.pos - v1;
+
+	/* Calculate u parameter and test bound. */
+	const auto u = glm::dot(T, P) * inv_det;
+
+	/* The intersection lies outside of the triangle. */
+	if (u < 0.0f || u > 1.0f) {
+		return false;
+	}
+
+	/* Prepare to test v parameter. */
+	const auto Q = glm::cross(T, e1);
+
+	/* Calculate V parameter and test bound. */
+	const auto v = glm::dot(ray.dir, Q) * inv_det;
+
+	/* The intersection lies outside of the triangle. */
+	if (v < 0.0f || u + v  > 1.0f) {
+		return false;
+	}
+
+	const auto t = glm::dot(e2, Q) * inv_det;
+
+	if (t > EPSILON) {
+		/* Ray intersection. */
+		return true;
+	}
+
+	/* No hit, no win. */
+	return false;
+}
+
+static bool intersect_quad(const glm::vec3 &v1, const glm::vec3 &v2,
+                           const glm::vec3 &v3, const glm::vec3 &v4,
+                           const Ray &ray)
+{
+	if (intersect(v1, v2, v3, ray)) {
+		return true;
+	}
+
+	if (intersect(v1, v3, v4, ray)) {
+		return true;
+	}
+
+	return false;
+}
+
 static void add_arrow(std::vector<glm::vec3> &points,
                       std::vector<unsigned int> &indices,
                       const int indices_offset,
@@ -463,35 +536,60 @@ bool Manipulator::intersect(const Ray &ray, float &min)
 		m_plane_nor = glm::vec3{ nor.x, nor.y, 0.0f };
 		return true;
 	}
-#if 0
-	/* Check XY-Plane */
-	glm::vec3 dummy;
-	if (::intersect(ray, glm::vec3{ 1.0f, 1.0f, 0.0f }, glm::vec3{ 0.0f, 0.0f, 1.0f }, dummy)) {
-		m_axis = XY_PLANE;
-		m_plane_nor =  glm::vec3{ 0.0f, 0.0f, -1.0f };
-		m_plane_pos =  glm::vec3{ 1.0f, 1.0f, 0.0f };
-		std::cerr << "Isect XY Plane\n";
-		return true;
+
+	{
+		const auto &min = glm::vec3(0.75f, 0.75f, 0.0f) + pos();
+		const auto &max = glm::vec3(1.25f, 1.25f, 0.0f) + pos();
+
+		const auto &v1 = glm::vec3(min[0], min[1], min[2]);
+		const auto &v2 = glm::vec3(max[0], min[1], min[2]);
+		const auto &v3 = glm::vec3(max[0], max[1], max[2]);
+		const auto &v4 = glm::vec3(min[0], max[1], max[2]);
+
+		if (intersect_quad(v1, v2, v3, v4, ray)) {
+			m_axis = YZ_PLANE;
+			m_plane_nor =  glm::vec3{ 1.0f, 0.0f, 0.0f };
+			m_plane_pos =  glm::vec3{ 0.0f, 1.0f, -1.0f };
+			std::cerr << "Isect YZ Plane\n";
+			return true;
+		}
 	}
 
-	/* Check XZ-Plane */
-	if (::intersect(ray, glm::vec3{ 1.0f, 0.0f, -1.0f }, glm::vec3{ 0.0f, -1.0f, 0.0f }, dummy)) {
-		m_axis = XZ_PLANE;
-		m_plane_nor =  glm::vec3{ 0.0f, 1.0f, 0.0f };
-		m_plane_pos =  glm::vec3{ 1.0f, 0.0f, -1.0f };
-		std::cerr << "Isect XZ Plane\n";
-		return true;
+	{
+		const auto &min = glm::vec3(0.75f, 0.0f, -0.75f) + pos();
+		const auto &max = glm::vec3(1.25f, 0.0f, -1.25f) + pos();
+
+		const auto &v1 = glm::vec3(min[0], min[1], min[2]);
+		const auto &v2 = glm::vec3(max[0], min[1], min[2]);
+		const auto &v3 = glm::vec3(max[0], max[1], max[2]);
+		const auto &v4 = glm::vec3(min[0], max[1], max[2]);
+
+		if (intersect_quad(v1, v2, v3, v4, ray)) {
+			m_axis = XZ_PLANE;
+			m_plane_nor =  glm::vec3{ 0.0f, 1.0f, 0.0f };
+			m_plane_pos =  glm::vec3{ 1.0f, 0.0f, -1.0f };
+			std::cerr << "Isect XZ Plane\n";
+			return true;
+		}
 	}
 
-	/* Check YZ-Plane */
-	if (::intersect(ray, glm::vec3{ 0.0f, 1.0f, -1.0f }, glm::vec3{ 1.0f, 0.0f, 0.0f }, dummy)) {
-		m_axis = YZ_PLANE;
-		m_plane_nor =  glm::vec3{ 1.0f, 0.0f, 0.0f };
-		m_plane_pos =  glm::vec3{ 0.0f, 1.0f, -1.0f };
-		std::cerr << "Isect YZ Plane\n";
-		return true;
+	{
+		const auto &min = glm::vec3(0.0f, 0.75f, -0.75f) + pos();
+		const auto &max = glm::vec3(0.0f, 1.25f, -1.25f) + pos();
+
+		const auto &v1 = glm::vec3(min[0], min[1], min[2]);
+		const auto &v2 = glm::vec3(max[0], min[1], max[2]);
+		const auto &v3 = glm::vec3(max[0], max[1], max[2]);
+		const auto &v4 = glm::vec3(min[0], max[1], min[2]);
+
+		if (intersect_quad(v1, v2, v3, v4, ray)) {
+			m_axis = XY_PLANE;
+			m_plane_nor =  glm::vec3{ 0.0f, 0.0f, 1.0f };
+			m_plane_pos =  glm::vec3{ 1.0f, 1.0f, 0.0f };
+			std::cerr << "Isect XY Plane\n";
+			return true;
+		}
 	}
-#endif
 
 	m_axis = AXIS_NONE;
 	return false;
