@@ -102,7 +102,7 @@ void Scene::render(ViewerContext *context)
 
 		const bool active_object = (object == m_active_object);
 
-		auto collection = object->collection();
+		const auto collection = object->collection();
 
 		for (auto &prim : collection->primitives()) {
 			/* update prim before drawing */
@@ -122,12 +122,15 @@ void Scene::render(ViewerContext *context)
 				glStencilMask(0x00);
 				glDisable(GL_DEPTH_TEST);
 
-				/* scale up the object a bit */
-				context->setMatrix(glm::scale(context->matrix(), glm::vec3(1.01f)));
+				glLineWidth(5);
+				glPolygonMode(GL_FRONT, GL_LINE);
 
 				prim->render(context, true);
 
-				/* restore */
+				/* Restore state. */
+				glPolygonMode(GL_FRONT, GL_FILL);
+				glLineWidth(1);
+
 				glStencilFunc(GL_ALWAYS, 1, 0xff);
 				glStencilMask(0xff);
 				glEnable(GL_DEPTH_TEST);
