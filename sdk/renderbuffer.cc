@@ -28,7 +28,7 @@
 #include <GL/glew.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <kamikaze/context.h>
+#include "context.h"
 
 /* ************************************************************************** */
 

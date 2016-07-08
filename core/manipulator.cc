@@ -27,8 +27,7 @@
 #include <ego/utils.h>
 
 #include <kamikaze/context.h>
-
-#include "renderbuffer.h"
+#include <kamikaze/renderbuffer.h>
 
 #include "util/utils.h"
 #include "util/utils_glm.h"

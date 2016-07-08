@@ -53,8 +53,7 @@ SOURCES += \
     nodes/nodes.cc \
     task.cc \
     manipulator.cc \
-    transformable.cc \
-    renderbuffer.cc
+    transformable.cc
 
 HEADERS += \
     grid.h \
@@ -72,8 +71,7 @@ HEADERS += \
     nodes/nodes.h \
     task.h \
     manipulator.h \
-    transformable.h \
-    renderbuffer.h
+    transformable.h
 
 OTHER_FILES += \
     shaders/flat_shader.frag \
