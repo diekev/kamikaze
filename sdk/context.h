@@ -47,20 +47,24 @@ class ViewerContext {
 	glm::mat4 m_modelviewprojection;
 	glm::vec3 m_view;
 	glm::mat3 m_normal;
+	glm::mat4 m_matrix;
 
 public:
-	glm::mat4 modelview() const;
+	const glm::mat4 &modelview() const;
 	void setModelview(const glm::mat4 &modelview);
 
-	glm::mat4 projection() const;
+	const glm::mat4 &projection() const;
 	void setProjection(const glm::mat4 &projection);
 
-	glm::vec3 view() const;
+	const glm::vec3 &view() const;
 	void setView(const glm::vec3 &view);
 
-	glm::mat3 normal() const;
+	const glm::mat3 &normal() const;
 	void setNormal(const glm::mat3 &normal);
 
-	glm::mat4 MVP() const;
+	const glm::mat4 &MVP() const;
 	void setMVP(const glm::mat4 &MVP);
+
+	const glm::mat4 &matrix() const;
+	void setMatrix(const glm::mat4 &matrix);
 };

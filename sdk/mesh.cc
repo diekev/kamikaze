@@ -172,13 +172,13 @@ void Mesh::loadShader()
 	m_program.disable();
 }
 
-void Mesh::render(ViewerContext *context, const bool for_outline)
+void Mesh::render(const ViewerContext * const context, const bool for_outline)
 {
 	if (m_program.isValid()) {
 		m_program.enable();
 		m_buffer_data->bind();
 
-		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(m_matrix));
+		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(context->matrix()));
 		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(context->MVP()));
 		glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(context->normal()));
 		glUniform1i(m_program("for_outline"), for_outline);

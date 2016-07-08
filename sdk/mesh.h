@@ -97,7 +97,7 @@ public:
 
 	void update() override;
 
-	void render(ViewerContext *context, const bool for_outline) override;
+	void render(const ViewerContext * const context, const bool for_outline) override;
 
 	void setCustomUIParams(ParamCallback *cb) override;
 

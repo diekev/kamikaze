@@ -87,7 +87,7 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 	m_buffer_data->unbind();
 }
 
-void Cube::render(ViewerContext *context, const bool /*for_outline*/)
+void Cube::render(const ViewerContext * const context, const bool /*for_outline*/)
 {
 	if (m_program.isValid()) {
 		m_program.enable();

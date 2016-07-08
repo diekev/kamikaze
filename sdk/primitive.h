@@ -103,7 +103,7 @@ public:
 	 * @param for_outline Flag to indicate that the primitive is selected. If so,
 	 *                    its outline will be drawn highlighted.
 	 */
-	virtual void render(ViewerContext *context, const bool for_outline) = 0;
+	virtual void render(const ViewerContext * const context, const bool for_outline) = 0;
 
 	/**
 	 * @brief computeBBox Compute the bounding box of this primitive.
