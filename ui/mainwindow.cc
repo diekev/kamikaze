@@ -100,6 +100,10 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	m_context.node_factory = m_main->nodeFactory();
 	m_context.primitive_factory = m_main->primitiveFactory();
 	m_context.main_window = this;
+
+	ui->m_start_but->setIcon(QIcon("icons/icon_play_forward.png"));
+	ui->m_begin_but->setIcon(QIcon("icons/icon_jump_first.png"));
+	ui->m_end_but->setIcon(QIcon("icons/icon_jump_last.png"));
 }
 
 MainWindow::~MainWindow()
@@ -190,10 +194,12 @@ void MainWindow::startAnimation()
 		m_timer_has_started = false;
 		m_timer->stop();
 		ui->m_start_but->setText("Play");
+		ui->m_start_but->setIcon(QIcon("icons/icon_play_forward.png"));
 	}
 	else {
 		m_timer_has_started = true;
 		ui->m_start_but->setText("Pause");
+		ui->m_start_but->setIcon(QIcon("icons/icon_pause.png"));
 		m_timer->start(1000 / ui->m_fps->value());
 	}
 }
