@@ -514,7 +514,7 @@
         <enum>QTabWidget::North</enum>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>2</number>
        </property>
        <property name="movable">
         <bool>true</bool>
@@ -587,7 +587,13 @@
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_9">
          <item>
-          <widget class="QListWidget" name="m_outliner"/>
+          <widget class="OutlinerTreeWidget" name="treeWidget">
+           <column>
+            <property name="text">
+             <string notr="true">1</string>
+            </property>
+           </column>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -613,7 +619,7 @@
           <x>0</x>
           <y>0</y>
           <width>276</width>
-          <height>98</height>
+          <height>97</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -826,6 +832,11 @@
    <extends>QWidget</extends>
    <header>node_editorwidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>OutlinerTreeWidget</class>
+   <extends>QTreeWidget</extends>
+   <header>outliner_widget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

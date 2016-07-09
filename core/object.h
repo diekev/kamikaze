@@ -53,6 +53,9 @@ class Object {
 
 	std::string m_name;
 
+	Object *m_parent = nullptr;
+	std::vector<Object *> m_children;
+
 public:
 	Object();
 	~Object();
@@ -76,6 +79,12 @@ public:
 
 	void updateMatrix();
 	void clearCache();
+
+	void addChild(Object *child);
+	const std::vector<Object *> &children() const;
+
+	Object *parent() const;
+	void parent(Object *parent);
 };
 
 void eval_graph(const EvaluationContext * const context);

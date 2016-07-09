@@ -26,7 +26,9 @@
 
 #include <sstream>
 
-#include "graph.h"
+#include "depsgraph.h"
+#include "object_graph.h"
+#include "object.h"
 
 /* Adapted from Blender's BVM debug code. */
 
@@ -217,6 +219,172 @@ GraphDumper::GraphDumper(Graph *graph)
 {}
 
 void GraphDumper::operator()(const filesystem::path &path)
+{
+	filesystem::File file(path, "w");
+
+	if (!file) {
+		return;
+	}
+
+	file.print("digraph depgraph {\n");
+	file.print("rankdir=LR\n");
+	file.print("graph [");
+	file.print("labbelloc=\"t\"");
+	file.print(",fontsize=\"%f\"", fontsize);
+	file.print("fontname=\"%s\"", fontname);
+	file.print("label=\"Object Graph\"");
+	file.print("]\n");
+
+	for (const auto &node : m_graph->nodes()) {
+		dump_node(file, node);
+	}
+
+	for (const auto &node : m_graph->nodes()) {
+		dump_node_links(file, node);
+	}
+
+	file.print("}\n");
+}
+
+/* ************************************************************************** */
+
+#define kmkz_inline static inline
+
+kmkz_inline std::string node_id(const DepsNode *node, bool quoted = true)
+{
+	std::stringstream ss;
+
+	ss << "node_" << node;
+
+	if (quoted) {
+		std::stringstream ssq;
+		ssq << std::quoted(ss.str());
+		return ssq.str();
+	}
+
+	return ss.str();
+}
+
+kmkz_inline std::string input_id(const DepsInputSocket */*socket*/, bool quoted = true)
+{
+	std::stringstream ss;
+
+	ss << "IParent";
+
+	if (quoted) {
+		std::stringstream ssq;
+		ssq << std::quoted(ss.str());
+		return ssq.str();
+	}
+
+	return ss.str();
+}
+
+kmkz_inline std::string output_id(const DepsOutputSocket */*socket*/, bool quoted = true)
+{
+	std::stringstream ss;
+
+	ss << "OChild";
+
+	if (quoted) {
+		std::stringstream ssq;
+		ssq << std::quoted(ss.str());
+		return ssq.str();
+	}
+
+	return ss.str();
+}
+
+kmkz_inline void dump_node(filesystem::File &file, DepsNode *node)
+{
+	constexpr auto shape = "box";
+	constexpr auto style = "filled,rounded";
+	constexpr auto color = "black";
+	constexpr auto fillcolor = "gainsboro";
+	auto penwidth = 1.0f;
+
+	DepsObjectNode *ob_node = static_cast<DepsObjectNode *>(node);
+	Object *object = ob_node->object();
+	const auto ob_name = object->name().toStdString().c_str();
+
+	file.print("// %s\n", ob_name);
+	file.print("%s", node_id(node).c_str());
+	file.print("[");
+
+	file.print("label=<<TABLE BORDER=\"0\" CELLBORDER=\"0\" CELLSPACING=\"0\" CELLPADDING=\"4\">");
+	file.print("<TR><TD COLSPAN=\"2\">%s</TD></TR>", ob_name);
+
+	file.print("<TR>");
+
+	const auto &input = node->input();
+	const auto &name_in = "Parent";
+
+	file.print("<TD");
+	file.print(" PORT=%s", input_id(input).c_str());
+	file.print(" BORDER=\"1\"");
+	file.print(" BGCOLOR=\"%s\"", color_value);
+	file.print(">");
+	file.print("%s", name_in);
+	file.print("</TD>");
+
+	const auto &output = node->output();
+	const auto &name_out = "Child";
+
+	file.print("<TD");
+	file.print(" PORT=%s", output_id(output).c_str());
+	file.print(" BORDER=\"1\"");
+	file.print(" BGCOLOR=\"%s\"", color_value);
+	file.print(">");
+	file.print("%s", name_out);
+	file.print("</TD>");
+
+	file.print("</TR>");
+
+	file.print("</TABLE>>");
+
+	file.print(",fontname=\"%s\"", fontname);
+	file.print(",fontsize=\"%f\"", node_label_size);
+	file.print(",shape=\"%s\"", shape);
+	file.print(",style=\"%s\"", style);
+	file.print(",color=\"%s\"", color);
+	file.print(",fillcolor=\"%s\"", fillcolor);
+	file.print(",penwidth=\"%f\"", penwidth);
+	file.print("];\n");
+	file.print("\n");
+}
+
+kmkz_inline void dump_link(filesystem::File &file,
+                           const DepsOutputSocket *from,
+                           const DepsInputSocket *to)
+{
+	float penwidth = 2.0f;
+
+	file.print("%s:%s -> %s:%s",
+	           node_id(from->parent).c_str(), output_id(from).c_str(),
+	           node_id(to->parent).c_str(), input_id(to).c_str());
+
+	file.print("[");
+
+	/* Note: without label an id seem necessary to avoid bugs in graphviz/dot */
+	file.print("id=\"VAL%s:%s\"", node_id(to->parent, false).c_str(), input_id(to, false).c_str());
+	file.print(",penwidth=\"%f\"", penwidth);
+
+	file.print("];\n");
+	file.print("\n");
+}
+
+kmkz_inline void dump_node_links(filesystem::File &file, const DepsNode *node)
+{
+	if (node->input()->link) {
+		dump_link(file, node->input()->link, node->input());
+	}
+}
+
+DepsGraphDumper::DepsGraphDumper(Depsgraph *graph)
+    : m_graph(graph)
+{}
+
+void DepsGraphDumper::operator()(const filesystem::path &path)
 {
 	filesystem::File file(path, "w");
 

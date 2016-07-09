@@ -33,7 +33,7 @@
 
 #include <dlfcn.h>
 
-#include "nodes/nodes.h"
+#include "graphs/object_nodes.h"
 
 namespace fs = filesystem;
 

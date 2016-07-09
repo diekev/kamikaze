@@ -47,11 +47,12 @@ SOURCES += \
     viewer.cc \
 #    brush.cc \
     kamikaze_main.cc \
-    nodes/graph.cc \
     object.cc \
-    nodes/graph_dumper.cc \
-    nodes/nodes.cc \
-    task.cc
+    graphs/graph_dumper.cc \
+    task.cc \
+    graphs/depsgraph.cc \
+    graphs/object_graph.cc \
+    graphs/object_nodes.cc
 
 HEADERS += \
     grid.h \
@@ -63,11 +64,12 @@ HEADERS += \
     viewer.h \
 #    brush.h \
     kamikaze_main.h \
-    nodes/graph.h \
     object.h \
-    nodes/graph_dumper.h \
-    nodes/nodes.h \
-    task.h
+    graphs/graph_dumper.h \
+    task.h \
+    graphs/depsgraph.h \
+    graphs/object_nodes.h \
+    graphs/object_graph.h
 
 OTHER_FILES += \
     shaders/flat_shader.frag \

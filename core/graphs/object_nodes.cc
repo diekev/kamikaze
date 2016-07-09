@@ -22,7 +22,7 @@
  *
  */
 
-#include "nodes.h"
+#include "object_nodes.h"
 
 #include <kamikaze/mesh.h>
 #include <kamikaze/primitive.h>

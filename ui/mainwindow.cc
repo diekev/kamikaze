@@ -37,8 +37,8 @@
 #include <QSplitter>
 #include <QTimer>
 
-#include "core/nodes/graph.h"
-#include "core/nodes/nodes.h"
+#include "core/graphs/object_graph.h"
+#include "core/graphs/object_nodes.h"
 #include "core/kamikaze_main.h"
 #include "core/object.h"
 #include "core/object_ops.h"
@@ -104,6 +104,8 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	ui->m_start_but->setIcon(QIcon("icons/icon_play_forward.png"));
 	ui->m_begin_but->setIcon(QIcon("icons/icon_jump_first.png"));
 	ui->m_end_but->setIcon(QIcon("icons/icon_jump_last.png"));
+
+	ui->treeWidget->setScene(m_scene);
 }
 
 MainWindow::~MainWindow()
@@ -132,37 +134,62 @@ void MainWindow::taskEnded()
 bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 {
 	if (e->type() == QEvent::KeyPress) {
+		auto event = static_cast<QKeyEvent *>(e);
+
 		if (obj == ui->m_viewport) {
-			auto keyEvent = static_cast<QKeyEvent *>(e);
-			ui->m_viewport->keyPressEvent(keyEvent);
+			ui->m_viewport->keyPressEvent(event);
+			return true;
+		}
+		else if (obj == ui->treeWidget) {
+			ui->treeWidget->keyPressEvent(event);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::MouseButtonPress) {
+		auto event = static_cast<QMouseEvent *>(e);
+
 		if (obj == ui->m_viewport) {
-			auto event = static_cast<QMouseEvent *>(e);
 			ui->m_viewport->mousePressEvent(event);
+			return true;
+		}
+		else if (obj == ui->treeWidget) {
+			ui->treeWidget->mousePressEvent(event);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::MouseMove) {
+		auto event = static_cast<QMouseEvent *>(e);
+
 		if (obj == ui->m_viewport) {
-			auto event = static_cast<QMouseEvent *>(e);
 			ui->m_viewport->mouseMoveEvent(event);
+			return true;
+		}
+		else if (obj == ui->treeWidget) {
+			ui->treeWidget->mouseMoveEvent(event);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::MouseButtonRelease) {
+		auto event = static_cast<QMouseEvent *>(e);
+
 		if (obj == ui->m_viewport) {
-			auto event = static_cast<QMouseEvent *>(e);
 			ui->m_viewport->mouseReleaseEvent(event);
+			return true;
+		}
+		else if (obj == ui->treeWidget) {
+			ui->treeWidget->mouseReleaseEvent(event);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::Wheel) {
+		auto event = static_cast<QWheelEvent *>(e);
+
 		if (obj == ui->m_viewport) {
-			auto event = static_cast<QWheelEvent *>(e);
 			ui->m_viewport->wheelEvent(event);
+			return true;
+		}
+		else if (obj == ui->treeWidget) {
+			ui->treeWidget->wheelEvent(event);
 			return true;
 		}
 	}
@@ -185,7 +212,7 @@ void MainWindow::updateObjectTab() const
 
 	cb.setContext(m_scene, SLOT(tagObjectUpdate()));
 
-	m_scene->objectNameList(ui->m_outliner);
+	ui->treeWidget->updateScene();
 }
 
 void MainWindow::startAnimation()

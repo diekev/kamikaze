@@ -22,13 +22,13 @@
  *
  */
 
-#include "graph.h"
+#include "object_graph.h"
 
 #include <algorithm>
 #include <iostream>
 
 #include "graph_dumper.h"
-#include "nodes.h"
+#include "object_nodes.h"
 
 //#define DEBUG_GRAPH
 

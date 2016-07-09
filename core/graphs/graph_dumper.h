@@ -26,6 +26,7 @@
 
 #include <utils/filesystem.h>
 
+class Depsgraph;
 class Graph;
 
 class GraphDumper {
@@ -33,6 +34,15 @@ class GraphDumper {
 
 public:
 	GraphDumper(Graph *graph);
+
+	void operator()(const filesystem::path &path);
+};
+
+class DepsGraphDumper {
+	Depsgraph *m_graph;
+
+public:
+	DepsGraphDumper(Depsgraph *graph);
 
 	void operator()(const filesystem::path &path);
 };

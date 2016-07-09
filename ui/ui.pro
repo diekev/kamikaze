@@ -50,7 +50,8 @@ SOURCES += \
     nodes/node_port.cc \
     paramfactory.cc \
     paramcallback.cc \
-    utils_ui.cc
+    utils_ui.cc \
+    outliner_widget.cc
 
 HEADERS += \
     mainwindow.h \
@@ -65,7 +66,8 @@ HEADERS += \
     nodes/node_scene.h \
     paramfactory.h \
     paramcallback.h \
-    utils_ui.h
+    utils_ui.h \
+    outliner_widget.h
 
 FORMS += \
     mainwindow.ui

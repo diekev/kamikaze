@@ -28,6 +28,7 @@
 
 #include "../util/util_render.h"
 
+class Depsgraph;
 class EvaluationContext;
 class Node;
 class Object;
@@ -42,6 +43,8 @@ class Scene : public QObject {
 	Object *m_active_object;
 	int m_mode;
 
+	Depsgraph *m_depsgraph;
+
 public:
 	Scene();
 	~Scene();
@@ -50,23 +53,23 @@ public:
 
 	Object *currentObject();
 	void addObject(Object *object);
-	void removeObject(Object *ob);
+	void removeObject(Object *object);
 
 	void render(ViewerContext *context);
 	void intersect(const Ray &ray);
 
 	void selectObject(const glm::vec3 &pos);
-	void objectNameList(QListWidget *widget) const;
 
 	void emitNodeAdded(Object *ob, Node *node);
 
 	void updateForNewFrame(const EvaluationContext * const context);
 
+	const std::vector<Object *> &objects() const;
+
 public Q_SLOTS:
 	void setObjectName(const QString &name);
 	void tagObjectUpdate();
 
-	void setCurrentObject(QListWidgetItem *item);
 	void setActiveObject(Object *object);
 
 private:

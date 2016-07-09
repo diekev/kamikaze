@@ -29,8 +29,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <kamikaze/primitive.h>
 
-#include "nodes/graph.h"
-#include "nodes/nodes.h"
+#include "graphs/object_graph.h"
+#include "graphs/object_nodes.h"
 
 #include "scene.h"
 #include "task.h"
@@ -114,6 +114,27 @@ void Object::updateMatrix()
 void Object::clearCache()
 {
 	m_cache.clear();
+}
+
+void Object::addChild(Object *child)
+{
+	m_children.push_back(child);
+	child->parent(this);
+}
+
+const std::vector<Object *> &Object::children() const
+{
+	return m_children;
+}
+
+Object *Object::parent() const
+{
+	return m_parent;
+}
+
+void Object::parent(Object *parent)
+{
+	m_parent = parent;
 }
 
 /* ********************************************* */
