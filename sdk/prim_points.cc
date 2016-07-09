@@ -80,9 +80,7 @@ PrimPoints::~PrimPoints()
 		delete attr;
 	}
 
-	if (m_renderbuffer) {
-		delete m_renderbuffer;
-	}
+	delete m_renderbuffer;
 }
 
 PointList *PrimPoints::points()

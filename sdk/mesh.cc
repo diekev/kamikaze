@@ -77,6 +77,8 @@ Mesh::~Mesh()
 	for (auto &attr : m_attributes) {
 		delete attr;
 	}
+
+	delete m_renderbuffer;
 }
 
 PointList *Mesh::points()

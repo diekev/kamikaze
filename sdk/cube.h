@@ -41,7 +41,7 @@ class Cube {
 
 public:
 	Cube(const glm::vec3 &min, const glm::vec3 &max);
-	~Cube() = default;
+	~Cube();
 
 	void render(const ViewerContext * const context, const bool for_outline);
 };

@@ -92,7 +92,12 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 	                            m_vertices.size() * sizeof(glm::vec3),
 	                            &indices[0],
 	                            sizeof(indices),
-	                            24);
+	        24);
+}
+
+Cube::~Cube()
+{
+	delete m_buffer;
 }
 
 void Cube::render(const ViewerContext * const context, const bool for_outline)
