@@ -35,7 +35,7 @@
 
 #include "object.h"
 
-#include "depsgraph.h"
+#include "graphs/depsgraph.h"
 
 #include "util/util_string.h"
 
