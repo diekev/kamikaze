@@ -26,7 +26,6 @@
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "ui/paramfactory.h"  /* XXX - bad level call */
 #include "util/util_render.h"  /* XXX - bad level call */
 
 bool Primitive::intersect(const Ray &ray, float &min) const
@@ -133,17 +132,6 @@ QString Primitive::name() const
 void Primitive::name(const QString &name)
 {
 	m_name = name.toStdString();
-}
-
-void Primitive::setUIParams(ParamCallback *cb)
-{
-	string_param(cb, "Name", &m_name, "");
-
-	bool_param(cb, "Draw BoundingBox", &m_draw_bbox, false);
-
-	xyz_param(cb, "Position", &m_pos[0]);
-	xyz_param(cb, "Scale", &m_scale[0]);
-	xyz_param(cb, "Rotation", &m_rotation[0]);
 }
 
 /* ********************************************** */

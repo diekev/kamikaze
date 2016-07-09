@@ -32,10 +32,6 @@
 #include "renderbuffer.h"
 #include "util_parallel.h"
 
-#ifndef UNUSED
-#define UNUSED(x) static_cast<void>(x);
-#endif
-
 /* ************************************************************************** */
 
 static RenderBuffer *create_surface_buffer()
@@ -186,11 +182,6 @@ size_t Mesh::typeID() const
 void Mesh::render(const ViewerContext * const context, const bool for_outline)
 {
 	m_renderbuffer->render(context, for_outline);
-}
-
-void Mesh::setCustomUIParams(ParamCallback *cb)
-{
-	UNUSED(cb);
 }
 
 void Mesh::prepareRenderData()

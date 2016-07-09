@@ -99,8 +99,6 @@ public:
 
 	void render(const ViewerContext * const context, const bool for_outline) override;
 
-	void setCustomUIParams(ParamCallback *cb) override;
-
 	void prepareRenderData() override;
 
 	void computeBBox(glm::vec3 &min, glm::vec3 &max) override;

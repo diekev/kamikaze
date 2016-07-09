@@ -146,10 +146,6 @@ public:
 	 */
 	virtual Primitive *copy() const = 0;
 
-	/* UI parameters */
-	void setUIParams(ParamCallback *cb);
-	virtual void setCustomUIParams(ParamCallback *cb) = 0;
-
 	/**
 	 * @brief typeID The unique ID that is shared between primitives instanced
 	 *               from a type derived from this class.

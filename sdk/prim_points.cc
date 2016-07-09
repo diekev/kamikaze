@@ -31,10 +31,6 @@
 #include "context.h"
 #include "renderbuffer.h"
 
-#ifndef UNUSED
-#define UNUSED(x) static_cast<void>(x);
-#endif
-
 /* ************************************************************************** */
 
 static RenderBuffer *create_point_buffer()
@@ -146,11 +142,6 @@ size_t PrimPoints::typeID() const
 void PrimPoints::render(const ViewerContext * const context, const bool for_outline)
 {
 	m_renderbuffer->render(context, for_outline);
-}
-
-void PrimPoints::setCustomUIParams(ParamCallback *cb)
-{
-	UNUSED(cb);
 }
 
 void PrimPoints::prepareRenderData()
