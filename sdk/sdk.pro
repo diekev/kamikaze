@@ -50,6 +50,7 @@ HDR_SDK = \
 	renderbuffer.h \
     geomlists.h \
     util_parallel.h \
+    util_render.h \
     prim_points.h
 
 SOURCES += \

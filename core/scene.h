@@ -26,7 +26,7 @@
 
 #include <QObject>
 
-#include "../util/util_render.h"
+#include <kamikaze/util_render.h>
 
 class Depsgraph;
 class EvaluationContext;

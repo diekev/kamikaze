@@ -26,7 +26,7 @@
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "util/util_render.h"  /* XXX - bad level call */
+#include "util_render.h"
 
 bool Primitive::intersect(const Ray &ray, float &min) const
 {
