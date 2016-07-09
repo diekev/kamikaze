@@ -275,6 +275,10 @@ void PrimitiveCollection::add(Primitive *prim)
 {
 	m_collection.push_back(prim);
 
+	if (prim == nullptr) {
+		return;
+	}
+
 	auto name = prim->name();
 
 	bool changed = ensure_unique_name(name, [&](const QString &str)

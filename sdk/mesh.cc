@@ -29,16 +29,43 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "context.h"
+#include "renderbuffer.h"
 #include "util_parallel.h"
 
 #ifndef UNUSED
 #define UNUSED(x) static_cast<void>(x);
 #endif
 
+/* ************************************************************************** */
+
+static RenderBuffer *create_surface_buffer()
+{
+	RenderBuffer *renderbuffer = new RenderBuffer;
+
+	renderbuffer->set_shader_source(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/object.vert"));
+	renderbuffer->set_shader_source(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/object.frag"));
+	renderbuffer->finalize_shader();
+
+	ProgramParams params;
+	params.add_attribute("vertex");
+	params.add_attribute("normal");
+	params.add_uniform("matrix");
+	params.add_uniform("MVP");
+	params.add_uniform("N");
+	params.add_uniform("for_outline");
+
+	renderbuffer->set_shader_params(params);
+
+	return renderbuffer;
+}
+
+/* ************************************************************************** */
+
 size_t Mesh::id = -1;
 
 Mesh::Mesh()
     : Primitive()
+    , m_renderbuffer(nullptr)
     , m_need_data_update(true)
 {
 	addAttribute("normal", ATTR_TYPE_VEC3);
@@ -154,39 +181,9 @@ size_t Mesh::typeID() const
 	return Mesh::id;
 }
 
-void Mesh::loadShader()
-{
-	m_program.load(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/object.vert"));
-	m_program.load(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/object.frag"));
-	m_program.createAndLinkProgram();
-
-	m_program.enable();
-	{
-		m_program.addAttribute("vertex");
-		m_program.addAttribute("normal");
-		m_program.addUniform("matrix");
-		m_program.addUniform("MVP");
-		m_program.addUniform("N");
-		m_program.addUniform("for_outline");
-	}
-	m_program.disable();
-}
-
 void Mesh::render(const ViewerContext * const context, const bool for_outline)
 {
-	if (m_program.isValid()) {
-		m_program.enable();
-		m_buffer_data->bind();
-
-		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(context->matrix()));
-		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(context->MVP()));
-		glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(context->normal()));
-		glUniform1i(m_program("for_outline"), for_outline);
-		glDrawElements(m_draw_type, m_elements, GL_UNSIGNED_INT, nullptr);
-
-		m_buffer_data->unbind();
-		m_program.disable();
-	}
+	m_renderbuffer->render(context, for_outline);
 }
 
 void Mesh::setCustomUIParams(ParamCallback *cb)
@@ -200,8 +197,8 @@ void Mesh::prepareRenderData()
 		return;
 	}
 
-	if (!m_program.isValid()) {
-		loadShader();
+	if (!m_renderbuffer) {
+		m_renderbuffer = create_surface_buffer();
 	}
 
 	auto normals = this->attribute("normal", ATTR_TYPE_VEC3);
@@ -233,18 +230,16 @@ void Mesh::prepareRenderData()
 		}
 	}
 
-	m_elements = indices.size();
+	m_renderbuffer->can_outline(true);
 
-	m_buffer_data.reset(new ego::BufferObject());
-	m_buffer_data->bind();
-	m_buffer_data->generateVertexBuffer(m_point_list.data(), m_point_list.byte_size());
-	m_buffer_data->generateIndexBuffer(&indices[0], m_elements * sizeof(GLuint));
-	m_buffer_data->attribPointer(m_program["vertex"], 3);
-	m_buffer_data->generateNormalBuffer(normals->data(), normals->byte_size());
-	m_buffer_data->attribPointer(m_program["normal"], 3);
-	m_buffer_data->unbind();
+	m_renderbuffer->set_vertex_buffer("vertex",
+	                                  m_point_list.data(),
+	                                  m_point_list.byte_size(),
+	                                  &indices[0],
+	                                  indices.size() * sizeof(GLuint),
+	                                  indices.size());
 
-	ego::util::GPU_check_errors("Unable to create level set buffer");
+	m_renderbuffer->set_normal_buffer("normal", normals->data(), normals->byte_size());
 
 	m_need_data_update = false;
 }

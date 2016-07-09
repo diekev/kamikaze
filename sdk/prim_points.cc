@@ -29,22 +29,59 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "context.h"
+#include "renderbuffer.h"
 
 #ifndef UNUSED
 #define UNUSED(x) static_cast<void>(x);
 #endif
 
+/* ************************************************************************** */
+
+static RenderBuffer *create_point_buffer()
+{
+	RenderBuffer *renderbuffer = new RenderBuffer;
+
+	renderbuffer->set_shader_source(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/flat_shader.vert"));
+	renderbuffer->set_shader_source(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/flat_shader.frag"));
+	renderbuffer->finalize_shader();
+
+	ProgramParams params;
+	params.add_attribute("vertex");
+	params.add_uniform("matrix");
+	params.add_uniform("MVP");
+	params.add_uniform("for_outline");
+	params.add_uniform("color");
+
+	renderbuffer->set_shader_params(params);
+
+	ego::Program *program = renderbuffer->program();
+	program->uniform("color", 0.0f, 0.0f, 0.0f, 1.0f);
+
+	DrawParams draw_params;
+	draw_params.set_draw_type(GL_POINTS);
+	draw_params.set_point_size(2.0f);
+
+	renderbuffer->set_draw_params(draw_params);
+
+	return renderbuffer;
+}
+
+/* ************************************************************************** */
+
 size_t PrimPoints::id = -1;
 
 PrimPoints::PrimPoints()
-{
-	m_draw_type = GL_POINTS;
-}
+    : m_renderbuffer(nullptr)
+{}
 
 PrimPoints::~PrimPoints()
 {
 	for (auto &attr : m_attributes) {
 		delete attr;
+	}
+
+	if (m_renderbuffer) {
+		delete m_renderbuffer;
 	}
 }
 
@@ -103,22 +140,6 @@ Primitive *PrimPoints::copy() const
 	return prim;
 }
 
-void PrimPoints::loadShader()
-{
-	m_program.load(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/flat_shader.vert"));
-	m_program.load(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/flat_shader.frag"));
-	m_program.createAndLinkProgram();
-
-	m_program.enable();
-	{
-		m_program.addAttribute("vertex");
-		m_program.addUniform("matrix");
-		m_program.addUniform("MVP");
-		m_program.addUniform("for_outline");
-	}
-	m_program.disable();
-}
-
 size_t PrimPoints::typeID() const
 {
 	return PrimPoints::id;
@@ -126,22 +147,7 @@ size_t PrimPoints::typeID() const
 
 void PrimPoints::render(const ViewerContext * const context, const bool for_outline)
 {
-	if (m_program.isValid()) {
-		glPointSize(2.0f);
-
-		m_program.enable();
-		m_buffer_data->bind();
-
-		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(context->matrix()));
-		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(context->MVP()));
-		glUniform1i(m_program("for_outline"), for_outline);
-		glDrawArrays(m_draw_type, 0, m_elements);
-
-		m_buffer_data->unbind();
-		m_program.disable();
-
-		glPointSize(1.0f);
-	}
+	m_renderbuffer->render(context, for_outline);
 }
 
 void PrimPoints::setCustomUIParams(ParamCallback *cb)
@@ -155,8 +161,8 @@ void PrimPoints::prepareRenderData()
 		return;
 	}
 
-	if (!m_program.isValid()) {
-		loadShader();
+	if (!m_renderbuffer) {
+		m_renderbuffer = create_point_buffer();
 	}
 
 	computeBBox(m_min, m_max);
@@ -165,15 +171,12 @@ void PrimPoints::prepareRenderData()
 		m_points[i] = m_points[i] * glm::mat3(m_inv_matrix);
 	}
 
-	m_elements = this->points()->size();
-
-	m_buffer_data.reset(new ego::BufferObject());
-	m_buffer_data->bind();
-	m_buffer_data->generateVertexBuffer(m_points.data(), m_points.byte_size());
-	m_buffer_data->attribPointer(m_program["vertex"], 3);
-	m_buffer_data->unbind();
-
-	ego::util::GPU_check_errors("Unable to create level set buffer");
+	m_renderbuffer->set_vertex_buffer("vertex",
+	                                  m_points.data(),
+	                                  m_points.byte_size(),
+	                                  nullptr,
+	                                  0,
+	                                  m_points.size());
 
 	m_need_data_update = false;
 }

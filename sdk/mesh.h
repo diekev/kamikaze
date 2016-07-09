@@ -28,15 +28,15 @@
 #include "geomlists.h"
 #include "primitive.h"
 
+class RenderBuffer;
+
 class Mesh : public Primitive {
 	PointList m_point_list;
 	PolygonList m_poly_list;
 
 	std::vector<Attribute *> m_attributes;
 
-	ego::BufferObject::Ptr m_buffer_data;
-	ego::Program m_program;
-	size_t m_elements;
+	RenderBuffer *m_renderbuffer;
 
 	bool m_need_data_update;
 
@@ -112,7 +112,6 @@ public:
 
 private:
 	void computeNormals();
-	void loadShader();
 };
 
 template <typename CharT, typename CharTraits>

@@ -114,9 +114,10 @@ void Viewer::paintGL()
 	m_context->setProjection(P);
 	m_context->setMVP(MVP);
 	m_context->setNormal(glm::inverseTranspose(glm::mat3(MV)));
+	m_context->setMatrix(glm::mat4(1.0f));
 
 	if (m_draw_grid) {
-		m_grid->render(MVP);
+		m_grid->render(m_context);
 	}
 
 	if (m_scene != nullptr) {

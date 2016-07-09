@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <memory>
 #include <QString>
 #include <unordered_map>
 
@@ -59,7 +60,6 @@ void new_kamikaze_prims(PrimitiveFactory *factory);
 class Primitive {
 protected:
 	std::unique_ptr<Cube> m_bbox{};
-	unsigned int m_draw_type = 0x0004;  /* GL_TRIANGLES */
 
 	glm::vec3 m_dimensions = glm::vec3(1.0f);
 	glm::vec3 m_scale = glm::vec3(1.0f);
