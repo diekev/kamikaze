@@ -131,6 +131,7 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &/*rect*/)
 			m_grid = new Grid(20, 20);
 		}
 
+		m_context->setMatrix(glm::mat4(1.0f));
 		m_grid->render(m_context);
 	}
 
