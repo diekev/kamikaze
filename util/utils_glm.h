@@ -97,3 +97,19 @@ glm::detail::tmat4x4<T, P> post_rotate(const glm::detail::tmat4x4<T, P> &mat,
 	auto rmat = glm::rotate(glm::detail::tmat4x4<T, P>(1), angle, axis);
 	return mat * rmat;
 }
+
+/**
+ * Matrix output.
+ */
+
+template <typename T, glm::precision P>
+std::ostream &operator<<(std::ostream &os, const glm::detail::tmat4x4<T, P> &vec)
+{
+	for (int i = 0; i < 4; ++i) {
+		for (int j = 0; j < 4; ++j) {
+			os << vec[i][j] << ' ';
+		}
+		os << '\n';
+	}
+	return os;
+}
