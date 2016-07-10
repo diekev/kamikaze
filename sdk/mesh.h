@@ -115,7 +115,7 @@ private:
 template <typename CharT, typename CharTraits>
 std::basic_ostream<CharT, CharTraits> &operator<<(std::basic_ostream<CharT, CharTraits> &os, const Mesh &mesh)
 {
-	os << "Mesh: " << mesh.name().toStdString() << '\n'
+	os << "Mesh: " << mesh.name() << '\n'
 	   << "\tvertices: " << mesh.points()->size() << '\n'
 	   << "\tpolys: " << mesh.polys()->size() << '\n';
 

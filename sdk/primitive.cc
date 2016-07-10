@@ -124,14 +124,14 @@ void Primitive::tagUpdate()
 	m_need_data_update = true;
 }
 
-QString Primitive::name() const
+std::string Primitive::name() const
 {
-	return QString::fromStdString(m_name);
+	return m_name;
 }
 
-void Primitive::name(const QString &name)
+void Primitive::name(const std::string &name)
 {
-	m_name = name.toStdString();
+	m_name = name;
 }
 
 /* ********************************************** */
@@ -199,13 +199,13 @@ bool PrimitiveFactory::registered(const std::string &key) const
 /* ********************************************** */
 
 template <typename OpType>
-bool ensure_unique_name(QString &name, const OpType &op)
+bool ensure_unique_name(std::string &name, const OpType &op)
 {
 	if (op(name)) {
 		return false;
 	}
 
-	QString temp = name + ".0000";
+	std::string temp = name + ".0000";
 	const auto temp_size = temp.size();
 	int number = 0;
 
@@ -269,7 +269,7 @@ void PrimitiveCollection::add(Primitive *prim)
 
 	auto name = prim->name();
 
-	bool changed = ensure_unique_name(name, [&](const QString &str)
+	bool changed = ensure_unique_name(name, [&](const std::string &str)
 	{
 		for (const auto &prim : m_collection) {
 			if (prim->name() == str) {
@@ -362,7 +362,7 @@ const primitive_iterator::reference primitive_iterator::operator*() const
 	return *m_iter;
 }
 
-const primitive_iterator::pointer primitive_iterator::operator->() const
+primitive_iterator::pointer primitive_iterator::operator->() const
 {
 	return &(*m_iter);
 }

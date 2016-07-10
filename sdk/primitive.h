@@ -137,8 +137,8 @@ public:
 	 */
 	void tagUpdate();
 
-	QString name() const;
-	void name(const QString &name);
+	std::string name() const;
+	void name(const std::string &name);
 
 	/**
 	 * @brief copy Perform a deep copy of this primitive.
@@ -309,7 +309,7 @@ public:
  */
 class primitive_iterator {
 	std::vector<Primitive *>::const_iterator m_iter{nullptr}, m_end{nullptr};
-	int m_type = 0;
+	size_t m_type = 0;
 	PrimitiveCollection collection{};
 
 public:
