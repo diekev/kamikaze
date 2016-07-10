@@ -297,6 +297,8 @@ void Viewer::drawGrid(bool b)
 	m_draw_grid = b;
 }
 
+/* ************************************************************************** */
+
 GraphicsViewer::GraphicsViewer(QWidget *parent)
     : QGraphicsView(parent)
 {
@@ -334,6 +336,10 @@ void GraphicsViewer::resizeEvent(QResizeEvent *event)
 	}
 }
 
+/* ************************************************************************** */
+
+//#define DEBUG_PRINT
+
 OpenGLScene::OpenGLScene()
     : m_width(0)
     , m_height(0)
@@ -365,12 +371,15 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &/*rect*/)
 	if (painter->paintEngine()->type() != QPaintEngine::OpenGL &&
 	    painter->paintEngine()->type() != QPaintEngine::OpenGL2)
 	{
+#ifdef DEBUG_PRINT
 		std::cerr << __func__ << ": needs a QGLWidget to be set as viewport on the graphics view\n";
 		return;
+#endif
 	}
 
-//	std::cerr << __func__ << '\n';
-
+#ifdef DEBUG_PRINT
+	std::cerr << __func__ << '\n';
+#endif
 	if (!m_initialized) {
 		initializeGL();
 		m_initialized = true;
@@ -400,6 +409,7 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &/*rect*/)
 		if (!m_grid) {
 			m_grid = new Grid(20, 20);
 		}
+
 		m_grid->render(m_context);
 	}
 
@@ -447,8 +457,6 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &/*rect*/)
 			}
 		}
 	}
-
-	QTimer::singleShot(20, this, SLOT(update()));
 }
 
 void OpenGLScene::setScene(Scene *scene)
@@ -458,7 +466,10 @@ void OpenGLScene::setScene(Scene *scene)
 
 void OpenGLScene::initializeGL()
 {
-	std::cerr << __func__ << "\n";
+#ifdef DEBUG_PRINT
+	std::cerr << __func__ << '\n';
+#endif
+
 	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
 
@@ -475,6 +486,10 @@ void OpenGLScene::initializeGL()
 
 void OpenGLScene::mousePressEvent(QGraphicsSceneMouseEvent *e)
 {
+#ifdef DEBUG_PRINT
+	std::cerr << __func__ << '\n';
+#endif
+
 	const int x = e->pos().x();
 	const int y = e->pos().y();
 
@@ -518,6 +533,9 @@ void OpenGLScene::mouseMoveEvent(QGraphicsSceneMouseEvent *e)
 		return;
 	}
 
+#ifdef DEBUG_PRINT
+	std::cerr << __func__ << '\n';
+#endif
 	const int x = e->pos().x();
 	const int y = e->pos().y();
 
@@ -526,12 +544,18 @@ void OpenGLScene::mouseMoveEvent(QGraphicsSceneMouseEvent *e)
 
 void OpenGLScene::mouseReleaseEvent(QGraphicsSceneMouseEvent */*e*/)
 {
+#ifdef DEBUG_PRINT
+	std::cerr << __func__ << "\n";
+#endif
 	m_mouse_button = MOUSE_NONE;
-	update();
 }
 
 void OpenGLScene::keyPressEvent(QKeyEvent *e)
 {
+#ifdef DEBUG_PRINT
+	std::cerr << __func__ << '\n';
+#endif
+
 	switch (e->key()) {
 		case Qt::Key_Delete:
 			m_scene->removeObject(m_scene->currentObject());
@@ -543,6 +567,10 @@ void OpenGLScene::keyPressEvent(QKeyEvent *e)
 
 void OpenGLScene::wheelEvent(QGraphicsSceneWheelEvent *e)
 {
+#ifdef DEBUG_PRINT
+	std::cerr << __func__ << '\n';
+#endif
+
 	if (e->delta() < 0) {
 		m_mouse_button = MOUSE_SCROLL_DOWN;
 	}
@@ -589,6 +617,8 @@ glm::vec3 OpenGLScene::unproject(const glm::vec3 &pos) const
 	return glm::unProject(pos, MV, P, glm::vec4(0, 0, m_width, m_height));
 }
 
+/* ************************************************************************** */
+
 void GLWidget::initializeGL()
 {
 	std::cerr << __func__ << '\n';
@@ -606,3 +636,5 @@ void GLWidget::initializeGL()
 	glEnable(GL_STENCIL_TEST);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 }
+
+/* ************************************************************************** */
