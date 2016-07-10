@@ -32,7 +32,6 @@ class Depsgraph;
 class EvaluationContext;
 class Node;
 class Object;
-class ViewerContext;
 
 class Scene : public QObject {
 	Q_OBJECT
@@ -47,13 +46,10 @@ public:
 	Scene();
 	~Scene();
 
-	void keyboardEvent(int key);
-
 	Object *currentObject();
 	void addObject(Object *object);
 	void removeObject(Object *object);
 
-	void render(ViewerContext *context);
 	void intersect(const Ray &ray);
 
 	void selectObject(const glm::vec3 &pos);

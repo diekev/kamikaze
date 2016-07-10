@@ -36,6 +36,7 @@
 #include <QTimer>
 
 #include "camera.h"
+#include "object.h"
 #include "scene.h"
 
 #include "grid.h"
@@ -121,7 +122,48 @@ void Viewer::paintGL()
 	}
 
 	if (m_scene != nullptr) {
-		m_scene->render(m_context);
+		for (auto &object : m_scene->objects()) {
+			if (!object || !object->collection()) {
+				continue;
+			}
+
+			const bool active_object = (object == m_scene->currentObject());
+
+			const auto collection = object->collection();
+
+			for (auto &prim : collection->primitives()) {
+				/* update prim before drawing */
+				prim->update();
+				prim->prepareRenderData();
+
+				if (prim->drawBBox()) {
+					prim->bbox()->render(m_context, false);
+				}
+
+				m_context->setMatrix(object->matrix() * prim->matrix());
+
+				prim->render(m_context, false);
+
+				if (active_object) {
+					glStencilFunc(GL_NOTEQUAL, 1, 0xff);
+					glStencilMask(0x00);
+					glDisable(GL_DEPTH_TEST);
+
+					glLineWidth(5);
+					glPolygonMode(GL_FRONT, GL_LINE);
+
+					prim->render(m_context, true);
+
+					/* Restore state. */
+					glPolygonMode(GL_FRONT, GL_FILL);
+					glLineWidth(1);
+
+					glStencilFunc(GL_ALWAYS, 1, 0xff);
+					glStencilMask(0xff);
+					glEnable(GL_DEPTH_TEST);
+				}
+			}
+		}
 	}
 }
 
@@ -184,7 +226,13 @@ void Viewer::mouseReleaseEvent(QMouseEvent */*e*/)
 
 void Viewer::keyPressEvent(QKeyEvent *e)
 {
-	m_scene->keyboardEvent(e->key());
+	switch (e->key()) {
+		case Qt::Key_Delete:
+			m_scene->removeObject(m_scene->currentObject());
+			break;
+		default:
+			break;
+	}
 }
 
 void Viewer::wheelEvent(QWheelEvent *e)
