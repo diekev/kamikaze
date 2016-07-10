@@ -43,7 +43,6 @@ class Main;
 class Node;
 class Object;
 class ObjectNodeItem;
-class GraphicsViewer;
 class Primitive;
 class QComboBox;
 class QListWidget;
@@ -66,8 +65,6 @@ class MainWindow : public QMainWindow {
 	bool m_timer_has_started;
 
 	EvaluationContext m_context;
-
-	GraphicsViewer *m_viewer;
 
 public:
 	explicit MainWindow(Main *main, QWidget *parent = nullptr);

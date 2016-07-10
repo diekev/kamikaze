@@ -65,7 +65,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
     , m_command_factory(new CommandFactory)
     , m_timer_has_started(false)
 {
-//	qApp->installEventFilter(this);
+	qApp->installEventFilter(this);
 	ui->setupUi(this);
 
 	connect(m_scene, SIGNAL(objectAdded(Object *)), this, SLOT(setupObjectUI(Object *)));
