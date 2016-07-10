@@ -46,8 +46,6 @@
 
 /* ************************************************************************** */
 
-//#define DEBUG_PRINT
-
 OpenGLScene::OpenGLScene()
     : m_width(0)
     , m_height(0)
@@ -76,10 +74,6 @@ OpenGLScene::~OpenGLScene()
 
 void OpenGLScene::initializeGL()
 {
-#ifdef DEBUG_PRINT
-	std::cerr << __func__ << '\n';
-#endif
-
 	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
 
@@ -107,15 +101,10 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &/*rect*/)
 	if (painter->paintEngine()->type() != QPaintEngine::OpenGL &&
 	    painter->paintEngine()->type() != QPaintEngine::OpenGL2)
 	{
-#ifdef DEBUG_PRINT
 		std::cerr << __func__ << ": needs a QGLWidget to be set as viewport on the graphics view\n";
 		return;
-#endif
 	}
 
-#ifdef DEBUG_PRINT
-	std::cerr << __func__ << '\n';
-#endif
 	if (!m_initialized) {
 		initializeGL();
 		m_initialized = true;
@@ -193,16 +182,14 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &/*rect*/)
 			}
 		}
 	}
+
+	QTimer::singleShot(40, this, SLOT(update()));
 }
 
 void OpenGLScene::mousePressEvent(QGraphicsSceneMouseEvent *e)
 {
-#ifdef DEBUG_PRINT
-	std::cerr << __func__ << '\n';
-#endif
-
-	const int x = e->pos().x();
-	const int y = e->pos().y();
+	const int x = e->scenePos().x();
+	const int y = e->scenePos().y();
 
 	const auto &modifier = QApplication::keyboardModifiers();
 
@@ -244,29 +231,19 @@ void OpenGLScene::mouseMoveEvent(QGraphicsSceneMouseEvent *e)
 		return;
 	}
 
-#ifdef DEBUG_PRINT
-	std::cerr << __func__ << '\n';
-#endif
-	const int x = e->pos().x();
-	const int y = e->pos().y();
+	const int x = e->scenePos().x();
+	const int y = e->scenePos().y();
 
 	m_camera->mouseMoveEvent(m_mouse_button, m_modifier, x, y);
 }
 
 void OpenGLScene::mouseReleaseEvent(QGraphicsSceneMouseEvent */*e*/)
 {
-#ifdef DEBUG_PRINT
-	std::cerr << __func__ << "\n";
-#endif
 	m_mouse_button = MOUSE_NONE;
 }
 
 void OpenGLScene::keyPressEvent(QKeyEvent *e)
 {
-#ifdef DEBUG_PRINT
-	std::cerr << __func__ << '\n';
-#endif
-
 	switch (e->key()) {
 		case Qt::Key_Delete:
 			m_scene->removeObject(m_scene->currentObject());
@@ -278,10 +255,6 @@ void OpenGLScene::keyPressEvent(QKeyEvent *e)
 
 void OpenGLScene::wheelEvent(QGraphicsSceneWheelEvent *e)
 {
-#ifdef DEBUG_PRINT
-	std::cerr << __func__ << '\n';
-#endif
-
 	if (e->delta() < 0) {
 		m_mouse_button = MOUSE_SCROLL_DOWN;
 	}

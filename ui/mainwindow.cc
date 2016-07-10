@@ -151,13 +151,6 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 			return true;
 		}
 	}
-//	else if (e->type() == QEvent::GraphicsSceneMousePress) {
-//		if (obj == ui->graphicsView) {
-//			auto event = dynamic_cast<QGraphicsSceneMouseEvent *>(e);
-//			ui->graphicsView->mousePressEvent(event);
-//			return true;
-//		}
-//	}
 	else if (e->type() == QEvent::MouseMove) {
 		auto event = static_cast<QMouseEvent *>(e);
 
