@@ -65,10 +65,6 @@ OpenGLScene::~OpenGLScene()
 		delete m_grid;
 	}
 
-//	if (m_scene) {
-//		delete m_scene;
-//	}
-
 	delete m_context;
 }
 
