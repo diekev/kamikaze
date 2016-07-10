@@ -47,37 +47,35 @@
 /* ************************************************************************** */
 
 OpenGLScene::OpenGLScene()
-    : m_width(0)
+    : m_mouse_button(MOUSE_NONE)
+    , m_width(0)
     , m_height(0)
+    , m_draw_grid(true)
+    , m_bg(glm::vec4(0.5f, 0.5f, 0.5f, 1.0f))
     , m_camera(new Camera(m_width, m_height))
     , m_grid(nullptr)
     , m_scene(nullptr)
     , m_context(new ViewerContext)
-    , m_draw_grid(true)
     , m_initialized(false)
 {}
 
 OpenGLScene::~OpenGLScene()
 {
 	delete m_camera;
-
-	if (m_grid) {
-		delete m_grid;
-	}
-
+	delete m_grid;
 	delete m_context;
 }
 
 void OpenGLScene::initializeGL()
 {
 	glewExperimental = GL_TRUE;
-	GLenum err = glewInit();
+	const auto &err = glewInit();
 
 	if (err != GLEW_OK) {
 		std::cerr << "Error: " << glewGetErrorString(err) << "\n";
 	}
 
-	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+	glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_STENCIL_TEST);
@@ -106,8 +104,7 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &/*rect*/)
 		m_initialized = true;
 	}
 
-	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-
+	glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	/* setup stencil mask for outlining active object */
@@ -125,13 +122,13 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &/*rect*/)
 	m_context->setProjection(P);
 	m_context->setMVP(MVP);
 	m_context->setNormal(glm::inverseTranspose(glm::mat3(MV)));
+	m_context->setMatrix(glm::mat4(1.0f));
 
 	if (m_draw_grid) {
 		if (!m_grid) {
 			m_grid = new Grid(20, 20);
 		}
 
-		m_context->setMatrix(glm::mat4(1.0f));
 		m_grid->render(m_context);
 	}
 
@@ -269,8 +266,8 @@ void OpenGLScene::setScene(Scene *scene)
 
 void OpenGLScene::intersectScene(int x, int y) const
 {
-	const glm::vec3 start = unproject(glm::vec3(x, m_height - y, 0.0f));
-	const glm::vec3 end = unproject(glm::vec3(x, m_height - y, 1.0f));
+	const auto &start = unproject(glm::vec3(x, m_height - y, 0.0f));
+	const auto &end = unproject(glm::vec3(x, m_height - y, 1.0f));
 
 	Ray ray;
 	ray.pos = m_camera->pos();

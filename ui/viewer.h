@@ -42,6 +42,7 @@ class OpenGLScene : public QGraphicsScene {
 	int m_mouse_button;
 	int m_modifier;
 	int m_width, m_height;
+	bool m_draw_grid;
 	glm::vec4 m_bg;
 
 	Camera *m_camera;
@@ -50,7 +51,6 @@ class OpenGLScene : public QGraphicsScene {
 	QTimer *m_timer;
 	ViewerContext *m_context;
 
-	bool m_draw_grid;
 	bool m_initialized;
 
 	/* Get the world space position of the given point. */
