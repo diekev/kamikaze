@@ -73,14 +73,14 @@ const glm::vec3 &PointList::operator[](size_t i) const
 	return m_points[i];
 }
 
-void PolygonList::push_back(const glm::ivec4 &point)
+void PolygonList::push_back(const glm::uvec4 &poly)
 {
-	m_polys.push_back(point);
+	m_polys.push_back(poly);
 }
 
-void PolygonList::push_back(glm::ivec4 &&point)
+void PolygonList::push_back(glm::uvec4 &&poly)
 {
-	m_polys.emplace_back(std::move(point));
+	m_polys.emplace_back(std::move(poly));
 }
 
 void PolygonList::reserve(size_t n)
@@ -112,12 +112,12 @@ const void *PolygonList::data() const
 	return (&m_polys[0][0]);
 }
 
-glm::ivec4 &PolygonList::operator[](size_t i)
+glm::uvec4 &PolygonList::operator[](size_t i)
 {
 	return m_polys[i];
 }
 
-const glm::ivec4 &PolygonList::operator[](size_t i) const
+const glm::uvec4 &PolygonList::operator[](size_t i) const
 {
 	return m_polys[i];
 }
