@@ -31,7 +31,6 @@
 #include <kamikaze/primitive.h>
 
 #include <QKeyEvent>
-#include <QListWidget>
 
 #include "object.h"
 

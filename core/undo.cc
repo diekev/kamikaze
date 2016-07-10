@@ -24,8 +24,6 @@
 
 #include "undo.h"
 
-#include <assert.h>
-
 #include "util/util_memory.h"
 
 void Command::setName(const std::string &name)

@@ -24,8 +24,6 @@
 
 #include "object.h"
 
-#include <QObject>
-
 #include <glm/gtc/matrix_transform.hpp>
 #include <kamikaze/primitive.h>
 

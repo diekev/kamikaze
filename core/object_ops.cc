@@ -28,8 +28,6 @@
 #include <kamikaze/nodes.h>
 #include <kamikaze/primitive.h>
 
-#include "ui/paramfactory.h"
-
 #include "graphs/object_graph.h"
 #include "graphs/object_nodes.h"
 

@@ -32,8 +32,6 @@ class Depsgraph;
 class EvaluationContext;
 class Node;
 class Object;
-class QListWidget;
-class QListWidgetItem;
 class ViewerContext;
 
 class Scene : public QObject {
