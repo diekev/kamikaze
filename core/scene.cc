@@ -25,20 +25,19 @@
 #include "scene.h"
 
 #include <glm/gtc/matrix_transform.hpp>
-#include <GL/glew.h>
 
 #include <kamikaze/nodes.h>
 #include <kamikaze/primitive.h>
 
-#include <QKeyEvent>
-#include <QListWidget>
-
 #include "object.h"
+
+#include "graphs/depsgraph.h"
 
 #include "util/util_string.h"
 
 Scene::Scene()
     : m_active_object(nullptr)
+    , m_depsgraph(new Depsgraph)
 {}
 
 Scene::~Scene()
@@ -46,34 +45,21 @@ Scene::~Scene()
 	for (auto &object : m_objects) {
 		delete object;
 	}
+
+	delete m_depsgraph;
 }
 
-void Scene::keyboardEvent(int key)
+void Scene::removeObject(Object *object)
 {
-	if (m_objects.size() == 0) {
-		return;
-	}
+	auto iter = std::find(m_objects.begin(), m_objects.end(), object);
 
-	switch (key) {
-		case Qt::Key_Delete:
-			auto iter = std::find(m_objects.begin(), m_objects.end(), m_active_object);
-			m_objects.erase(iter);
-			delete m_active_object;
-			m_active_object = nullptr;
-			break;
-	}
-}
+	assert(iter != m_objects.end());
 
-void Scene::removeObject(Object *ob)
-{
-	auto iter = std::find(m_objects.begin(), m_objects.end(), ob);
+	m_objects.erase(iter);
+	m_depsgraph->remove_node(object);
+	delete object;
 
-	if (iter != m_objects.end()) {
-		m_objects.erase(iter);
-		delete ob;
-	}
-
-	if (ob == m_active_object) {
+	if (object == m_active_object) {
 		m_active_object = nullptr;
 	}
 
@@ -90,51 +76,9 @@ void Scene::addObject(Object *object)
 	m_objects.push_back(object);
 	m_active_object = object;
 
+	m_depsgraph->create_node(object);
+
 	Q_EMIT(objectAdded(object));
-}
-
-void Scene::render(ViewerContext *context)
-{
-	for (auto &object : m_objects) {
-		if (!object || !object->primitive()) {
-			continue;
-		}
-
-		const bool active_object = (object == m_active_object);
-
-		auto prim = object->primitive();
-
-		/* update prim before drawing */
-		prim->update();
-		prim->prepareRenderData();
-
-		if (prim->drawBBox()) {
-			prim->bbox()->render(context, false);
-		}
-
-		auto primmat = prim->matrix();
-		prim->matrix() = object->matrix() * primmat;
-
-		prim->render(context, false);
-
-		if (active_object) {
-			glStencilFunc(GL_NOTEQUAL, 1, 0xff);
-			glStencilMask(0x00);
-			glDisable(GL_DEPTH_TEST);
-
-			/* scale up the object a bit */
-			prim->matrix() = glm::scale(prim->matrix(), glm::vec3(1.01f));
-
-			prim->render(context, true);
-
-			prim->matrix() = primmat;
-
-			/* restore */
-			glStencilFunc(GL_ALWAYS, 1, 0xff);
-			glStencilMask(0xff);
-			glEnable(GL_DEPTH_TEST);
-		}
-	}
 }
 
 void Scene::intersect(const Ray &/*ray*/)
@@ -148,14 +92,17 @@ void Scene::selectObject(const glm::vec3 &pos)
 	int selected_object = -1, index = 0;
 
 	for (auto &object : m_objects) {
-		if (!object) {
+		if (!object || !object->collection()) {
 			continue;
 		}
 
-		float dist = glm::distance(object->primitive()->pos(), pos);
-		if (/*dist < 1.0f &&*/ dist < min) {
-			selected_object = index;
-			min = dist;
+		for (const auto &prim : object->collection()->primitives()) {
+			float dist = glm::distance(prim->pos(), pos);
+
+			if (/*dist < 1.0f &&*/ dist < min) {
+				selected_object = index;
+				min = dist;
+			}
 		}
 
 		++index;
@@ -195,11 +142,15 @@ void Scene::setObjectName(const QString &name)
 
 void Scene::tagObjectUpdate()
 {
-	if (m_active_object) {
-		m_active_object->updateMatrix();
+	if (!m_active_object) {
+		return;
+	}
 
-		if (m_active_object->primitive()) {
-			m_active_object->primitive()->tagUpdate();
+	m_active_object->updateMatrix();
+
+	if (m_active_object->collection()) {
+		for (auto &prim : m_active_object->collection()->primitives()) {
+			prim->tagUpdate();
 		}
 	}
 }
@@ -207,15 +158,6 @@ void Scene::tagObjectUpdate()
 void Scene::emitNodeAdded(Object *ob, Node *node)
 {
 	Q_EMIT(nodeAdded(ob, node));
-}
-
-void Scene::objectNameList(QListWidget *widget) const
-{
-	widget->clear();
-
-	for (auto &object : m_objects) {
-		widget->addItem(object->name());
-	}
 }
 
 bool Scene::ensureUniqueName(QString &name) const
@@ -232,30 +174,18 @@ bool Scene::ensureUniqueName(QString &name) const
 		});
 }
 
-void Scene::setCurrentObject(QListWidgetItem *item)
-{
-	for (auto &object : m_objects) {
-		if (object->name() == item->text()) {
-			m_active_object = object;
-			break;
-		}
-	}
-
-	Q_EMIT(objectChanged());
-}
-
 void Scene::setActiveObject(Object *object)
 {
 	m_active_object = object;
 	Q_EMIT(objectChanged());
 }
 
-void Scene::updateForNewFrame()
+void Scene::updateForNewFrame(const EvaluationContext * const context)
 {
-	/* TODO: dependency graph */
+	m_depsgraph->evaluate(context);
+}
 
-	for (Object *object : m_objects) {
-		/* TODO: replace with proper update method */
-		eval_graph(nullptr, object, false);
-	}
+const std::vector<Object *> &Scene::objects() const
+{
+	return m_objects;
 }

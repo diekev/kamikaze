@@ -22,7 +22,7 @@
  *
  */
 
-#include "nodes.h"
+#include "object_nodes.h"
 
 #include <kamikaze/mesh.h>
 #include <kamikaze/primitive.h>
@@ -38,14 +38,14 @@ OutputNode::OutputNode(const std::string &name)
 	addInput("Primitive");
 }
 
-Primitive *OutputNode::primitive() const
+PrimitiveCollection *OutputNode::collection() const
 {
-	return m_primitive;
+	return m_collection;
 }
 
 void OutputNode::process()
 {
-	m_primitive = getInputPrimitive("Primitive");
+	m_collection = getInputCollection("Primitive");
 }
 
 /* ************************************************************************** */
@@ -96,13 +96,6 @@ TransformNode::TransformNode()
 
 void TransformNode::process()
 {
-	auto prim = getInputPrimitive("Prim");
-
-	if (!prim) {
-		setOutputPrimitive("Prim", nullptr);
-		return;
-	}
-
 	const auto translate = eval_vec3("Translate");
 	const auto rotate = eval_vec3("Rotate");
 	const auto scale = eval_vec3("Scale");
@@ -131,34 +124,36 @@ void TransformNode::process()
 	const auto Y = rot_ord[rot_order][1];
 	const auto Z = rot_ord[rot_order][2];
 
-	auto matrix = glm::mat4(1.0f);
+	for (auto &prim : primitive_iterator(this->m_collection, Mesh::id)) {
+		std::cerr << "Iter\n";
 
-	switch (transform_type) {
-		case 0: /* Pre Transform */
-			matrix = pre_translate(matrix, pivot);
-			matrix = pre_rotate(matrix, glm::radians(rotate[X]), axis[X]);
-			matrix = pre_rotate(matrix, glm::radians(rotate[Y]), axis[Y]);
-			matrix = pre_rotate(matrix, glm::radians(rotate[Z]), axis[Z]);
-			matrix = pre_scale(matrix, scale * uniform_scale);
-			matrix = pre_translate(matrix, -pivot);
-			matrix = pre_translate(matrix, translate);
-			matrix = matrix * prim->matrix();
-			break;
-		case 1: /* Post Transform */
-			matrix = post_translate(matrix, pivot);
-			matrix = post_rotate(matrix, glm::radians(rotate[X]), axis[X]);
-			matrix = post_rotate(matrix, glm::radians(rotate[Y]), axis[Y]);
-			matrix = post_rotate(matrix, glm::radians(rotate[Z]), axis[Z]);
-			matrix = post_scale(matrix, scale * uniform_scale);
-			matrix = post_translate(matrix, -pivot);
-			matrix = post_translate(matrix, translate);
-			matrix = prim->matrix() * matrix;
-			break;
+		auto matrix = glm::mat4(1.0f);
+
+		switch (transform_type) {
+			case 0: /* Pre Transform */
+				matrix = pre_translate(matrix, pivot);
+				matrix = pre_rotate(matrix, glm::radians(rotate[X]), axis[X]);
+				matrix = pre_rotate(matrix, glm::radians(rotate[Y]), axis[Y]);
+				matrix = pre_rotate(matrix, glm::radians(rotate[Z]), axis[Z]);
+				matrix = pre_scale(matrix, scale * uniform_scale);
+				matrix = pre_translate(matrix, -pivot);
+				matrix = pre_translate(matrix, translate);
+				matrix = matrix * prim->matrix();
+				break;
+			case 1: /* Post Transform */
+				matrix = post_translate(matrix, pivot);
+				matrix = post_rotate(matrix, glm::radians(rotate[X]), axis[X]);
+				matrix = post_rotate(matrix, glm::radians(rotate[Y]), axis[Y]);
+				matrix = post_rotate(matrix, glm::radians(rotate[Z]), axis[Z]);
+				matrix = post_scale(matrix, scale * uniform_scale);
+				matrix = post_translate(matrix, -pivot);
+				matrix = post_translate(matrix, translate);
+				matrix = prim->matrix() * matrix;
+				break;
+		}
+
+		prim->matrix(matrix);
 	}
-
-	prim->matrix(matrix);
-
-	setOutputPrimitive("Prim", prim);
 }
 
 /* ************************************************************************** */
@@ -181,7 +176,7 @@ CreateBoxNode::CreateBoxNode()
 
 void CreateBoxNode::process()
 {
-	Primitive *prim = new Mesh;
+	auto prim = m_collection->build("Mesh");
 	auto mesh = static_cast<Mesh *>(prim);
 
 	PointList *points = mesh->points();
@@ -224,16 +219,14 @@ void CreateBoxNode::process()
 
 	PolygonList *polys = mesh->polys();
 	polys->resize(6);
-	polys->push_back(glm::ivec4(1, 3, 2, 0));
-	polys->push_back(glm::ivec4(3, 7, 6, 2));
-	polys->push_back(glm::ivec4(7, 5, 4, 6));
-	polys->push_back(glm::ivec4(5, 1, 0, 4));
-	polys->push_back(glm::ivec4(0, 2, 6, 4));
-	polys->push_back(glm::ivec4(5, 7, 3, 1));
+	polys->push_back(glm::uvec4(1, 3, 2, 0));
+	polys->push_back(glm::uvec4(3, 7, 6, 2));
+	polys->push_back(glm::uvec4(7, 5, 4, 6));
+	polys->push_back(glm::uvec4(5, 1, 0, 4));
+	polys->push_back(glm::uvec4(0, 2, 6, 4));
+	polys->push_back(glm::uvec4(5, 7, 3, 1));
 
 	mesh->tagUpdate();
-
-	setOutputPrimitive("Prim", prim);
 }
 
 /* ************************************************************************** */
@@ -269,7 +262,7 @@ CreateTorusNode::CreateTorusNode()
 
 void CreateTorusNode::process()
 {
-	Primitive *prim = new Mesh;
+	auto prim = m_collection->build("Mesh");
 	auto mesh = static_cast<Mesh *>(prim);
 
 	const auto center = eval_vec3("Center");
@@ -327,10 +320,10 @@ void CreateTorusNode::process()
 			}
 
 			if (f2 > 0) {
-				polys->push_back(glm::ivec4(f1, f3, f4, f2));
+				polys->push_back(glm::uvec4(f1, f3, f4, f2));
 			}
 			else {
-				polys->push_back(glm::ivec4(f2, f1, f3, f4));
+				polys->push_back(glm::uvec4(f2, f1, f3, f4));
 			}
 
 			++f1;
@@ -338,8 +331,6 @@ void CreateTorusNode::process()
 	}
 
 	mesh->tagUpdate();
-
-	setOutputPrimitive("Prim", prim);
 }
 
 /* ************************************************************************** */
@@ -366,7 +357,7 @@ CreateGridNode::CreateGridNode()
 
 void CreateGridNode::process()
 {
-	Primitive *prim = new Mesh;
+	auto prim = m_collection->build("Mesh");
 	auto mesh = static_cast<Mesh *>(prim);
 
 	const auto size = eval_vec3("Size");
@@ -399,7 +390,7 @@ void CreateGridNode::process()
 
 	PolygonList *polys = mesh->polys();
 
-	auto quad = glm::ivec4{ 0, 0, 0, 0 };
+	auto quad = glm::uvec4{ 0, 0, 0, 0 };
 
 	/* make a copy for the lambda */
 	const auto xtot = rows;
@@ -421,8 +412,322 @@ void CreateGridNode::process()
 	}
 
 	mesh->tagUpdate();
+}
 
-	setOutputPrimitive("Prim", prim);
+/* ************************************************************************** */
+
+class CreateCircleNode : public Node {
+public:
+	CreateCircleNode();
+
+	void process() override;
+};
+
+CreateCircleNode::CreateCircleNode()
+    : Node("Circle")
+{
+	addOutput("Primitive");
+
+	add_prop("Vertices", property_type::prop_int);
+	set_prop_min_max(3, 500);
+	set_prop_default_value_int(32);
+
+	add_prop("Radius", property_type::prop_float);
+	set_prop_min_max(0.0f, 10.0f);
+	set_prop_default_value_float(1.0f);
+}
+
+void CreateCircleNode::process()
+{
+	auto prim = m_collection->build("Mesh");
+	auto mesh = static_cast<Mesh *>(prim);
+
+	const auto segs = eval_int("Vertices");
+	const auto dia = eval_float("Radius");
+
+	const auto phid = 2.0f * static_cast<float>(M_PI) / segs;
+	auto phi = 0.0f;
+
+	PointList *points = mesh->points();
+	points->reserve(segs + 1);
+
+	glm::vec3 vec(0.0f, 0.0f, 0.0f);
+
+	points->push_back(vec);
+
+	for (int a = 0; a < segs; ++a, phi += phid) {
+		/* Going this way ends up with normal(s) upward */
+		vec[0] = -dia * std::sin(phi);
+		vec[2] = dia * std::cos(phi);
+
+		points->push_back(vec);
+	}
+
+	PolygonList *polys = mesh->polys();
+
+	auto index = points->size() - 1;
+	glm::uvec4 poly(0, 0, 0, INVALID_INDEX);
+
+	for (auto i = 1ul; i < points->size(); ++i) {
+		poly[1] = index;
+		poly[2] = i;
+
+		polys->push_back(poly);
+
+		index = i;
+	}
+
+	mesh->tagUpdate();
+}
+
+/* ************************************************************************** */
+
+static void create_cylinder(PointList *points, PolygonList *polys, int segs, float dia1, float dia2, float depth)
+{
+	const auto phid = 2.0f * static_cast<float>(M_PI) / segs;
+	auto phi = 0.0f;
+
+	points->reserve((dia2 != 0.0f) ? segs * 2 + 2 : segs + 2);
+
+	glm::vec3 vec(0.0f, 0.0f, 0.0f);
+
+	const auto cent1 = 0;
+	vec[1] = -depth;
+	points->push_back(vec);
+
+	const auto cent2 = 1;
+	vec[1] = depth;
+	points->push_back(vec);
+
+	auto firstv1 = 0;
+	auto firstv2 = 0;
+	auto lastv1 = 0;
+	auto lastv2 = 0;
+	auto v1 = 0;
+	auto v2 = 0;
+
+	for (int a = 0; a < segs; ++a, phi += phid) {
+		/* Going this way ends up with normal(s) upward */
+		vec[0] = -dia1 * std::sin(phi);
+		vec[1] = -depth;
+		vec[2] = dia1 * std::cos(phi);
+
+		v1 = points->size();
+		points->push_back(vec);
+
+		vec[0] = -dia2 * std::sin(phi);
+		vec[1] = depth;
+		vec[2] = dia2 * std::cos(phi);
+
+		v2 = points->size();
+		points->push_back(vec);
+
+		if (a > 0) {
+			/* Poly for the bottom cap. */
+			polys->push_back(glm::uvec4{ cent1, lastv1, v1, INVALID_INDEX });
+
+			/* Poly for the top cap. */
+			polys->push_back(glm::uvec4{ cent2, v2, lastv2, INVALID_INDEX });
+
+			/* Poly for the side. */
+			polys->push_back(glm::uvec4{ lastv1, lastv2, v2, v1 });
+		}
+		else {
+			firstv1 = v1;
+			firstv2 = v2;
+		}
+
+		lastv1 = v1;
+		lastv2 = v2;
+	}
+
+	/* Poly for the bottom cap. */
+	polys->push_back(glm::uvec4{ cent1, v1, firstv1, INVALID_INDEX });
+
+	/* Poly for the top cap. */
+	polys->push_back(glm::uvec4{ cent2, firstv2, v2, INVALID_INDEX });
+
+	/* Poly for the side. */
+	polys->push_back(glm::uvec4{ v1, v2, firstv2, firstv1 });
+}
+
+class CreateTubeNode : public Node {
+public:
+	CreateTubeNode();
+
+	void process() override;
+};
+
+CreateTubeNode::CreateTubeNode()
+    : Node("Tube")
+{
+	addOutput("Primitive");
+
+	add_prop("Vertices", property_type::prop_int);
+	set_prop_min_max(3, 500);
+	set_prop_default_value_int(32);
+
+	add_prop("Radius", property_type::prop_float);
+	set_prop_min_max(0.0f, 10.0f);
+	set_prop_default_value_float(1.0f);
+
+	add_prop("Depth", property_type::prop_float);
+	set_prop_min_max(0.0f, 10.0f);
+	set_prop_default_value_float(1.0f);
+}
+
+void CreateTubeNode::process()
+{
+	auto prim = m_collection->build("Mesh");
+	auto mesh = static_cast<Mesh *>(prim);
+
+	const auto segs = eval_int("Vertices");
+	const auto dia = eval_float("Radius");
+	const auto depth = eval_float("Depth");
+
+	create_cylinder(mesh->points(), mesh->polys(), segs, dia, dia, depth);
+
+	mesh->tagUpdate();
+}
+
+/* ************************************************************************** */
+
+class CreateConeNode : public Node {
+public:
+	CreateConeNode();
+
+	void process() override;
+};
+
+CreateConeNode::CreateConeNode()
+    : Node("Cone")
+{
+	addOutput("Primitive");
+
+	add_prop("Vertices", property_type::prop_int);
+	set_prop_min_max(3, 500);
+	set_prop_default_value_int(32);
+
+	add_prop("Minor Radius", property_type::prop_float);
+	set_prop_min_max(0.0f, 10.0f);
+	set_prop_default_value_float(0.0f);
+
+	add_prop("Major Radius", property_type::prop_float);
+	set_prop_min_max(0.0f, 10.0f);
+	set_prop_default_value_float(1.0f);
+
+	add_prop("Depth", property_type::prop_float);
+	set_prop_min_max(0.0f, 10.0f);
+	set_prop_default_value_float(1.0f);
+}
+
+void CreateConeNode::process()
+{
+	auto prim = m_collection->build("Mesh");
+	auto mesh = static_cast<Mesh *>(prim);
+
+	const auto segs = eval_int("Vertices");
+	const auto dia1 = eval_float("Major Radius");
+	const auto dia2 = eval_float("Minor Radius");
+	const auto depth = eval_float("Depth");
+
+	create_cylinder(mesh->points(), mesh->polys(), segs, dia1, dia2, depth);
+
+	mesh->tagUpdate();
+}
+
+/* ************************************************************************** */
+
+static const float icovert[12][3] = {
+	{0.0f, 0.0f, -200.0f},
+	{144.72f, -105.144f, -89.443f},
+	{-55.277f, -170.128, -89.443f},
+	{-178.885f, 0.0f, -89.443f},
+	{-55.277f, 170.128f, -89.443f},
+	{144.72f, 105.144f, -89.443f},
+	{55.277f, -170.128f, 89.443f},
+	{-144.72f, -105.144f, 89.443f},
+	{-144.72f, 105.144f, 89.443f},
+	{55.277f, 170.128f, 89.443f},
+	{178.885f, 0.0f, 89.443f},
+	{0.0f, 0.0f, 200.0f}
+};
+
+static const short icoface[20][3] = {
+	{0, 1, 2},
+	{1, 0, 5},
+	{0, 2, 3},
+	{0, 3, 4},
+	{0, 4, 5},
+	{1, 5, 10},
+	{2, 1, 6},
+	{3, 2, 7},
+	{4, 3, 8},
+	{5, 4, 9},
+	{1, 10, 6},
+	{2, 6, 7},
+	{3, 7, 8},
+	{4, 8, 9},
+	{5, 9, 10},
+	{6, 10, 11},
+	{7, 6, 11},
+	{8, 7, 11},
+	{9, 8, 11},
+	{10, 9, 11}
+};
+
+class CreateIcoSphereNode : public Node {
+public:
+	CreateIcoSphereNode();
+
+	void process() override;
+};
+
+CreateIcoSphereNode::CreateIcoSphereNode()
+    : Node("IcoSphere")
+{
+	addOutput("Primitive");
+
+	add_prop("Radius", property_type::prop_float);
+	set_prop_min_max(0.0f, 10.0f);
+	set_prop_default_value_float(1.0f);
+}
+
+void CreateIcoSphereNode::process()
+{
+	auto prim = m_collection->build("Mesh");
+	auto mesh = static_cast<Mesh *>(prim);
+
+	const auto dia = eval_float("Radius");
+	const auto dia_div = dia / 200.0f;
+
+	PointList *points = mesh->points();
+	points->reserve(12);
+
+	glm::vec3 vec(0.0f, 0.0f, 0.0f);
+
+	for (int a = 0; a < 12; a++) {
+		vec[0] = dia_div * icovert[a][0];
+		vec[1] = dia_div * icovert[a][2];
+		vec[2] = dia_div * icovert[a][1];
+
+		points->push_back(vec);
+	}
+
+	PolygonList *polys = mesh->polys();
+	polys->reserve(20);
+
+	glm::uvec4 poly(0, 0, 0, INVALID_INDEX);
+
+	for (auto i = 0; i < 20; ++i) {
+		poly[0] = icoface[i][0];
+		poly[1] = icoface[i][1];
+		poly[2] = icoface[i][2];
+
+		polys->push_back(poly);
+	}
+
+	mesh->tagUpdate();
 }
 
 /* ************************************************************************** */
@@ -433,4 +738,8 @@ void register_builtin_nodes(NodeFactory *factory)
 	REGISTER_NODE("Geometry", "Grid", CreateGridNode);
 	REGISTER_NODE("Geometry", "Torus", CreateTorusNode);
 	REGISTER_NODE("Geometry", "Transform", TransformNode);
+	REGISTER_NODE("Geometry", "Circle", CreateCircleNode);
+	REGISTER_NODE("Geometry", "Tube", CreateTubeNode);
+	REGISTER_NODE("Geometry", "IcoSphere", CreateIcoSphereNode);
+	REGISTER_NODE("Geometry", "Cone", CreateConeNode);
 }

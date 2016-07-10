@@ -26,7 +26,6 @@
 
 #include <iostream>
 
-#include <kamikaze/context.h>
 #include <kamikaze/primitive.h>
 #include <kamikaze/nodes.h>
 
@@ -38,8 +37,8 @@
 #include <QSplitter>
 #include <QTimer>
 
-#include "core/nodes/graph.h"
-#include "core/nodes/nodes.h"
+#include "core/graphs/object_graph.h"
+#include "core/graphs/object_nodes.h"
 #include "core/kamikaze_main.h"
 #include "core/object.h"
 #include "core/object_ops.h"
@@ -102,6 +101,18 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	ui->statusBar->addWidget(m_progress_bar);
 	m_progress_bar->setRange(0, 100);
 	m_progress_bar->setVisible(false);
+
+	/* setup context */
+	m_context.scene = m_scene;
+	m_context.node_factory = m_main->nodeFactory();
+	m_context.primitive_factory = m_main->primitiveFactory();
+	m_context.main_window = this;
+
+	ui->m_start_but->setIcon(QIcon("icons/icon_play_forward.png"));
+	ui->m_begin_but->setIcon(QIcon("icons/icon_jump_first.png"));
+	ui->m_end_but->setIcon(QIcon("icons/icon_jump_last.png"));
+
+	ui->treeWidget->setScene(m_scene);
 }
 
 MainWindow::~MainWindow()
@@ -131,16 +142,26 @@ void MainWindow::taskEnded()
 bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 {
 	if (e->type() == QEvent::KeyPress) {
+		auto event = static_cast<QKeyEvent *>(e);
+
 		if (obj == ui->m_viewport) {
-			auto keyEvent = static_cast<QKeyEvent *>(e);
-			ui->m_viewport->keyPressEvent(keyEvent);
+			ui->m_viewport->keyPressEvent(event);
+			return true;
+		}
+		else if (obj == ui->treeWidget) {
+			ui->treeWidget->keyPressEvent(event);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::MouseButtonPress) {
+		auto event = static_cast<QMouseEvent *>(e);
+
 		if (obj == ui->m_viewport) {
-			auto event = static_cast<QMouseEvent *>(e);
 			ui->m_viewport->mousePressEvent(event);
+			return true;
+		}
+		else if (obj == ui->treeWidget) {
+			ui->treeWidget->mousePressEvent(event);
 			return true;
 		}
 	}
@@ -152,23 +173,38 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 //		}
 //	}
 	else if (e->type() == QEvent::MouseMove) {
+		auto event = static_cast<QMouseEvent *>(e);
+
 		if (obj == ui->m_viewport) {
-			auto event = static_cast<QMouseEvent *>(e);
 			ui->m_viewport->mouseMoveEvent(event);
+			return true;
+		}
+		else if (obj == ui->treeWidget) {
+			ui->treeWidget->mouseMoveEvent(event);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::MouseButtonRelease) {
+		auto event = static_cast<QMouseEvent *>(e);
+
 		if (obj == ui->m_viewport) {
-			auto event = static_cast<QMouseEvent *>(e);
 			ui->m_viewport->mouseReleaseEvent(event);
+			return true;
+		}
+		else if (obj == ui->treeWidget) {
+			ui->treeWidget->mouseReleaseEvent(event);
 			return true;
 		}
 	}
 	else if (e->type() == QEvent::Wheel) {
+		auto event = static_cast<QWheelEvent *>(e);
+
 		if (obj == ui->m_viewport) {
-			auto event = static_cast<QWheelEvent *>(e);
 			ui->m_viewport->wheelEvent(event);
+			return true;
+		}
+		else if (obj == ui->treeWidget) {
+			ui->treeWidget->wheelEvent(event);
 			return true;
 		}
 	}
@@ -189,13 +225,9 @@ void MainWindow::updateObjectTab() const
 	ParamCallback cb(ui->node_param_layout);
 	ob->setUIParams(&cb);
 
-	if (ob->primitive()) {
-		ob->primitive()->setCustomUIParams(&cb);
-	}
-
 	cb.setContext(m_scene, SLOT(tagObjectUpdate()));
 
-	m_scene->objectNameList(ui->m_outliner);
+	ui->treeWidget->updateScene();
 }
 
 void MainWindow::startAnimation()
@@ -204,10 +236,12 @@ void MainWindow::startAnimation()
 		m_timer_has_started = false;
 		m_timer->stop();
 		ui->m_start_but->setText("Play");
+		ui->m_start_but->setIcon(QIcon("icons/icon_play_forward.png"));
 	}
 	else {
 		m_timer_has_started = true;
 		ui->m_start_but->setText("Pause");
+		ui->m_start_but->setIcon(QIcon("icons/icon_pause.png"));
 		m_timer->start(1000 / ui->m_fps->value());
 	}
 }
@@ -244,7 +278,7 @@ void MainWindow::updateFrame() const
 
 	ui->m_timeline->setValue(value);
 
-	m_scene->updateForNewFrame();
+	m_scene->updateForNewFrame(&m_context);
 }
 
 void MainWindow::setStartFrame(int value) const
@@ -267,7 +301,7 @@ void MainWindow::generateObjectMenu()
 	connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
 
 #if 0
-	for (const auto &key : m_main->objectFactory()->keys()) {
+	for (const auto &key : m_main->primitiveFactory()->keys()) {
 		auto action = ui->menuAdd->addAction(key.c_str());
 		action->setData(QVariant::fromValue(QString("add object")));
 
@@ -294,19 +328,27 @@ void MainWindow::generateNodeMenu()
 	ui->graph_editor->setAddNodeMenu(ui->add_nodes_menu);
 }
 
+struct UIProp {
+	const char *name;
+	const char *icon_path;
+};
+
 void MainWindow::generatePresetMenu()
 {
 	m_command_factory->registerType("add preset", AddPresetObjectCmd::registerSelf);
 
-	const char *icons[] = {
-	    "icons/icon_grid.png",
-	    "icons/icon_box.png",
-	    "icons/icon_torus.png",
+	UIProp props[] = {
+	    { "Grid", "icons/icon_grid.png" },
+	    { "Box", "icons/icon_box.png" },
+	    { "Circle", "icons/icon_circle.png" },
+	    { "IcoSphere", "icons/icon_icosphere.png" },
+	    { "Tube", "icons/icon_tube.png" },
+	    { "Cone", "icons/icon_cone.png" },
+	    { "Torus", "icons/icon_torus.png" },
 	};
 
-	auto i = 0;
-	for (const auto &name : { "Grid", "Box", "Torus" }) {
-		auto action = ui->toolBar->addAction(QIcon(icons[i++]), name);
+	for (const auto &prop : props) {
+		auto action = ui->toolBar->addAction(QIcon(prop.icon_path), prop.name);
 		action->setData(QVariant::fromValue(QString("add preset")));
 
 		connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
@@ -324,18 +366,18 @@ void MainWindow::handleCommand()
 	const auto &name = action->text().toStdString();
 	const auto &data = action->data().toString().toStdString();
 
-	/* get command */
+	/* Get command, and give it the name of the UI button which will be used to
+	 * look up keys in the various creation factories if need be. This could and
+	 * should be handled better. */
 	auto cmd = (*m_command_factory)(data);
 	cmd->setName(name);
 
-	/* TODO */
-	EvaluationContext context;
-	context.scene = m_scene;
-	context.object_factory = m_main->objectFactory();
-	context.node_factory = m_main->nodeFactory();
+	/* TODO: handle this in a better way. */
+	m_context.edit_mode = (ui->graph_editor->editor_mode() == EDITOR_MODE_OBJECT);
 
-	/* Create node */
-	m_command_manager->execute(cmd, &context);
+	/* Execute the command in the current context, the manager will push the
+	* command on the undo stack. */
+	m_command_manager->execute(cmd, &m_context);
 }
 
 void MainWindow::setupNodeUI(Object *, Node *node)
@@ -436,7 +478,7 @@ void MainWindow::setupNodeParamUI(QtNode *node_item)
 /* TODO: evaluation system */
 void MainWindow::evalObjectGraph()
 {
-	eval_graph(this, m_scene->currentObject(), true);
+	eval_graph(&m_context);
 }
 
 void MainWindow::setupObjectUI(Object *object)
@@ -504,7 +546,7 @@ void MainWindow::removeNode(QtNode *node)
 	graph->remove(node->getNode());
 
 	if (was_connected) {
-		eval_graph(this, object, true);
+		eval_graph(&m_context);
 	}
 }
 
@@ -523,7 +565,7 @@ void MainWindow::nodesConnected(QtNode *from, const QString &socket_from, QtNode
 
 	graph->connect(output_socket, input_socket);
 
-	eval_graph(this, object, true);
+	eval_graph(&m_context);
 }
 
 void MainWindow::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
@@ -541,5 +583,5 @@ void MainWindow::connectionRemoved(QtNode *from, const QString &socket_from, QtN
 
 	graph->disconnect(output_socket, input_socket);
 
-	eval_graph(this, object, true);
+	eval_graph(&m_context);
 }

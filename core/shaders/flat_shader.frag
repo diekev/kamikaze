@@ -2,7 +2,9 @@
 
 layout(location = 0) out vec4 fragment_color;
 
+uniform vec4 color;
+
 void main()
 {
-	fragment_color = vec4(1.0, 1.0, 1.0, 1.0);
+	fragment_color = color;
 }

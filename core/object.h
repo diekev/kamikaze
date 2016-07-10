@@ -24,34 +24,22 @@
 
 #pragma once
 
-#include <QString>
-#include <vector>
-
 #include <glm/glm.hpp>
 #include <memory>
+
+#include <kamikaze/primitive.h>
+
+#include "ui/mainwindow.h"
 
 class Graph;
 class Node;
 class ParamCallback;
 class Primitive;
+class PrimitiveCollection;
 class MainWindow;
 
-#include "ui/mainwindow.h"
-
-/**
- * This class is used to gather and release the primitives created inside of an
- * object's node graph.
- */
-class PrimitiveCache {
-	std::vector<Primitive *> m_primitives;
-
-public:
-	void add(Primitive *prim);
-	void clear();
-};
-
 class Object {
-	Primitive *m_primitive = nullptr;
+	PrimitiveCollection *m_collection = nullptr;
 	PrimitiveCache m_cache;
 
 	glm::vec3 m_scale = glm::vec3(1.0f);
@@ -65,12 +53,15 @@ class Object {
 
 	std::string m_name;
 
+	Object *m_parent = nullptr;
+	std::vector<Object *> m_children;
+
 public:
 	Object();
 	~Object();
 
-	Primitive *primitive() const;
-	void primitive(Primitive *prim);
+	PrimitiveCollection *collection() const;
+	void collection(PrimitiveCollection *coll);
 
 	/* Return the object's matrix. */
 	void matrix(const glm::mat4 &m);
@@ -88,6 +79,12 @@ public:
 
 	void updateMatrix();
 	void clearCache();
+
+	void addChild(Object *child);
+	const std::vector<Object *> &children() const;
+
+	Object *parent() const;
+	void parent(Object *parent);
 };
 
-void eval_graph(MainWindow *window, Object *ob, bool force);
+void eval_graph(const EvaluationContext * const context);

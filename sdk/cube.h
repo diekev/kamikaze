@@ -23,31 +23,25 @@
 
 #pragma once
 
-#include <ego/bufferobject.h>
-#include <ego/program.h>
 #include <glm/glm.hpp>
 #include <vector>
 
+class RenderBuffer;
 class ViewerContext;
 
 class Cube {
-	ego::BufferObject::Ptr m_buffer_data;
-	ego::Program m_program;
-	size_t m_elements;
-	unsigned int m_draw_type;
+	RenderBuffer *m_buffer;
 
 	std::vector<glm::vec3> m_vertices;
 	glm::vec3 m_dimensions, m_scale, m_rotation;
 	glm::vec3 m_min, m_max, m_pos;
 	glm::mat4 m_matrix, m_inv_matrix;
 
-	bool m_draw_bbox;
-
 	void updateMatrix();
 
 public:
 	Cube(const glm::vec3 &min, const glm::vec3 &max);
-	~Cube() = default;
+	~Cube();
 
-	void render(ViewerContext *context, const bool for_outline);
+	void render(const ViewerContext * const context, const bool for_outline);
 };

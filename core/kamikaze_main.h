@@ -31,7 +31,7 @@ class PrimitiveFactory;
 class NodeFactory;
 
 class Main final {
-	PrimitiveFactory *m_object_factory;
+	PrimitiveFactory *m_primitive_factory;
 	NodeFactory *m_node_factory;
 
 	std::vector<filesystem::shared_library> m_plugins;
@@ -43,6 +43,6 @@ public:
 	void initTypes();
 	void loadPlugins();
 
-	PrimitiveFactory *objectFactory() const;
+	PrimitiveFactory *primitiveFactory() const;
 	NodeFactory *nodeFactory() const;
 };

@@ -26,9 +26,9 @@ include(global.pri)
 CONFIG += ordered
 
 SUBDIRS += \
+    sdk/sdk.pro \
 	core/core.pro \
 #	smoke/smoke.pro \
 	ui/ui.pro \
 	util/util.pro \
-	app/app.pro \
-    sdk/sdk.pro
+	app/app.pro

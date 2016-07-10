@@ -29,6 +29,7 @@ include(../global.pri)
 
 INCLUDEPATH += $$PWD/../
 INCLUDEPATH += $$FILESYSTEM_INCLUDE_DIR
+INCLUDEPATH += $$KAMIKAZE_SDK_INCLUDE_DIR
 
 SOURCES += main.cc
 
@@ -38,9 +39,9 @@ LIBS += $$OUT_PWD/../core/libcore.a
 LIBS += $$OUT_PWD/../util/libutils.a
 LIBS += -ltbb
 
-LIBS += $$EGO_LIBRARIES
 LIBS += $$FILESYSTEM_LIBRARIES
 LIBS += $$KAMIKAZE_SDK_LIBRARY
+LIBS += $$EGO_LIBRARIES
 
 unix {
 	copy_files.commands = cp -r $$PWD/../core/shaders/ .

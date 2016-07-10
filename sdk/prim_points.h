@@ -28,13 +28,13 @@
 #include "geomlists.h"
 #include "primitive.h"
 
+class RenderBuffer;
+
 class PrimPoints : public Primitive {
 	PointList m_points;
 	std::vector<Attribute *> m_attributes;
 
-	ego::BufferObject::Ptr m_buffer_data;
-	ego::Program m_program;
-	size_t m_elements;
+	RenderBuffer *m_renderbuffer;
 
 public:
 	PrimPoints();
@@ -52,13 +52,14 @@ public:
 
 	Primitive *copy() const override;
 
-	void render(ViewerContext *context, const bool for_outline) override;
-
-	void setCustomUIParams(ParamCallback *cb) override;
+	void render(const ViewerContext * const context, const bool for_outline) override;
 
 	void prepareRenderData() override;
 
 	void computeBBox(glm::vec3 &min, glm::vec3 &max) override;
 
 	void loadShader();
+
+	static size_t id;
+	size_t typeID() const override;
 };

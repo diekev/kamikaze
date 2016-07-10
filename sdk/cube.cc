@@ -29,22 +29,32 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "renderbuffer.h"
+
 Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
+    : m_buffer(new RenderBuffer)
 {
-	m_program.load(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/flat_shader.vert"));
-	m_program.load(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/flat_shader.frag"));
+	m_buffer->set_shader_source(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/flat_shader.vert"));
+	m_buffer->set_shader_source(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/flat_shader.frag"));
+	m_buffer->finalize_shader();
 
-	m_program.createAndLinkProgram();
+	ProgramParams params;
+	params.add_attribute("vertex");
+	params.add_uniform("matrix");
+	params.add_uniform("MVP");
+	params.add_uniform("color");
 
-	m_program.enable();
-	{
-		m_program.addAttribute("vertex");
-		m_program.addUniform("matrix");
-		m_program.addUniform("MVP");
-	}
-	m_program.disable();
+	m_buffer->set_shader_params(params);
 
-	m_draw_type = GL_LINES;
+	DrawParams draw_params;
+	draw_params.set_draw_type(GL_LINES);
+
+	m_buffer->set_draw_params(draw_params);
+
+	ego::Program *program = m_buffer->program();
+	program->enable();
+	program->uniform("color", 1.0f, 1.0f, 1.0f, 1.0f);
+	program->disable();
 
 	const glm::vec3 vertices[8] = {
 	    glm::vec3(min[0], min[1], min[2]),
@@ -77,29 +87,22 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 	    2, 6, 3, 7
 	};
 
-	m_elements = 24;
-
-	m_buffer_data = ego::BufferObject::create();
-	m_buffer_data->bind();
-	m_buffer_data->generateVertexBuffer(&m_vertices[0][0], m_vertices.size() * sizeof(glm::vec3));
-	m_buffer_data->generateIndexBuffer(&indices[0], sizeof(indices));
-	m_buffer_data->attribPointer(m_program["vertex"], 3);
-	m_buffer_data->unbind();
+	m_buffer->set_vertex_buffer("vertex",
+	                            &m_vertices[0][0],
+	                            m_vertices.size() * sizeof(glm::vec3),
+	                            &indices[0],
+	                            sizeof(indices),
+	        24);
 }
 
-void Cube::render(ViewerContext *context, const bool /*for_outline*/)
+Cube::~Cube()
 {
-	if (m_program.isValid()) {
-		m_program.enable();
-		m_buffer_data->bind();
+	delete m_buffer;
+}
 
-		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(m_matrix));
-		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(context->MVP()));
-		glDrawElements(m_draw_type, m_elements, GL_UNSIGNED_SHORT, nullptr);
-
-		m_buffer_data->unbind();
-		m_program.disable();
-	}
+void Cube::render(const ViewerContext * const context, const bool for_outline)
+{
+	m_buffer->render(context, for_outline);
 }
 
 void Cube::updateMatrix()

@@ -23,18 +23,19 @@
 
 #pragma once
 
-#include <ego/bufferobject.h>
-#include <ego/program.h>
 #include <glm/gtc/type_ptr.hpp>
 
+class RenderBuffer;
+class ViewerContext;
+
 class Grid {
-	ego::BufferObject::Ptr m_buffer_data;
-	size_t m_elements;
-	ego::Program m_program;
+	RenderBuffer *m_grid_buffer;
+	RenderBuffer *m_xline_buffer;
+	RenderBuffer *m_zline_buffer;
 
 public:
 	Grid(int x, int y);
-	~Grid() = default;
+	~Grid();
 
-	void render(const glm::mat4 &MVP);
+	void render(const ViewerContext * const context);
 };

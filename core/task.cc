@@ -56,15 +56,16 @@ void TaskNotifier::signalEnd()
 
 /* ************************ */
 
-Task::Task(MainWindow *window)
-    : m_notifier(new TaskNotifier(window))
+Task::Task(const EvaluationContext * const context)
+    : m_notifier(new TaskNotifier(context->main_window))
+    , m_context(context)
 {}
 
 tbb::task *Task::execute()
 {
 	m_notifier->signalStart();
 
-	this->start();
+	this->start(this->m_context);
 
 	m_notifier->signalEnd();
 

@@ -27,6 +27,8 @@
 #include <QMainWindow>
 #include <QProgressBar>
 
+#include <kamikaze/context.h>
+
 #include "core/undo.h"
 
 namespace Ui {
@@ -63,10 +65,9 @@ class MainWindow : public QMainWindow {
 	CommandFactory *m_command_factory;
 	bool m_timer_has_started;
 
-	GraphicsViewer *m_viewer;
+	EvaluationContext m_context;
 
-	/* TODO: de-duplicate this from undo.h */
-	typedef Command *(*command_factory_func)(void);
+	GraphicsViewer *m_viewer;
 
 public:
 	explicit MainWindow(Main *main, QWidget *parent = nullptr);
