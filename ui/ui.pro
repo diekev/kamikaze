@@ -51,7 +51,8 @@ SOURCES += \
     paramfactory.cc \
     paramcallback.cc \
     utils_ui.cc \
-    outliner_widget.cc
+    outliner_widget.cc \
+	viewer.cc
 
 HEADERS += \
     mainwindow.h \
@@ -67,7 +68,8 @@ HEADERS += \
     paramfactory.h \
     paramcallback.h \
     utils_ui.h \
-    outliner_widget.h
+    outliner_widget.h \
+	viewer.h
 
 FORMS += \
     mainwindow.ui
