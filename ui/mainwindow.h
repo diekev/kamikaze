@@ -35,18 +35,12 @@ namespace Ui {
 class MainWindow;
 }
 
-class QtNode;
-
-class Command;
-class CommandManager;
 class Main;
 class Node;
 class Object;
 class ObjectNodeItem;
-class Primitive;
-class QComboBox;
-class QListWidget;
 class QProgressBar;
+class QtNode;
 class QTimer;
 class Scene;
 

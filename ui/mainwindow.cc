@@ -43,7 +43,6 @@
 #include "core/object.h"
 #include "core/object_ops.h"
 #include "core/scene.h"
-#include "core/undo.h"
 
 #include "node_compound.h"
 #include "node_editorwidget.h"
