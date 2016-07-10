@@ -431,20 +431,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_2">
     <item>
-     <widget class="Viewer" name="m_viewport">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>1</width>
-        <height>1</height>
-       </size>
-      </property>
-     </widget>
+     <widget class="GraphicsViewer" name="graphicsView"/>
     </item>
    </layout>
   </widget>
@@ -514,7 +501,7 @@
         <enum>QTabWidget::North</enum>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <property name="movable">
         <bool>true</bool>
@@ -534,69 +521,6 @@
           <widget class="QtNodeEditor" name="graph_editor" native="true"/>
          </item>
         </layout>
-       </widget>
-       <widget class="QFrame" name="frame_2">
-        <property name="frameShape">
-         <enum>QFrame::StyledPanel</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
-        </property>
-        <attribute name="title">
-         <string/>
-        </attribute>
-        <layout class="QGridLayout" name="gridLayout_2">
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item row="0" column="0">
-          <widget class="Viewer" name="m_viewport">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>1</width>
-             <height>1</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="GraphicsViewer" name="graphicsView"/>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QTabWidget" name="tabWidget">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <attribute name="title">
-         <string>Graph Editor</string>
-        </attribute>
-        <widget class="QtNodeEditor" name="graph_editor">
-         <attribute name="title">
-          <string/>
-         </attribute>
-        </widget>
        </widget>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -882,15 +806,6 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>Viewer</class>
-   <extends>QOpenGLWidget</extends>
-   <header>viewer.h</header>
-   <slots>
-    <slot>changeBackground()</slot>
-    <slot>drawGrid(bool)</slot>
-   </slots>
-  </customwidget>
-  <customwidget>
    <class>QtNodeEditor</class>
    <extends>QWidget</extends>
    <header>node_editorwidget.h</header>
@@ -958,22 +873,6 @@
    </hints>
   </connection>
   <connection>
-   <sender>m_draw_grid</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>m_viewport</receiver>
-   <slot>drawGrid(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>745</x>
-     <y>135</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>204</x>
-     <y>330</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>m_begin_but</sender>
    <signal>clicked()</signal>
    <receiver>MainWindow</receiver>
@@ -986,22 +885,6 @@
     <hint type="destinationlabel">
      <x>501</x>
      <y>329</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>pushButton</sender>
-   <signal>clicked()</signal>
-   <receiver>m_viewport</receiver>
-   <slot>changeBackground()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>745</x>
-     <y>116</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>204</x>
-     <y>330</y>
     </hint>
    </hints>
   </connection>

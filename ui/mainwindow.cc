@@ -67,7 +67,6 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 {
 //	qApp->installEventFilter(this);
 	ui->setupUi(this);
-	ui->m_viewport->setScene(m_scene);
 
 	connect(m_scene, SIGNAL(objectAdded(Object *)), this, SLOT(setupObjectUI(Object *)));
 	connect(m_scene, SIGNAL(nodeAdded(Object *, Node *)), this, SLOT(setupNodeUI(Object *, Node *)));
@@ -89,11 +88,6 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	generateNodeMenu();
 	generatePresetMenu();
 
-	ui->graphicsView->GLScene(new OpenGLScene);
-	ui->graphicsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-	ui->graphicsView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-	ui->graphicsView->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers | QGL::DirectRendering)));
-	ui->graphicsView->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
 	ui->graphicsView->GLScene()->setScene(m_scene);
 	ui->graphicsView->adjustSize();
 
@@ -144,11 +138,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 	if (e->type() == QEvent::KeyPress) {
 		auto event = static_cast<QKeyEvent *>(e);
 
-		if (obj == ui->m_viewport) {
-			ui->m_viewport->keyPressEvent(event);
-			return true;
-		}
-		else if (obj == ui->treeWidget) {
+		if (obj == ui->treeWidget) {
 			ui->treeWidget->keyPressEvent(event);
 			return true;
 		}
@@ -156,11 +146,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 	else if (e->type() == QEvent::MouseButtonPress) {
 		auto event = static_cast<QMouseEvent *>(e);
 
-		if (obj == ui->m_viewport) {
-			ui->m_viewport->mousePressEvent(event);
-			return true;
-		}
-		else if (obj == ui->treeWidget) {
+		if (obj == ui->treeWidget) {
 			ui->treeWidget->mousePressEvent(event);
 			return true;
 		}
@@ -175,11 +161,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 	else if (e->type() == QEvent::MouseMove) {
 		auto event = static_cast<QMouseEvent *>(e);
 
-		if (obj == ui->m_viewport) {
-			ui->m_viewport->mouseMoveEvent(event);
-			return true;
-		}
-		else if (obj == ui->treeWidget) {
+		if (obj == ui->treeWidget) {
 			ui->treeWidget->mouseMoveEvent(event);
 			return true;
 		}
@@ -187,11 +169,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 	else if (e->type() == QEvent::MouseButtonRelease) {
 		auto event = static_cast<QMouseEvent *>(e);
 
-		if (obj == ui->m_viewport) {
-			ui->m_viewport->mouseReleaseEvent(event);
-			return true;
-		}
-		else if (obj == ui->treeWidget) {
+		if (obj == ui->treeWidget) {
 			ui->treeWidget->mouseReleaseEvent(event);
 			return true;
 		}
@@ -199,11 +177,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 	else if (e->type() == QEvent::Wheel) {
 		auto event = static_cast<QWheelEvent *>(e);
 
-		if (obj == ui->m_viewport) {
-			ui->m_viewport->wheelEvent(event);
-			return true;
-		}
-		else if (obj == ui->treeWidget) {
+		if (obj == ui->treeWidget) {
 			ui->treeWidget->wheelEvent(event);
 			return true;
 		}
