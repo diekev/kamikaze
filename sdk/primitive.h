@@ -342,7 +342,7 @@ public:
 	primitive_iterator &operator++();
 
 	const reference operator*() const;
-	const pointer operator->() const;
+	pointer operator->() const;
 
 	value_type get() const;
 };
