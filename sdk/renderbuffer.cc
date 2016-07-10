@@ -54,6 +54,48 @@ const std::vector<std::string> &ProgramParams::uniforms() const
 
 /* ************************************************************************** */
 
+void DrawParams::set_draw_type(unsigned int draw_type)
+{
+	m_draw_type = draw_type;
+}
+
+unsigned int DrawParams::draw_type() const
+{
+	return m_draw_type;
+}
+
+void DrawParams::set_data_type(unsigned int data_type)
+{
+	m_data_type = data_type;
+}
+
+unsigned int DrawParams::data_type() const
+{
+	return m_data_type;
+}
+
+float DrawParams::line_size() const
+{
+	return m_line_size;
+}
+
+void DrawParams::set_line_size(float size)
+{
+	m_line_size = size;
+}
+
+float DrawParams::point_size() const
+{
+	return m_point_size;
+}
+
+void DrawParams::set_point_size(float size)
+{
+	m_point_size = size;
+}
+
+/* ************************************************************************** */
+
 void RenderBuffer::set_shader_source(int shader_type, const std::string &source, std::ostream &os)
 {
 	m_program.load(shader_type, source, os);
@@ -74,6 +116,11 @@ void RenderBuffer::set_shader_params(const ProgramParams &params)
 	m_program.disable();
 }
 
+void RenderBuffer::set_draw_params(const DrawParams &params)
+{
+	m_params = params;
+}
+
 void RenderBuffer::finalize_shader(std::ostream &os)
 {
 	m_program.createAndLinkProgram(os);
@@ -84,13 +131,18 @@ void RenderBuffer::can_outline(bool yesno)
 	m_can_outline = yesno;
 }
 
-void RenderBuffer::set_vertex_buffer(const std::string &attribute,
-                                     const std::vector<glm::vec3> &vertices,
-                                     const std::vector<unsigned int> &indices)
+void RenderBuffer::init()
 {
 	if (m_buffer_data == nullptr) {
 		m_buffer_data = ego::BufferObject::create();
 	}
+}
+
+void RenderBuffer::set_vertex_buffer(const std::string &attribute,
+                                     const std::vector<glm::vec3> &vertices,
+                                     const std::vector<unsigned int> &indices)
+{
+	init();
 
 	m_elements = indices.size();
 
@@ -101,12 +153,33 @@ void RenderBuffer::set_vertex_buffer(const std::string &attribute,
 	m_buffer_data->unbind();
 }
 
+void RenderBuffer::set_vertex_buffer(const std::string &attribute,
+                                     const void *vertices_ptr,
+                                     const size_t vertices_size,
+                                     const void *indices_ptr,
+                                     const size_t indices_size,
+                                     const size_t elements)
+{
+	init();
+
+	m_elements = elements;
+
+	m_buffer_data->bind();
+	m_buffer_data->generateVertexBuffer(vertices_ptr, vertices_size);
+
+	if (indices_ptr) {
+		m_buffer_data->generateIndexBuffer(indices_ptr, indices_size);
+		m_index_drawing = true;
+	}
+
+	m_buffer_data->attribPointer(m_program[attribute], 3);
+	m_buffer_data->unbind();
+}
+
 void RenderBuffer::set_extra_buffer(const std::string &attribute,
                                     const std::vector<glm::vec3> &values)
 {
-	if (m_buffer_data == nullptr) {
-		m_buffer_data = ego::BufferObject::create();
-	}
+	init();
 
 	m_buffer_data->bind();
 	m_buffer_data->generateNormalBuffer(&values[0][0], values.size() * sizeof(glm::vec3));
@@ -121,11 +194,38 @@ void RenderBuffer::set_normal_buffer(const std::string &attribute,
 	m_require_normal = true;
 }
 
+void RenderBuffer::set_extra_buffer(const std::string &attribute,
+                                    const void *data,
+                                    const size_t data_size)
+{
+	init();
+
+	m_buffer_data->bind();
+	m_buffer_data->generateNormalBuffer(data, data_size);
+	m_buffer_data->attribPointer(m_program[attribute], 3);
+	m_buffer_data->unbind();
+}
+
+void RenderBuffer::set_normal_buffer(const std::string &attribute,
+                                     const void *normals,
+                                     const size_t normals_size)
+{
+	set_extra_buffer(attribute, normals, normals_size);
+	m_require_normal = true;
+}
+
 void RenderBuffer::render(const ViewerContext * const context, const bool for_outline)
 {
 	if (!m_program.isValid()) {
 		std::cerr << "Invalid Program\n";
 		return;
+	}
+
+	if (m_params.draw_type() == GL_POINTS) {
+		glPointSize(m_params.point_size());
+	}
+	else if (m_params.draw_type() == GL_LINES) {
+		glLineWidth(m_params.line_size());
 	}
 
 	m_program.enable();
@@ -142,10 +242,27 @@ void RenderBuffer::render(const ViewerContext * const context, const bool for_ou
 		glUniform1i(m_program("for_outline"), for_outline);
 	}
 
-	glDrawElements(m_draw_type, m_elements, m_data_type, nullptr);
+	if (m_index_drawing) {
+		glDrawElements(m_params.draw_type(), m_elements, m_params.data_type(), nullptr);
+	}
+	else {
+		glDrawArrays(m_params.draw_type(), 0, m_elements);
+	}
 
 	ego::util::GPU_check_errors("Error rendering buffer\n");
 
 	m_buffer_data->unbind();
 	m_program.disable();
+
+	if (m_params.draw_type() == GL_POINTS) {
+		glPointSize(1.0f);
+	}
+	else if (m_params.draw_type() == GL_LINES) {
+		glLineWidth(1.0f);
+	}
+}
+
+ego::Program *RenderBuffer::program()
+{
+	return &m_program;
 }

@@ -48,6 +48,9 @@ class Object : public Transformable {
 
 	std::string m_name;
 
+	Object *m_parent = nullptr;
+	std::vector<Object *> m_children;
+
 public:
 	Object();
 	~Object();
@@ -66,6 +69,12 @@ public:
 	void setUIParams(ParamCallback *cb);
 
 	void clearCache();
+
+	void addChild(Object *child);
+	const std::vector<Object *> &children() const;
+
+	Object *parent() const;
+	void parent(Object *parent);
 };
 
 void eval_graph(const EvaluationContext * const context);

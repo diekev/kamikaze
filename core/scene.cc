@@ -25,20 +25,19 @@
 #include "scene.h"
 
 #include <glm/gtc/matrix_transform.hpp>
-#include <GL/glew.h>
 
 #include <kamikaze/nodes.h>
 #include <kamikaze/primitive.h>
 
-#include <QKeyEvent>
-#include <QListWidget>
-
 #include "object.h"
+
+#include "graphs/depsgraph.h"
 
 #include "util/util_string.h"
 
 Scene::Scene()
     : m_active_object(nullptr)
+    , m_depsgraph(new Depsgraph)
 {}
 
 Scene::~Scene()
@@ -46,34 +45,21 @@ Scene::~Scene()
 	for (auto &object : m_objects) {
 		delete object;
 	}
+
+	delete m_depsgraph;
 }
 
-void Scene::keyboardEvent(int key)
+void Scene::removeObject(Object *object)
 {
-	if (m_objects.size() == 0) {
-		return;
-	}
+	auto iter = std::find(m_objects.begin(), m_objects.end(), object);
 
-	switch (key) {
-		case Qt::Key_Delete:
-			auto iter = std::find(m_objects.begin(), m_objects.end(), m_active_object);
-			m_objects.erase(iter);
-			delete m_active_object;
-			m_active_object = nullptr;
-			break;
-	}
-}
+	assert(iter != m_objects.end());
 
-void Scene::removeObject(Object *ob)
-{
-	auto iter = std::find(m_objects.begin(), m_objects.end(), ob);
+	m_objects.erase(iter);
+	m_depsgraph->remove_node(object);
+	delete object;
 
-	if (iter != m_objects.end()) {
-		m_objects.erase(iter);
-		delete ob;
-	}
-
-	if (ob == m_active_object) {
+	if (object == m_active_object) {
 		m_active_object = nullptr;
 	}
 
@@ -90,53 +76,9 @@ void Scene::addObject(Object *object)
 	m_objects.push_back(object);
 	m_active_object = object;
 
+	m_depsgraph->create_node(object);
+
 	Q_EMIT(objectAdded(object));
-}
-
-void Scene::render(ViewerContext *context)
-{
-	for (auto &object : m_objects) {
-		if (!object || !object->collection()) {
-			continue;
-		}
-
-		const bool active_object = (object == m_active_object);
-
-		auto collection = object->collection();
-
-		for (auto &prim : collection->primitives()) {
-			/* Update prim before drawing. */
-			prim->update();
-			prim->prepareRenderData();
-
-			if (prim->drawBBox()) {
-				prim->bbox()->render(context, false);
-			}
-
-			context->setMatrix(object->matrix() * prim->matrix());
-
-			prim->render(context, false);
-
-			if (active_object) {
-				glStencilFunc(GL_NOTEQUAL, 1, 0xff);
-				glStencilMask(0x00);
-				glDisable(GL_DEPTH_TEST);
-
-				glLineWidth(5);
-				glPolygonMode(GL_FRONT, GL_LINE);
-
-				prim->render(context, true);
-
-				/* Restore state. */
-				glPolygonMode(GL_FRONT, GL_FILL);
-				glLineWidth(1);
-
-				glStencilFunc(GL_ALWAYS, 1, 0xff);
-				glStencilMask(0xff);
-				glEnable(GL_DEPTH_TEST);
-			}
-		}
-	}
 }
 
 void Scene::intersect(const Ray &/*ray*/)
@@ -223,15 +165,6 @@ void Scene::emitNodeAdded(Object *ob, Node *node)
 	Q_EMIT(nodeAdded(ob, node));
 }
 
-void Scene::objectNameList(QListWidget *widget) const
-{
-	widget->clear();
-
-	for (auto &object : m_objects) {
-		widget->addItem(object->name());
-	}
-}
-
 bool Scene::ensureUniqueName(QString &name) const
 {
 	return ensure_unique_name(name, [&](const QString &str)
@@ -246,18 +179,6 @@ bool Scene::ensureUniqueName(QString &name) const
 		});
 }
 
-void Scene::setCurrentObject(QListWidgetItem *item)
-{
-	for (auto &object : m_objects) {
-		if (object->name() == item->text()) {
-			m_active_object = object;
-			break;
-		}
-	}
-
-	Q_EMIT(objectChanged());
-}
-
 void Scene::setActiveObject(Object *object)
 {
 	m_active_object = object;
@@ -266,10 +187,10 @@ void Scene::setActiveObject(Object *object)
 
 void Scene::updateForNewFrame(const EvaluationContext * const context)
 {
-	/* TODO: dependency graph */
+	m_depsgraph->evaluate(context);
+}
 
-//	for (Object *object : m_objects) {
-//		/* TODO: replace with proper update method */
-//		eval_graph(context, false);
-//	}
+const std::vector<Object *> &Scene::objects() const
+{
+	return m_objects;
 }

@@ -28,10 +28,8 @@
 #include <kamikaze/nodes.h>
 #include <kamikaze/primitive.h>
 
-#include "ui/paramfactory.h"
-
-#include "nodes/graph.h"
-#include "nodes/nodes.h"
+#include "graphs/object_graph.h"
+#include "graphs/object_nodes.h"
 
 #include "object.h"
 #include "scene.h"

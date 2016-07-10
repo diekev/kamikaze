@@ -22,7 +22,7 @@
  *
  */
 
-#include "nodes.h"
+#include "object_nodes.h"
 
 #include <kamikaze/mesh.h>
 #include <kamikaze/primitive.h>
@@ -219,12 +219,12 @@ void CreateBoxNode::process()
 
 	PolygonList *polys = mesh->polys();
 	polys->resize(6);
-	polys->push_back(glm::ivec4(1, 3, 2, 0));
-	polys->push_back(glm::ivec4(3, 7, 6, 2));
-	polys->push_back(glm::ivec4(7, 5, 4, 6));
-	polys->push_back(glm::ivec4(5, 1, 0, 4));
-	polys->push_back(glm::ivec4(0, 2, 6, 4));
-	polys->push_back(glm::ivec4(5, 7, 3, 1));
+	polys->push_back(glm::uvec4(1, 3, 2, 0));
+	polys->push_back(glm::uvec4(3, 7, 6, 2));
+	polys->push_back(glm::uvec4(7, 5, 4, 6));
+	polys->push_back(glm::uvec4(5, 1, 0, 4));
+	polys->push_back(glm::uvec4(0, 2, 6, 4));
+	polys->push_back(glm::uvec4(5, 7, 3, 1));
 
 	mesh->tagUpdate();
 }
@@ -320,10 +320,10 @@ void CreateTorusNode::process()
 			}
 
 			if (f2 > 0) {
-				polys->push_back(glm::ivec4(f1, f3, f4, f2));
+				polys->push_back(glm::uvec4(f1, f3, f4, f2));
 			}
 			else {
-				polys->push_back(glm::ivec4(f2, f1, f3, f4));
+				polys->push_back(glm::uvec4(f2, f1, f3, f4));
 			}
 
 			++f1;
@@ -390,7 +390,7 @@ void CreateGridNode::process()
 
 	PolygonList *polys = mesh->polys();
 
-	auto quad = glm::ivec4{ 0, 0, 0, 0 };
+	auto quad = glm::uvec4{ 0, 0, 0, 0 };
 
 	/* make a copy for the lambda */
 	const auto xtot = rows;
@@ -466,9 +466,9 @@ void CreateCircleNode::process()
 	PolygonList *polys = mesh->polys();
 
 	auto index = points->size() - 1;
-	glm::ivec4 poly(0, 0, 0, INVALID_INDEX);
+	glm::uvec4 poly(0, 0, 0, INVALID_INDEX);
 
-	for (auto i = 1; i < points->size(); ++i) {
+	for (auto i = 1ul; i < points->size(); ++i) {
 		poly[1] = index;
 		poly[2] = i;
 
@@ -524,13 +524,13 @@ static void create_cylinder(PointList *points, PolygonList *polys, int segs, flo
 
 		if (a > 0) {
 			/* Poly for the bottom cap. */
-			polys->push_back(glm::ivec4{ cent1, lastv1, v1, INVALID_INDEX });
+			polys->push_back(glm::uvec4{ cent1, lastv1, v1, INVALID_INDEX });
 
 			/* Poly for the top cap. */
-			polys->push_back(glm::ivec4{ cent2, v2, lastv2, INVALID_INDEX });
+			polys->push_back(glm::uvec4{ cent2, v2, lastv2, INVALID_INDEX });
 
 			/* Poly for the side. */
-			polys->push_back(glm::ivec4{ lastv1, lastv2, v2, v1 });
+			polys->push_back(glm::uvec4{ lastv1, lastv2, v2, v1 });
 		}
 		else {
 			firstv1 = v1;
@@ -542,13 +542,13 @@ static void create_cylinder(PointList *points, PolygonList *polys, int segs, flo
 	}
 
 	/* Poly for the bottom cap. */
-	polys->push_back(glm::ivec4{ cent1, v1, firstv1, INVALID_INDEX });
+	polys->push_back(glm::uvec4{ cent1, v1, firstv1, INVALID_INDEX });
 
 	/* Poly for the top cap. */
-	polys->push_back(glm::ivec4{ cent2, firstv2, v2, INVALID_INDEX });
+	polys->push_back(glm::uvec4{ cent2, firstv2, v2, INVALID_INDEX });
 
 	/* Poly for the side. */
-	polys->push_back(glm::ivec4{ v1, v2, firstv2, firstv1 });
+	polys->push_back(glm::uvec4{ v1, v2, firstv2, firstv1 });
 }
 
 class CreateTubeNode : public Node {
@@ -717,7 +717,7 @@ void CreateIcoSphereNode::process()
 	PolygonList *polys = mesh->polys();
 	polys->reserve(20);
 
-	glm::ivec4 poly(0, 0, 0, INVALID_INDEX);
+	glm::uvec4 poly(0, 0, 0, INVALID_INDEX);
 
 	for (auto i = 0; i < 20; ++i) {
 		poly[0] = icoface[i][0];

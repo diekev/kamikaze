@@ -26,10 +26,10 @@
 
 #include <glm/gtx/rotate_vector.hpp>
 
+#include <kamikaze/util_render.h>
 #include <vector>
 
 #include "transformable.h"
-#include "util_render.h"
 
 class RenderBuffer;
 class ViewerContext;

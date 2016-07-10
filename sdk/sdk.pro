@@ -47,9 +47,11 @@ HDR_SDK = \
     noise.h \
     nodes.h \
     primitive.h \
+	renderbuffer.h \
     geomlists.h \
     renderbuffer.h \
     util_parallel.h \
+    util_render.h \
     prim_points.h
 
 SOURCES += \
@@ -63,7 +65,7 @@ SOURCES += \
     geomlists.cc \
     prim_points.cc \
     any.cc \
-    renderbuffer.cc
+	renderbuffer.cc
 
 HEADERS += \
     $$HDR_SDK

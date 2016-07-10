@@ -26,8 +26,6 @@
 
 #include "undo.h"
 
-#include <QString>
-
 class Object;
 class Scene;
 

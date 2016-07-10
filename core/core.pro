@@ -19,7 +19,7 @@
 #
 # ***** END GPL LICENSE BLOCK *****
 
-QT += core gui opengl
+QT += core
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = core
@@ -44,14 +44,14 @@ SOURCES += \
     undo.cc \
     camera.cc \
     scene.cc \
-    viewer.cc \
 #    brush.cc \
     kamikaze_main.cc \
-    nodes/graph.cc \
     object.cc \
-    nodes/graph_dumper.cc \
-    nodes/nodes.cc \
+    graphs/graph_dumper.cc \
     task.cc \
+    graphs/depsgraph.cc \
+    graphs/object_graph.cc \
+    graphs/object_nodes.cc \
     manipulator.cc \
     transformable.cc
 
@@ -62,14 +62,14 @@ HEADERS += \
     factory.h \
     camera.h \
     scene.h \
-    viewer.h \
 #    brush.h \
     kamikaze_main.h \
-    nodes/graph.h \
     object.h \
-    nodes/graph_dumper.h \
-    nodes/nodes.h \
+    graphs/graph_dumper.h \
     task.h \
+    graphs/depsgraph.h \
+    graphs/object_nodes.h \
+    graphs/object_graph.h \
     manipulator.h \
     transformable.h
 

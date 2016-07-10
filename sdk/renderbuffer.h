@@ -47,21 +47,45 @@ public:
 	const std::vector<std::string> &uniforms() const;
 };
 
+class DrawParams {
+	unsigned int m_draw_type = 0x0004; /* GL_TRIANGLES */
+	unsigned int m_data_type = 0x1405; /* GL_UNSIGNED_INT */
+	float m_line_size = 1.0f;
+	float m_point_size = 1.0f;
+
+public:
+	DrawParams() = default;
+
+	void set_draw_type(unsigned int draw_type);
+	unsigned int draw_type() const;
+
+	void set_data_type(unsigned int data_type);
+	unsigned int data_type() const;
+
+	void set_line_size(float size);
+	float line_size() const;
+
+	void set_point_size(float size);
+	float point_size() const;
+};
+
 class RenderBuffer {
 	ego::BufferObject::Ptr m_buffer_data = nullptr;
 	ego::Program m_program;
 	size_t m_elements = 0;
 
-	unsigned int m_draw_type = 0x0004; /* GL_TRIANGLES */
-	unsigned int m_data_type = 0x1405; /* GL_UNSIGNED_INT */
+	DrawParams m_params;
 
 	bool m_require_normal = false;
 	bool m_can_outline = false;
+	bool m_index_drawing = false;
 
 public:
 	void set_shader_source(int shader_type, const std::string &source, std::ostream &os = std::cerr);
 
 	void set_shader_params(const ProgramParams &params);
+
+	void set_draw_params(const DrawParams &params);
 
 	void finalize_shader(std::ostream &os = std::cerr);
 
@@ -71,11 +95,31 @@ public:
 	                       const std::vector<glm::vec3> &vertices,
 	                       const std::vector<unsigned int> &indices);
 
+	void set_vertex_buffer(const std::string &attribute,
+	                       const void *vertices_ptr,
+	                       const size_t vertices_size,
+	                       const void *indices_ptr,
+	                       const size_t indices_size,
+	                       const size_t elements);
+
 	void set_extra_buffer(const std::string &attribute,
 	                      const std::vector<glm::vec3> &values);
+
+	void set_extra_buffer(const std::string &attribute,
+	                      const void *data,
+	                      const size_t data_size);
 
 	void set_normal_buffer(const std::string &attribute,
 	                       const std::vector<glm::vec3> &normals);
 
+	void set_normal_buffer(const std::string &attribute,
+	                       const void *normals,
+	                       const size_t normals_size);
+
 	void render(const ViewerContext * const context, const bool for_outline);
+
+	ego::Program *program();
+
+private:
+	void init();
 };

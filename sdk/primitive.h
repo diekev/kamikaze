@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <memory>
 #include <QString>
 #include <unordered_map>
 
@@ -59,7 +60,6 @@ void new_kamikaze_prims(PrimitiveFactory *factory);
 class Primitive {
 protected:
 	std::unique_ptr<Cube> m_bbox{};
-	unsigned int m_draw_type = 0x0004;  /* GL_TRIANGLES */
 
 	glm::vec3 m_dimensions = glm::vec3(1.0f);
 	glm::vec3 m_scale = glm::vec3(1.0f);
@@ -103,7 +103,7 @@ public:
 	 * @param for_outline Flag to indicate that the primitive is selected. If so,
 	 *                    its outline will be drawn highlighted.
 	 */
-	virtual void render(ViewerContext *context, const bool for_outline) = 0;
+	virtual void render(const ViewerContext * const context, const bool for_outline) = 0;
 
 	/**
 	 * @brief computeBBox Compute the bounding box of this primitive.
@@ -137,18 +137,14 @@ public:
 	 */
 	void tagUpdate();
 
-	QString name() const;
-	void name(const QString &name);
+	std::string name() const;
+	void name(const std::string &name);
 
 	/**
 	 * @brief copy Perform a deep copy of this primitive.
 	 * @return     A new primitive with the same data as this primitive.
 	 */
 	virtual Primitive *copy() const = 0;
-
-	/* UI parameters */
-	void setUIParams(ParamCallback *cb);
-	virtual void setCustomUIParams(ParamCallback *cb) = 0;
 
 	/**
 	 * @brief typeID The unique ID that is shared between primitives instanced
@@ -313,7 +309,7 @@ public:
  */
 class primitive_iterator {
 	std::vector<Primitive *>::const_iterator m_iter{nullptr}, m_end{nullptr};
-	int m_type = 0;
+	size_t m_type = 0;
 	PrimitiveCollection collection{};
 
 public:
@@ -346,7 +342,7 @@ public:
 	primitive_iterator &operator++();
 
 	const reference operator*() const;
-	const pointer operator->() const;
+	pointer operator->() const;
 
 	value_type get() const;
 };

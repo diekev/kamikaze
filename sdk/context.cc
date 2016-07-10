@@ -79,7 +79,7 @@ const glm::mat4 &ViewerContext::matrix() const
 	return m_matrix;
 }
 
-void ViewerContext::setMatrix(const glm::mat4 &mat)
+void ViewerContext::setMatrix(const glm::mat4 &matrix)
 {
-	m_matrix = mat;
+	m_matrix = matrix;
 }

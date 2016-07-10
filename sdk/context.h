@@ -68,5 +68,5 @@ public:
 	void setMVP(const glm::mat4 &MVP);
 
 	const glm::mat4 &matrix() const;
-	void setMatrix(const glm::mat4 &mat);
+	void setMatrix(const glm::mat4 &matrix);
 };
