@@ -63,7 +63,6 @@ Viewer::~Viewer()
 {
 	delete m_camera;
 	delete m_grid;
-	delete m_scene;
 	delete m_context;
 }
 

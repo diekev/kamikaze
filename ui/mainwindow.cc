@@ -112,6 +112,7 @@ MainWindow::~MainWindow()
 	delete ui;
 	delete m_command_manager;
 	delete m_command_factory;
+	delete m_scene;
 }
 
 void MainWindow::taskStarted()
