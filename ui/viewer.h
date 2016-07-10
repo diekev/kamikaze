@@ -65,7 +65,7 @@ public:
 	~OpenGLScene();
 
 	void initializeGL();
-	void resize(int x, int y);
+	void resize(int w, int h);
 
 	void drawBackground(QPainter *painter, const QRectF &rect) override;
 

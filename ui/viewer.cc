@@ -80,14 +80,16 @@ void OpenGLScene::initializeGL()
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_STENCIL_TEST);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+	m_grid = new Grid(20, 20);
 }
 
-void OpenGLScene::resize(int x, int y)
+void OpenGLScene::resize(int w, int h)
 {
-	setSceneRect(0, 0, x, y);
-	m_camera->resize(x, y);
-	m_width = x;
-	m_height = y;
+	setSceneRect(0, 0, w, h);
+	m_camera->resize(w, h);
+	m_width = w;
+	m_height = h;
 }
 
 void OpenGLScene::drawBackground(QPainter *painter, const QRectF &/*rect*/)
@@ -125,10 +127,6 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &/*rect*/)
 	m_context->setMatrix(glm::mat4(1.0f));
 
 	if (m_draw_grid) {
-		if (!m_grid) {
-			m_grid = new Grid(20, 20);
-		}
-
 		m_grid->render(m_context);
 	}
 
