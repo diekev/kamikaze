@@ -24,6 +24,7 @@
 
 #include "mesh.h"
 
+#include <algorithm>
 #include <ego/utils.h>
 #include <GL/glew.h>
 #include <glm/gtc/type_ptr.hpp>
