@@ -27,61 +27,100 @@
 #include <ego/utils.h>
 #include <GL/glew.h>
 
-Grid::Grid(int x, int y)
-    : m_buffer_data(ego::BufferObject::create())
-    , m_elements(x * y)
+#include <kamikaze/renderbuffer.h>
+
+static RenderBuffer *create_buffer(const glm::vec4 &color, float line_size)
 {
-	m_program.load(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/flat_shader.vert"));
-	m_program.load(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/flat_shader.frag"));
+	RenderBuffer *buffer = new RenderBuffer;
 
-	m_program.createAndLinkProgram();
+	buffer->set_shader_source(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/flat_shader.vert"));
+	buffer->set_shader_source(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/flat_shader.frag"));
+	buffer->finalize_shader();
 
-	m_program.enable();
-	{
-		m_program.addAttribute("vertex");
-		m_program.addUniform("MVP");
-		m_program.addUniform("matrix");
-	}
-	m_program.disable();
+	ProgramParams params;
+	params.add_attribute("vertex");
+	params.add_uniform("matrix");
+	params.add_uniform("MVP");
+	params.add_uniform("color");
 
-	/* setup vertex buffer */
+	buffer->set_shader_params(params);
+
+	DrawParams draw_params;
+	draw_params.set_draw_type(GL_LINES);
+	draw_params.set_line_size(line_size);
+
+	buffer->set_draw_params(draw_params);
+
+	ego::Program *program = buffer->program();
+	program->enable();
+	program->uniform("color", color.r, color.g, color.b, color.a);
+	program->disable();
+
+	return buffer;
+}
+
+Grid::Grid(int x, int y)
+    : m_grid_buffer(nullptr)
+    , m_xline_buffer(nullptr)
+    , m_zline_buffer(nullptr)
+{
+	/* Set up grid buffer. */
+
+	m_grid_buffer = create_buffer(glm::vec4(1.0f), 1.0f);
 
 	const auto total_vertices = ((x + 1) + (y + 1)) * 2;
 	std::vector<glm::vec3> vertices(total_vertices);
 
-	const int half_x = (x / 2), half_y = (y / 2);
+	const int half_x = (x / 2), half_z = (y / 2);
 	auto count(0);
-	for (int i = -half_y; i <= half_y; ++i) {
-		vertices[count++] = glm::vec3(i, 0.0f, -half_y);
-		vertices[count++] = glm::vec3(i, 0.0f,  half_y);
+	for (int i = -half_z; i <= half_z; ++i) {
+		vertices[count++] = glm::vec3(i, 0.0f, -half_z);
+		vertices[count++] = glm::vec3(i, 0.0f,  half_z);
 		vertices[count++] = glm::vec3(-half_x, 0.0f, i);
 		vertices[count++] = glm::vec3( half_x, 0.0f, i);
 	}
 
-	std::vector<unsigned short> indices(m_elements);
+	std::vector<unsigned int> indices(x * y);
 	std::iota(indices.begin(), indices.end(), 0);
 
-	const auto &vsize = total_vertices * sizeof(glm::vec3);
-	const auto &isize = m_elements * sizeof(GLushort);
+	m_grid_buffer->set_vertex_buffer("vertex", vertices, indices);
 
-	m_buffer_data->bind();
-	m_buffer_data->generateVertexBuffer(&(vertices[0].x), vsize);
-	m_buffer_data->generateIndexBuffer(&indices[0], isize);
-	m_buffer_data->attribPointer(m_program["vertex"], 3);
-	m_buffer_data->unbind();
+	/* Set line buffers. */
+
+	std::vector<unsigned int> line_indices(2);
+	std::iota(line_indices.begin(), line_indices.end(), 0);
+
+	/* Set up X line buffer. */
+
+	m_xline_buffer = create_buffer(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), 2.0f);
+
+	std::vector<glm::vec3> xvertices(2);
+	xvertices[0] = glm::vec3(-half_x, 0.0f, 0.0f);
+	xvertices[1] = glm::vec3( half_x, 0.0f, 0.0f);
+
+	m_xline_buffer->set_vertex_buffer("vertex", xvertices, line_indices);
+
+	/* Set up Z line buffer. */
+
+	m_zline_buffer = create_buffer(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f), 2.0f);
+
+	std::vector<glm::vec3> zvertices(2);
+	zvertices[0] = glm::vec3(0.0f, 0.0f, -half_z);
+	zvertices[1] = glm::vec3(0.0f, 0.0f,  half_z);
+
+	m_zline_buffer->set_vertex_buffer("vertex", zvertices, line_indices);
 }
 
-void Grid::render(const glm::mat4 &MVP)
+Grid::~Grid()
 {
-	if (m_program.isValid()) {
-		m_program.enable();
-		m_buffer_data->bind();
+	delete m_grid_buffer;
+	delete m_xline_buffer;
+	delete m_zline_buffer;
+}
 
-		glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
-		glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
-		glDrawElements(GL_LINES, m_elements, GL_UNSIGNED_SHORT, nullptr);
-
-		m_buffer_data->unbind();
-		m_program.disable();
-	}
+void Grid::render(const ViewerContext * const context)
+{
+	m_grid_buffer->render(context, false);
+	m_xline_buffer->render(context, false);
+	m_zline_buffer->render(context, false);
 }

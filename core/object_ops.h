@@ -26,8 +26,6 @@
 
 #include "undo.h"
 
-#include <QString>
-
 class Object;
 class Scene;
 
@@ -40,14 +38,12 @@ class AddObjectCmd : public Command {
 
 public:
 	AddObjectCmd() = default;
-	AddObjectCmd(const QString &name);
-	AddObjectCmd(Scene *scene);
 	~AddObjectCmd();
 
-	void execute(EvaluationContext *context);
-	void undo();
-	void redo();
-	void setUIParams(ParamCallback *cb);
+	void execute(EvaluationContext *context) override;
+	void undo() override;
+	void redo() override;
+
 	static Command *registerSelf();
 };
 
@@ -57,13 +53,12 @@ class AddNodeCmd : public Command {
 
 public:
 	AddNodeCmd() = default;
-	AddNodeCmd(const QString &name);
 	~AddNodeCmd() = default;
 
-	void execute(EvaluationContext *context);
-	void undo();
-	void redo();
-	void setUIParams(ParamCallback *cb);
+	void execute(EvaluationContext *context) override;
+	void undo() override;
+	void redo() override;
+
 	static Command *registerSelf();
 };
 
@@ -73,12 +68,11 @@ class AddPresetObjectCmd : public Command {
 
 public:
 	AddPresetObjectCmd() = default;
-	AddPresetObjectCmd(const QString &name);
 	~AddPresetObjectCmd() = default;
 
-	void execute(EvaluationContext *context);
-	void undo();
-	void redo();
-	void setUIParams(ParamCallback *cb);
+	void execute(EvaluationContext *context) override;
+	void undo() override;
+	void redo() override;
+
 	static Command *registerSelf();
 };

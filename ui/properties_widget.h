@@ -24,15 +24,29 @@
 
 #pragma once
 
-#include <utils/filesystem.h>
+#include <QWidget>
 
-class Graph;
+#include "context.h"
 
-class GraphDumper {
-	Graph *m_graph;
+class QFrame;
+class QGridLayout;
+class QHBoxLayout;
+class QScrollArea;
+
+class PropertiesWidget : public QWidget, public ContextListener {
+	Q_OBJECT
+
+	QWidget *m_widget;
+	QScrollArea *m_scroll;
+	QGridLayout *m_layout;
+	QHBoxLayout *m_hbox_layout;
 
 public:
-	GraphDumper(Graph *graph);
+	explicit PropertiesWidget(QWidget *parent = nullptr);
 
-	void operator()(const filesystem::path &path);
+	void update_state(int event_type) override;
+
+private Q_SLOTS:
+	void evalObjectGraph();
+	void tagObjectUpdate();
 };

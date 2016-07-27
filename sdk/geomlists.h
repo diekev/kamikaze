@@ -57,14 +57,14 @@ public:
 static constexpr auto INVALID_INDEX = std::numeric_limits<unsigned int>::max();
 
 class PolygonList {
-	std::vector<glm::ivec4> m_polys{};
+	std::vector<glm::uvec4> m_polys{};
 
 public:
 	PolygonList() = default;
 
-	void push_back(const glm::ivec4 &point);
+	void push_back(const glm::uvec4 &poly);
 
-	void push_back(glm::ivec4 &&point);
+	void push_back(glm::uvec4 &&poly);
 
 	void reserve(size_t n);
 
@@ -76,7 +76,7 @@ public:
 
 	const void *data() const;
 
-	glm::ivec4 &operator[](size_t i);
+	glm::uvec4 &operator[](size_t i);
 
-	const glm::ivec4 &operator[](size_t i) const;
+	const glm::uvec4 &operator[](size_t i) const;
 };

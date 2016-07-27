@@ -28,10 +28,8 @@
 #include <kamikaze/nodes.h>
 #include <kamikaze/primitive.h>
 
-#include "ui/paramfactory.h"
-
-#include "nodes/graph.h"
-#include "nodes/nodes.h"
+#include "graphs/object_graph.h"
+#include "graphs/object_nodes.h"
 
 #include "object.h"
 #include "scene.h"
@@ -50,11 +48,6 @@ void AddObjectCmd::execute(EvaluationContext *context)
 	m_scene = context->scene;
 
 	m_object = new Object;
-
-//	Primitive *prim = (*context->object_factory)(m_name);
-//	m_object->primitive(prim);
-
-	assert(m_object != nullptr);
 	m_object->name(m_name.c_str());
 
 	assert(m_scene != nullptr);
@@ -71,10 +64,6 @@ void AddObjectCmd::redo()
 {
 	m_scene->addObject(m_object);
 	m_was_undone = false;
-}
-
-void AddObjectCmd::setUIParams(ParamCallback */*cb*/)
-{
 }
 
 Command *AddObjectCmd::registerSelf()
@@ -94,7 +83,7 @@ void AddNodeCmd::execute(EvaluationContext *context)
 	auto node = (*context->node_factory)(m_name);
 	m_object->addNode(node);
 
-	m_scene->emitNodeAdded(m_object, node);
+	m_scene->notify_listeners(NODE_ADDED);
 }
 
 void AddNodeCmd::undo()
@@ -107,10 +96,6 @@ void AddNodeCmd::redo()
 	/* TODO */
 }
 
-void AddNodeCmd::setUIParams(ParamCallback */*cb*/)
-{
-}
-
 Command *AddNodeCmd::registerSelf()
 {
 	return new AddNodeCmd;
@@ -121,16 +106,27 @@ Command *AddNodeCmd::registerSelf()
 void AddPresetObjectCmd::execute(EvaluationContext *context)
 {
 	m_scene = context->scene;
-	m_object = new Object;
+
+	auto node = (*context->node_factory)(m_name);
+
+	if (context->edit_mode) {
+		m_object = m_scene->currentObject();
+	}
+	else {
+		m_object = new Object;
+		m_object->name(m_name.c_str());
+	}
 
 	assert(m_object != nullptr);
 
-	m_object->name(m_name.c_str());
-
-	auto node = (*context->node_factory)(m_name);
 	m_object->addNode(node);
 
-	m_scene->addObject(m_object);
+	if (!context->edit_mode) {
+		m_scene->addObject(m_object);
+	}
+	else {
+		m_scene->notify_listeners(NODE_ADDED);
+	}
 }
 
 void AddPresetObjectCmd::undo()
@@ -141,10 +137,6 @@ void AddPresetObjectCmd::undo()
 void AddPresetObjectCmd::redo()
 {
 	/* TODO */
-}
-
-void AddPresetObjectCmd::setUIParams(ParamCallback */*cb*/)
-{
 }
 
 Command *AddPresetObjectCmd::registerSelf()

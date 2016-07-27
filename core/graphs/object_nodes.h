@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * The Original Code is Copyright (C) 2015 Kévin Dietrich.
+ * The Original Code is Copyright (C) 2016 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
@@ -24,35 +24,47 @@
 
 #pragma once
 
+#include <glm/glm.hpp>
+
 #include <kamikaze/nodes.h>
-#include <vector>
 
-class InputSocket;
-class OutputNode;
-class OutputSocket;
+void register_builtin_nodes(NodeFactory *factory);
 
-class Graph {
-	std::vector<Node *> m_nodes;
-	std::vector<Node *> m_stack;
-
-	bool m_need_update;
-
-	void topology_sort();
+class OutputNode : public Node {
+	PrimitiveCollection *m_collection = nullptr;
 
 public:
-	Graph();
-	~Graph();
+	OutputNode(const std::string &name);
 
-	void add(Node *node);
-	void remove(Node *node);
+	PrimitiveCollection *collection() const;
 
-	void connect(OutputSocket *from, InputSocket *to);
-	void disconnect(OutputSocket *from, InputSocket *to);
+	void process() override;
+};
 
-	void build();
+class TransformNode : public Node {
+public:
+	TransformNode();
 
-	OutputNode *output() const;
+	void process() override;
+};
 
-	const std::vector<Node *> &nodes() const;
-	const std::vector<Node *> &finished_stack() const;
+class CreateBoxNode : public Node {
+public:
+	CreateBoxNode();
+
+	void process() override;
+};
+
+class CreateTorusNode : public Node {
+public:
+	CreateTorusNode();
+
+	void process() override;
+};
+
+class CreateGridNode : public Node {
+public:
+	CreateGridNode();
+
+	void process() override;
 };

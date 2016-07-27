@@ -42,7 +42,6 @@ public:
 	virtual void execute(EvaluationContext *context) = 0;
 	virtual void undo() = 0;
 	virtual void redo() = 0;
-	virtual void setUIParams(ParamCallback *cb) = 0;
 
 	void setName(const std::string &name);
 };

@@ -24,21 +24,29 @@
 
 #include "object.h"
 
-#include <QObject>
-
 #include <glm/gtc/matrix_transform.hpp>
 #include <kamikaze/primitive.h>
 
-#include "nodes/graph.h"
-#include "nodes/nodes.h"
+#include "graphs/object_graph.h"
+#include "graphs/object_nodes.h"
+
+#include "scene.h"
+#include "task.h"
 
 #include "ui/paramfactory.h"
-
-#include "task.h"
 
 Object::Object()
     : m_graph(new Graph)
 {
+	add_prop("Position", property_type::prop_vec3);
+	set_prop_default_value_vec3(glm::vec3(0.0f, 0.0f, 0.0f));
+
+	add_prop("Rotation", property_type::prop_vec3);
+	set_prop_default_value_vec3(glm::vec3(0.0f, 0.0f, 0.0f));
+
+	add_prop("Size", property_type::prop_vec3);
+	set_prop_default_value_vec3(glm::vec3(1.0f, 1.0f, 1.0f));
+
 	updateMatrix();
 }
 
@@ -48,14 +56,14 @@ Object::~Object()
 	m_cache.clear();
 }
 
-Primitive *Object::primitive() const
+PrimitiveCollection *Object::collection() const
 {
-	return m_primitive;
+	return m_collection;
 }
 
-void Object::primitive(Primitive *prim)
+void Object::collection(PrimitiveCollection *coll)
 {
-	m_primitive = prim;
+	m_collection = coll;
 }
 
 void Object::matrix(const glm::mat4 &m)
@@ -72,6 +80,7 @@ void Object::addNode(Node *node)
 {
 	node->setPrimitiveCache(&m_cache);
 	m_graph->add(node);
+	m_graph->active_node(node);
 }
 
 Graph *Object::graph() const
@@ -89,17 +98,12 @@ const QString Object::name() const
 	return QString::fromStdString(m_name);
 }
 
-void Object::setUIParams(ParamCallback *cb)
-{
-	string_param(cb, "Name", &m_name, "");
-
-	xyz_param(cb, "Position", &m_pos[0], 0.0f, 100.0f);
-	xyz_param(cb, "Scale", &m_scale[0], 0.0f, 100.0f);
-	xyz_param(cb, "Rotation", &m_rotation[0], 0.0f, 360.0f);
-}
-
 void Object::updateMatrix()
 {
+	const auto m_pos = eval_vec3("Position");
+	const auto m_rotation = eval_vec3("Rotation");
+	const auto m_scale = eval_vec3("Size");
+
 	m_matrix = glm::mat4(1.0f);
 	m_matrix = glm::translate(m_matrix, m_pos);
 	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -115,49 +119,45 @@ void Object::clearCache()
 	m_cache.clear();
 }
 
-/* ********************************************* */
-
-void PrimitiveCache::add(Primitive *prim)
+void Object::addChild(Object *child)
 {
-	m_primitives.push_back(prim);
+	m_children.push_back(child);
+	child->parent(this);
 }
 
-void PrimitiveCache::clear()
+const std::vector<Object *> &Object::children() const
 {
-	for (auto &primitive : m_primitives) {
-		if (primitive->refcount() > 1) {
-			primitive->decref();
-			continue;
-		}
+	return m_children;
+}
 
-		delete primitive;
-		primitive = nullptr;
-	}
+Object *Object::parent() const
+{
+	return m_parent;
+}
 
-	m_primitives.clear();
+void Object::parent(Object *parent)
+{
+	m_parent = parent;
 }
 
 /* ********************************************* */
 
 class GraphEvalTask : public Task {
-	Object *m_object;
-	Graph *m_graph;
-
 public:
-	GraphEvalTask(Object *object, Graph *graph, MainWindow *window);
+	GraphEvalTask(const EvaluationContext * const context);
 
-	void start() override;
+	void start(const EvaluationContext * const context) override;
 };
 
-GraphEvalTask::GraphEvalTask(Object *object, Graph *graph, MainWindow *window)
-    : Task(window)
-    , m_object(object)
-    , m_graph(graph)
+GraphEvalTask::GraphEvalTask(const EvaluationContext * const context)
+    : Task(context)
 {}
 
-void GraphEvalTask::start()
+void GraphEvalTask::start(const EvaluationContext * const context)
 {
-	auto stack = m_graph->finished_stack();
+	auto object = context->scene->currentObject();
+	auto graph = object->graph();
+	auto stack = graph->finished_stack();
 
 	const auto size = static_cast<float>(stack.size());
 	auto index = 0;
@@ -166,28 +166,40 @@ void GraphEvalTask::start()
 
 	for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter) {
 		Node *node = *iter;
-		node->process();
+
+		if (node->inputs().empty()) {
+			node->buildCollection(context);
+		}
+		else {
+			node->collection(node->getInputCollection(0ul));
+		}
+
+		if (node->collection()) {
+			node->process();
+		}
+
+		if (!node->outputs().empty()) {
+			node->setOutputCollection(0ul, node->collection());
+		}
 
 		const float progress = (++index / size) * 100.0f;
 		m_notifier->signalProgressUpdate(progress);
 	}
 
-	auto output_node = m_graph->output();
-	m_object->primitive(output_node->primitive());
+	auto output_node = graph->output();
+	object->collection(output_node->collection());
 }
 
-void eval_graph(MainWindow *window, Object *ob, bool force)
+void eval_graph(const EvaluationContext * const context)
 {
-	if (!force) {
-		return;
-	}
-
+	auto scene = context->scene;
+	auto ob = scene->currentObject();
 	auto graph = ob->graph();
 	auto output_node = graph->output();
 
 	if (!output_node->isLinked()) {
-		output_node->input(0)->prim = nullptr;
-		ob->primitive(nullptr);
+		output_node->input(0)->collection = nullptr;
+		ob->collection(nullptr);
 		return;
 	}
 
@@ -196,13 +208,13 @@ void eval_graph(MainWindow *window, Object *ob, bool force)
 	/* XXX */
 	for (Node *node : graph->nodes()) {
 		for (OutputSocket *output : node->outputs()) {
-			output->prim = nullptr;
+			output->collection = nullptr;
 		}
 	}
 
-	ob->primitive(nullptr);
+	ob->collection(nullptr);
 	ob->clearCache();
 
-	GraphEvalTask *t = new(tbb::task::allocate_root()) GraphEvalTask(ob, graph, window);
+	GraphEvalTask *t = new(tbb::task::allocate_root()) GraphEvalTask(context);
 	tbb::task::enqueue(*t);
 }

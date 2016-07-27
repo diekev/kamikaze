@@ -22,13 +22,13 @@
  *
  */
 
-#include "graph.h"
+#include "object_graph.h"
 
 #include <algorithm>
 #include <iostream>
 
 #include "graph_dumper.h"
-#include "nodes.h"
+#include "object_nodes.h"
 
 //#define DEBUG_GRAPH
 
@@ -207,4 +207,14 @@ void Graph::disconnect(OutputSocket *from, InputSocket *to)
 	to->link = nullptr;
 
 	m_need_update = true;
+}
+
+void Graph::active_node(Node *node)
+{
+	m_active_node = node;
+}
+
+Node *Graph::active_node() const
+{
+	return m_active_node;
 }

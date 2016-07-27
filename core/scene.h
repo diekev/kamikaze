@@ -26,53 +26,61 @@
 
 #include <QObject>
 
-#include "../util/util_render.h"
+#include <kamikaze/util_render.h>
 
+#include "context.h"
+
+class Depsgraph;
+class EvaluationContext;
 class Node;
 class Object;
-class QListWidget;
-class QListWidgetItem;
-class ViewerContext;
 
-class Scene : public QObject {
-	Q_OBJECT
-
+class Scene : public Listened {
 	std::vector<Object *> m_objects;
 	Object *m_active_object;
 	int m_mode;
+
+	Depsgraph *m_depsgraph;
+
+	int m_start_frame;
+	int m_end_frame;
+	int m_cur_frame;
+	float m_fps = 24.0f;
 
 public:
 	Scene();
 	~Scene();
 
-	void keyboardEvent(int key);
-
 	Object *currentObject();
-	void addObject(Object *object);
-	void removeObject(Object *ob);
+	void setActiveObject(Object *object);
 
-	void render(ViewerContext *context);
+	void addObject(Object *object);
+	void removeObject(Object *object);
+
 	void intersect(const Ray &ray);
 
 	void selectObject(const glm::vec3 &pos);
-	void objectNameList(QListWidget *widget) const;
 
-	void emitNodeAdded(Object *ob, Node *node);
+	/* Time/Frame */
 
-	void updateForNewFrame();
+	int startFrame() const;
+	void startFrame(int value);
 
-public Q_SLOTS:
-	void setObjectName(const QString &name);
+	int endFrame() const;
+	void endFrame(int value);
+
+	int currentFrame() const;
+	void currentFrame(int value);
+
+	float framesPerSecond() const;
+	void framesPerSecond(float value);
+
+	void updateForNewFrame(const EvaluationContext * const context);
+
+	const std::vector<Object *> &objects() const;
+
 	void tagObjectUpdate();
-
-	void setCurrentObject(QListWidgetItem *item);
-	void setActiveObject(Object *object);
 
 private:
 	bool ensureUniqueName(QString &name) const;
-
-Q_SIGNALS:
-	void objectAdded(Object *);
-	void nodeAdded(Object *, Node *);
-	void objectChanged();
 };

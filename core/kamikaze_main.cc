@@ -27,12 +27,14 @@
 #include <kamikaze/nodes.h>
 #include <kamikaze/mesh.h>
 #include <kamikaze/primitive.h>
+#include <kamikaze/prim_points.h>
 
 #include <utils/filesystem.h>
 
 #include <dlfcn.h>
 
-#include "nodes/nodes.h"
+#include "graphs/object_nodes.h"
+#include "scene.h"
 
 namespace fs = filesystem;
 
@@ -61,14 +63,16 @@ static std::vector<fs::shared_library> load_plugins(const fs::path &path)
 }
 
 Main::Main()
-    : m_object_factory(new PrimitiveFactory)
+    : m_primitive_factory(new PrimitiveFactory)
     , m_node_factory(new NodeFactory)
+    , m_scene(new Scene)
 {}
 
 Main::~Main()
 {
-	delete m_object_factory;
+	delete m_primitive_factory;
 	delete m_node_factory;
+	delete m_scene;
 }
 
 void Main::loadPlugins()
@@ -86,7 +90,7 @@ void Main::loadPlugins()
 		auto register_figures = fs::dso_function<void(PrimitiveFactory *)>(symbol);
 
 		if (register_figures) {
-			register_figures(m_object_factory);
+			register_figures(m_primitive_factory);
 		}
 
 		symbol = plugin("new_kamikaze_node", ec);
@@ -101,14 +105,28 @@ void Main::loadPlugins()
 void Main::initTypes()
 {
 	register_builtin_nodes(m_node_factory);
+
+	/* primitive types */
+
+	{
+		auto factory = m_primitive_factory;
+
+		Mesh::id = REGISTER_PRIMITIVE("Mesh", Mesh);
+		PrimPoints::id = REGISTER_PRIMITIVE("PrimPoints", PrimPoints);
+	}
 }
 
-PrimitiveFactory *Main::objectFactory() const
+PrimitiveFactory *Main::primitiveFactory() const
 {
-	return m_object_factory;
+	return m_primitive_factory;
 }
 
 NodeFactory *Main::nodeFactory() const
 {
 	return m_node_factory;
+}
+
+Scene *Main::scene() const
+{
+	return m_scene;
 }

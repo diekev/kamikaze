@@ -22,49 +22,39 @@
  *
  */
 
-#pragma once
+#include "context.h"
 
-#include <glm/glm.hpp>
+#include <kamikaze/context.h>
 
-#include <kamikaze/nodes.h>
+#include "scene.h"
 
-void register_builtin_nodes(NodeFactory *factory);
+ContextListener::~ContextListener()
+{
+	if (m_context->scene) {
+		m_context->scene->remove_listener(this);
+	}
+}
 
-class OutputNode : public Node {
-	Primitive *m_primitive = nullptr;
+void ContextListener::listens(EvaluationContext *eval_ctx)
+{
+	m_context = eval_ctx;
+	m_context->scene->add_listener(this);
+}
 
-public:
-	OutputNode(const std::string &name);
+void Listened::add_listener(ContextListener *listener)
+{
+	m_listeners.push_back(listener);
+}
 
-	Primitive *primitive() const;
+void Listened::remove_listener(ContextListener *listener)
+{
+	auto iter = std::find(m_listeners.begin(), m_listeners.end(), listener);
+	m_listeners.erase(iter);
+}
 
-	void process() override;
-};
-
-class TransformNode : public Node {
-public:
-	TransformNode();
-
-	void process() override;
-};
-
-class CreateBoxNode : public Node {
-public:
-	CreateBoxNode();
-
-	void process() override;
-};
-
-class CreateTorusNode : public Node {
-public:
-	CreateTorusNode();
-
-	void process() override;
-};
-
-class CreateGridNode : public Node {
-public:
-	CreateGridNode();
-
-	void process() override;
-};
+void Listened::notify_listeners(int event_type)
+{
+	for (auto &listener : m_listeners) {
+		listener->update_state(event_type);
+	}
+}

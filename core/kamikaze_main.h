@@ -27,12 +27,14 @@
 #include <vector>
 #include <utils/filesystem.h>
 
-class PrimitiveFactory;
 class NodeFactory;
+class PrimitiveFactory;
+class Scene;
 
 class Main final {
-	PrimitiveFactory *m_object_factory;
+	PrimitiveFactory *m_primitive_factory;
 	NodeFactory *m_node_factory;
+	Scene *m_scene;
 
 	std::vector<filesystem::shared_library> m_plugins;
 
@@ -43,6 +45,7 @@ public:
 	void initTypes();
 	void loadPlugins();
 
-	PrimitiveFactory *objectFactory() const;
+	PrimitiveFactory *primitiveFactory() const;
 	NodeFactory *nodeFactory() const;
+	Scene *scene() const;
 };

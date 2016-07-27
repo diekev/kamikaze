@@ -25,20 +25,22 @@
 #include "scene.h"
 
 #include <glm/gtc/matrix_transform.hpp>
-#include <GL/glew.h>
 
 #include <kamikaze/nodes.h>
 #include <kamikaze/primitive.h>
 
-#include <QKeyEvent>
-#include <QListWidget>
-
 #include "object.h"
+
+#include "graphs/depsgraph.h"
 
 #include "util/util_string.h"
 
 Scene::Scene()
     : m_active_object(nullptr)
+    , m_depsgraph(new Depsgraph)
+    , m_start_frame(0)
+    , m_end_frame(250)
+    , m_cur_frame(0)
 {}
 
 Scene::~Scene()
@@ -46,38 +48,25 @@ Scene::~Scene()
 	for (auto &object : m_objects) {
 		delete object;
 	}
+
+	delete m_depsgraph;
 }
 
-void Scene::keyboardEvent(int key)
+void Scene::removeObject(Object *object)
 {
-	if (m_objects.size() == 0) {
-		return;
-	}
+	auto iter = std::find(m_objects.begin(), m_objects.end(), object);
 
-	switch (key) {
-		case Qt::Key_Delete:
-			auto iter = std::find(m_objects.begin(), m_objects.end(), m_active_object);
-			m_objects.erase(iter);
-			delete m_active_object;
-			m_active_object = nullptr;
-			break;
-	}
-}
+	assert(iter != m_objects.end());
 
-void Scene::removeObject(Object *ob)
-{
-	auto iter = std::find(m_objects.begin(), m_objects.end(), ob);
+	m_objects.erase(iter);
+	m_depsgraph->remove_node(object);
+	delete object;
 
-	if (iter != m_objects.end()) {
-		m_objects.erase(iter);
-		delete ob;
-	}
-
-	if (ob == m_active_object) {
+	if (object == m_active_object) {
 		m_active_object = nullptr;
 	}
 
-	Q_EMIT(objectChanged());
+	notify_listeners(OBJECT_ADDED);
 }
 
 void Scene::addObject(Object *object)
@@ -90,51 +79,9 @@ void Scene::addObject(Object *object)
 	m_objects.push_back(object);
 	m_active_object = object;
 
-	Q_EMIT(objectAdded(object));
-}
+	m_depsgraph->create_node(object);
 
-void Scene::render(ViewerContext *context)
-{
-	for (auto &object : m_objects) {
-		if (!object || !object->primitive()) {
-			continue;
-		}
-
-		const bool active_object = (object == m_active_object);
-
-		auto prim = object->primitive();
-
-		/* update prim before drawing */
-		prim->update();
-		prim->prepareRenderData();
-
-		if (prim->drawBBox()) {
-			prim->bbox()->render(context, false);
-		}
-
-		auto primmat = prim->matrix();
-		prim->matrix() = object->matrix() * primmat;
-
-		prim->render(context, false);
-
-		if (active_object) {
-			glStencilFunc(GL_NOTEQUAL, 1, 0xff);
-			glStencilMask(0x00);
-			glDisable(GL_DEPTH_TEST);
-
-			/* scale up the object a bit */
-			prim->matrix() = glm::scale(prim->matrix(), glm::vec3(1.01f));
-
-			prim->render(context, true);
-
-			prim->matrix() = primmat;
-
-			/* restore */
-			glStencilFunc(GL_ALWAYS, 1, 0xff);
-			glStencilMask(0xff);
-			glEnable(GL_DEPTH_TEST);
-		}
-	}
+	notify_listeners(OBJECT_ADDED);
 }
 
 void Scene::intersect(const Ray &/*ray*/)
@@ -148,14 +95,17 @@ void Scene::selectObject(const glm::vec3 &pos)
 	int selected_object = -1, index = 0;
 
 	for (auto &object : m_objects) {
-		if (!object) {
+		if (!object || !object->collection()) {
 			continue;
 		}
 
-		float dist = glm::distance(object->primitive()->pos(), pos);
-		if (/*dist < 1.0f &&*/ dist < min) {
-			selected_object = index;
-			min = dist;
+		for (const auto &prim : object->collection()->primitives()) {
+			float dist = glm::distance(prim->pos(), pos);
+
+			if (/*dist < 1.0f &&*/ dist < min) {
+				selected_object = index;
+				min = dist;
+			}
 		}
 
 		++index;
@@ -163,7 +113,7 @@ void Scene::selectObject(const glm::vec3 &pos)
 
 	if (selected_object != -1 && m_active_object != m_objects[selected_object]) {
 		m_active_object = m_objects[selected_object];
-		Q_EMIT(objectChanged());
+		notify_listeners(OBJECT_SELECTED);
 	}
 }
 
@@ -176,86 +126,93 @@ Object *Scene::currentObject()
 	return nullptr;
 }
 
-void Scene::setObjectName(const QString &name)
-{
-	/* Need to make a copy of the string, since the slot signature has to match
-     * the signal signature (const QString &) */
-	QString copy(name);
-
-	bool name_changed = ensureUniqueName(copy);
-
-	if (name_changed) {
-		m_active_object->name(copy);
-		Q_EMIT(objectChanged()); // XXX - hack to update the tab and outliner
-	}
-	else {
-		m_active_object->name(name);
-	}
-}
-
 void Scene::tagObjectUpdate()
 {
-	if (m_active_object) {
-		m_active_object->updateMatrix();
+	if (!m_active_object) {
+		return;
+	}
 
-		if (m_active_object->primitive()) {
-			m_active_object->primitive()->tagUpdate();
+	m_active_object->updateMatrix();
+
+	if (m_active_object->collection()) {
+		for (auto &prim : m_active_object->collection()->primitives()) {
+			prim->tagUpdate();
 		}
 	}
-}
 
-void Scene::emitNodeAdded(Object *ob, Node *node)
-{
-	Q_EMIT(nodeAdded(ob, node));
-}
-
-void Scene::objectNameList(QListWidget *widget) const
-{
-	widget->clear();
-
-	for (auto &object : m_objects) {
-		widget->addItem(object->name());
-	}
+	notify_listeners(OBJECT_MODIFIED);
 }
 
 bool Scene::ensureUniqueName(QString &name) const
 {
 	return ensure_unique_name(name, [&](const QString &str)
-		{
-			for (const auto &object : m_objects) {
-				if (object->name() == str) {
-					return false;
-				}
+	{
+		for (const auto &object : m_objects) {
+			if (object->name() == str) {
+				return false;
 			}
-
-			return true;
-		});
-}
-
-void Scene::setCurrentObject(QListWidgetItem *item)
-{
-	for (auto &object : m_objects) {
-		if (object->name() == item->text()) {
-			m_active_object = object;
-			break;
 		}
-	}
 
-	Q_EMIT(objectChanged());
+		return true;
+	});
 }
 
 void Scene::setActiveObject(Object *object)
 {
 	m_active_object = object;
-	Q_EMIT(objectChanged());
+	notify_listeners(OBJECT_SELECTED);
 }
 
-void Scene::updateForNewFrame()
+void Scene::updateForNewFrame(const EvaluationContext * const context)
 {
-	/* TODO: dependency graph */
+	m_depsgraph->evaluate(context);
+}
 
-	for (Object *object : m_objects) {
-		/* TODO: replace with proper update method */
-		eval_graph(nullptr, object, false);
-	}
+int Scene::startFrame() const
+{
+	return m_start_frame;
+}
+
+void Scene::startFrame(int value)
+{
+	m_start_frame = value;
+	notify_listeners(TIME_CHANGED);
+}
+
+int Scene::endFrame() const
+{
+	return m_end_frame;
+}
+
+void Scene::endFrame(int value)
+{
+	m_end_frame = value;
+	notify_listeners(TIME_CHANGED);
+}
+
+int Scene::currentFrame() const
+{
+	return m_cur_frame;
+}
+
+void Scene::currentFrame(int value)
+{
+	m_cur_frame = value;
+	notify_listeners(TIME_CHANGED);
+}
+
+float Scene::framesPerSecond() const
+{
+	return m_fps;
+}
+
+void Scene::framesPerSecond(float value)
+{
+	m_fps = value;
+	notify_listeners(TIME_CHANGED);
+}
+
+const std::vector<Object *> &Scene::objects() const
+{
+	return m_objects;
 }

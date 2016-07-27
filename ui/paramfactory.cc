@@ -24,8 +24,6 @@
 
 #include "paramfactory.h"
 
-#include <QLabel>
-#include <QGridLayout>
 #include <kamikaze/models.h>
 
 #include "intern/param_widgets.h"
