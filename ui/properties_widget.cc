@@ -28,6 +28,7 @@
 #include <QHBoxLayout>
 #include <QScrollArea>
 
+#include <kamikaze/context.h>
 #include <kamikaze/nodes.h>
 
 #include "paramcallback.h"

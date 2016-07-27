@@ -29,6 +29,7 @@
 #include <QVBoxLayout>
 
 #include <iostream>
+#include <kamikaze/context.h>
 
 #include "node_compound.h"
 #include "node_connection.h"

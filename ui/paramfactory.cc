@@ -24,7 +24,7 @@
 
 #include "paramfactory.h"
 
-#include <kamikaze/models.h>
+#include <kamikaze/persona.h>
 
 #include "intern/param_widgets.h"
 
