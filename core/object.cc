@@ -25,6 +25,7 @@
 #include "object.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <kamikaze/context.h>
 #include <kamikaze/primitive.h>
 
 #include "graphs/object_graph.h"

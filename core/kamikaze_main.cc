@@ -77,7 +77,7 @@ Main::~Main()
 
 void Main::loadPlugins()
 {
-	m_plugins = load_plugins("/opt/kamikaze/plugins");
+	m_plugins = load_plugins("plugins");
 
 	std::error_code ec;
 	for (auto &plugin : m_plugins) {

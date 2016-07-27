@@ -24,6 +24,8 @@
 
 #include "outliner_widget.h"
 
+#include <kamikaze/context.h>
+
 #include "core/object.h"
 #include "core/scene.h"
 

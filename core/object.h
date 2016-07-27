@@ -32,14 +32,12 @@
 
 #include "transformable.h"
 
-#include "ui/mainwindow.h"
-
+class EvaluationContext;
 class Graph;
 class Node;
 class ParamCallback;
 class Primitive;
 class PrimitiveCollection;
-class MainWindow;
 
 class Object : public Persona, public Transformable {
 	PrimitiveCollection *m_collection = nullptr;
