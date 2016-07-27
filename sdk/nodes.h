@@ -28,7 +28,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "models.h"
+#include "persona.h"
 
 class EvaluationContext;
 class InputSocket;
@@ -84,14 +84,7 @@ struct InputSocket {
 
 /* ********************************** */
 
-struct NodeState {
-	std::vector<InputSocket *> inputs;
-	std::vector<OutputSocket *> outputs;
-};
-
-using NodeWatcher = Watcher<NodeState>;
-
-class Node : public Watched<NodeWatcher> {
+class Node : public Persona {
 protected:
 	std::vector<InputSocket *> m_inputs = {};
 	std::vector<OutputSocket *> m_outputs = {};
@@ -220,14 +213,6 @@ private:
 	 * Set the collection at the given output socket.
 	 */
 	void setOutputCollection(OutputSocket *socket, PrimitiveCollection *collection);
-
-	NodeState getState() const
-	{
-		NodeState s;
-		s.inputs = this->m_inputs;
-		s.outputs = this->m_outputs;
-		return s;
-	}
 };
 
 class NodeFactory final {

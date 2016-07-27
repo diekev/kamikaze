@@ -26,7 +26,6 @@
 
 #include <QGridLayout>
 #include <QLabel>
-#include <QWidget>
 
 ParamCallback::ParamCallback(QGridLayout *layout)
     : m_layout(layout)

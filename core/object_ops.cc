@@ -83,7 +83,7 @@ void AddNodeCmd::execute(EvaluationContext *context)
 	auto node = (*context->node_factory)(m_name);
 	m_object->addNode(node);
 
-	m_scene->emitNodeAdded(m_object, node);
+	m_scene->notify_listeners(NODE_ADDED);
 }
 
 void AddNodeCmd::undo()
@@ -125,7 +125,7 @@ void AddPresetObjectCmd::execute(EvaluationContext *context)
 		m_scene->addObject(m_object);
 	}
 	else {
-		m_scene->emitNodeAdded(m_object, node);
+		m_scene->notify_listeners(NODE_ADDED);
 	}
 }
 

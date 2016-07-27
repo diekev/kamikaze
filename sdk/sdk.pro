@@ -43,7 +43,7 @@ HDR_SDK = \
     context.h \
 	cube.h \
     mesh.h \
-    models.h \
+    persona.h \
     noise.h \
     nodes.h \
     primitive.h \
@@ -64,7 +64,8 @@ SOURCES += \
     geomlists.cc \
     prim_points.cc \
     any.cc \
-	renderbuffer.cc
+	renderbuffer.cc \
+    persona.cc
 
 HEADERS += \
     $$HDR_SDK

@@ -25,27 +25,40 @@
 #pragma once
 
 #include <vector>
-#include <utils/filesystem.h>
 
-class NodeFactory;
-class PrimitiveFactory;
-class Scene;
+class EvaluationContext;
 
-class Main final {
-	PrimitiveFactory *m_primitive_factory;
-	NodeFactory *m_node_factory;
-	Scene *m_scene;
+enum {
+	TIME_CHANGED,
 
-	std::vector<filesystem::shared_library> m_plugins;
+	OBJECT_ADDED,
+	OBJECT_MODIFIED,
+	OBJECT_SELECTED,
+
+	NODE_ADDED,
+	NODE_REMOVED,
+	NODE_SELECTED,
+};
+
+class ContextListener {
+protected:
+	EvaluationContext *m_context = nullptr;
 
 public:
-	Main();
-	~Main();
+	virtual ~ContextListener();
 
-	void initTypes();
-	void loadPlugins();
+	void listens(EvaluationContext *eval_ctx);
 
-	PrimitiveFactory *primitiveFactory() const;
-	NodeFactory *nodeFactory() const;
-	Scene *scene() const;
+	virtual void update_state(int event_type) = 0;
+};
+
+class Listened {
+	std::vector<ContextListener *> m_listeners;
+
+public:
+	void add_listener(ContextListener *listener);
+
+	void remove_listener(ContextListener *listener);
+
+	void notify_listeners(int event_type);
 };

@@ -24,28 +24,56 @@
 
 #pragma once
 
-#include <vector>
-#include <utils/filesystem.h>
+#include <QWidget>
 
-class NodeFactory;
-class PrimitiveFactory;
+#include "context.h"
+
+class QDoubleSpinBox;
+class QFrame;
+class QGridLayout;
+class QHBoxLayout;
+class QLabel;
+class QSlider;
+class QPushButton;
+class QSpinBox;
 class Scene;
 
-class Main final {
-	PrimitiveFactory *m_primitive_factory;
-	NodeFactory *m_node_factory;
-	Scene *m_scene;
+class TimeLineWidget : public QWidget, public ContextListener {
+	Q_OBJECT
 
-	std::vector<filesystem::shared_library> m_plugins;
+	QFrame *m_frame;
+	QSlider *m_slider;
+
+	QHBoxLayout *m_layout;
+	QHBoxLayout *m_hbox_layout;
+	QGridLayout *m_grid_layout;
+	QSpinBox *m_end_frame, *m_start_frame, *m_cur_frame;
+	QDoubleSpinBox *m_fps;
+
+	QPushButton *m_begin_but;
+	QPushButton *m_start_but;
+	QPushButton *m_end_but;
+
+	QLabel *m_label;
+
+	QTimer *m_timer;
+
+	bool m_timer_has_started = false;
 
 public:
-	Main();
-	~Main();
+	TimeLineWidget(QWidget *parent = nullptr);
 
-	void initTypes();
-	void loadPlugins();
+	void update_state(int event_type) override;
 
-	PrimitiveFactory *primitiveFactory() const;
-	NodeFactory *nodeFactory() const;
-	Scene *scene() const;
+private Q_SLOTS:
+	void setStartFrame(int value) const;
+	void setEndFrame(int value) const;
+	void setFPS(double value) const;
+
+	void goToStartFrame() const;
+	void goToEndFrame() const;
+
+	void startAnimation();
+
+	void updateFrame() const;
 };

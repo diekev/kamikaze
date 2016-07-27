@@ -38,6 +38,15 @@
 Object::Object()
     : m_graph(new Graph)
 {
+	add_prop("Position", property_type::prop_vec3);
+	set_prop_default_value_vec3(glm::vec3(0.0f, 0.0f, 0.0f));
+
+	add_prop("Rotation", property_type::prop_vec3);
+	set_prop_default_value_vec3(glm::vec3(0.0f, 0.0f, 0.0f));
+
+	add_prop("Size", property_type::prop_vec3);
+	set_prop_default_value_vec3(glm::vec3(1.0f, 1.0f, 1.0f));
+
 	updateMatrix();
 }
 
@@ -71,6 +80,7 @@ void Object::addNode(Node *node)
 {
 	node->setPrimitiveCache(&m_cache);
 	m_graph->add(node);
+	m_graph->active_node(node);
 }
 
 Graph *Object::graph() const
@@ -88,17 +98,12 @@ const QString Object::name() const
 	return QString::fromStdString(m_name);
 }
 
-void Object::setUIParams(ParamCallback *cb)
-{
-	string_param(cb, "Name", &m_name, "");
-
-	xyz_param(cb, "Position", &m_pos[0], 0.0f, 100.0f);
-	xyz_param(cb, "Scale", &m_scale[0], 0.0f, 100.0f);
-	xyz_param(cb, "Rotation", &m_rotation[0], 0.0f, 360.0f);
-}
-
 void Object::updateMatrix()
 {
+	const auto m_pos = eval_vec3("Position");
+	const auto m_rotation = eval_vec3("Rotation");
+	const auto m_scale = eval_vec3("Size");
+
 	m_matrix = glm::mat4(1.0f);
 	m_matrix = glm::translate(m_matrix, m_pos);
 	m_matrix = glm::rotate(m_matrix, glm::radians(m_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));

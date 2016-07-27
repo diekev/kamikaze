@@ -51,19 +51,22 @@ Viewer::Viewer(QWidget *parent)
     , m_bg(glm::vec4(0.5f, 0.5f, 0.5f, 1.0f))
     , m_camera(new Camera(m_width, m_height))
     , m_grid(nullptr)
-    , m_scene(nullptr)
-    , m_timer(new QTimer(this))
-    , m_context(new ViewerContext)
+    , m_viewer_context(new ViewerContext)
 {
 	setFocusPolicy(Qt::FocusPolicy::StrongFocus);
-	connect(m_timer, SIGNAL(timeout()), this, SLOT(updateGL()));
 }
 
 Viewer::~Viewer()
 {
+	Q_EMIT(viewerDeleted());
 	delete m_camera;
 	delete m_grid;
-	delete m_context;
+	delete m_viewer_context;
+}
+
+void Viewer::update_state(int /*event_type*/)
+{
+	update();
 }
 
 void Viewer::initializeGL()
@@ -83,8 +86,6 @@ void Viewer::initializeGL()
 
 	m_grid = new Grid(20, 20);
 	m_camera->update();
-
-	m_timer->start(1000 / 24);
 }
 
 void Viewer::resizeGL(int w, int h)
@@ -109,24 +110,24 @@ void Viewer::paintGL()
 	const auto &P = m_camera->P();
 	const auto &MVP = P * MV;
 
-	m_context->setView(m_camera->dir());
-	m_context->setModelview(MV);
-	m_context->setProjection(P);
-	m_context->setMVP(MVP);
-	m_context->setNormal(glm::inverseTranspose(glm::mat3(MV)));
-	m_context->setMatrix(glm::mat4(1.0f));
+	m_viewer_context->setView(m_camera->dir());
+	m_viewer_context->setModelview(MV);
+	m_viewer_context->setProjection(P);
+	m_viewer_context->setMVP(MVP);
+	m_viewer_context->setNormal(glm::inverseTranspose(glm::mat3(MV)));
+	m_viewer_context->setMatrix(glm::mat4(1.0f));
 
 	if (m_draw_grid) {
-		m_grid->render(m_context);
+		m_grid->render(m_viewer_context);
 	}
 
-	if (m_scene != nullptr) {
-		for (auto &object : m_scene->objects()) {
+	if (m_context->scene != nullptr) {
+		for (auto &object : m_context->scene->objects()) {
 			if (!object || !object->collection()) {
 				continue;
 			}
 
-			const bool active_object = (object == m_scene->currentObject());
+			const bool active_object = (object == m_context->scene->currentObject());
 
 			const auto collection = object->collection();
 
@@ -136,12 +137,12 @@ void Viewer::paintGL()
 				prim->prepareRenderData();
 
 				if (prim->drawBBox()) {
-					prim->bbox()->render(m_context, false);
+					prim->bbox()->render(m_viewer_context, false);
 				}
 
-				m_context->setMatrix(object->matrix() * prim->matrix());
+				m_viewer_context->setMatrix(object->matrix() * prim->matrix());
 
-				prim->render(m_context, false);
+				prim->render(m_viewer_context, false);
 
 				if (active_object) {
 					glStencilFunc(GL_NOTEQUAL, 1, 0xff);
@@ -151,7 +152,7 @@ void Viewer::paintGL()
 					glLineWidth(5);
 					glPolygonMode(GL_FRONT, GL_LINE);
 
-					prim->render(m_context, true);
+					prim->render(m_viewer_context, true);
 
 					/* Restore state. */
 					glPolygonMode(GL_FRONT, GL_FILL);
@@ -203,6 +204,7 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 	}
 
 	m_camera->mouseDownEvent(x, y);
+	update();
 }
 
 void Viewer::mouseMoveEvent(QMouseEvent *e)
@@ -215,6 +217,7 @@ void Viewer::mouseMoveEvent(QMouseEvent *e)
 	const int y = e->pos().y();
 
 	m_camera->mouseMoveEvent(m_mouse_button, m_modifier, x, y);
+	update();
 }
 
 void Viewer::mouseReleaseEvent(QMouseEvent */*e*/)
@@ -227,7 +230,7 @@ void Viewer::keyPressEvent(QKeyEvent *e)
 {
 	switch (e->key()) {
 		case Qt::Key_Delete:
-			m_scene->removeObject(m_scene->currentObject());
+			m_context->scene->removeObject(m_context->scene->currentObject());
 			break;
 		default:
 			break;
@@ -244,11 +247,7 @@ void Viewer::wheelEvent(QWheelEvent *e)
 	}
 
 	m_camera->mouseWheelEvent(m_mouse_button);
-}
-
-void Viewer::setScene(Scene *scene)
-{
-	m_scene = scene;
+	update();
 }
 
 void Viewer::intersectScene(int x, int y) const
@@ -260,7 +259,7 @@ void Viewer::intersectScene(int x, int y) const
 	ray.pos = m_camera->pos();
 	ray.dir = glm::normalize(end - start);
 
-	m_scene->intersect(ray);
+	m_context->scene->intersect(ray);
 }
 
 void Viewer::selectObject(int x, int y) const
@@ -269,7 +268,7 @@ void Viewer::selectObject(int x, int y) const
 	glReadPixels(x, m_height - y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &z);
 
 	const glm::vec3 pos = unproject(glm::vec3(x, m_height - y, z));
-	m_scene->selectObject(pos);
+	m_context->scene->selectObject(pos);
 }
 
 glm::vec3 Viewer::unproject(const glm::vec3 &pos) const
@@ -292,4 +291,5 @@ void Viewer::changeBackground()
 void Viewer::drawGrid(bool b)
 {
 	m_draw_grid = b;
+	update();
 }

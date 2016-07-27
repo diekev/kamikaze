@@ -26,6 +26,8 @@
 
 #include <QTreeWidget>
 
+#include "context.h"
+
 class Object;
 class Scene;
 
@@ -67,17 +69,13 @@ public:
 
 /* ************************************************************************** */
 
-class OutlinerTreeWidget : public QTreeWidget {
+class OutlinerTreeWidget : public QTreeWidget, public ContextListener {
 	Q_OBJECT
-
-	Scene *m_scene;
 
 public:
 	explicit OutlinerTreeWidget(QWidget *parent = nullptr);
 
-	void setScene(Scene *scene);
-
-	void updateScene();
+	void update_state(int event_type) override;
 
 	/* Events. */
 	void keyPressEvent(QKeyEvent *e) override;

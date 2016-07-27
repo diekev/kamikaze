@@ -23,6 +23,8 @@
 #include <QGraphicsView>
 #include <QWidget>
 
+#include "scene.h"
+
 class ObjectNodeItem;
 class QGraphicsItem;
 class QGraphicsRectItem;
@@ -49,7 +51,7 @@ protected:
 	void wheelEvent(QWheelEvent *event) override;
 };
 
-class QtNodeEditor : public QWidget {
+class QtNodeEditor : public QWidget, public ContextListener {
 	Q_OBJECT
 
 	NodeView *m_view;
@@ -150,6 +152,8 @@ public:
 		return m_editor_mode;
 	}
 
+	void update_state(int event_type) override;
+
 public Q_SLOTS:
 	/* Activated when a contextmenu item is selected */
 	void contextMenuItemSelected(QAction *action);
@@ -157,27 +161,24 @@ public Q_SLOTS:
 	/* Activated when a connection is set between two nodes. */
 	void connectionEstablished(QtConnection*);
 
-Q_SIGNALS:
-	/* Emitted when a node is added to the node editor */
-	void nodeAdded(QtNode *);
-
-	/* Emitted when a node is going to be removed from the node editor */
-	void nodeRemoved(QtNode *);
-	void objectNodeRemoved(ObjectNodeItem *);
-
-	/* Emitted when a node is selected */
-	void nodeSelected(QtNode *);
-	void objectNodeSelected(ObjectNodeItem *);
-
-	/* Activated when a connection is set between two nodes. */
-	void nodesConnected(QtNode *, const QString &, QtNode *, const QString &);
-
-	/* Activated when a connection is removed between two nodes. */
-	void connectionRemoved(QtNode *, const QString &, QtNode *, const QString &);
-
 private:
 	/* Called when a node is dropped on a connection. */
 	void splitConnectionWithNode(QtNode *node);
+
+	/* Called when an object node is selected. */
+	void setActiveObject(ObjectNodeItem *node);
+
+	/* Called when an object node is removed. */
+	void removeObject(ObjectNodeItem *node);
+
+	/* Called when a node is removed. */
+	void removeNodeEx(QtNode *node);
+
+	/* Called when nodes are connected. */
+	void nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to);
+
+	/* Called when nodes are disconnected. */
+	void connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to);
 
 protected:
 	/* Event handling */

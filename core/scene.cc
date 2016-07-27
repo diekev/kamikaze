@@ -38,6 +38,9 @@
 Scene::Scene()
     : m_active_object(nullptr)
     , m_depsgraph(new Depsgraph)
+    , m_start_frame(0)
+    , m_end_frame(250)
+    , m_cur_frame(0)
 {}
 
 Scene::~Scene()
@@ -63,7 +66,7 @@ void Scene::removeObject(Object *object)
 		m_active_object = nullptr;
 	}
 
-	Q_EMIT(objectChanged());
+	notify_listeners(OBJECT_ADDED);
 }
 
 void Scene::addObject(Object *object)
@@ -78,7 +81,7 @@ void Scene::addObject(Object *object)
 
 	m_depsgraph->create_node(object);
 
-	Q_EMIT(objectAdded(object));
+	notify_listeners(OBJECT_ADDED);
 }
 
 void Scene::intersect(const Ray &/*ray*/)
@@ -110,7 +113,7 @@ void Scene::selectObject(const glm::vec3 &pos)
 
 	if (selected_object != -1 && m_active_object != m_objects[selected_object]) {
 		m_active_object = m_objects[selected_object];
-		Q_EMIT(objectChanged());
+		notify_listeners(OBJECT_SELECTED);
 	}
 }
 
@@ -121,23 +124,6 @@ Object *Scene::currentObject()
 	}
 
 	return nullptr;
-}
-
-void Scene::setObjectName(const QString &name)
-{
-	/* Need to make a copy of the string, since the slot signature has to match
-     * the signal signature (const QString &) */
-	QString copy(name);
-
-	bool name_changed = ensureUniqueName(copy);
-
-	if (name_changed) {
-		m_active_object->name(copy);
-		Q_EMIT(objectChanged()); // XXX - hack to update the tab and outliner
-	}
-	else {
-		m_active_object->name(name);
-	}
 }
 
 void Scene::tagObjectUpdate()
@@ -153,36 +139,77 @@ void Scene::tagObjectUpdate()
 			prim->tagUpdate();
 		}
 	}
-}
 
-void Scene::emitNodeAdded(Object *ob, Node *node)
-{
-	Q_EMIT(nodeAdded(ob, node));
+	notify_listeners(OBJECT_MODIFIED);
 }
 
 bool Scene::ensureUniqueName(QString &name) const
 {
 	return ensure_unique_name(name, [&](const QString &str)
-		{
-			for (const auto &object : m_objects) {
-				if (object->name() == str) {
-					return false;
-				}
+	{
+		for (const auto &object : m_objects) {
+			if (object->name() == str) {
+				return false;
 			}
+		}
 
-			return true;
-		});
+		return true;
+	});
 }
 
 void Scene::setActiveObject(Object *object)
 {
 	m_active_object = object;
-	Q_EMIT(objectChanged());
+	notify_listeners(OBJECT_SELECTED);
 }
 
 void Scene::updateForNewFrame(const EvaluationContext * const context)
 {
 	m_depsgraph->evaluate(context);
+}
+
+int Scene::startFrame() const
+{
+	return m_start_frame;
+}
+
+void Scene::startFrame(int value)
+{
+	m_start_frame = value;
+	notify_listeners(TIME_CHANGED);
+}
+
+int Scene::endFrame() const
+{
+	return m_end_frame;
+}
+
+void Scene::endFrame(int value)
+{
+	m_end_frame = value;
+	notify_listeners(TIME_CHANGED);
+}
+
+int Scene::currentFrame() const
+{
+	return m_cur_frame;
+}
+
+void Scene::currentFrame(int value)
+{
+	m_cur_frame = value;
+	notify_listeners(TIME_CHANGED);
+}
+
+float Scene::framesPerSecond() const
+{
+	return m_fps;
+}
+
+void Scene::framesPerSecond(float value)
+{
+	m_fps = value;
+	notify_listeners(TIME_CHANGED);
 }
 
 const std::vector<Object *> &Scene::objects() const
