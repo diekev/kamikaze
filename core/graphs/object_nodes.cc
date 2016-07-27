@@ -125,8 +125,6 @@ void TransformNode::process()
 	const auto Z = rot_ord[rot_order][2];
 
 	for (auto &prim : primitive_iterator(this->m_collection, Mesh::id)) {
-		std::cerr << "Iter\n";
-
 		auto matrix = glm::mat4(1.0f);
 
 		switch (transform_type) {
