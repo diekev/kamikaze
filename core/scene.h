@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include <QObject>
+#include <QString>
 
 #include <kamikaze/util_render.h>
 

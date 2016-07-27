@@ -24,6 +24,7 @@
 
 #include "context.h"
 
+#include <algorithm>
 #include <kamikaze/context.h>
 
 #include "scene.h"

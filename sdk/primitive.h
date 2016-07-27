@@ -24,7 +24,6 @@
 #pragma once
 
 #include <memory>
-#include <QString>
 #include <unordered_map>
 
 #include "cube.h"

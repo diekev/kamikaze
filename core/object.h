@@ -30,14 +30,12 @@
 #include <kamikaze/primitive.h>
 #include <kamikaze/persona.h>
 
-#include "ui/mainwindow.h"
-
+class EvaluationContext;
 class Graph;
 class Node;
 class ParamCallback;
 class Primitive;
 class PrimitiveCollection;
-class MainWindow;
 
 class Object : public Persona {
 	PrimitiveCollection *m_collection = nullptr;

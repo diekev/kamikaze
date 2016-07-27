@@ -14,26 +14,18 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
-# The Original Code is Copyright (C) 2015 Kévin Dietrich.
+# The Original Code is Copyright (C) 2016 Kévin Dietrich.
 # All rights reserved.
 #
 # ***** END GPL LICENSE BLOCK *****
 
-TARGET = utils
-TEMPLATE = lib
+add_library(kmk_util STATIC
+	util_input.h
+	util_memory.h
+	util_string.h
+	utils.h
+	utils_glm.h
 
-CONFIG += staticlib
-
-include(../global.pri)
-
-DEFINES += GLM_FORCE_RADIANS
-
-SOURCES += \
 	utils.cc
+)
 
-HEADERS += \
-	utils.h \
-    util_input.h \
-    util_string.h \
-    util_memory.h \
-    utils_glm.h

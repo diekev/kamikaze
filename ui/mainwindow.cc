@@ -59,6 +59,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	m_progress_bar->setVisible(false);
 
 	/* setup context */
+	m_context.animation = false;
 	m_context.scene = m_main->scene();
 	m_context.node_factory = m_main->nodeFactory();
 	m_context.primitive_factory = m_main->primitiveFactory();

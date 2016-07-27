@@ -14,39 +14,50 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
-# The Original Code is Copyright (C) 2015 Kévin Dietrich.
+# The Original Code is Copyright (C) 2016 Kévin Dietrich.
 # All rights reserved.
 #
 # ***** END GPL LICENSE BLOCK *****
 
-QT += core opengl
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+set(INC_SYS
+	${CMAKE_CURRENT_SOURCE_DIR}/../
+	${FILESYSTEM_INCLUDE_DIRS}
+	${KAMIKAZE_INCLUDE_DIRS}
+	${QT5_WIDGETS_INCLUDE_DIRS}
+)
 
-TARGET = kamikaze
-TEMPLATE = app
+set(DL_LIBRARIES dl)
+set(OPENGL_LIBRARIES GLEW GLU GL glut)
+set(TBB_LIBRARIES tbb)
 
-include(../global.pri)
+set(LIBS
+	${QT5_WIDGETS_LIBRARIES}
+	${QT5_GUI_LIBRARIES}
+	${QT5_OPENGL_LIBRARIES}
+	${QT5_CORE_LIBRARIES}
 
-INCLUDEPATH += $$PWD/../
-INCLUDEPATH += $$FILESYSTEM_INCLUDE_DIR
-INCLUDEPATH += $$KAMIKAZE_SDK_INCLUDE_DIR
+	kmk_ui
+	${QT5_OPENGL_LIBRARIES}
+	${OPENGL_LIBRARIES}
+	kmk_core
+	${EGO_LIBRARIES}
+	kmk_util
 
-SOURCES += main.cc
+	${FILESYSTEM_LIBRARIES}
+	${DL_LIBRARIES}
 
-LIBS += $$OUT_PWD/../ui/libui.a
-LIBS += $$OUT_PWD/../core/libcore.a
-#LIBS += $$OUT_PWD/../smoke/libsmoke.a
-LIBS += $$OUT_PWD/../util/libutils.a
-LIBS += -ltbb
+	${KAMIKAZE_LIBRARIES}
+	${TBB_LIBRARIES}
 
-LIBS += $$FILESYSTEM_LIBRARIES
-LIBS += $$KAMIKAZE_SDK_LIBRARY
-LIBS += $$EGO_LIBRARIES
+	${EGO_LIBRARIES}
+)
 
-unix {
-	copy_files.commands = cp -r $$PWD/../core/shaders/ .
-	copy_icons.commands = cp -r $$PWD/../core/icons/ .
-}
+add_compile_options(-fPIC)
 
-QMAKE_EXTRA_TARGETS += copy_files copy_icons
-POST_TARGETDEPS += copy_files copy_icons
+add_executable(kamikaze main.cc)
+
+target_include_directories(kamikaze PUBLIC "${INC_SYS}")
+
+target_link_libraries(kamikaze "${LIBS}")
+
+install(TARGETS kamikaze RUNTIME DESTINATION .)
