@@ -123,19 +123,18 @@ OutlinerTreeWidget::OutlinerTreeWidget(QWidget *parent)
 	        this, SLOT(handleItemSelection()));
 }
 
-void OutlinerTreeWidget::setScene(Scene *scene)
+void OutlinerTreeWidget::update_state(int event_type)
 {
-	m_scene = scene;
-	SceneTreeWidgetItem *item = new SceneTreeWidgetItem(this);
-    item->setScene(m_scene);
-    addTopLevelItem(item);
-}
+	if (event_type != OBJECT_ADDED) {
+		return;
+	}
 
-void OutlinerTreeWidget::updateScene()
-{
 	/* TODO */
 	clear();
-	setScene(m_scene);
+
+	SceneTreeWidgetItem *item = new SceneTreeWidgetItem(this);
+    item->setScene(m_context->scene);
+    addTopLevelItem(item);
 }
 
 void OutlinerTreeWidget::keyPressEvent(QKeyEvent *e)
@@ -215,7 +214,7 @@ void OutlinerTreeWidget::handleItemSelection()
 	auto object_item = dynamic_cast<ObjectTreeWidgetItem *>(item);
 
 	if (object_item) {
-		m_scene->setActiveObject(object_item->getObject());
+		m_context->scene->setActiveObject(object_item->getObject());
 		return;
 	}
 }

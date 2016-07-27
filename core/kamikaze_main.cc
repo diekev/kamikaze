@@ -34,6 +34,7 @@
 #include <dlfcn.h>
 
 #include "graphs/object_nodes.h"
+#include "scene.h"
 
 namespace fs = filesystem;
 
@@ -64,12 +65,14 @@ static std::vector<fs::shared_library> load_plugins(const fs::path &path)
 Main::Main()
     : m_primitive_factory(new PrimitiveFactory)
     , m_node_factory(new NodeFactory)
+    , m_scene(new Scene)
 {}
 
 Main::~Main()
 {
 	delete m_primitive_factory;
 	delete m_node_factory;
+	delete m_scene;
 }
 
 void Main::loadPlugins()
@@ -121,4 +124,9 @@ PrimitiveFactory *Main::primitiveFactory() const
 NodeFactory *Main::nodeFactory() const
 {
 	return m_node_factory;
+}
+
+Scene *Main::scene() const
+{
+	return m_scene;
 }

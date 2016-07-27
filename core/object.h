@@ -28,6 +28,7 @@
 #include <memory>
 
 #include <kamikaze/primitive.h>
+#include <kamikaze/persona.h>
 
 #include "transformable.h"
 
@@ -40,7 +41,7 @@ class Primitive;
 class PrimitiveCollection;
 class MainWindow;
 
-class Object : public Transformable {
+class Object : public Persona, public Transformable {
 	PrimitiveCollection *m_collection = nullptr;
 	PrimitiveCache m_cache;
 
@@ -65,8 +66,6 @@ public:
 
 	void name(const QString &name);
 	const QString name() const;
-
-	void setUIParams(ParamCallback *cb);
 
 	void clearCache();
 

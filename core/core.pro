@@ -53,7 +53,8 @@ SOURCES += \
     graphs/object_graph.cc \
     graphs/object_nodes.cc \
     manipulator.cc \
-    transformable.cc
+    transformable.cc \
+    context.cc
 
 HEADERS += \
     grid.h \
@@ -71,7 +72,8 @@ HEADERS += \
     graphs/object_nodes.h \
     graphs/object_graph.h \
     manipulator.h \
-    transformable.h
+    transformable.h \
+    context.h
 
 OTHER_FILES += \
     shaders/flat_shader.frag \

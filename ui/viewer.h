@@ -28,13 +28,15 @@
 #include <GL/glew.h>  /* needs to be included before QGLWidget (includes gl.h) */
 #include <QGLWidget>
 
+#include "context.h"
+
 class Camera;
 class Grid;
 class Manipulator;
 class Scene;
 class ViewerContext;
 
-class Viewer : public QGLWidget {
+class Viewer : public QGLWidget, public ContextListener {
 	Q_OBJECT
 
 	int m_mouse_button;
@@ -45,9 +47,7 @@ class Viewer : public QGLWidget {
 
 	Camera *m_camera;
 	Grid *m_grid;
-	Scene *m_scene;
-	QTimer *m_timer;
-	ViewerContext *m_context;
+	ViewerContext *m_viewer_context;
 	Manipulator *m_manipulator;
 	bool m_manipulator_active = false;
 
@@ -62,6 +62,8 @@ public:
 	explicit Viewer(QWidget *parent = nullptr);
 	~Viewer();
 
+	void update_state(int event_type) override;
+
 	void initializeGL();
 	void paintGL();
 	void resizeGL(int w, int h);
@@ -72,8 +74,9 @@ public:
 	void mouseReleaseEvent(QMouseEvent *e);
 	void wheelEvent(QWheelEvent *e);
 
-	void setScene(Scene *scene);
-
 	/** Cast a ray in the scene at mouse pos (x, y). */
 	void intersectScene(int x, int y);
+
+Q_SIGNALS:
+	void viewerDeleted();
 };

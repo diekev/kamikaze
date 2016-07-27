@@ -24,28 +24,29 @@
 
 #pragma once
 
-#include <vector>
-#include <utils/filesystem.h>
+#include <QWidget>
 
-class NodeFactory;
-class PrimitiveFactory;
-class Scene;
+#include "context.h"
 
-class Main final {
-	PrimitiveFactory *m_primitive_factory;
-	NodeFactory *m_node_factory;
-	Scene *m_scene;
+class QFrame;
+class QGridLayout;
+class QHBoxLayout;
+class QScrollArea;
 
-	std::vector<filesystem::shared_library> m_plugins;
+class PropertiesWidget : public QWidget, public ContextListener {
+	Q_OBJECT
+
+	QWidget *m_widget;
+	QScrollArea *m_scroll;
+	QGridLayout *m_layout;
+	QHBoxLayout *m_hbox_layout;
 
 public:
-	Main();
-	~Main();
+	explicit PropertiesWidget(QWidget *parent = nullptr);
 
-	void initTypes();
-	void loadPlugins();
+	void update_state(int event_type) override;
 
-	PrimitiveFactory *primitiveFactory() const;
-	NodeFactory *nodeFactory() const;
-	Scene *scene() const;
+private Q_SLOTS:
+	void evalObjectGraph();
+	void tagObjectUpdate();
 };

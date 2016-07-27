@@ -39,6 +39,9 @@ struct EvaluationContext {
 
 	/** Whether we are currently editing the graph of an object. */
 	bool edit_mode;
+
+	/** Whether we are currently playing an animation. */
+	bool animation;
 };
 
 class ViewerContext {

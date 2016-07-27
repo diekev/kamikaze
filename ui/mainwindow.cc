@@ -24,94 +24,60 @@
 
 #include "mainwindow.h"
 
-#include <iostream>
-
 #include <kamikaze/primitive.h>
 #include <kamikaze/nodes.h>
 
-#include <QComboBox>
-#include <QDialogButtonBox>
-#include <QFileDialog>
-#include <QKeyEvent>
-#include <QListWidget>
-#include <QSplitter>
-#include <QTimer>
+#include <QDockWidget>
+#include <QMenuBar>
+#include <QProgressBar>
+#include <QStatusBar>
+#include <QToolBar>
 
-#include "core/graphs/object_graph.h"
-#include "core/graphs/object_nodes.h"
 #include "core/kamikaze_main.h"
-#include "core/object.h"
 #include "core/object_ops.h"
-#include "core/scene.h"
-#include "core/undo.h"
 
-#include "node_compound.h"
 #include "node_editorwidget.h"
-#include "node_node.h"
-#include "node_scene.h"
-
-#include "paramcallback.h"
-#include "paramfactory.h"
-#include "ui_mainwindow.h"
-#include "utils_ui.h"
+#include "outliner_widget.h"
+#include "properties_widget.h"
+#include "timeline_widget.h"
+#include "viewer.h"
 
 MainWindow::MainWindow(Main *main, QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
     , m_main(main)
-    , m_scene(new Scene)
-    , m_timer(new QTimer(this))
     , m_command_manager(new CommandManager)
     , m_command_factory(new CommandFactory)
-    , m_timer_has_started(false)
 {
-	qApp->installEventFilter(this);
-	ui->setupUi(this);
-	ui->m_viewport->setScene(m_scene);
-
-	connect(m_scene, SIGNAL(objectAdded(Object *)), this, SLOT(setupObjectUI(Object *)));
-	connect(m_scene, SIGNAL(nodeAdded(Object *, Node *)), this, SLOT(setupNodeUI(Object *, Node *)));
-	connect(m_scene, SIGNAL(objectChanged()), this, SLOT(updateObjectTab()));
-	connect(ui->graph_editor, SIGNAL(objectNodeSelected(ObjectNodeItem *)), this, SLOT(setActiveObject(ObjectNodeItem *)));
-	connect(ui->graph_editor, SIGNAL(objectNodeRemoved(ObjectNodeItem *)), this, SLOT(removeObject(ObjectNodeItem *)));
-	connect(ui->graph_editor, SIGNAL(nodeRemoved(QtNode *)), this, SLOT(removeNode(QtNode *)));
-	connect(ui->graph_editor, SIGNAL(nodeSelected(QtNode *)), this, SLOT(setupNodeParamUI(QtNode *)));
-	connect(ui->graph_editor, SIGNAL(nodesConnected(QtNode *, const QString &, QtNode *, const QString &)),
-	        this, SLOT(nodesConnected(QtNode *, const QString &, QtNode *, const QString &)));
-	connect(ui->graph_editor, SIGNAL(connectionRemoved(QtNode *, const QString &, QtNode *, const QString &)),
-	        this, SLOT(connectionRemoved(QtNode *, const QString &, QtNode *, const QString &)));
-
-	connect(m_timer, SIGNAL(timeout()), this, SLOT(updateFrame()));
-
-	/* Timeline */
-	ui->m_timeline->setMaximum(250);
-
-	/* TODO: find another place to do this */
 	generateObjectMenu();
 	generateNodeMenu();
+	generateWindowMenu();
 	generatePresetMenu();
 
 	m_progress_bar = new QProgressBar(this);
-	ui->statusBar->addWidget(m_progress_bar);
+	statusBar()->addWidget(m_progress_bar);
 	m_progress_bar->setRange(0, 100);
 	m_progress_bar->setVisible(false);
 
 	/* setup context */
-	m_context.scene = m_scene;
+	m_context.scene = m_main->scene();
 	m_context.node_factory = m_main->nodeFactory();
 	m_context.primitive_factory = m_main->primitiveFactory();
 	m_context.main_window = this;
 
-	ui->m_start_but->setIcon(QIcon("icons/icon_play_forward.png"));
-	ui->m_begin_but->setIcon(QIcon("icons/icon_jump_first.png"));
-	ui->m_end_but->setIcon(QIcon("icons/icon_jump_last.png"));
+	m_has_glwindow = false;
 
-	ui->treeWidget->setScene(m_scene);
+	addGLViewerWidget();
+	addPropertiesWidget();
+	addGraphOutlinerWidget();
+	addTimeLineWidget();
+
+	setCentralWidget(nullptr);
+
+	setupPalette();
 }
 
 MainWindow::~MainWindow()
 {
-	delete ui;
 	delete m_command_manager;
 	delete m_command_factory;
 }
@@ -132,116 +98,6 @@ void MainWindow::taskEnded()
 	m_progress_bar->setVisible(false);
 }
 
-bool MainWindow::eventFilter(QObject *obj, QEvent *e)
-{
-	if (e->type() == QEvent::KeyPress) {
-		auto event = static_cast<QKeyEvent *>(e);
-
-		if (obj == ui->m_viewport) {
-			ui->m_viewport->keyPressEvent(event);
-			return true;
-		}
-		else if (obj == ui->treeWidget) {
-			ui->treeWidget->keyPressEvent(event);
-			return true;
-		}
-	}
-	else if (e->type() == QEvent::MouseButtonPress) {
-		auto event = static_cast<QMouseEvent *>(e);
-
-		if (obj == ui->m_viewport) {
-			ui->m_viewport->mousePressEvent(event);
-			return true;
-		}
-		else if (obj == ui->treeWidget) {
-			ui->treeWidget->mousePressEvent(event);
-			return true;
-		}
-	}
-	else if (e->type() == QEvent::MouseMove) {
-		auto event = static_cast<QMouseEvent *>(e);
-
-		if (obj == ui->m_viewport) {
-			ui->m_viewport->mouseMoveEvent(event);
-			return true;
-		}
-		else if (obj == ui->treeWidget) {
-			ui->treeWidget->mouseMoveEvent(event);
-			return true;
-		}
-	}
-	else if (e->type() == QEvent::MouseButtonRelease) {
-		auto event = static_cast<QMouseEvent *>(e);
-
-		if (obj == ui->m_viewport) {
-			ui->m_viewport->mouseReleaseEvent(event);
-			return true;
-		}
-		else if (obj == ui->treeWidget) {
-			ui->treeWidget->mouseReleaseEvent(event);
-			return true;
-		}
-	}
-	else if (e->type() == QEvent::Wheel) {
-		auto event = static_cast<QWheelEvent *>(e);
-
-		if (obj == ui->m_viewport) {
-			ui->m_viewport->wheelEvent(event);
-			return true;
-		}
-		else if (obj == ui->treeWidget) {
-			ui->treeWidget->wheelEvent(event);
-			return true;
-		}
-	}
-
-	return QObject::eventFilter(obj, e);
-}
-
-void MainWindow::updateObjectTab() const
-{
-	auto ob = m_scene->currentObject();
-
-	if (ob == nullptr) {
-		return;
-	}
-
-	clear_layout(ui->node_param_layout);
-
-	ParamCallback cb(ui->node_param_layout);
-	ob->setUIParams(&cb);
-
-	cb.setContext(m_scene, SLOT(tagObjectUpdate()));
-
-	ui->treeWidget->updateScene();
-}
-
-void MainWindow::startAnimation()
-{
-	if (m_timer_has_started) {
-		m_timer_has_started = false;
-		m_timer->stop();
-		ui->m_start_but->setText("Play");
-		ui->m_start_but->setIcon(QIcon("icons/icon_play_forward.png"));
-	}
-	else {
-		m_timer_has_started = true;
-		ui->m_start_but->setText("Pause");
-		ui->m_start_but->setIcon(QIcon("icons/icon_pause.png"));
-		m_timer->start(1000 / ui->m_fps->value());
-	}
-}
-
-void MainWindow::goToStartFrame() const
-{
-	ui->m_timeline->setValue(ui->m_timeline->minimum());
-}
-
-void MainWindow::goToEndFrame() const
-{
-	ui->m_timeline->setValue(ui->m_timeline->maximum());
-}
-
 void MainWindow::undo() const
 {
 	/* TODO: figure out how to update everything properly */
@@ -254,34 +110,12 @@ void MainWindow::redo() const
 	m_command_manager->redo();
 }
 
-void MainWindow::updateFrame() const
-{
-	auto value = ui->m_timeline->value() + 1;
-
-	if (value == ui->m_timeline->maximum()) {
-		value = 0;
-	}
-
-	ui->m_timeline->setValue(value);
-
-	m_scene->updateForNewFrame(&m_context);
-}
-
-void MainWindow::setStartFrame(int value) const
-{
-	ui->m_timeline->setMinimum(value);
-}
-
-void MainWindow::setEndFrame(int value) const
-{
-	ui->m_timeline->setMaximum(value);
-}
-
 void MainWindow::generateObjectMenu()
 {
 	m_command_factory->registerType("add object", AddObjectCmd::registerSelf);
 
-	auto action = ui->menuAdd->addAction("Empty Object");
+	m_add_object_menu = menuBar()->addMenu("Add Object");
+	auto action = m_add_object_menu->addAction("Empty Object");
 	action->setData(QVariant::fromValue(QString("add object")));
 
 	connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
@@ -299,9 +133,10 @@ void MainWindow::generateObjectMenu()
 void MainWindow::generateNodeMenu()
 {
 	m_command_factory->registerType("add node", AddNodeCmd::registerSelf);
+	m_add_nodes_menu = menuBar()->addMenu("Add Node");
 
 	for (const auto &category : m_main->nodeFactory()->categories()) {
-		auto sub_menu = ui->add_nodes_menu->addMenu(category.c_str());
+		auto sub_menu = m_add_nodes_menu->addMenu(category.c_str());
 
 		for (const auto &key : m_main->nodeFactory()->keys(category)) {
 			auto action = sub_menu->addAction(key.c_str());
@@ -310,8 +145,48 @@ void MainWindow::generateNodeMenu()
 			connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
 		}
 	}
+}
 
-	ui->graph_editor->setAddNodeMenu(ui->add_nodes_menu);
+void MainWindow::generateWindowMenu()
+{
+	m_add_window_menu = menuBar()->addMenu("View");
+
+	QAction *action;
+
+	action = m_add_window_menu->addAction("Graph Editor");
+	action->setToolTip("Add a Graph Editor");
+	connect(action, SIGNAL(triggered()), this, SLOT(addGraphEditorWidget()));
+
+	action = m_add_window_menu->addAction("Outliner");
+	action->setToolTip("Add an Outliner");
+	connect(action, SIGNAL(triggered()), this, SLOT(addOutlinerWidget()));
+
+	action = m_add_window_menu->addAction("Properties Editor");
+	action->setToolTip("Add a Properties Editor");
+	connect(action, SIGNAL(triggered()), this, SLOT(addPropertiesWidget()));
+
+	action = m_add_window_menu->addAction("Time Line");
+	action->setToolTip("Add a Time Line");
+	connect(action, SIGNAL(triggered()), this, SLOT(addTimeLineWidget()));
+
+	action = m_add_window_menu->addAction("3D View");
+	action->setToolTip("Add a 3D View");
+	/* TODO: figure out a way to have multiple GL context. */
+	action->setEnabled(false);
+	connect(action, SIGNAL(triggered()), this, SLOT(addGLViewerWidget()));
+}
+
+void MainWindow::generateEditMenu()
+{
+	m_edit_menu = menuBar()->addMenu("Edit");
+
+	QAction *action;
+
+	action = m_edit_menu->addAction("Undo");
+	connect(action, SIGNAL(triggered()), this, SLOT(undo()));
+
+	action = m_edit_menu->addAction("Redo");
+	connect(action, SIGNAL(triggered()), this, SLOT(redo()));
 }
 
 struct UIProp {
@@ -322,6 +197,9 @@ struct UIProp {
 void MainWindow::generatePresetMenu()
 {
 	m_command_factory->registerType("add preset", AddPresetObjectCmd::registerSelf);
+
+	m_tool_bar = new QToolBar();
+	addToolBar(Qt::TopToolBarArea, m_tool_bar);
 
 	UIProp props[] = {
 	    { "Grid", "icons/icon_grid.png" },
@@ -334,7 +212,7 @@ void MainWindow::generatePresetMenu()
 	};
 
 	for (const auto &prop : props) {
-		auto action = ui->toolBar->addAction(QIcon(prop.icon_path), prop.name);
+		auto action = m_tool_bar->addAction(QIcon(prop.icon_path), prop.name);
 		action->setData(QVariant::fromValue(QString("add preset")));
 
 		connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
@@ -359,215 +237,208 @@ void MainWindow::handleCommand()
 	cmd->setName(name);
 
 	/* TODO: handle this in a better way. */
-	m_context.edit_mode = (ui->graph_editor->editor_mode() == EDITOR_MODE_OBJECT);
+	m_context.edit_mode = (false /*ui->graph_editor->editor_mode() == EDITOR_MODE_OBJECT*/);
 
 	/* Execute the command in the current context, the manager will push the
 	* command on the undo stack. */
 	m_command_manager->execute(cmd, &m_context);
 }
 
-void MainWindow::setupNodeUI(Object *, Node *node)
+void MainWindow::addTimeLineWidget()
 {
-	QtNode *node_item = new QtNode(node->name().c_str());
-	node_item->setTitleColor(Qt::white);
-	node_item->alignTitle(ALIGNED_LEFT);
-	node_item->setNode(node);
+	QDockWidget *dock = new QDockWidget("Time Line", this);
+	dock->setAttribute(Qt::WA_DeleteOnClose);
 
-	ui->graph_editor->addNode(node_item);
+	TimeLineWidget *time_line = new TimeLineWidget(dock);
+	time_line->listens(&m_context);
+	time_line->update_state(TIME_CHANGED);
+
+	dock->setWidget(time_line);
+	dock->setAllowedAreas(Qt::AllDockWidgetAreas);
+
+	addDockWidget(Qt::RightDockWidgetArea, dock);
 }
 
-void MainWindow::setupNodeParamUI(QtNode *node_item)
+void MainWindow::addGraphEditorWidget()
 {
-	auto node = node_item->getNode();
+	QDockWidget *dock = new QDockWidget("Graph Editor", this);
+	dock->setAttribute(Qt::WA_DeleteOnClose);
 
-	if (!node) {
+	QtNodeEditor *graph_editor = new QtNodeEditor(dock);
+	graph_editor->listens(&m_context);
+	graph_editor->setAddNodeMenu(m_add_nodes_menu);
+	/* XXX - graph editor needs to be able to draw the scene from the scratch. */
+	graph_editor->update_state(-1);
+
+	dock->setWidget(graph_editor);
+	dock->setAllowedAreas(Qt::AllDockWidgetAreas);
+
+	addDockWidget(Qt::RightDockWidgetArea, dock);
+}
+
+void MainWindow::addGLViewerWidget()
+{
+	if (m_has_glwindow) {
 		return;
 	}
 
-	clear_layout(ui->node_param_layout);
+	QDockWidget *dock = new QDockWidget("Viewport", this);
+	dock->setAttribute(Qt::WA_DeleteOnClose);
 
-	ParamCallback cb(ui->node_param_layout);
+	Viewer *glviewer = new Viewer(dock);
+	glviewer->listens(&m_context);
+	glviewer->update_state(-1);
 
-	node->update_properties();
+	connect(glviewer, SIGNAL(viewerDeleted()), this, SLOT(viewerDeleted()));
 
-	ParamCallback *callback = &cb;
+	dock->setWidget(glviewer);
+	dock->setAllowedAreas(Qt::AllDockWidgetAreas);
 
-	for (Property &prop : node->props()) {
-		if (!prop.visible) {
-			continue;
-		}
+	addDockWidget(Qt::LeftDockWidgetArea, dock);
 
-		assert(!prop.data.empty());
-
-		switch (prop.type) {
-			case property_type::prop_bool:
-				bool_param(callback,
-				           prop.name.c_str(),
-				           any_cast<bool>(&prop.data),
-				           any_cast<bool>(prop.data));
-				break;
-			case property_type::prop_float:
-				float_param(callback,
-				            prop.name.c_str(),
-				            any_cast<float>(&prop.data),
-				            prop.min, prop.max,
-				            any_cast<float>(prop.data));
-				break;
-			case property_type::prop_int:
-				int_param(callback,
-				          prop.name.c_str(),
-				          any_cast<int>(&prop.data),
-				          prop.min, prop.max,
-				          any_cast<int>(prop.data));
-				break;
-			case property_type::prop_enum:
-				enum_param(callback,
-				           prop.name.c_str(),
-				           any_cast<int>(&prop.data),
-				           prop.enum_items,
-				           any_cast<int>(prop.data));
-				break;
-			case property_type::prop_vec3:
-				xyz_param(callback,
-				          prop.name.c_str(),
-				          &(any_cast<glm::vec3>(&prop.data)->x));
-				break;
-			case property_type::prop_input_file:
-				input_file_param(callback,
-				                 prop.name.c_str(),
-				                 any_cast<std::string>(&prop.data));
-				break;
-			case property_type::prop_output_file:
-				output_file_param(callback,
-				                  prop.name.c_str(),
-				                  any_cast<std::string>(&prop.data));
-				break;
-			case property_type::prop_string:
-				string_param(callback,
-				             prop.name.c_str(),
-				             any_cast<std::string>(&prop.data),
-				             any_cast<std::string>(prop.data).c_str());
-				break;
-		}
-
-		if (!prop.tooltip.empty()) {
-			param_tooltip(callback, prop.tooltip.c_str());
+	for (auto action : m_add_window_menu->actions()) {
+		if (action->text() == "3D View") {
+			action->setEnabled(false);
 		}
 	}
 
-	/* Only update/evaluate the graph if the node is connected. */
-	if (node->isLinked()) {
-		cb.setContext(this, SLOT(evalObjectGraph()));
-	}
+	m_has_glwindow = true;
 }
 
-/* TODO: evaluation system */
-void MainWindow::evalObjectGraph()
+void MainWindow::addOutlinerWidget()
 {
-	eval_graph(&m_context);
+	QDockWidget *dock = new QDockWidget("Outliner", this);
+	dock->setAttribute(Qt::WA_DeleteOnClose);
+
+	OutlinerTreeWidget *outliner = new OutlinerTreeWidget(dock);
+	outliner->listens(&m_context);
+	/* XXX - outliner needs to be able to draw the scene from the scratch. */
+	outliner->update_state(OBJECT_ADDED);
+
+	dock->setWidget(outliner);
+	dock->setAllowedAreas(Qt::AllDockWidgetAreas);
+
+	addDockWidget(Qt::LeftDockWidgetArea, dock);
 }
 
-void MainWindow::setupObjectUI(Object *object)
+void MainWindow::addGraphOutlinerWidget()
 {
-	auto obnode_item = new ObjectNodeItem(object, object->name());
-	obnode_item->setTitleColor(Qt::white);
-	obnode_item->alignTitle(ALIGNED_CENTER);
+	QDockWidget *outliner_dock = new QDockWidget("Outliner", this);
+	outliner_dock->setAttribute(Qt::WA_DeleteOnClose);
 
-	/* add node item for the object's graph output node */
-	{
-		auto graph = object->graph();
-		auto output_node = graph->output();
+	OutlinerTreeWidget *outliner = new OutlinerTreeWidget(outliner_dock);
+	outliner->listens(&m_context);
 
-		QtNode *out_node_item = new QtNode(output_node->name().c_str());
-		out_node_item->setTitleColor(Qt::white);
-		out_node_item->alignTitle(ALIGNED_LEFT);
-		out_node_item->setNode(output_node);
-		out_node_item->setScene(obnode_item->nodeScene());
-		out_node_item->setEditor(ui->graph_editor);
+	outliner_dock->setWidget(outliner);
+	outliner_dock->setAllowedAreas(Qt::AllDockWidgetAreas);
 
-		obnode_item->addNode(out_node_item);
+	addDockWidget(Qt::RightDockWidgetArea, outliner_dock);
 
-		/* TODO: this is just when adding an object from a preset. */
-		if (graph->nodes().size() > 1) {
-			Node *node = graph->nodes().back();
+	QDockWidget *graph_dock = new QDockWidget("Graph Editor", this);
+	graph_dock->setAttribute(Qt::WA_DeleteOnClose);
 
-			QtNode *node_item = new QtNode(node->name().c_str());
-			node_item->setTitleColor(Qt::white);
-			node_item->alignTitle(ALIGNED_LEFT);
-			node_item->setNode(node);
-			node_item->setScene(obnode_item->nodeScene());
-			node_item->setEditor(ui->graph_editor);
-			node_item->setPos(out_node_item->pos() - QPointF(200, 100));
+	QtNodeEditor *graph_editor = new QtNodeEditor(graph_dock);
+	graph_editor->listens(&m_context);
+	graph_editor->setAddNodeMenu(m_add_nodes_menu);
 
-			obnode_item->addNode(node_item);
+	graph_dock->setWidget(graph_editor);
+	graph_dock->setAllowedAreas(Qt::AllDockWidgetAreas);
 
-			ui->graph_editor->connectNodes(node_item, node_item->output(0),
-			                               out_node_item, out_node_item->input(0));
+	addDockWidget(Qt::RightDockWidgetArea, graph_dock);
+
+	tabifyDockWidget(graph_dock, outliner_dock);
+}
+
+void MainWindow::addPropertiesWidget()
+{
+	QDockWidget *dock = new QDockWidget("Properties", this);
+	dock->setAttribute(Qt::WA_DeleteOnClose);
+
+	PropertiesWidget *properties = new PropertiesWidget(dock);
+	properties->listens(&m_context);
+	properties->update_state(-1);
+
+	dock->setWidget(properties);
+	dock->setAllowedAreas(Qt::AllDockWidgetAreas);
+
+	addDockWidget(Qt::RightDockWidgetArea, dock);
+}
+
+void MainWindow::setupPalette()
+{
+	QPalette palette;
+	QBrush brush(QColor(255, 255, 255, 255));
+	brush.setStyle(Qt::SolidPattern);
+	palette.setBrush(QPalette::Active, QPalette::WindowText, brush);
+	QBrush brush1(QColor(127, 127, 127, 255));
+	brush1.setStyle(Qt::SolidPattern);
+	palette.setBrush(QPalette::Active, QPalette::Button, brush1);
+	QBrush brush2(QColor(191, 191, 191, 255));
+	brush2.setStyle(Qt::SolidPattern);
+	palette.setBrush(QPalette::Active, QPalette::Light, brush2);
+	QBrush brush3(QColor(159, 159, 159, 255));
+	brush3.setStyle(Qt::SolidPattern);
+	palette.setBrush(QPalette::Active, QPalette::Midlight, brush3);
+	QBrush brush4(QColor(63, 63, 63, 255));
+	brush4.setStyle(Qt::SolidPattern);
+	palette.setBrush(QPalette::Active, QPalette::Dark, brush4);
+	QBrush brush5(QColor(84, 84, 84, 255));
+	brush5.setStyle(Qt::SolidPattern);
+	palette.setBrush(QPalette::Active, QPalette::Mid, brush5);
+	palette.setBrush(QPalette::Active, QPalette::Text, brush);
+	palette.setBrush(QPalette::Active, QPalette::BrightText, brush);
+	palette.setBrush(QPalette::Active, QPalette::ButtonText, brush);
+	QBrush brush6(QColor(0, 0, 0, 255));
+	brush6.setStyle(Qt::SolidPattern);
+	palette.setBrush(QPalette::Active, QPalette::Base, brush6);
+	palette.setBrush(QPalette::Active, QPalette::Window, brush1);
+	palette.setBrush(QPalette::Active, QPalette::Shadow, brush6);
+	palette.setBrush(QPalette::Active, QPalette::AlternateBase, brush4);
+	QBrush brush7(QColor(255, 255, 220, 255));
+	brush7.setStyle(Qt::SolidPattern);
+	palette.setBrush(QPalette::Active, QPalette::ToolTipBase, brush7);
+	palette.setBrush(QPalette::Active, QPalette::ToolTipText, brush6);
+	palette.setBrush(QPalette::Inactive, QPalette::WindowText, brush);
+	palette.setBrush(QPalette::Inactive, QPalette::Button, brush1);
+	palette.setBrush(QPalette::Inactive, QPalette::Light, brush2);
+	palette.setBrush(QPalette::Inactive, QPalette::Midlight, brush3);
+	palette.setBrush(QPalette::Inactive, QPalette::Dark, brush4);
+	palette.setBrush(QPalette::Inactive, QPalette::Mid, brush5);
+	palette.setBrush(QPalette::Inactive, QPalette::Text, brush);
+	palette.setBrush(QPalette::Inactive, QPalette::BrightText, brush);
+	palette.setBrush(QPalette::Inactive, QPalette::ButtonText, brush);
+	palette.setBrush(QPalette::Inactive, QPalette::Base, brush6);
+	palette.setBrush(QPalette::Inactive, QPalette::Window, brush1);
+	palette.setBrush(QPalette::Inactive, QPalette::Shadow, brush6);
+	palette.setBrush(QPalette::Inactive, QPalette::AlternateBase, brush4);
+	palette.setBrush(QPalette::Inactive, QPalette::ToolTipBase, brush7);
+	palette.setBrush(QPalette::Inactive, QPalette::ToolTipText, brush6);
+	palette.setBrush(QPalette::Disabled, QPalette::WindowText, brush4);
+	palette.setBrush(QPalette::Disabled, QPalette::Button, brush1);
+	palette.setBrush(QPalette::Disabled, QPalette::Light, brush2);
+	palette.setBrush(QPalette::Disabled, QPalette::Midlight, brush3);
+	palette.setBrush(QPalette::Disabled, QPalette::Dark, brush4);
+	palette.setBrush(QPalette::Disabled, QPalette::Mid, brush5);
+	palette.setBrush(QPalette::Disabled, QPalette::Text, brush4);
+	palette.setBrush(QPalette::Disabled, QPalette::BrightText, brush);
+	palette.setBrush(QPalette::Disabled, QPalette::ButtonText, brush4);
+	palette.setBrush(QPalette::Disabled, QPalette::Base, brush1);
+	palette.setBrush(QPalette::Disabled, QPalette::Window, brush1);
+	palette.setBrush(QPalette::Disabled, QPalette::Shadow, brush6);
+	palette.setBrush(QPalette::Disabled, QPalette::AlternateBase, brush1);
+	palette.setBrush(QPalette::Disabled, QPalette::ToolTipBase, brush7);
+	palette.setBrush(QPalette::Disabled, QPalette::ToolTipText, brush6);
+
+	setPalette(palette);
+}
+
+void MainWindow::viewerDeleted()
+{
+	m_has_glwindow = false;
+
+	for (auto action : m_add_window_menu->actions()) {
+		if (action->text() == "3D View") {
+			action->setEnabled(true);
 		}
 	}
-
-	ui->graph_editor->addNode(obnode_item);
-
-	updateObjectTab();
-}
-
-void MainWindow::setActiveObject(ObjectNodeItem *node)
-{
-	m_scene->setActiveObject(node->object());
-	updateObjectTab();
-}
-
-void MainWindow::removeObject(ObjectNodeItem *node)
-{
-	m_scene->removeObject(node->object());
-}
-
-void MainWindow::removeNode(QtNode *node)
-{
-	auto object = m_scene->currentObject();
-	auto graph = object->graph();
-
-	const auto was_connected = node->getNode()->isLinked();
-
-	graph->remove(node->getNode());
-
-	if (was_connected) {
-		eval_graph(&m_context);
-	}
-}
-
-void MainWindow::nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
-{
-	auto object = m_scene->currentObject();
-	auto graph = object->graph();
-
-	auto node_from = from->getNode();
-	auto node_to = to->getNode();
-
-	auto output_socket = node_from->output(socket_from.toStdString());
-	auto input_socket = node_to->input(socket_to.toStdString());
-
-	assert((output_socket != nullptr) && (input_socket != nullptr));
-
-	graph->connect(output_socket, input_socket);
-
-	eval_graph(&m_context);
-}
-
-void MainWindow::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
-{
-	auto object = m_scene->currentObject();
-	auto graph = object->graph();
-
-	auto node_from = from->getNode();
-	auto node_to = to->getNode();
-
-	auto output_socket = node_from->output(socket_from.toStdString());
-	auto input_socket = node_to->input(socket_to.toStdString());
-
-	assert((output_socket != nullptr) && (input_socket != nullptr));
-
-	graph->disconnect(output_socket, input_socket);
-
-	eval_graph(&m_context);
 }

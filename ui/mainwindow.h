@@ -25,46 +25,35 @@
 #pragma once
 
 #include <QMainWindow>
-#include <QProgressBar>
 
 #include <kamikaze/context.h>
 
 #include "core/undo.h"
 
-namespace Ui {
-class MainWindow;
-}
-
-class QtNode;
-
-class Command;
-class CommandManager;
 class Main;
-class Node;
-class Object;
-class ObjectNodeItem;
-class Primitive;
-class QComboBox;
-class QListWidget;
 class QProgressBar;
-class QTimer;
-class Scene;
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
 
-	Ui::MainWindow *ui;
 	QProgressBar *m_progress_bar;
 
 	Main *m_main;
 
-	Scene *m_scene;
 	QTimer *m_timer;
 	CommandManager *m_command_manager;
 	CommandFactory *m_command_factory;
-	bool m_timer_has_started;
+
+	bool m_has_glwindow;
 
 	EvaluationContext m_context;
+
+	QMenu *m_add_object_menu;
+	QMenu *m_add_nodes_menu;
+	QMenu *m_edit_menu;
+	QMenu *m_add_window_menu;
+
+	QToolBar *m_tool_bar;
 
 public:
 	explicit MainWindow(Main *main, QWidget *parent = nullptr);
@@ -76,39 +65,26 @@ public Q_SLOTS:
 	void updateProgress(float progress);
 	void taskEnded();
 
-protected:
-	bool eventFilter(QObject *obj, QEvent *e);
-
 private:
+	void generateWindowMenu();
+	void generateEditMenu();
 	void generateObjectMenu();
 	void generateNodeMenu();
 	void generatePresetMenu();
 
-private Q_SLOTS:
-	/* Timeline */
-	void startAnimation();
-	void updateFrame() const;
-	void setStartFrame(int value) const;
-	void setEndFrame(int value) const;
-	void goToStartFrame() const;
-	void goToEndFrame() const;
+	void setupPalette();
 
+private Q_SLOTS:
 	/* Undo & commands */
 	void undo() const;
 	void redo() const;
 	void handleCommand();
 
-	/* Generic object actions */
-	void setupObjectUI(Object *);
-	void updateObjectTab() const;
-
-	/* Nodes */
-	void setupNodeUI(Object *, Node *node);
-	void setupNodeParamUI(QtNode *node_item);
-	void setActiveObject(ObjectNodeItem *);
-	void removeObject(ObjectNodeItem *node);
-	void removeNode(QtNode *node);
-	void nodesConnected(QtNode *, const QString &, QtNode *, const QString &);
-	void connectionRemoved(QtNode *, const QString &, QtNode *, const QString &);
-	void evalObjectGraph();
+	void addTimeLineWidget();
+	void addGraphEditorWidget();
+	void addGraphOutlinerWidget();
+	void addGLViewerWidget();
+	void addOutlinerWidget();
+	void addPropertiesWidget();
+	void viewerDeleted();
 };
