@@ -28,25 +28,32 @@
 
 #include <kamikaze/util_render.h>
 
+#include "context.h"
+
 class Depsgraph;
 class EvaluationContext;
 class Node;
 class Object;
 
-class Scene : public QObject {
-	Q_OBJECT
-
+class Scene : public Listened {
 	std::vector<Object *> m_objects;
 	Object *m_active_object;
 	int m_mode;
 
 	Depsgraph *m_depsgraph;
 
+	int m_start_frame;
+	int m_end_frame;
+	int m_cur_frame;
+	float m_fps = 24.0f;
+
 public:
 	Scene();
 	~Scene();
 
 	Object *currentObject();
+	void setActiveObject(Object *object);
+
 	void addObject(Object *object);
 	void removeObject(Object *object);
 
@@ -54,23 +61,26 @@ public:
 
 	void selectObject(const glm::vec3 &pos);
 
-	void emitNodeAdded(Object *ob, Node *node);
+	/* Time/Frame */
+
+	int startFrame() const;
+	void startFrame(int value);
+
+	int endFrame() const;
+	void endFrame(int value);
+
+	int currentFrame() const;
+	void currentFrame(int value);
+
+	float framesPerSecond() const;
+	void framesPerSecond(float value);
 
 	void updateForNewFrame(const EvaluationContext * const context);
 
 	const std::vector<Object *> &objects() const;
 
-public Q_SLOTS:
-	void setObjectName(const QString &name);
 	void tagObjectUpdate();
-
-	void setActiveObject(Object *object);
 
 private:
 	bool ensureUniqueName(QString &name) const;
-
-Q_SIGNALS:
-	void objectAdded(Object *);
-	void nodeAdded(Object *, Node *);
-	void objectChanged();
 };

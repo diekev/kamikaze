@@ -55,6 +55,8 @@ FloatSpinBox::FloatSpinBox(QWidget *parent)
 	m_spin_box->setButtonSymbols(QAbstractSpinBox::NoButtons);
 	m_spin_box->setReadOnly(true);
 
+	setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
 	connect(m_slider, SIGNAL(sliderReleased()), this, SLOT(ValueChanged()));
 	connect(m_slider, SIGNAL(valueChanged(int)), this, SLOT(updateLabel(int)));
 }
@@ -112,6 +114,8 @@ IntSpinBox::IntSpinBox(QWidget *parent)
 	m_spin_box->setButtonSymbols(QAbstractSpinBox::NoButtons);
 	m_spin_box->setReadOnly(true);
 
+	setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
 	connect(m_slider, SIGNAL(sliderReleased()), this, SLOT(ValueChanged()));
 	connect(m_slider, SIGNAL(valueChanged(int)), this, SLOT(updateLabel(int)));
 }
@@ -160,6 +164,8 @@ XYZSpinBox::XYZSpinBox(QWidget *parent)
 	m_layout->addWidget(m_x);
 	m_layout->addWidget(m_y);
 	m_layout->addWidget(m_z);
+
+	setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
 	m_layout->setSpacing(0);
 }

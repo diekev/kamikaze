@@ -28,6 +28,7 @@
 #include <memory>
 
 #include <kamikaze/primitive.h>
+#include <kamikaze/persona.h>
 
 #include "ui/mainwindow.h"
 
@@ -38,13 +39,9 @@ class Primitive;
 class PrimitiveCollection;
 class MainWindow;
 
-class Object {
+class Object : public Persona {
 	PrimitiveCollection *m_collection = nullptr;
 	PrimitiveCache m_cache;
-
-	glm::vec3 m_scale = glm::vec3(1.0f);
-	glm::vec3 m_rotation = glm::vec3(0.0f);
-	glm::vec3 m_pos = glm::vec3(0.0f);
 
 	glm::mat4 m_matrix = glm::mat4(0.0f);
 	glm::mat4 m_inv_matrix = glm::mat4(0.0f);
@@ -74,8 +71,6 @@ public:
 
 	void name(const QString &name);
 	const QString name() const;
-
-	void setUIParams(ParamCallback *cb);
 
 	void updateMatrix();
 	void clearCache();

@@ -208,3 +208,13 @@ void Graph::disconnect(OutputSocket *from, InputSocket *to)
 
 	m_need_update = true;
 }
+
+void Graph::active_node(Node *node)
+{
+	m_active_node = node;
+}
+
+Node *Graph::active_node() const
+{
+	return m_active_node;
+}

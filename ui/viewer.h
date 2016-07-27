@@ -29,6 +29,8 @@
 #include <QGLWidget>
 #include <QGraphicsView>
 
+#include "context.h"
+
 class Camera;
 class Grid;
 class Scene;
@@ -36,7 +38,7 @@ class ViewerContext;
 
 /* ************************************************************************** */
 
-class OpenGLScene : public QGraphicsScene {
+class OpenGLScene : public QGraphicsScene, public ContextListener {
 	Q_OBJECT
 
 	int m_mouse_button;
@@ -47,9 +49,7 @@ class OpenGLScene : public QGraphicsScene {
 
 	Camera *m_camera;
 	Grid *m_grid;
-	Scene *m_scene;
-	QTimer *m_timer;
-	ViewerContext *m_context;
+	ViewerContext *m_viewer_context;
 
 	bool m_initialized;
 
@@ -64,6 +64,8 @@ public:
 	OpenGLScene();
 	~OpenGLScene();
 
+	void update_state(int event_type) override;
+
 	void initializeGL();
 	void resize(int w, int h);
 
@@ -75,13 +77,14 @@ public:
 	void mouseReleaseEvent(QGraphicsSceneMouseEvent *e) override;
 	void wheelEvent(QGraphicsSceneWheelEvent *e) override;
 
-	void setScene(Scene *scene);
-
 	/* Cast a ray in the scene at mouse pos (x, y). */
 	void intersectScene(int x, int y) const;
 
 	/* Select the object at screen pos (x, y). */
 	void selectObject(int x, int y) const;
+
+Q_SIGNALS:
+	void viewerDeleted();
 };
 
 /* ************************************************************************** */

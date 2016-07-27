@@ -22,30 +22,39 @@
  *
  */
 
-#pragma once
+#include "context.h"
 
-#include <vector>
-#include <utils/filesystem.h>
+#include <kamikaze/context.h>
 
-class NodeFactory;
-class PrimitiveFactory;
-class Scene;
+#include "scene.h"
 
-class Main final {
-	PrimitiveFactory *m_primitive_factory;
-	NodeFactory *m_node_factory;
-	Scene *m_scene;
+ContextListener::~ContextListener()
+{
+	if (m_context->scene) {
+		m_context->scene->remove_listener(this);
+	}
+}
 
-	std::vector<filesystem::shared_library> m_plugins;
+void ContextListener::listens(EvaluationContext *eval_ctx)
+{
+	m_context = eval_ctx;
+	m_context->scene->add_listener(this);
+}
 
-public:
-	Main();
-	~Main();
+void Listened::add_listener(ContextListener *listener)
+{
+	m_listeners.push_back(listener);
+}
 
-	void initTypes();
-	void loadPlugins();
+void Listened::remove_listener(ContextListener *listener)
+{
+	auto iter = std::find(m_listeners.begin(), m_listeners.end(), listener);
+	m_listeners.erase(iter);
+}
 
-	PrimitiveFactory *primitiveFactory() const;
-	NodeFactory *nodeFactory() const;
-	Scene *scene() const;
-};
+void Listened::notify_listeners(int event_type)
+{
+	for (auto &listener : m_listeners) {
+		listener->update_state(event_type);
+	}
+}

@@ -35,6 +35,8 @@ class Graph {
 	std::vector<Node *> m_nodes;
 	std::vector<Node *> m_stack;
 
+	Node *m_active_node = nullptr;
+
 	bool m_need_update;
 
 	void topology_sort();
@@ -55,4 +57,7 @@ public:
 
 	const std::vector<Node *> &nodes() const;
 	const std::vector<Node *> &finished_stack() const;
+
+	void active_node(Node *node);
+	Node *active_node() const;
 };

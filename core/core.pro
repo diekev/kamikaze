@@ -51,7 +51,8 @@ SOURCES += \
     task.cc \
     graphs/depsgraph.cc \
     graphs/object_graph.cc \
-    graphs/object_nodes.cc
+    graphs/object_nodes.cc \
+    context.cc
 
 HEADERS += \
     grid.h \
@@ -67,7 +68,8 @@ HEADERS += \
     task.h \
     graphs/depsgraph.h \
     graphs/object_nodes.h \
-    graphs/object_graph.h
+    graphs/object_graph.h \
+    context.h
 
 OTHER_FILES += \
     shaders/flat_shader.frag \
