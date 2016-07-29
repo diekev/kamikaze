@@ -380,9 +380,6 @@ void Depsgraph::evaluate_ex(const EvaluationContext* const context, DepsNode *ro
 #ifdef DEBUG_DEPSGRAPH
 	std::cerr << "Nodes size: " << m_nodes.size() << '\n';
 	std::cerr << "Stack size: " << m_stack.size() << '\n';
-
-	DepsGraphDumper gd(this);
-	gd("/tmp/depsgraph.gv");
 #endif
 
 	if (!notifier) {

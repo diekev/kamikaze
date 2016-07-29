@@ -61,6 +61,8 @@ public:
 
 	void selectObject(const glm::vec3 &pos);
 
+	Depsgraph *depsgraph();
+
 	/* Time/Frame */
 
 	int startFrame() const;

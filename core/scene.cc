@@ -117,6 +117,11 @@ void Scene::selectObject(const glm::vec3 &pos)
 	}
 }
 
+Depsgraph *Scene::depsgraph()
+{
+	return m_depsgraph;
+}
+
 Object *Scene::currentObject()
 {
 	if (!m_objects.empty()) {

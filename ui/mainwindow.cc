@@ -33,7 +33,9 @@
 #include <QStatusBar>
 #include <QToolBar>
 
+#include "core/graphs/graph_dumper.h"
 #include "core/kamikaze_main.h"
+#include "core/object.h"
 #include "core/object_ops.h"
 
 #include "node_editorwidget.h"
@@ -52,6 +54,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	generateNodeMenu();
 	generateWindowMenu();
 	generatePresetMenu();
+	generateDebugMenu();
 
 	m_progress_bar = new QProgressBar(this);
 	statusBar()->addWidget(m_progress_bar);
@@ -129,6 +132,20 @@ void MainWindow::generateObjectMenu()
 		connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
 	}
 #endif
+}
+
+void MainWindow::generateDebugMenu()
+{
+	m_add_object_menu = menuBar()->addMenu("Debug");
+	auto action = m_add_object_menu->addAction("Dump Object Graph");
+	action->setData(QVariant::fromValue(QString("dump_object_graph")));
+
+	connect(action, SIGNAL(triggered()), this, SLOT(dumpGraph()));
+
+	action = m_add_object_menu->addAction("Dump Dependency Graph");
+	action->setData(QVariant::fromValue(QString("dump_dependency_graph")));
+
+	connect(action, SIGNAL(triggered()), this, SLOT(dumpGraph()));
 }
 
 void MainWindow::generateNodeMenu()
@@ -440,6 +457,41 @@ void MainWindow::viewerDeleted()
 	for (auto action : m_add_window_menu->actions()) {
 		if (action->text() == "3D View") {
 			action->setEnabled(true);
+		}
+	}
+}
+
+void MainWindow::dumpGraph()
+{
+	auto action = qobject_cast<QAction *>(sender());
+
+	if (!action) {
+		return;
+	}
+
+	auto data = action->data().toString();
+	auto scene = m_context.scene;
+
+	if (data == "dump_object_graph") {
+		auto object = scene->currentObject();
+
+		if (!object) {
+			return;
+		}
+
+		GraphDumper gd(object->graph());
+		gd("/tmp/object_graph.gv");
+
+		if (system("dot /tmp/object_graph.gv -Tpng -o object_graph.png") == -1) {
+			std::cerr << "Cannot create graph image from dot\n";
+		}
+	}
+	else if (data == "dump_dependency_graph") {
+		DepsGraphDumper gd(scene->depsgraph());
+		gd("/tmp/depsgraph.gv");
+
+		if (system("dot /tmp/depsgraph.gv -Tpng -o depsgraph.png") == -1) {
+			std::cerr << "Cannot create graph image from dot\n";
 		}
 	}
 }

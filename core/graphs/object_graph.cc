@@ -99,9 +99,6 @@ void Graph::build()
 		Node *node = *iter;
 		std::cerr << node->name() << '\n';
 	}
-
-	GraphDumper gd(this);
-	gd("/tmp/kamikaze.gv");
 #endif
 
 	m_need_update = false;
