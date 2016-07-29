@@ -79,5 +79,3 @@ public:
 	Object *parent() const;
 	void parent(Object *parent);
 };
-
-void eval_graph(const EvaluationContext * const context);

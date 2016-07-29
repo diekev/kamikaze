@@ -165,7 +165,12 @@ void Scene::setActiveObject(Object *object)
 
 void Scene::updateForNewFrame(const EvaluationContext * const context)
 {
-	m_depsgraph->evaluate(context);
+	m_depsgraph->evaluate_for_time_change(context);
+}
+
+void Scene::evalObjectDag(const EvaluationContext * const context, Object *object)
+{
+	m_depsgraph->evaluate(context, object);
 }
 
 int Scene::startFrame() const
