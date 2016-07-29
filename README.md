@@ -11,7 +11,8 @@ Dependencies
 | C++ 14 Compiler                                                      | GCC 5.3 |
 | [Ego](https://github.com/diekev/utils/tree/master/ego)               | 1.1.0 |
 | [Filesystem](https://github.com/diekev/utils/tree/master/filesystem) |  |
-| [GLM](http://glm.g-truc.net/0.9.7/index.html)                        | 0.9.5.1-1 |
+| [GLM](http://glm.g-truc.net/0.9.7/index.html)                        | 0.9.5 |
+| [Intel TBB](https://www.threadingbuildingblocks.org/)                | 4.2 |
 | [Qt5](https://doc.qt.io/qt-5/)                                       | 5.5 |
 
 Getting and Building the Code
