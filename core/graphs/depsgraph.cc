@@ -39,7 +39,7 @@
 #include "scene.h"
 #include "task.h"
 
-#define DEBUG_DEPSGRAPH
+//#define DEBUG_DEPSGRAPH
 
 /* ************************************************************************** */
 
