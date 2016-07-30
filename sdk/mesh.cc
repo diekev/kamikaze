@@ -63,7 +63,6 @@ size_t Mesh::id = -1;
 Mesh::Mesh()
     : Primitive()
     , m_renderbuffer(nullptr)
-    , m_need_data_update(true)
 {
 	addAttribute("normal", ATTR_TYPE_VEC3);
 	m_need_update = true;

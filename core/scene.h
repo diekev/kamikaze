@@ -36,15 +36,15 @@ class Node;
 class Object;
 
 class Scene : public Listened {
-	std::vector<Object *> m_objects;
-	Object *m_active_object;
-	int m_mode;
+	std::vector<Object *> m_objects = {};
+	Object *m_active_object = nullptr;
+	int m_mode = 0;
 
-	Depsgraph *m_depsgraph;
+	Depsgraph *m_depsgraph = nullptr;
 
-	int m_start_frame;
-	int m_end_frame;
-	int m_cur_frame;
+	int m_start_frame = 0;
+	int m_end_frame = 250;
+	int m_cur_frame = 0;
 	float m_fps = 24.0f;
 
 public:
@@ -60,6 +60,8 @@ public:
 	void intersect(const Ray &ray);
 
 	void selectObject(const glm::vec3 &pos);
+
+	Depsgraph *depsgraph();
 
 	/* Time/Frame */
 
@@ -81,6 +83,7 @@ public:
 
 	void tagObjectUpdate();
 
+	void evalObjectDag(const EvaluationContext * const context, Object *object);
 private:
 	bool ensureUniqueName(QString &name) const;
 };

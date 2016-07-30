@@ -36,11 +36,7 @@
 #include "util/util_string.h"
 
 Scene::Scene()
-    : m_active_object(nullptr)
-    , m_depsgraph(new Depsgraph)
-    , m_start_frame(0)
-    , m_end_frame(250)
-    , m_cur_frame(0)
+    : m_depsgraph(new Depsgraph)
 {}
 
 Scene::~Scene()
@@ -118,6 +114,11 @@ void Scene::selectObject(const glm::vec3 &pos)
 	}
 }
 
+Depsgraph *Scene::depsgraph()
+{
+	return m_depsgraph;
+}
+
 Object *Scene::currentObject()
 {
 	if (!m_objects.empty()) {
@@ -166,7 +167,12 @@ void Scene::setActiveObject(Object *object)
 
 void Scene::updateForNewFrame(const EvaluationContext * const context)
 {
-	m_depsgraph->evaluate(context);
+	m_depsgraph->evaluate_for_time_change(context);
+}
+
+void Scene::evalObjectDag(const EvaluationContext * const context, Object *object)
+{
+	m_depsgraph->evaluate(context, object);
 }
 
 int Scene::startFrame() const

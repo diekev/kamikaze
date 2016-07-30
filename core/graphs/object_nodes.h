@@ -34,7 +34,7 @@ class OutputNode : public Node {
 	PrimitiveCollection *m_collection = nullptr;
 
 public:
-	OutputNode(const std::string &name);
+	explicit OutputNode(const std::string &name);
 
 	PrimitiveCollection *collection() const;
 

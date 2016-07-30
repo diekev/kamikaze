@@ -33,7 +33,7 @@ class GraphDumper {
 	Graph *m_graph;
 
 public:
-	GraphDumper(Graph *graph);
+	explicit GraphDumper(Graph *graph);
 
 	void operator()(const filesystem::path &path);
 };
@@ -42,7 +42,7 @@ class DepsGraphDumper {
 	Depsgraph *m_graph;
 
 public:
-	DepsGraphDumper(Depsgraph *graph);
+	explicit DepsGraphDumper(Depsgraph *graph);
 
 	void operator()(const filesystem::path &path);
 };

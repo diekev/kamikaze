@@ -29,6 +29,7 @@
 #include <QGLWidget>
 
 #include "context.h"
+#include "util/util_input.h"
 
 class Camera;
 class Grid;
@@ -39,16 +40,17 @@ class ViewerContext;
 class Viewer : public QGLWidget, public ContextListener {
 	Q_OBJECT
 
-	int m_mouse_button;
-	int m_modifier;
-	int m_width, m_height;
-	bool m_draw_grid;
-	glm::vec4 m_bg;
+	int m_mouse_button = MOUSE_NONE;
+	int m_modifier = 0;
+	int m_width = 0;
+	int m_height = 0;
+	bool m_draw_grid = true;
+	glm::vec4 m_bg = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
 
-	Camera *m_camera;
-	Grid *m_grid;
-	ViewerContext *m_viewer_context;
-	Manipulator *m_manipulator;
+	Camera *m_camera = nullptr;
+	Grid *m_grid= nullptr;
+	ViewerContext *m_viewer_context = nullptr;
+	Manipulator *m_manipulator = nullptr;
 	bool m_manipulator_active = false;
 
 	/* Get the world space position of the given point. */

@@ -42,6 +42,10 @@ public:
 	Main();
 	~Main();
 
+	/* Disallow copy. */
+	Main(const Main &other) = delete;
+	Main &operator=(const Main &other) = delete;
+
 	void initTypes();
 	void loadPlugins();
 

@@ -29,7 +29,9 @@
 
 class DepsNode;
 class EvaluationContext;
+class Graph;
 class Object;
+class TaskNotifier;
 
 struct DepsInputSocket;
 struct DepsOutputSocket;
@@ -60,7 +62,8 @@ public:
 	DepsNode();
 
 	virtual ~DepsNode() = default;
-	virtual void process() = 0;
+	virtual void pre_process() {}
+	virtual void process(const EvaluationContext * const context, TaskNotifier *notifier) = 0;
 
 	DepsInputSocket *input();
 	const DepsInputSocket *input() const;
@@ -68,6 +71,8 @@ public:
 	DepsOutputSocket *output();
 
 	bool is_linked() const;
+
+	virtual const char *name() const = 0;
 };
 
 /* ************************************************************************** */
@@ -77,27 +82,78 @@ class DepsObjectNode : public DepsNode {
 
 public:
 	DepsObjectNode() = delete;
-	DepsObjectNode(Object *object);
+	explicit DepsObjectNode(Object *object);
 
 	~DepsObjectNode() = default;
 
-	void process() override;
+	void pre_process() override;
+	void process(const EvaluationContext * const context, TaskNotifier *notifier) override;
 
 	Object *object();
 	const Object *object() const;
+
+	const char *name() const override;
 };
 
 /* ************************************************************************** */
+
+class ObjectGraphDepsNode : public DepsNode {
+	Graph *m_graph;
+
+public:
+	ObjectGraphDepsNode() = delete;
+	explicit ObjectGraphDepsNode(Graph *graph);
+
+	~ObjectGraphDepsNode() = default;
+
+	void process(const EvaluationContext * const context, TaskNotifier *notifier) override;
+
+	Graph *graph();
+	const Graph *graph() const;
+
+	const char *name() const override;
+};
+
+/* ************************************************************************** */
+
+class TimeDepsNode : public DepsNode {
+public:
+	TimeDepsNode() = default;
+	~TimeDepsNode() = default;
+
+	void process(const EvaluationContext * const context, TaskNotifier *notifier) override;
+
+	const char *name() const override;
+};
+
+/* ************************************************************************** */
+
+enum {
+	DEG_STATE_NONE   = -1,
+	DEG_STATE_OBJECT = 0,
+	DEG_STATE_TIME   = 1,
+};
 
 class Depsgraph {
 	std::vector<DepsNode *> m_nodes;
 	std::vector<DepsNode *> m_stack;
 	std::unordered_map<Object *, DepsNode *> m_object_map;
+	std::unordered_map<Graph *, DepsNode *> m_object_graph_map;
 
+	int m_state = DEG_STATE_NONE;
 	bool m_need_update = false;
 
+	TimeDepsNode *m_time_node = nullptr;
+
+	friend class GraphEvalTask;
+
 public:
+	Depsgraph();
 	~Depsgraph();
+
+	/* Disallow copy. */
+	Depsgraph(const Depsgraph &other) = delete;
+	Depsgraph &operator=(const Depsgraph &other) = delete;
 
 	void connect(DepsOutputSocket *from, DepsInputSocket *to);
 	void disconnect(DepsOutputSocket *from, DepsInputSocket *to);
@@ -105,10 +161,15 @@ public:
 	void create_node(Object *object);
 	void remove_node(Object *object);
 
-	void evaluate(const EvaluationContext * const context);
+	void connect_to_time(Object *object);
+
+	void evaluate(const EvaluationContext * const context, Object *object);
+	void evaluate_for_time_change(const EvaluationContext * const context);
 
 	const std::vector<DepsNode *> &nodes() const;
 
 private:
-	void topology_sort();
+	void build(DepsNode *root);
+
+	void evaluate_ex(const EvaluationContext* const context, DepsNode *root, TaskNotifier *notifier);
 };

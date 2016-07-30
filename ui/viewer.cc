@@ -41,22 +41,14 @@
 
 #include "core/grid.h"
 #include "core/manipulator.h"
-#include "util/util_input.h"
 #include "util/utils.h"
 
 #include "util/utils_glm.h"
 
 Viewer::Viewer(QWidget *parent)
     : QGLWidget(parent)
-    , m_mouse_button(MOUSE_NONE)
-    , m_width(0)
-    , m_height(0)
-    , m_draw_grid(true)
-    , m_bg(glm::vec4(0.5f, 0.5f, 0.5f, 1.0f))
     , m_camera(new Camera(m_width, m_height))
-    , m_grid(nullptr)
     , m_viewer_context(new ViewerContext)
-    , m_manipulator(nullptr)
 {
 	setFocusPolicy(Qt::FocusPolicy::StrongFocus);
 }

@@ -303,9 +303,7 @@ kmkz_inline void dump_node(filesystem::File &file, DepsNode *node)
 	constexpr auto fillcolor = "gainsboro";
 	auto penwidth = 1.0f;
 
-	DepsObjectNode *ob_node = static_cast<DepsObjectNode *>(node);
-	Object *object = ob_node->object();
-	const auto ob_name = object->name().toStdString().c_str();
+	const auto ob_name = node->name();
 
 	file.print("// %s\n", ob_name);
 	file.print("%s", node_id(node).c_str());
@@ -398,7 +396,7 @@ void DepsGraphDumper::operator()(const filesystem::path &path)
 	file.print("labbelloc=\"t\"");
 	file.print(",fontsize=\"%f\"", fontsize);
 	file.print("fontname=\"%s\"", fontname);
-	file.print("label=\"Object Graph\"");
+	file.print("label=\"Dependency Graph\"");
 	file.print("]\n");
 
 	for (const auto &node : m_graph->nodes()) {

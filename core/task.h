@@ -57,7 +57,7 @@ protected:
 	const EvaluationContext *m_context = nullptr;
 
 public:
-	Task(const EvaluationContext * const context);
+	explicit Task(const EvaluationContext * const context);
 
 	tbb::task *execute() override;
 
