@@ -39,8 +39,6 @@ class Graph {
 
 	bool m_need_update;
 
-	void topology_sort();
-
 public:
 	Graph();
 	~Graph();

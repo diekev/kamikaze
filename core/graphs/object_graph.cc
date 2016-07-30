@@ -28,6 +28,7 @@
 #include <iostream>
 
 #include "graph_dumper.h"
+#include "graph_tools.h"
 #include "object_nodes.h"
 
 //#define DEBUG_GRAPH
@@ -84,13 +85,54 @@ void Graph::remove(Node *node)
 	m_need_update = true;
 }
 
+static inline auto is_linked(Node *node)
+{
+	return node->isLinked();
+}
+
+static inline auto is_linked(InputSocket *socket)
+{
+	return socket->link != nullptr;
+}
+
+static inline auto get_input(Node *node, size_t index)
+{
+	return node->input(index);
+}
+
+static inline auto get_link_parent(InputSocket *socket)
+{
+	return socket->link->parent;
+}
+
+static inline auto num_inputs(Node *node)
+{
+	return node->inputs().size();
+}
+
+static inline auto is_zero_out_degree(Node *node)
+{
+	return node->outputs().size() == 0;
+}
+
+static inline auto get_degree(Node *node)
+{
+	auto degree = 0;
+
+	for (OutputSocket *socket : node->outputs()) {
+		degree += socket->links.size();
+	}
+
+	return degree;
+}
+
 void Graph::build()
 {
 	if (!m_need_update) {
 		return;
 	}
 
-	topology_sort();
+	topology_sort(m_nodes, m_stack);
 
 #ifdef DEBUG_GRAPH
 	std::cerr << "Order of operation:\n";
@@ -102,69 +144,6 @@ void Graph::build()
 #endif
 
 	m_need_update = false;
-}
-
-void Graph::topology_sort()
-{
-	m_stack.clear();
-	m_stack.reserve(m_nodes.size());
-
-	/* 1. store each node degree in an array */
-	std::vector<Node *> stack;
-	std::unordered_map<Node *, std::pair<int, bool>> node_degrees;
-
-	int degree;
-
-	for (Node *node : m_nodes) {
-		if (!node->isLinked()) {
-			continue;
-		}
-
-		/* 2. initialize a stack with all out-degree zero nodes */
-		if (node->outputs().size() == 0) {
-			stack.push_back(node);
-			node_degrees[node] = std::make_pair(-1, true);
-			continue;
-		}
-
-		degree = 0;
-
-		for (OutputSocket *socket : node->outputs()) {
-			degree += socket->links.size();
-		}
-
-		node_degrees[node] = std::make_pair(degree, false);
-	}
-
-	/* 3. While there are vertices remaining in the stack:
-	 *   - Dequeue and output a node
-	 *   - Reduce out-degree of all vertices adjacent to it by 1
-	 *   - Enqueue any of these nodes whose out-degree became zero
-	 */
-	while (!stack.empty()) {
-		auto node = stack.back();
-		m_stack.push_back(node);
-		stack.pop_back();
-
-		for (InputSocket *socket : node->inputs()) {
-			if (!socket->link) {
-				continue;
-			}
-
-			auto &degree_pair = node_degrees[socket->link->parent];
-
-			if (degree_pair.second) {
-				continue;
-			}
-
-			degree_pair.first -= 1;
-
-			if (degree_pair.first == 0) {
-				stack.push_back(socket->link->parent);
-				degree_pair.second = true;
-			}
-		}
-	}
 }
 
 const std::vector<Node *> &Graph::finished_stack() const

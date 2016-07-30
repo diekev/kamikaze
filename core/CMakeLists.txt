@@ -64,6 +64,7 @@ add_library(kmk_core STATIC
 
 	graphs/depsgraph.h
 	graphs/graph_dumper.h
+	graphs/graph_tools.h
 	graphs/object_graph.h
 	graphs/object_nodes.h
 
