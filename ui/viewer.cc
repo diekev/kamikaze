@@ -40,17 +40,10 @@
 #include "scene.h"
 
 #include "grid.h"
-#include "util/util_input.h"
 
 Viewer::Viewer(QWidget *parent)
     : QGLWidget(parent)
-    , m_mouse_button(MOUSE_NONE)
-    , m_width(0)
-    , m_height(0)
-    , m_draw_grid(true)
-    , m_bg(glm::vec4(0.5f, 0.5f, 0.5f, 1.0f))
     , m_camera(new Camera(m_width, m_height))
-    , m_grid(nullptr)
     , m_viewer_context(new ViewerContext)
 {
 	setFocusPolicy(Qt::FocusPolicy::StrongFocus);

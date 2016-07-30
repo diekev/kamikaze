@@ -27,6 +27,8 @@
 #include <glm/glm.hpp>
 #include <memory>
 
+#include <QString>
+
 #include <kamikaze/primitive.h>
 #include <kamikaze/persona.h>
 
@@ -79,5 +81,3 @@ public:
 	Object *parent() const;
 	void parent(Object *parent);
 };
-
-void eval_graph(const EvaluationContext * const context);

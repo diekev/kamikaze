@@ -71,6 +71,7 @@ private:
 	void generateObjectMenu();
 	void generateNodeMenu();
 	void generatePresetMenu();
+	void generateDebugMenu();
 
 	void setupPalette();
 
@@ -87,4 +88,6 @@ private Q_SLOTS:
 	void addOutlinerWidget();
 	void addPropertiesWidget();
 	void viewerDeleted();
+
+	void dumpGraph();
 };

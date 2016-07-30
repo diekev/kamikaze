@@ -1325,7 +1325,8 @@ void QtNodeEditor::removeObject(ObjectNodeItem *node)
 
 void QtNodeEditor::removeNodeEx(QtNode *node)
 {
-	auto object = m_context->scene->currentObject();
+	auto scene = m_context->scene;
+	auto object = scene->currentObject();
 	auto graph = object->graph();
 
 	const auto was_connected = node->getNode()->isLinked();
@@ -1333,13 +1334,14 @@ void QtNodeEditor::removeNodeEx(QtNode *node)
 	graph->remove(node->getNode());
 
 	if (was_connected) {
-		eval_graph(m_context);
+		scene->evalObjectDag(m_context, object);
 	}
 }
 
 void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
 {
-	auto object = m_context->scene->currentObject();
+	auto scene = m_context->scene;
+	auto object = scene->currentObject();
 	auto graph = object->graph();
 
 	auto node_from = from->getNode();
@@ -1352,12 +1354,13 @@ void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNo
 
 	graph->connect(output_socket, input_socket);
 
-	eval_graph(m_context);
+	scene->evalObjectDag(m_context, object);
 }
 
 void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
 {
-	auto object = m_context->scene->currentObject();
+	auto scene = m_context->scene;
+	auto object = scene->currentObject();
 	auto graph = object->graph();
 
 	auto node_from = from->getNode();
@@ -1370,7 +1373,7 @@ void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, Q
 
 	graph->disconnect(output_socket, input_socket);
 
-	eval_graph(m_context);
+	scene->evalObjectDag(m_context, object);
 }
 
 /* ************************************************************************** */
