@@ -27,6 +27,8 @@
 #include <glm/glm.hpp>
 #include <memory>
 
+#include <QString>
+
 #include <kamikaze/primitive.h>
 #include <kamikaze/persona.h>
 
