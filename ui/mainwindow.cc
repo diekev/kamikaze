@@ -42,6 +42,7 @@
 #include "outliner_widget.h"
 #include "properties_widget.h"
 #include "timeline_widget.h"
+#include "utils_ui.h"
 #include "viewer.h"
 
 MainWindow::MainWindow(Main *main, QWidget *parent)
@@ -207,11 +208,6 @@ void MainWindow::generateEditMenu()
 	connect(action, SIGNAL(triggered()), this, SLOT(redo()));
 }
 
-struct UIProp {
-	const char *name;
-	const char *icon_path;
-};
-
 void MainWindow::generatePresetMenu()
 {
 	m_command_factory->registerType("add preset", AddPresetObjectCmd::registerSelf);
@@ -219,14 +215,14 @@ void MainWindow::generatePresetMenu()
 	m_tool_bar = new QToolBar();
 	addToolBar(Qt::TopToolBarArea, m_tool_bar);
 
-	UIProp props[] = {
-	    { "Grid", "icons/icon_grid.png" },
-	    { "Box", "icons/icon_box.png" },
-	    { "Circle", "icons/icon_circle.png" },
-	    { "IcoSphere", "icons/icon_icosphere.png" },
-	    { "Tube", "icons/icon_tube.png" },
-	    { "Cone", "icons/icon_cone.png" },
-	    { "Torus", "icons/icon_torus.png" },
+	UIButData props[] = {
+	    { 0, "Grid", "icons/icon_grid.png" },
+	    { 0, "Box", "icons/icon_box.png" },
+	    { 0, "Circle", "icons/icon_circle.png" },
+	    { 0, "IcoSphere", "icons/icon_icosphere.png" },
+	    { 0, "Tube", "icons/icon_tube.png" },
+	    { 0, "Cone", "icons/icon_cone.png" },
+	    { 0, "Torus", "icons/icon_torus.png" },
 	};
 
 	for (const auto &prop : props) {
