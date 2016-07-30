@@ -82,7 +82,7 @@ class DepsObjectNode : public DepsNode {
 
 public:
 	DepsObjectNode() = delete;
-	DepsObjectNode(Object *object);
+	explicit DepsObjectNode(Object *object);
 
 	~DepsObjectNode() = default;
 
@@ -102,7 +102,7 @@ class ObjectGraphDepsNode : public DepsNode {
 
 public:
 	ObjectGraphDepsNode() = delete;
-	ObjectGraphDepsNode(Graph *graph);
+	explicit ObjectGraphDepsNode(Graph *graph);
 
 	~ObjectGraphDepsNode() = default;
 
@@ -150,6 +150,10 @@ class Depsgraph {
 public:
 	Depsgraph();
 	~Depsgraph();
+
+	/* Disallow copy. */
+	Depsgraph(const Depsgraph &other) = delete;
+	Depsgraph &operator=(const Depsgraph &other) = delete;
 
 	void connect(DepsOutputSocket *from, DepsInputSocket *to);
 	void disconnect(DepsOutputSocket *from, DepsInputSocket *to);

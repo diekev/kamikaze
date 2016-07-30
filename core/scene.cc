@@ -36,11 +36,7 @@
 #include "util/util_string.h"
 
 Scene::Scene()
-    : m_active_object(nullptr)
-    , m_depsgraph(new Depsgraph)
-    , m_start_frame(0)
-    , m_end_frame(250)
-    , m_cur_frame(0)
+    : m_depsgraph(new Depsgraph)
 {}
 
 Scene::~Scene()

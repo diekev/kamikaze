@@ -43,5 +43,9 @@ public:
 	Cube(const glm::vec3 &min, const glm::vec3 &max);
 	~Cube();
 
+	/* Disallow copy. */
+	Cube(const Cube &other) = delete;
+	Cube &operator=(const Cube &other) = delete;
+
 	void render(const ViewerContext * const context, const bool for_outline);
 };

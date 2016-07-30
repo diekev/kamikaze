@@ -31,14 +31,12 @@
 class RenderBuffer;
 
 class Mesh : public Primitive {
-	PointList m_point_list;
-	PolygonList m_poly_list;
+	PointList m_point_list = {};
+	PolygonList m_poly_list = {};
 
-	std::vector<Attribute *> m_attributes;
+	std::vector<Attribute *> m_attributes = {};
 
-	RenderBuffer *m_renderbuffer;
-
-	bool m_need_data_update;
+	RenderBuffer *m_renderbuffer = nullptr;
 
 public:
 	Mesh();
