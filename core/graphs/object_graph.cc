@@ -99,9 +99,6 @@ void Graph::build()
 		Node *node = *iter;
 		std::cerr << node->name() << '\n';
 	}
-
-	GraphDumper gd(this);
-	gd("/tmp/kamikaze.gv");
 #endif
 
 	m_need_update = false;
@@ -144,9 +141,8 @@ void Graph::topology_sort()
 	 *   - Reduce out-degree of all vertices adjacent to it by 1
 	 *   - Enqueue any of these nodes whose out-degree became zero
 	 */
-	Node *node;
 	while (!stack.empty()) {
-		node = stack.back();
+		auto node = stack.back();
 		m_stack.push_back(node);
 		stack.pop_back();
 

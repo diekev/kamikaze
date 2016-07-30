@@ -177,8 +177,10 @@ void PropertiesWidget::update_state(int event_type)
 
 void PropertiesWidget::evalObjectGraph()
 {
-	eval_graph(m_context);
-	m_context->scene->notify_listeners(-1);
+	auto scene = m_context->scene;
+
+	scene->evalObjectDag(m_context, scene->currentObject());
+	scene->notify_listeners(-1);
 }
 
 void PropertiesWidget::tagObjectUpdate()

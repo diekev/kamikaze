@@ -61,7 +61,7 @@ class TimeLineWidget : public QWidget, public ContextListener {
 	bool m_timer_has_started = false;
 
 public:
-	TimeLineWidget(QWidget *parent = nullptr);
+	explicit TimeLineWidget(QWidget *parent = nullptr);
 
 	void update_state(int event_type) override;
 
