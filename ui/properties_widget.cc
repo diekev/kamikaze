@@ -92,7 +92,7 @@ void PropertiesWidget::update_state(int event_type)
 		/* Only update/evaluate the graph if the node is connected. */
 		set_context = node->isLinked();
 	}
-	else if (event_type == OBJECT_REMOVED) {
+	else if (event_type == OBJECT_REMOVED || event_type == NODE_REMOVED) {
 		clear_layout(m_layout);
 		return;
 	}
