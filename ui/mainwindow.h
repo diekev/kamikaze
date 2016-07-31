@@ -55,6 +55,8 @@ class MainWindow : public QMainWindow {
 
 	QToolBar *m_tool_bar;
 
+	QDockWidget *m_viewer_dock = nullptr;
+
 public:
 	explicit MainWindow(Main *main, QWidget *parent = nullptr);
 	~MainWindow();
@@ -87,7 +89,6 @@ private Q_SLOTS:
 	void addGLViewerWidget();
 	void addOutlinerWidget();
 	void addPropertiesWidget();
-	void viewerDeleted();
 
 	void dumpGraph();
 };

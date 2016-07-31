@@ -36,6 +36,7 @@ class QLabel;
 class QSlider;
 class QPushButton;
 class QSpinBox;
+class QVBoxLayout;
 class Scene;
 
 class TimeLineWidget : public QWidget, public ContextListener {
@@ -45,16 +46,11 @@ class TimeLineWidget : public QWidget, public ContextListener {
 	QSlider *m_slider;
 
 	QHBoxLayout *m_layout;
-	QHBoxLayout *m_hbox_layout;
-	QGridLayout *m_grid_layout;
+	QHBoxLayout *m_tc_layout;
+	QHBoxLayout *m_num_layout;
+	QVBoxLayout *m_vbox_layout;
 	QSpinBox *m_end_frame, *m_start_frame, *m_cur_frame;
 	QDoubleSpinBox *m_fps;
-
-	QPushButton *m_begin_but;
-	QPushButton *m_start_but;
-	QPushButton *m_end_but;
-
-	QLabel *m_label;
 
 	QTimer *m_timer;
 
@@ -67,13 +63,18 @@ public:
 
 private Q_SLOTS:
 	void setStartFrame(int value) const;
+	void setCurrentFrame(int value) const;
 	void setEndFrame(int value) const;
 	void setFPS(double value) const;
 
 	void goToStartFrame() const;
 	void goToEndFrame() const;
 
-	void startAnimation();
+	void playBackward();
+	void playForward();
+	void stopAnimation();
+	void stepBackward();
+	void stepForward();
 
 	void updateFrame() const;
 };

@@ -84,9 +84,6 @@ public:
 
 	/* Select the object at screen pos (x, y). */
 	void selectObject(int x, int y) const;
-
-Q_SIGNALS:
-	void viewerDeleted();
 };
 
 /* ************************************************************************** */

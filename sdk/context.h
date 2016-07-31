@@ -31,6 +31,11 @@ class NodeFactory;
 class PrimitiveFactory;
 class Scene;
 
+enum {
+	TIME_DIR_FORWARD = 0,
+	TIME_DIR_BACKWARD = 1,
+};
+
 struct EvaluationContext {
 	Scene *scene;
 	PrimitiveFactory *primitive_factory;
@@ -42,6 +47,8 @@ struct EvaluationContext {
 
 	/** Whether we are currently playing an animation. */
 	bool animation;
+
+	char time_direction;
 };
 
 class ViewerContext {
