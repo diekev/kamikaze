@@ -149,8 +149,8 @@ void PrimitiveCache::add(PrimitiveCollection *collection)
 
 void PrimitiveCache::clear()
 {
-	for (auto &primitive : m_collections) {
-		delete primitive;
+	for (auto &collection : m_collections) {
+		delete collection;
 	}
 
 	m_collections.clear();
