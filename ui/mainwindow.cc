@@ -124,15 +124,6 @@ void MainWindow::generateObjectMenu()
 	action->setData(QVariant::fromValue(QString("add object")));
 
 	connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
-
-#if 0
-	for (const auto &key : m_main->primitiveFactory()->keys()) {
-		auto action = ui->menuAdd->addAction(key.c_str());
-		action->setData(QVariant::fromValue(QString("add object")));
-
-		connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
-	}
-#endif
 }
 
 void MainWindow::generateDebugMenu()
