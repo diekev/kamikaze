@@ -346,7 +346,7 @@ void Depsgraph::evaluate(const EvaluationContext * const context, Object *object
 
 	DepsNode *node = iter->second;
 
-	m_need_update = (m_state != DEG_STATE_OBJECT);
+	m_need_update |= (m_state != DEG_STATE_OBJECT);
 	m_state = DEG_STATE_OBJECT;
 
 	/* XXX - see comment in evaluate_ex */
@@ -368,7 +368,7 @@ void Depsgraph::evaluate(const EvaluationContext * const context, Object *object
 
 void Depsgraph::evaluate_for_time_change(const EvaluationContext * const context)
 {
-	m_need_update = (m_state != DEG_STATE_TIME);
+	m_need_update |= (m_state != DEG_STATE_TIME);
 	m_state = DEG_STATE_TIME;
 
 	evaluate_ex(context, m_time_node, nullptr);
