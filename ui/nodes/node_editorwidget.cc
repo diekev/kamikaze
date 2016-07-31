@@ -1123,6 +1123,10 @@ void QtNodeEditor::update_state(int event_type)
 		obnode_item->setTitleColor(Qt::white);
 		obnode_item->alignTitle(ALIGNED_CENTER);
 
+		deselectAll();
+		m_selected_nodes.append(obnode_item);
+		obnode_item->setSelected(true);
+
 		/* add node item for the object's graph output node */
 		{
 			auto graph = object->graph();
@@ -1157,6 +1161,23 @@ void QtNodeEditor::update_state(int event_type)
 		}
 
 		this->addNode(obnode_item);
+	}
+	else if (event_type == OBJECT_REMOVED) {
+		auto object = m_context->scene->currentObject();
+
+		for (auto item : m_current_scene->items()) {
+			if (!is_object_node(item)) {
+				continue;
+			}
+
+			auto obnode = static_cast<ObjectNodeItem *>(item);
+
+			if (obnode->object() == object) {
+				m_current_scene->removeItem(item);
+				delete item;
+				break;
+			}
+		}
 	}
 	else if (event_type == NODE_ADDED) {
 		auto object = m_context->scene->currentObject();

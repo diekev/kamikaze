@@ -54,6 +54,8 @@ void Scene::removeObject(Object *object)
 
 	assert(iter != m_objects.end());
 
+	notify_listeners(OBJECT_REMOVED);
+
 	m_objects.erase(iter);
 	m_depsgraph->remove_node(object);
 	delete object;
@@ -61,8 +63,6 @@ void Scene::removeObject(Object *object)
 	if (object == m_active_object) {
 		m_active_object = nullptr;
 	}
-
-	notify_listeners(OBJECT_ADDED);
 }
 
 void Scene::addObject(Object *object)
