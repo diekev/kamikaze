@@ -704,16 +704,21 @@ void QtNodeEditor::removeNode(QtNode *node)
 	}
 
 	if (is_object_node(node)) {
-		removeObject(static_cast<ObjectNodeItem *>(node));
+		auto object = static_cast<ObjectNodeItem *>(node)->object();
+
+		/* TODO: first we delete the node then the object, so we avoid issues
+		 * when the scene sends the notifier that the object was deleted. */
+		m_current_scene->removeItem(node);
+		delete node;
+
+		m_context->scene->removeObject(object);
 	}
 	else {
 		removeNodeEx(node);
+		m_current_scene->removeItem(node);
+		delete node;
 		m_context->scene->notify_listeners(NODE_REMOVED);
 	}
-
-	m_current_scene->removeItem(node);
-
-	delete node;
 }
 
 using node_port_pair = std::pair<QtNode *, QtPort *>;
@@ -1205,11 +1210,6 @@ void QtNodeEditor::update_state(int event_type)
 void QtNodeEditor::setActiveObject(ObjectNodeItem *node)
 {
 	m_context->scene->setActiveObject(node->object());
-}
-
-void QtNodeEditor::removeObject(ObjectNodeItem *node)
-{
-	m_context->scene->removeObject(node->object());
 }
 
 void QtNodeEditor::removeNodeEx(QtNode *node)

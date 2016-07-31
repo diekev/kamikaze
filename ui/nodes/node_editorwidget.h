@@ -168,9 +168,6 @@ private:
 	/* Called when an object node is selected. */
 	void setActiveObject(ObjectNodeItem *node);
 
-	/* Called when an object node is removed. */
-	void removeObject(ObjectNodeItem *node);
-
 	/* Called when a node is removed. */
 	void removeNodeEx(QtNode *node);
 
