@@ -118,6 +118,9 @@ void ObjectGraphDepsNode::process(const EvaluationContext * const context, TaskN
 
 	if (!output_node->isLinked()) {
 		output_node->input(0)->collection = nullptr;
+
+		/* Make sure the node's collection is updated, otherwise can crash. */
+		output_node->process();
 		return;
 	}
 
