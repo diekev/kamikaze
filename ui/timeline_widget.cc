@@ -125,9 +125,6 @@ TimeLineWidget::TimeLineWidget(QWidget *parent)
 	m_cur_frame->setToolTip("Current Frame");
 
 	m_tc_layout->addWidget(m_cur_frame);
-
-	m_vbox_layout->addLayout(m_num_layout);
-
 	m_tc_layout->addStretch();
 
 	/* ------------------------- transport controls ------------------------- */
