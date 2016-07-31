@@ -51,7 +51,6 @@ Viewer::Viewer(QWidget *parent)
 
 Viewer::~Viewer()
 {
-	Q_EMIT(viewerDeleted());
 	delete m_camera;
 	delete m_grid;
 	delete m_viewer_context;

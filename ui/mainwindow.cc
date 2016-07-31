@@ -190,8 +190,6 @@ void MainWindow::generateWindowMenu()
 
 	action = m_add_window_menu->addAction("3D View");
 	action->setToolTip("Add a 3D View");
-	/* TODO: figure out a way to have multiple GL context. */
-	action->setEnabled(false);
 	connect(action, SIGNAL(triggered()), this, SLOT(addGLViewerWidget()));
 }
 
@@ -292,31 +290,21 @@ void MainWindow::addGraphEditorWidget()
 
 void MainWindow::addGLViewerWidget()
 {
-	if (m_has_glwindow) {
-		return;
+	/* TODO: figure out a way to have multiple GL context. */
+	if (m_viewer_dock == nullptr) {
+		m_viewer_dock = new QDockWidget("Viewport", this);
+
+		Viewer *glviewer = new Viewer(m_viewer_dock);
+		glviewer->listens(&m_context);
+		glviewer->update_state(-1);
+
+		m_viewer_dock->setWidget(glviewer);
+		m_viewer_dock->setAllowedAreas(Qt::AllDockWidgetAreas);
+
+		addDockWidget(Qt::LeftDockWidgetArea, m_viewer_dock);
 	}
 
-	QDockWidget *dock = new QDockWidget("Viewport", this);
-	dock->setAttribute(Qt::WA_DeleteOnClose);
-
-	Viewer *glviewer = new Viewer(dock);
-	glviewer->listens(&m_context);
-	glviewer->update_state(-1);
-
-	connect(glviewer, SIGNAL(viewerDeleted()), this, SLOT(viewerDeleted()));
-
-	dock->setWidget(glviewer);
-	dock->setAllowedAreas(Qt::AllDockWidgetAreas);
-
-	addDockWidget(Qt::LeftDockWidgetArea, dock);
-
-	for (auto action : m_add_window_menu->actions()) {
-		if (action->text() == "3D View") {
-			action->setEnabled(false);
-		}
-	}
-
-	m_has_glwindow = true;
+	m_viewer_dock->show();
 }
 
 void MainWindow::addOutlinerWidget()
@@ -444,17 +432,6 @@ void MainWindow::setupPalette()
 	palette.setBrush(QPalette::Disabled, QPalette::ToolTipText, brush6);
 
 	setPalette(palette);
-}
-
-void MainWindow::viewerDeleted()
-{
-	m_has_glwindow = false;
-
-	for (auto action : m_add_window_menu->actions()) {
-		if (action->text() == "3D View") {
-			action->setEnabled(true);
-		}
-	}
 }
 
 void MainWindow::dumpGraph()
