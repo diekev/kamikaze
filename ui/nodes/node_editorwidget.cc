@@ -1165,7 +1165,17 @@ void QtNodeEditor::update_state(int event_type)
 			}
 		}
 
-		this->addNode(obnode_item);
+		if (this->m_editor_mode == EDITOR_MODE_SCENE) {
+			this->addNode(obnode_item);
+		}
+		else {
+			obnode_item->setEditor(this);
+			obnode_item->setScene(m_scene_scene);
+			m_scene_scene->addItem(obnode_item);
+			m_current_scene = obnode_item->nodeScene();
+			m_current_scene->installEventFilter(this);
+			m_view->setScene(m_current_scene);
+		}
 	}
 	else if (event_type == OBJECT_REMOVED) {
 		auto object = m_context->scene->currentObject();
