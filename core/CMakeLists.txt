@@ -57,6 +57,7 @@ add_library(kmk_core STATIC
 	object.h
 	object_ops.h
 	scene.h
+	simulation.h
 	task.h
 	undo.h
 
@@ -74,8 +75,9 @@ add_library(kmk_core STATIC
 	kamikaze_main.cc
 	object.cc
 	object_ops.cc
-	task.cc
 	scene.cc
+	simulation.cc
+	task.cc
 	undo.cc
 
 	graphs/depsgraph.cc

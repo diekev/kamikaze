@@ -34,9 +34,11 @@ class Depsgraph;
 class EvaluationContext;
 class Node;
 class Object;
+class Simulation;
 
 class Scene : public Listened {
 	std::vector<Object *> m_objects = {};
+	std::vector<Simulation *> m_simulations = {};
 	Object *m_active_object = nullptr;
 	int m_mode = 0;
 
@@ -56,6 +58,8 @@ public:
 
 	void addObject(Object *object);
 	void removeObject(Object *object);
+
+	void addSimulation(Simulation *simulation);
 
 	void intersect(const Ray &ray);
 

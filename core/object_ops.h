@@ -76,3 +76,15 @@ public:
 
 	static Command *registerSelf();
 };
+
+class AddSimulationCmd : public Command {
+public:
+	AddSimulationCmd() = default;
+	~AddSimulationCmd() = default;
+
+	void execute(EvaluationContext *context) override;
+	void undo() override;
+	void redo() override;
+
+	static Command *registerSelf();
+};

@@ -38,6 +38,7 @@
 #include "object_graph.h"
 #include "object_nodes.h"
 #include "scene.h"
+#include "simulation.h"
 #include "task.h"
 
 //#define DEBUG_DEPSGRAPH
@@ -196,6 +197,22 @@ const char *TimeDepsNode::name() const
 
 /* ************************************************************************** */
 
+SimulationDepsNode::SimulationDepsNode(Simulation *simulation)
+    : m_simulation(simulation)
+{}
+
+void SimulationDepsNode::process(const EvaluationContext * const /*context*/, TaskNotifier */*notifier*/)
+{
+	m_simulation->step();
+}
+
+const char *SimulationDepsNode::name() const
+{
+	return "Simulation";
+}
+
+/* ************************************************************************** */
+
 /* Evaluate depsgraph in another thread. */
 
 class GraphEvalTask : public Task {
@@ -326,6 +343,46 @@ void Depsgraph::remove_node(Object *object)
 		m_nodes.erase(node_iter);
 		delete node;
 	}
+
+	m_need_update = true;
+}
+
+void Depsgraph::create_node(Simulation *simulation)
+{
+	auto node = new SimulationDepsNode(simulation);
+
+	m_nodes.push_back(node);
+	m_simulation_map[simulation] = node;
+
+	/* Simulation depends on time. */
+	connect(m_time_node->output(), node->input());
+
+	m_need_update = true;
+}
+
+void Depsgraph::remove_node(Simulation *simulation)
+{
+	auto iter = m_simulation_map.find(simulation);
+	assert(iter != m_simulation_map.end());
+
+	DepsNode *node = iter->second;
+
+	auto node_iter = std::find(m_nodes.begin(), m_nodes.end(), node);
+	assert(node_iter != m_nodes.end());
+
+	/* Disconnect input. */
+	if (node->input()->link) {
+		disconnect(node->input()->link, node->input());
+	}
+
+	/* Disconnect output. */
+	for (DepsInputSocket *input : node->output()->links) {
+		disconnect(node->output(), input);
+	}
+
+	m_simulation_map.erase(iter);
+	m_nodes.erase(node_iter);
+	delete node;
 
 	m_need_update = true;
 }

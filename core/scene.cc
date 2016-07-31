@@ -30,6 +30,7 @@
 #include <kamikaze/primitive.h>
 
 #include "object.h"
+#include "simulation.h"
 
 #include "graphs/depsgraph.h"
 
@@ -43,6 +44,10 @@ Scene::~Scene()
 {
 	for (auto &object : m_objects) {
 		delete object;
+	}
+
+	for (auto &simulation : m_simulations) {
+		delete simulation;
 	}
 
 	delete m_depsgraph;
@@ -63,6 +68,14 @@ void Scene::removeObject(Object *object)
 	if (object == m_active_object) {
 		m_active_object = nullptr;
 	}
+}
+
+void Scene::addSimulation(Simulation *simulation)
+{
+	m_simulations.push_back(simulation);
+	m_depsgraph->create_node(simulation);
+
+	notify_listeners(OBJECT_ADDED);
 }
 
 void Scene::addObject(Object *object)

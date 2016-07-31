@@ -33,6 +33,7 @@
 
 #include "object.h"
 #include "scene.h"
+#include "simulation.h"
 
 /* *************************** add object command *************************** */
 
@@ -142,4 +143,29 @@ void AddPresetObjectCmd::redo()
 Command *AddPresetObjectCmd::registerSelf()
 {
 	return new AddPresetObjectCmd;
+}
+
+/* ************************* add simulation command ************************* */
+
+void AddSimulationCmd::execute(EvaluationContext *context)
+{
+	auto scene = context->scene;
+	auto simulation = new Simulation;
+
+	scene->addSimulation(simulation);
+}
+
+void AddSimulationCmd::undo()
+{
+	/* TODO */
+}
+
+void AddSimulationCmd::redo()
+{
+	/* TODO */
+}
+
+Command *AddSimulationCmd::registerSelf()
+{
+	return new AddSimulationCmd;
 }

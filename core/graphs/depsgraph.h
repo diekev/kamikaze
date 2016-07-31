@@ -31,6 +31,7 @@ class DepsNode;
 class EvaluationContext;
 class Graph;
 class Object;
+class Simulation;
 class TaskNotifier;
 
 struct DepsInputSocket;
@@ -128,6 +129,22 @@ public:
 
 /* ************************************************************************** */
 
+class SimulationDepsNode : public DepsNode {
+	Simulation *m_simulation = nullptr;
+
+public:
+	SimulationDepsNode() = delete;
+	explicit SimulationDepsNode(Simulation *simulation);
+
+	~SimulationDepsNode() = default;
+
+	void process(const EvaluationContext * const context, TaskNotifier *notifier) override;
+
+	const char *name() const override;
+};
+
+/* ************************************************************************** */
+
 enum {
 	DEG_STATE_NONE   = -1,
 	DEG_STATE_OBJECT = 0,
@@ -139,6 +156,7 @@ class Depsgraph {
 	std::vector<DepsNode *> m_stack;
 	std::unordered_map<Object *, DepsNode *> m_object_map;
 	std::unordered_map<Graph *, DepsNode *> m_object_graph_map;
+	std::unordered_map<Simulation *, DepsNode *> m_simulation_map;
 
 	int m_state = DEG_STATE_NONE;
 	bool m_need_update = false;
@@ -160,6 +178,9 @@ public:
 
 	void create_node(Object *object);
 	void remove_node(Object *object);
+
+	void create_node(Simulation *simulation);
+	void remove_node(Simulation *simulation);
 
 	void connect_to_time(Object *object);
 
