@@ -722,6 +722,7 @@ void QtNodeEditor::removeNode(QtNode *node)
 		removeObject(static_cast<ObjectNodeItem *>(node));
 	}
 	else {
+		removeNodeEx(node);
 		m_context->scene->notify_listeners(NODE_REMOVED);
 	}
 

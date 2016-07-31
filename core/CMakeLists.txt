@@ -64,6 +64,7 @@ add_library(kmk_core STATIC
 
 	graphs/depsgraph.h
 	graphs/graph_dumper.h
+	graphs/graph_tools.h
 	graphs/object_graph.h
 	graphs/object_nodes.h
 
@@ -102,6 +103,10 @@ set(ICONS
 	icons/icon_jump_last.png
 	icons/icon_pause.png
 	icons/icon_play_forward.png
+	icons/icon_play_backward.png
+	icons/icon_step_forward.png
+	icons/icon_step_backward.png
+	icons/icon_stop.png
 	icons/icon_torus.png
 	icons/icon_tube.png
 	icons/icon_uvsphere.png

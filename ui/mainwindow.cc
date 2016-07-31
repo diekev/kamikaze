@@ -42,6 +42,7 @@
 #include "outliner_widget.h"
 #include "properties_widget.h"
 #include "timeline_widget.h"
+#include "utils_ui.h"
 #include "viewer.h"
 
 MainWindow::MainWindow(Main *main, QWidget *parent)
@@ -189,8 +190,6 @@ void MainWindow::generateWindowMenu()
 
 	action = m_add_window_menu->addAction("3D View");
 	action->setToolTip("Add a 3D View");
-	/* TODO: figure out a way to have multiple GL context. */
-	action->setEnabled(false);
 	connect(action, SIGNAL(triggered()), this, SLOT(addGLViewerWidget()));
 }
 
@@ -207,11 +206,6 @@ void MainWindow::generateEditMenu()
 	connect(action, SIGNAL(triggered()), this, SLOT(redo()));
 }
 
-struct UIProp {
-	const char *name;
-	const char *icon_path;
-};
-
 void MainWindow::generatePresetMenu()
 {
 	m_command_factory->registerType("add preset", AddPresetObjectCmd::registerSelf);
@@ -219,14 +213,14 @@ void MainWindow::generatePresetMenu()
 	m_tool_bar = new QToolBar();
 	addToolBar(Qt::TopToolBarArea, m_tool_bar);
 
-	UIProp props[] = {
-	    { "Grid", "icons/icon_grid.png" },
-	    { "Box", "icons/icon_box.png" },
-	    { "Circle", "icons/icon_circle.png" },
-	    { "IcoSphere", "icons/icon_icosphere.png" },
-	    { "Tube", "icons/icon_tube.png" },
-	    { "Cone", "icons/icon_cone.png" },
-	    { "Torus", "icons/icon_torus.png" },
+	UIButData props[] = {
+	    { 0, "Grid", "icons/icon_grid.png" },
+	    { 0, "Box", "icons/icon_box.png" },
+	    { 0, "Circle", "icons/icon_circle.png" },
+	    { 0, "IcoSphere", "icons/icon_icosphere.png" },
+	    { 0, "Tube", "icons/icon_tube.png" },
+	    { 0, "Cone", "icons/icon_cone.png" },
+	    { 0, "Torus", "icons/icon_torus.png" },
 	};
 
 	for (const auto &prop : props) {
@@ -296,31 +290,21 @@ void MainWindow::addGraphEditorWidget()
 
 void MainWindow::addGLViewerWidget()
 {
-	if (m_has_glwindow) {
-		return;
+	/* TODO: figure out a way to have multiple GL context. */
+	if (m_viewer_dock == nullptr) {
+		m_viewer_dock = new QDockWidget("Viewport", this);
+
+		Viewer *glviewer = new Viewer(m_viewer_dock);
+		glviewer->listens(&m_context);
+		glviewer->update_state(-1);
+
+		m_viewer_dock->setWidget(glviewer);
+		m_viewer_dock->setAllowedAreas(Qt::AllDockWidgetAreas);
+
+		addDockWidget(Qt::LeftDockWidgetArea, m_viewer_dock);
 	}
 
-	QDockWidget *dock = new QDockWidget("Viewport", this);
-	dock->setAttribute(Qt::WA_DeleteOnClose);
-
-	Viewer *glviewer = new Viewer(dock);
-	glviewer->listens(&m_context);
-	glviewer->update_state(-1);
-
-	connect(glviewer, SIGNAL(viewerDeleted()), this, SLOT(viewerDeleted()));
-
-	dock->setWidget(glviewer);
-	dock->setAllowedAreas(Qt::AllDockWidgetAreas);
-
-	addDockWidget(Qt::LeftDockWidgetArea, dock);
-
-	for (auto action : m_add_window_menu->actions()) {
-		if (action->text() == "3D View") {
-			action->setEnabled(false);
-		}
-	}
-
-	m_has_glwindow = true;
+	m_viewer_dock->show();
 }
 
 void MainWindow::addOutlinerWidget()
@@ -448,17 +432,6 @@ void MainWindow::setupPalette()
 	palette.setBrush(QPalette::Disabled, QPalette::ToolTipText, brush6);
 
 	setPalette(palette);
-}
-
-void MainWindow::viewerDeleted()
-{
-	m_has_glwindow = false;
-
-	for (auto action : m_add_window_menu->actions()) {
-		if (action->text() == "3D View") {
-			action->setEnabled(true);
-		}
-	}
 }
 
 void MainWindow::dumpGraph()

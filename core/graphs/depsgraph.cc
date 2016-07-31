@@ -32,6 +32,7 @@
 #include <kamikaze/nodes.h>
 
 #include "graph_dumper.h"
+#include "graph_tools.h"
 
 #include "object.h"
 #include "object_graph.h"
@@ -418,65 +419,39 @@ static void gather_nodes(std::vector<DepsNode *> &nodes, DepsNode *root)
 	}
 }
 
-static void topology_sort(const std::vector<DepsNode *> &nodes, std::vector<DepsNode *> &r_stack)
+static inline auto is_linked(DepsNode *node)
 {
-	r_stack.clear();
-	r_stack.reserve(nodes.size());
+	return node->is_linked();
+}
 
-	/* 1. store each node degree in an array */
-	std::vector<DepsNode *> stack;
-	std::unordered_map<DepsNode *, std::pair<int, bool>> node_degrees;
+static inline auto is_linked(DepsInputSocket *socket)
+{
+	return socket->link != nullptr;
+}
 
-	int degree;
+static inline auto get_input(DepsNode *node, size_t /*index*/)
+{
+	return node->input();
+}
 
-	for (DepsNode *node : nodes) {
-		if (!node->is_linked()) {
-			r_stack.push_back(node);
-			continue;
-		}
+static inline auto get_link_parent(DepsInputSocket *socket)
+{
+	return socket->link->parent;
+}
 
-		/* 2. initialize a stack with all out-degree zero nodes */
+static inline auto num_inputs(DepsNode */*node*/)
+{
+	return 1;
+}
 
-		degree = node->output()->links.size();
+static inline auto get_degree(DepsNode *node)
+{
+	return node->output()->links.size();
+}
 
-		if (degree == 0) {
-			stack.push_back(node);
-			node_degrees[node] = std::make_pair(-1, true);
-		}
-		else {
-			node_degrees[node] = std::make_pair(degree, false);
-		}
-	}
-
-	/* 3. While there are vertices remaining in the stack:
-	 *   - Dequeue and output a node
-	 *   - Reduce out-degree of all vertices adjacent to it by 1
-	 *   - Enqueue any of these nodes whose out-degree became zero
-	 */
-	while (!stack.empty()) {
-		DepsNode *node = stack.back();
-		r_stack.push_back(node);
-		stack.pop_back();
-
-		DepsInputSocket *socket = node->input();
-
-		if (!socket->link) {
-			continue;
-		}
-
-		auto &degree_pair = node_degrees[socket->link->parent];
-
-		if (degree_pair.second) {
-			continue;
-		}
-
-		degree_pair.first -= 1;
-
-		if (degree_pair.first == 0) {
-			stack.push_back(socket->link->parent);
-			degree_pair.second = true;
-		}
-	}
+static inline auto is_zero_out_degree(DepsNode *node)
+{
+	return get_degree(node) == 0;
 }
 
 void Depsgraph::build(DepsNode *root)
