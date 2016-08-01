@@ -34,18 +34,28 @@ Simulation::Simulation()
 
 void Simulation::step()
 {
+	std::cerr << "Simulation::step\n";
+
 	auto gravity = glm::vec3(0.0f, -9.80665f, 0.0f);
 	auto time_step = 0.1f;
 
 	for (SceneInputSocket *input : m_inputs) {
-		if (input->parent->type() != SCE_NODE_OBJECT) {
+		if (!input->link) {
+			std::cerr << "Input is not linked\n";
 			continue;
 		}
 
-		Object *object = static_cast<Object *>(input->parent);
+		if (input->link->parent->type() != SCE_NODE_OBJECT) {
+			std::cerr << "Input is not an object\n";
+			continue;
+		}
+
+		Object *object = static_cast<Object *>(input->link->parent);
 
 		auto pos = object->eval_vec3("Position");
 		pos += time_step * gravity;
-//		object->set_value("Position", pos);
+		object->set_prop_value("Position", pos);
+
+		object->updateMatrix();
 	}
 }

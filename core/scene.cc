@@ -213,6 +213,9 @@ void Scene::connect(SceneNode *node_from, SceneNode *node_to)
 	}
 
 	if (do_connect) {
+		node_to->inputs()[0]->link = node_from->outputs()[0];
+		node_from->outputs()[0]->links.push_back(node_to->inputs()[0]);
+
 		m_depsgraph->connect(node_from, node_to);
 	}
 }
