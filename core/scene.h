@@ -87,7 +87,7 @@ public:
 
 	void evalObjectDag(const EvaluationContext * const context, SceneNode *node);
 
-	void connect(SceneNode *node_from, SceneNode *node_to);
+	void connect(const EvaluationContext * const context, SceneNode *node_from, SceneNode *node_to);
 
 private:
 	bool ensureUniqueName(QString &name) const;

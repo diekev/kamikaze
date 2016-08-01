@@ -1270,7 +1270,7 @@ void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNo
 		auto node_from = static_cast<ObjectNodeItem *>(from)->scene_node();
 		auto node_to = static_cast<ObjectNodeItem *>(to)->scene_node();
 
-		scene->connect(node_from, node_to);
+		scene->connect(m_context, node_from, node_to);
 	}
 }
 

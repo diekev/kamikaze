@@ -183,7 +183,7 @@ void Scene::evalObjectDag(const EvaluationContext * const context, SceneNode *no
 	m_depsgraph->evaluate(context, node);
 }
 
-void Scene::connect(SceneNode *node_from, SceneNode *node_to)
+void Scene::connect(const EvaluationContext * const context, SceneNode *node_from, SceneNode *node_to)
 {
 	auto from_type = node_from->type();
 	auto to_type = node_to->type();
@@ -217,6 +217,7 @@ void Scene::connect(SceneNode *node_from, SceneNode *node_to)
 		node_from->outputs()[0]->links.push_back(node_to->inputs()[0]);
 
 		m_depsgraph->connect(node_from, node_to);
+		m_depsgraph->evaluate(context, node_from);
 	}
 }
 

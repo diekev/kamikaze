@@ -24,7 +24,10 @@
 
 #include "simulation.h"
 
+#include <kamikaze/context.h>
+
 #include "object.h"
+#include "scene.h"
 
 Simulation::Simulation()
 {
@@ -32,21 +35,25 @@ Simulation::Simulation()
 	add_input("Input");
 }
 
-void Simulation::step()
+void Simulation::step(const EvaluationContext * const context)
 {
-	std::cerr << "Simulation::step\n";
+	auto scene = context->scene;
+
+	if (m_start_frame != scene->startFrame()) {
+		m_start_frame = scene->startFrame();
+	}
+
+	if (scene->currentFrame() == m_start_frame) {
+		/* save object state */
+		sync_states();
+		return;
+	}
 
 	auto gravity = glm::vec3(0.0f, -9.80665f, 0.0f);
-	auto time_step = 0.1f;
+	auto time_step = (context->time_direction == TIME_DIR_BACKWARD) ? -0.1f : 0.1f;
 
 	for (SceneInputSocket *input : m_inputs) {
 		if (!input->link) {
-			std::cerr << "Input is not linked\n";
-			continue;
-		}
-
-		if (input->link->parent->type() != SCE_NODE_OBJECT) {
-			std::cerr << "Input is not an object\n";
 			continue;
 		}
 
@@ -57,5 +64,26 @@ void Simulation::step()
 		object->set_prop_value("Position", pos);
 
 		object->updateMatrix();
+	}
+}
+
+void Simulation::sync_states()
+{
+	for (SceneInputSocket *input : m_inputs) {
+		if (!input->link) {
+			continue;
+		}
+
+		Object *object = static_cast<Object *>(input->link->parent);
+
+		auto iter = m_states.find(object);
+
+		if (iter == m_states.end()) {
+			m_states[object] = object->eval_vec3("Position");
+		}
+		else {
+			object->set_prop_value("Position", iter->second);
+			object->updateMatrix();
+		}
 	}
 }

@@ -201,9 +201,9 @@ SimulationDepsNode::SimulationDepsNode(Simulation *simulation)
     : m_simulation(simulation)
 {}
 
-void SimulationDepsNode::process(const EvaluationContext * const /*context*/, TaskNotifier */*notifier*/)
+void SimulationDepsNode::process(const EvaluationContext * const context, TaskNotifier */*notifier*/)
 {
-	m_simulation->step();
+	m_simulation->step(context);
 }
 
 const char *SimulationDepsNode::name() const

@@ -28,8 +28,11 @@
 
 #include "object.h"
 
+static constexpr auto INVALID_FRAME = std::numeric_limits<int>::max();
+
 class Simulation : public SceneNode {
-	int m_start_frame = 0;
+	std::unordered_map<Object *, glm::vec3> m_states;
+	int m_start_frame = INVALID_FRAME;
 
 public:
 	Simulation();
@@ -39,5 +42,7 @@ public:
 		return SCE_NODE_SIMULATION;
 	}
 
-	void step();
+	void step(const EvaluationContext * const context);
+
+	void sync_states();
 };
