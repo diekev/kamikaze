@@ -191,6 +191,15 @@ void Persona::set_prop_default_value_vec3(const glm::vec3 &value)
 	*(prop.data.as_ptr<glm::vec3>()) = value;
 }
 
+void Persona::set_prop_value(const std::string &prop_name, const glm::vec3 &value)
+{
+	Property *prop = find_property(prop_name);
+
+	assert(prop->type == property_type::prop_vec3);
+
+	*(prop->data.as_ptr<glm::vec3>()) = value;
+}
+
 void Persona::set_prop_tooltip(std::string tooltip)
 {
 	Property &prop = this->m_props.back();

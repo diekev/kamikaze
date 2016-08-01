@@ -121,6 +121,8 @@ public:
 
 	std::vector<Property> &props();
 
+	void set_prop_value(const std::string &prop_name, const glm::vec3 &value);
+
 private:
 	inline Property *find_property(const std::string &prop_name)
 	{
