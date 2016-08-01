@@ -28,7 +28,8 @@
 
 Simulation::Simulation()
 {
-
+	m_name = "Simulation";
+	add_input("Input");
 }
 
 void Simulation::step()
