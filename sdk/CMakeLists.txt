@@ -53,20 +53,7 @@ set(INC_SYS
 	${EGO_INCLUDE_DIRS}
 )
 
-add_library(kamikaze SHARED
-	any.cc 
-	attribute.cc
-	context.cc
-	cube.cc
-	geomlists.cc
-	nodes.cc
-	noise.cc
-	mesh.cc
-	persona.cc
-	prim_points.cc
-	primitive.cc
-	renderbuffer.cc
-
+set(HEADERS
 	any.h
 	attribute.h
 	context.h
@@ -83,6 +70,23 @@ add_library(kamikaze SHARED
 	util_render.h
 )
 
+add_library(kamikaze SHARED
+	any.cc 
+	attribute.cc
+	context.cc
+	cube.cc
+	geomlists.cc
+	nodes.cc
+	noise.cc
+	mesh.cc
+	persona.cc
+	prim_points.cc
+	primitive.cc
+	renderbuffer.cc
+
+	${HEADERS}
+)
+
 target_include_directories(kamikaze PUBLIC "${INC_SYS}")
 
 set(KAMIKAZE_VERSION_MAJOR 0)
@@ -95,8 +99,6 @@ set_target_properties(kamikaze PROPERTIES VERSION ${KAMIKAZE_VERSION_STRING} SOV
 install(TARGETS kamikaze LIBRARY DESTINATION lib)
 
 install(
-	DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-	DESTINATION include
-	COMPONENT Development
-	FILES_MATCHING PATTERN "*.h"
+	FILES ${HEADERS}
+	DESTINATION include/kamikaze
 )
