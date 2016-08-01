@@ -234,6 +234,7 @@ void TimeLineWidget::setCurrentFrame(int value) const
 {
 	auto scene = m_context->scene;
 	scene->currentFrame(value);
+	scene->updateForNewFrame(m_context);
 }
 
 void TimeLineWidget::setFPS(double value) const
@@ -246,12 +247,14 @@ void TimeLineWidget::goToStartFrame() const
 {
 	auto scene = m_context->scene;
 	scene->currentFrame(scene->startFrame());
+	scene->updateForNewFrame(m_context);
 }
 
 void TimeLineWidget::goToEndFrame() const
 {
 	auto scene = m_context->scene;
 	scene->currentFrame(scene->endFrame());
+	scene->updateForNewFrame(m_context);
 }
 
 void TimeLineWidget::playForward()
