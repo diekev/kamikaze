@@ -42,53 +42,41 @@ Scene::Scene()
 
 Scene::~Scene()
 {
-	for (auto &object : m_objects) {
-		delete object;
-	}
-
-	for (auto &simulation : m_simulations) {
-		delete simulation;
+	for (auto &node : m_nodes) {
+		delete node;
 	}
 
 	delete m_depsgraph;
 }
 
-void Scene::removeObject(Object *object)
+void Scene::removeObject(SceneNode *node)
 {
-	auto iter = std::find(m_objects.begin(), m_objects.end(), object);
+	auto iter = std::find(m_nodes.begin(), m_nodes.end(), node);
 
-	assert(iter != m_objects.end());
+	assert(iter != m_nodes.end());
 
 	notify_listeners(OBJECT_REMOVED);
 
-	m_objects.erase(iter);
-	m_depsgraph->remove_node(object);
-	delete object;
+	m_nodes.erase(iter);
+	m_depsgraph->remove_node(node);
+	delete node;
 
-	if (object == m_active_object) {
-		m_active_object = nullptr;
+	if (node == m_active_node) {
+		m_active_node = nullptr;
 	}
 }
 
-void Scene::addSimulation(Simulation *simulation)
+void Scene::addObject(SceneNode *node)
 {
-	m_simulations.push_back(simulation);
-	m_depsgraph->create_node(simulation);
-
-	notify_listeners(OBJECT_ADDED);
-}
-
-void Scene::addObject(Object *object)
-{
-	QString name = object->name();
+	QString name = node->name();
 	if (ensureUniqueName(name)) {
-		object->name(name);
+		node->name(name);
 	}
 
-	m_objects.push_back(object);
-	m_active_object = object;
+	m_nodes.push_back(node);
+	m_active_node = node;
 
-	m_depsgraph->create_node(object);
+	m_depsgraph->create_node(node);
 
 	notify_listeners(OBJECT_ADDED);
 }
@@ -103,7 +91,13 @@ void Scene::selectObject(const glm::vec3 &pos)
 	float min = 1000.0f;
 	int selected_object = -1, index = 0;
 
-	for (auto &object : m_objects) {
+	for (auto &node : m_nodes) {
+		if (node->type() != SCE_NODE_OBJECT) {
+			continue;
+		}
+
+		auto object = static_cast<Object *>(node);
+
 		if (!object || !object->collection()) {
 			continue;
 		}
@@ -120,8 +114,8 @@ void Scene::selectObject(const glm::vec3 &pos)
 		++index;
 	}
 
-	if (selected_object != -1 && m_active_object != m_objects[selected_object]) {
-		m_active_object = m_objects[selected_object];
+	if (selected_object != -1 && m_active_node != m_nodes[selected_object]) {
+		m_active_node = m_nodes[selected_object];
 		notify_listeners(OBJECT_SELECTED);
 	}
 }
@@ -131,10 +125,10 @@ Depsgraph *Scene::depsgraph()
 	return m_depsgraph;
 }
 
-Object *Scene::currentObject()
+SceneNode *Scene::current_node()
 {
-	if (!m_objects.empty()) {
-		return m_active_object;
+	if (!m_nodes.empty()) {
+		return m_active_node;
 	}
 
 	return nullptr;
@@ -142,14 +136,16 @@ Object *Scene::currentObject()
 
 void Scene::tagObjectUpdate()
 {
-	if (!m_active_object) {
+	if (!m_active_node || m_active_node->type() != SCE_NODE_OBJECT) {
 		return;
 	}
 
-	m_active_object->updateMatrix();
+	auto object = static_cast<Object *>(m_active_node);
 
-	if (m_active_object->collection()) {
-		for (auto &prim : m_active_object->collection()->primitives()) {
+	object->updateMatrix();
+
+	if (object->collection()) {
+		for (auto &prim : object->collection()->primitives()) {
 			prim->tagUpdate();
 		}
 	}
@@ -161,7 +157,7 @@ bool Scene::ensureUniqueName(QString &name) const
 {
 	return ensure_unique_name(name, [&](const QString &str)
 	{
-		for (const auto &object : m_objects) {
+		for (const auto &object : m_nodes) {
 			if (object->name() == str) {
 				return false;
 			}
@@ -171,9 +167,9 @@ bool Scene::ensureUniqueName(QString &name) const
 	});
 }
 
-void Scene::setActiveObject(Object *object)
+void Scene::set_active_node(SceneNode *node)
 {
-	m_active_object = object;
+	m_active_node = node;
 	notify_listeners(OBJECT_SELECTED);
 }
 
@@ -182,9 +178,9 @@ void Scene::updateForNewFrame(const EvaluationContext * const context)
 	m_depsgraph->evaluate_for_time_change(context);
 }
 
-void Scene::evalObjectDag(const EvaluationContext * const context, Object *object)
+void Scene::evalObjectDag(const EvaluationContext * const context, SceneNode *node)
 {
-	m_depsgraph->evaluate(context, object);
+	m_depsgraph->evaluate(context, node);
 }
 
 int Scene::startFrame() const
@@ -231,7 +227,7 @@ void Scene::framesPerSecond(float value)
 	notify_listeners(TIME_CHANGED);
 }
 
-const std::vector<Object *> &Scene::objects() const
+const std::vector<SceneNode *> &Scene::nodes() const
 {
-	return m_objects;
+	return m_nodes;
 }

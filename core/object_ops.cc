@@ -77,7 +77,13 @@ Command *AddObjectCmd::registerSelf()
 void AddNodeCmd::execute(EvaluationContext *context)
 {
 	m_scene = context->scene;
-	m_object = m_scene->currentObject();
+	auto scene_node = m_scene->current_node();
+
+	if (scene_node == nullptr || scene_node->type() != SCE_NODE_OBJECT) {
+		return;
+	}
+
+	m_object = static_cast<Object *>(scene_node);
 
 	assert(m_object != nullptr);
 
@@ -111,7 +117,14 @@ void AddPresetObjectCmd::execute(EvaluationContext *context)
 	auto node = (*context->node_factory)(m_name);
 
 	if (context->edit_mode) {
-		m_object = m_scene->currentObject();
+		auto scene_node = m_scene->current_node();
+
+		/* Sanity check. */
+		if (scene_node == nullptr || scene_node->type() != SCE_NODE_OBJECT) {
+			return;
+		}
+
+		m_object = static_cast<Object *>(scene_node);
 	}
 	else {
 		m_object = new Object;
@@ -152,7 +165,7 @@ void AddSimulationCmd::execute(EvaluationContext *context)
 	auto scene = context->scene;
 	auto simulation = new Simulation;
 
-	scene->addSimulation(simulation);
+	scene->addObject(simulation);
 }
 
 void AddSimulationCmd::undo()

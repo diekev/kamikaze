@@ -61,26 +61,26 @@ void SceneTreeWidgetItem::setVisited()
 
 int SceneTreeWidgetItem::numChildren() const
 {
-	return m_scene->objects().size();
+	return m_scene->nodes().size();
 }
 
 /* ************************************************************************** */
 
 ObjectTreeWidgetItem::ObjectTreeWidgetItem(QTreeWidgetItem *parent)
     : QTreeWidgetItem(parent)
-    , m_object(nullptr)
+    , m_scene_node(nullptr)
     , m_visited(false)
 {}
 
-Object *ObjectTreeWidgetItem::getObject() const
+SceneNode *ObjectTreeWidgetItem::getNode() const
 {
-	return m_object;
+	return m_scene_node;
 }
 
-void ObjectTreeWidgetItem::setObject(Object *object)
+void ObjectTreeWidgetItem::setNode(SceneNode *scene_node)
 {
-	m_object = object;
-	setText(0, m_object->name());
+	m_scene_node = scene_node;
+	setText(0, m_scene_node->name());
 
 	if (this->numChildren() > 0) {
 		setChildIndicatorPolicy(QTreeWidgetItem::ShowIndicator);
@@ -99,7 +99,13 @@ void ObjectTreeWidgetItem::setVisited()
 
 int ObjectTreeWidgetItem::numChildren() const
 {
-	return getObject()->children().size();
+	auto node = getNode();
+
+	if (node->type() == SCE_NODE_OBJECT) {
+		return static_cast<Object *>(node)->children().size();
+	}
+
+	return 0;
 }
 
 /* ************************************************************************** */
@@ -171,9 +177,9 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 	if (scene_item && !scene_item->visited()) {
 		Scene *scene = scene_item->getScene();
 
-		for (const auto &object : scene->objects()) {
+		for (const auto &node : scene->nodes()) {
 			auto child = new ObjectTreeWidgetItem(scene_item);
-			child->setObject(object);
+			child->setNode(node);
 			scene_item->addChild(child);
 		}
 
@@ -184,12 +190,16 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 	auto object_item = dynamic_cast<ObjectTreeWidgetItem *>(item);
 
 	if (object_item && !object_item->visited()) {
-		Object *object = object_item->getObject();
+		auto node = object_item->getNode();
 
-		for (const auto &child : object->children()) {
-			auto child_item = new ObjectTreeWidgetItem(object_item);
-			child_item->setObject(child);
-			object_item->addChild(child_item);
+		if (node->type() == SCE_NODE_OBJECT) {
+			auto object = static_cast<Object *>(node);
+
+			for (const auto &child : object->children()) {
+				auto child_item = new ObjectTreeWidgetItem(object_item);
+				child_item->setNode(child);
+				object_item->addChild(child_item);
+			}
 		}
 
 		object_item->setVisited();
@@ -216,7 +226,7 @@ void OutlinerTreeWidget::handleItemSelection()
 	auto object_item = dynamic_cast<ObjectTreeWidgetItem *>(item);
 
 	if (object_item) {
-		m_context->scene->setActiveObject(object_item->getObject());
+		m_context->scene->set_active_node(object_item->getNode());
 		return;
 	}
 }

@@ -36,7 +36,13 @@ void Simulation::step()
 	auto gravity = glm::vec3(0.0f, -9.80665f, 0.0f);
 	auto time_step = 0.1f;
 
-	for (Object *object : m_inputs) {
+	for (SceneInputSocket *input : m_inputs) {
+		if (input->parent->type() != SCE_NODE_OBJECT) {
+			continue;
+		}
+
+		Object *object = static_cast<Object *>(input->parent);
+
 		auto pos = object->eval_vec3("Position");
 		pos += time_step * gravity;
 //		object->set_value("Position", pos);

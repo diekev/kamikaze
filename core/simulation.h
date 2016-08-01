@@ -26,14 +26,18 @@
 
 #include <vector>
 
-class Object;
+#include "object.h"
 
-class Simulation {
-	std::vector<Object *> m_inputs = {};
+class Simulation : public SceneNode {
 	int m_start_frame = 0;
 
 public:
 	Simulation();
+
+	int type() const override
+	{
+		return SCE_NODE_SIMULATION;
+	}
 
 	void step();
 };

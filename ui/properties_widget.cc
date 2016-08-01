@@ -70,16 +70,23 @@ void PropertiesWidget::update_state(int event_type)
 	bool set_context = true;
 	auto scene = m_context->scene;
 
-	if (scene->currentObject() == nullptr) {
+	if (scene->current_node() == nullptr) {
 		return;
 	}
 
 	if (event_type == OBJECT_ADDED) {
-		auto object = scene->currentObject();
-		persona = object;
+		auto scene_node = scene->current_node();
+		persona = scene_node;
 	}
 	else if (event_type == NODE_SELECTED) {
-		auto object = scene->currentObject();
+		auto scene_node = scene->current_node();
+
+		if (scene_node->type() != SCE_NODE_OBJECT) {
+			clear_layout(m_layout);
+			return;
+		}
+
+		auto object = static_cast<Object *>(scene_node);
 		auto graph = object->graph();
 		auto node = graph->active_node();
 
@@ -183,7 +190,7 @@ void PropertiesWidget::evalObjectGraph()
 {
 	auto scene = m_context->scene;
 
-	scene->evalObjectDag(m_context, scene->currentObject());
+	scene->evalObjectDag(m_context, scene->current_node());
 	scene->notify_listeners(-1);
 }
 

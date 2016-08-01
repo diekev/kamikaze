@@ -30,6 +30,7 @@
 
 class Object;
 class Scene;
+class SceneNode;
 
 /* ************************************************************************** */
 
@@ -52,14 +53,14 @@ public:
 /* ************************************************************************** */
 
 class ObjectTreeWidgetItem : public QTreeWidgetItem {
-	Object *m_object;
+	SceneNode *m_scene_node;
     bool m_visited;
 
 public:
     explicit ObjectTreeWidgetItem(QTreeWidgetItem *parent = nullptr);
 
-    Object *getObject() const;
-    void setObject(Object *object);
+    SceneNode *getNode() const;
+    void setNode(SceneNode *scene_node);
 
     bool visited() const;
     void setVisited();

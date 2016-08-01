@@ -444,11 +444,13 @@ void MainWindow::dumpGraph()
 	auto scene = m_context.scene;
 
 	if (data == "dump_object_graph") {
-		auto object = scene->currentObject();
+		auto scene_node = scene->current_node();
 
-		if (!object) {
+		if (!scene_node || scene_node->type() != SCE_NODE_OBJECT) {
 			return;
 		}
+
+		auto object = static_cast<Object *>(scene_node);
 
 		GraphDumper gd(object->graph());
 		gd("/tmp/object_graph.gv");

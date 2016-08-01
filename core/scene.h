@@ -33,13 +33,13 @@
 class Depsgraph;
 class EvaluationContext;
 class Node;
+class SceneNode;
 class Object;
 class Simulation;
 
 class Scene : public Listened {
-	std::vector<Object *> m_objects = {};
-	std::vector<Simulation *> m_simulations = {};
-	Object *m_active_object = nullptr;
+	std::vector<SceneNode *> m_nodes = {};
+	SceneNode *m_active_node = nullptr;
 	int m_mode = 0;
 
 	Depsgraph *m_depsgraph = nullptr;
@@ -53,13 +53,11 @@ public:
 	Scene();
 	~Scene();
 
-	Object *currentObject();
-	void setActiveObject(Object *object);
+	SceneNode *current_node();
+	void set_active_node(SceneNode *node);
 
-	void addObject(Object *object);
-	void removeObject(Object *object);
-
-	void addSimulation(Simulation *simulation);
+	void addObject(SceneNode *node);
+	void removeObject(SceneNode *node);
 
 	void intersect(const Ray &ray);
 
@@ -83,11 +81,11 @@ public:
 
 	void updateForNewFrame(const EvaluationContext * const context);
 
-	const std::vector<Object *> &objects() const;
+	const std::vector<SceneNode *> &nodes() const;
 
 	void tagObjectUpdate();
 
-	void evalObjectDag(const EvaluationContext * const context, Object *object);
+	void evalObjectDag(const EvaluationContext * const context, SceneNode *node);
 private:
 	bool ensureUniqueName(QString &name) const;
 };

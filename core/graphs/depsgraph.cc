@@ -279,28 +279,42 @@ void Depsgraph::disconnect(DepsOutputSocket *from, DepsInputSocket *to)
 	m_need_update = true;
 }
 
-void Depsgraph::create_node(Object *object)
+void Depsgraph::create_node(SceneNode *scene_node)
 {
-	DepsObjectNode *node = new DepsObjectNode(object);
+	if (scene_node->type() == SCE_NODE_OBJECT) {
+		auto object = static_cast<Object *>(scene_node);
+		auto node = new DepsObjectNode(object);
 
-	m_nodes.push_back(node);
-	m_object_map[object] = node;
+		m_nodes.push_back(node);
+		m_scene_node_map[scene_node] = node;
 
-	ObjectGraphDepsNode *graph_node = new ObjectGraphDepsNode(object->graph());
+		auto graph_node = new ObjectGraphDepsNode(object->graph());
 
-	m_nodes.push_back(graph_node);
-	m_object_graph_map[object->graph()] = graph_node;
+		m_nodes.push_back(graph_node);
+		m_object_graph_map[object->graph()] = graph_node;
 
-	/* Object depends on its graph. */
-	connect(graph_node->output(), node->input());
+		/* Object depends on its graph. */
+		connect(graph_node->output(), node->input());
+	}
+	else if (scene_node->type() == SCE_NODE_SIMULATION) {
+		auto simulation = static_cast<Simulation *>(scene_node);
+		auto node = new SimulationDepsNode(simulation);
+
+		m_nodes.push_back(node);
+		m_scene_node_map[scene_node] = node;
+
+		/* Simulation depends on time. */
+		connect(node->output(), m_time_node->input());
+	}
 
 	m_need_update = true;
 }
 
-void Depsgraph::remove_node(Object *object)
+void Depsgraph::remove_node(SceneNode *scene_node)
 {
 	/* First, remove graph node. */
-	{
+	if (scene_node->type() == SCE_NODE_OBJECT) {
+		auto object = static_cast<Object *>(scene_node);
 		auto iter = m_object_graph_map.find(object->graph());
 		assert(iter != m_object_graph_map.end());
 
@@ -324,22 +338,27 @@ void Depsgraph::remove_node(Object *object)
 		delete node;
 	}
 
-	/* Then, delete object node. */
+	/* Then, delete scene node. */
 	{
-		auto iter = m_object_map.find(object);
-		assert(iter != m_object_map.end());
+		auto iter = m_scene_node_map.find(scene_node);
+		assert(iter != m_scene_node_map.end());
 
 		DepsNode *node = iter->second;
 
 		auto node_iter = std::find(m_nodes.begin(), m_nodes.end(), node);
 		assert(node_iter != m_nodes.end());
 
+		/* Disconnect input. */
+		if (node->input()->link) {
+			disconnect(node->input()->link, node->input());
+		}
+
 		/* Disconnect output. */
 		for (DepsInputSocket *input : node->output()->links) {
 			disconnect(node->output(), input);
 		}
 
-		m_object_map.erase(iter);
+		m_scene_node_map.erase(iter);
 		m_nodes.erase(node_iter);
 		delete node;
 	}
@@ -347,61 +366,48 @@ void Depsgraph::remove_node(Object *object)
 	m_need_update = true;
 }
 
-void Depsgraph::create_node(Simulation *simulation)
+void Depsgraph::connect_to_time(SceneNode *scene_node)
 {
-	auto node = new SimulationDepsNode(simulation);
+	DepsNode *node = nullptr;
 
-	m_nodes.push_back(node);
-	m_simulation_map[simulation] = node;
+	if (scene_node->type() == SCE_NODE_OBJECT) {
+		auto object = static_cast<Object *>(scene_node);
+		auto iter = m_object_graph_map.find(object->graph());
+		assert(iter != m_object_graph_map.end());
 
-	/* Simulation depends on time. */
-	connect(m_time_node->output(), node->input());
+		node = iter->second;
+	}
+	else {
+		auto iter = m_scene_node_map.find(scene_node);
+		assert(iter != m_scene_node_map.end());
 
-	m_need_update = true;
-}
-
-void Depsgraph::remove_node(Simulation *simulation)
-{
-	auto iter = m_simulation_map.find(simulation);
-	assert(iter != m_simulation_map.end());
-
-	DepsNode *node = iter->second;
-
-	auto node_iter = std::find(m_nodes.begin(), m_nodes.end(), node);
-	assert(node_iter != m_nodes.end());
-
-	/* Disconnect input. */
-	if (node->input()->link) {
-		disconnect(node->input()->link, node->input());
+		node = iter->second;
 	}
 
-	/* Disconnect output. */
-	for (DepsInputSocket *input : node->output()->links) {
-		disconnect(node->output(), input);
-	}
+	assert(node != nullptr);
 
-	m_simulation_map.erase(iter);
-	m_nodes.erase(node_iter);
-	delete node;
-
-	m_need_update = true;
-}
-
-void Depsgraph::connect_to_time(Object *object)
-{
-	auto iter = m_object_graph_map.find(object->graph());
-	assert(iter != m_object_graph_map.end());
-
-	DepsNode *node = iter->second;
 	connect(m_time_node->output(), node->input());
 }
 
-void Depsgraph::evaluate(const EvaluationContext * const context, Object *object)
+void Depsgraph::evaluate(const EvaluationContext * const context, SceneNode *scene_node)
 {
-	auto iter = m_object_graph_map.find(object->graph());
-	assert(iter != m_object_graph_map.end());
+	DepsNode *node = nullptr;
 
-	DepsNode *node = iter->second;
+	if (scene_node->type() == SCE_NODE_OBJECT) {
+		auto object = static_cast<Object *>(scene_node);
+		auto iter = m_object_graph_map.find(object->graph());
+		assert(iter != m_object_graph_map.end());
+
+		node = iter->second;
+	}
+	else {
+		auto iter = m_scene_node_map.find(scene_node);
+		assert(iter != m_scene_node_map.end());
+
+		node = iter->second;
+	}
+
+	assert(node != nullptr);
 
 	m_need_update |= (m_state != DEG_STATE_OBJECT);
 	m_state = DEG_STATE_OBJECT;

@@ -31,6 +31,7 @@ class DepsNode;
 class EvaluationContext;
 class Graph;
 class Object;
+class SceneNode;
 class Simulation;
 class TaskNotifier;
 
@@ -154,9 +155,8 @@ enum {
 class Depsgraph {
 	std::vector<DepsNode *> m_nodes;
 	std::vector<DepsNode *> m_stack;
-	std::unordered_map<Object *, DepsNode *> m_object_map;
+	std::unordered_map<SceneNode *, DepsNode *> m_scene_node_map;
 	std::unordered_map<Graph *, DepsNode *> m_object_graph_map;
-	std::unordered_map<Simulation *, DepsNode *> m_simulation_map;
 
 	int m_state = DEG_STATE_NONE;
 	bool m_need_update = false;
@@ -176,15 +176,12 @@ public:
 	void connect(DepsOutputSocket *from, DepsInputSocket *to);
 	void disconnect(DepsOutputSocket *from, DepsInputSocket *to);
 
-	void create_node(Object *object);
-	void remove_node(Object *object);
+	void create_node(SceneNode *scene_node);
+	void remove_node(SceneNode *scene_node);
 
-	void create_node(Simulation *simulation);
-	void remove_node(Simulation *simulation);
+	void connect_to_time(SceneNode *scene_node);
 
-	void connect_to_time(Object *object);
-
-	void evaluate(const EvaluationContext * const context, Object *object);
+	void evaluate(const EvaluationContext * const context, SceneNode *scene_node);
 	void evaluate_for_time_change(const EvaluationContext * const context);
 
 	const std::vector<DepsNode *> &nodes() const;

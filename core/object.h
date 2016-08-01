@@ -32,6 +32,95 @@
 #include <kamikaze/primitive.h>
 #include <kamikaze/persona.h>
 
+enum {
+	SCE_NODE_OBJECT     = 0,
+	SCE_NODE_SIMULATION = 1,
+};
+
+struct SceneNode;
+struct SceneInputSocket;
+
+struct SceneOutputSocket {
+	SceneNode *parent = nullptr;
+	std::vector<SceneInputSocket *> links{};
+	std::string name = "";
+
+	explicit SceneOutputSocket(const std::string &sname)
+	    : parent(nullptr)
+	    , name(sname)
+	{}
+};
+
+struct SceneInputSocket {
+	SceneNode *parent = nullptr;
+	SceneOutputSocket *link = nullptr;
+	std::string name = "";
+
+	explicit SceneInputSocket(const std::string &sname)
+	    : parent(nullptr)
+	    , link(nullptr)
+	    , name(sname)
+	{}
+};
+
+class SceneNode : public Persona {
+protected:
+	std::vector<SceneInputSocket *> m_inputs;
+	std::vector<SceneOutputSocket *> m_outputs;
+
+	std::string m_name;
+
+public:
+	virtual ~SceneNode()
+	{
+		for (auto &input : m_inputs) {
+			delete input;
+		}
+
+		for (auto &output : m_outputs) {
+			delete output;
+		}
+	}
+
+	virtual int type() const = 0;
+
+	void add_input(const std::string &name)
+	{
+		auto socket = new SceneInputSocket(name);
+		socket->parent = this;
+
+		this->m_inputs.push_back(socket);
+	}
+
+	void add_output(const std::string &name)
+	{
+		auto socket = new SceneOutputSocket(name);
+		socket->parent = this;
+
+		this->m_outputs.push_back(socket);
+	}
+
+	const std::vector<SceneInputSocket *> &inputs()
+	{
+		return m_inputs;
+	}
+
+	const std::vector<SceneOutputSocket *> &outputs()
+	{
+		return m_outputs;
+	}
+
+	void name(const QString &name)
+	{
+		m_name = name.toStdString();
+	}
+
+	const QString name() const
+	{
+		return QString::fromStdString(m_name);
+	}
+};
+
 class EvaluationContext;
 class Graph;
 class Node;
@@ -39,7 +128,7 @@ class ParamCallback;
 class Primitive;
 class PrimitiveCollection;
 
-class Object : public Persona {
+class Object : public SceneNode {
 	PrimitiveCollection *m_collection = nullptr;
 	PrimitiveCache m_cache;
 
@@ -48,14 +137,17 @@ class Object : public Persona {
 
 	Graph *m_graph;
 
-	std::string m_name;
-
 	Object *m_parent = nullptr;
 	std::vector<Object *> m_children;
 
 public:
 	Object();
 	~Object();
+
+	int type() const override
+	{
+		return SCE_NODE_OBJECT;
+	}
 
 	PrimitiveCollection *collection() const;
 	void collection(PrimitiveCollection *coll);
@@ -68,9 +160,6 @@ public:
 	void addNode(Node *node);
 
 	Graph *graph() const;
-
-	void name(const QString &name);
-	const QString name() const;
 
 	void updateMatrix();
 	void clearCache();

@@ -589,7 +589,7 @@ void QtNodeEditor::selectNode(QtNode *node, QGraphicsSceneMouseEvent *mouseEvent
 		setActiveObject(static_cast<ObjectNodeItem *>(node));
 	}
 	else {
-		auto object = m_context->scene->currentObject();
+		auto object = static_cast<Object *>(m_context->scene->current_node());
 		auto graph = object->graph();
 		graph->active_node(node->getNode());
 		m_context->scene->notify_listeners(NODE_SELECTED);
@@ -704,7 +704,7 @@ void QtNodeEditor::removeNode(QtNode *node)
 	}
 
 	if (is_object_node(node)) {
-		auto object = static_cast<ObjectNodeItem *>(node)->object();
+		auto object = static_cast<ObjectNodeItem *>(node)->scene_node();
 
 		/* TODO: first we delete the node then the object, so we avoid issues
 		 * when the scene sends the notifier that the object was deleted. */
@@ -1118,13 +1118,13 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 void QtNodeEditor::update_state(int event_type)
 {
 	if (event_type == OBJECT_ADDED) {
-		auto object = m_context->scene->currentObject();
+		auto scene_node = m_context->scene->current_node();
 
-		if (object == nullptr) {
+		if (scene_node == nullptr) {
 			return;
 		}
 
-		auto obnode_item = new ObjectNodeItem(object, object->name());
+		auto obnode_item = new ObjectNodeItem(scene_node, scene_node->name());
 		obnode_item->setTitleColor(Qt::white);
 		obnode_item->alignTitle(ALIGNED_CENTER);
 
@@ -1133,7 +1133,8 @@ void QtNodeEditor::update_state(int event_type)
 		obnode_item->setSelected(true);
 
 		/* add node item for the object's graph output node */
-		{
+		if (scene_node->type() == SCE_NODE_OBJECT) {
+			auto object = static_cast<Object *>(scene_node);
 			auto graph = object->graph();
 			auto output_node = graph->output();
 
@@ -1178,7 +1179,7 @@ void QtNodeEditor::update_state(int event_type)
 		}
 	}
 	else if (event_type == OBJECT_REMOVED) {
-		auto object = m_context->scene->currentObject();
+		auto object = m_context->scene->current_node();
 
 		for (auto item : m_current_scene->items()) {
 			if (!is_object_node(item)) {
@@ -1187,7 +1188,7 @@ void QtNodeEditor::update_state(int event_type)
 
 			auto obnode = static_cast<ObjectNodeItem *>(item);
 
-			if (obnode->object() == object) {
+			if (obnode->scene_node() == object) {
 				m_current_scene->removeItem(item);
 				delete item;
 				break;
@@ -1195,7 +1196,7 @@ void QtNodeEditor::update_state(int event_type)
 		}
 	}
 	else if (event_type == NODE_ADDED) {
-		auto object = m_context->scene->currentObject();
+		auto object = static_cast<Object *>(m_context->scene->current_node());
 
 		if (object == nullptr) {
 			return;
@@ -1219,13 +1220,13 @@ void QtNodeEditor::update_state(int event_type)
 
 void QtNodeEditor::setActiveObject(ObjectNodeItem *node)
 {
-	m_context->scene->setActiveObject(node->object());
+	m_context->scene->set_active_node(node->scene_node());
 }
 
 void QtNodeEditor::removeNodeEx(QtNode *node)
 {
 	auto scene = m_context->scene;
-	auto object = scene->currentObject();
+	auto object = static_cast<Object *>(scene->current_node());
 	auto graph = object->graph();
 
 	const auto was_connected = node->getNode()->isLinked();
@@ -1240,7 +1241,7 @@ void QtNodeEditor::removeNodeEx(QtNode *node)
 void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
 {
 	auto scene = m_context->scene;
-	auto object = scene->currentObject();
+	auto object = static_cast<Object *>(scene->current_node());
 	auto graph = object->graph();
 
 	auto node_from = from->getNode();
@@ -1259,7 +1260,7 @@ void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNo
 void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
 {
 	auto scene = m_context->scene;
-	auto object = scene->currentObject();
+	auto object = static_cast<Object *>(scene->current_node());
 	auto graph = object->graph();
 
 	auto node_from = from->getNode();
