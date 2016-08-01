@@ -68,7 +68,7 @@ DepsOutputSocket *DepsNode::output()
 
 bool DepsNode::is_linked() const
 {
-	return (m_input.link != nullptr) || (!m_output.links.empty());
+	return (!m_input.links.empty()) || (!m_output.links.empty());
 }
 
 /* ************************************************************************** */
@@ -251,14 +251,41 @@ Depsgraph::~Depsgraph()
 	}
 }
 
-void Depsgraph::connect(DepsOutputSocket *from, DepsInputSocket *to)
+void Depsgraph::connect(SceneNode *from, SceneNode *to)
 {
-	if (to->link != nullptr) {
-		std::cerr << "Input already connected!\n";
-		return;
+	auto from_deps_node = find_node(from, false);
+	auto to_deps_node = find_node(to, true);
+
+	connect(from_deps_node->output(), to_deps_node->input());
+}
+
+DepsNode *Depsgraph::find_node(SceneNode *scene_node, bool graph)
+{
+	DepsNode *node = nullptr;
+
+	/* TODO: find a better way for this. */
+	if (graph && scene_node->type() == SCE_NODE_OBJECT) {
+		auto object = static_cast<Object *>(scene_node);
+		auto iter = m_object_graph_map.find(object->graph());
+		assert(iter != m_object_graph_map.end());
+
+		node = iter->second;
+	}
+	else {
+		auto iter = m_scene_node_map.find(scene_node);
+		assert(iter != m_scene_node_map.end());
+
+		node = iter->second;
 	}
 
-	to->link = from;
+	assert(node != nullptr);
+
+	return node;
+}
+
+void Depsgraph::connect(DepsOutputSocket *from, DepsInputSocket *to)
+{
+	to->links.push_back(from);
 	from->links.push_back(to);
 
 	m_need_update = true;
@@ -266,15 +293,27 @@ void Depsgraph::connect(DepsOutputSocket *from, DepsInputSocket *to)
 
 void Depsgraph::disconnect(DepsOutputSocket *from, DepsInputSocket *to)
 {
-	auto iter = std::find(from->links.begin(), from->links.end(), to);
+	{
+		auto iter = std::find(from->links.begin(), from->links.end(), to);
 
-	if (iter == from->links.end()) {
-		std::cerr << "Connection mismatch!\n";
-		return;
+		if (iter == from->links.end()) {
+			std::cerr << "Depsgraph::disconnect, cannot find output!\n";
+			return;
+		}
+
+		from->links.erase(iter);
 	}
 
-	from->links.erase(iter);
-	to->link = nullptr;
+	{
+		auto iter = std::find(to->links.begin(), to->links.end(), from);
+
+		if (iter == to->links.end()) {
+			std::cerr << "Depsgraph::disconnect, cannot find input!\n";
+			return;
+		}
+
+		to->links.erase(iter);
+	}
 
 	m_need_update = true;
 }
@@ -324,8 +363,8 @@ void Depsgraph::remove_node(SceneNode *scene_node)
 		assert(node_iter != m_nodes.end());
 
 		/* Disconnect input. */
-		if (node->input()->link) {
-			disconnect(node->input()->link, node->input());
+		for (DepsOutputSocket *output : node->input()->links) {
+			disconnect(output, node->input());
 		}
 
 		/* Disconnect output. */
@@ -349,8 +388,8 @@ void Depsgraph::remove_node(SceneNode *scene_node)
 		assert(node_iter != m_nodes.end());
 
 		/* Disconnect input. */
-		if (node->input()->link) {
-			disconnect(node->input()->link, node->input());
+		for (DepsOutputSocket *output : node->input()->links) {
+			disconnect(output, node->input());
 		}
 
 		/* Disconnect output. */
@@ -368,46 +407,13 @@ void Depsgraph::remove_node(SceneNode *scene_node)
 
 void Depsgraph::connect_to_time(SceneNode *scene_node)
 {
-	DepsNode *node = nullptr;
-
-	if (scene_node->type() == SCE_NODE_OBJECT) {
-		auto object = static_cast<Object *>(scene_node);
-		auto iter = m_object_graph_map.find(object->graph());
-		assert(iter != m_object_graph_map.end());
-
-		node = iter->second;
-	}
-	else {
-		auto iter = m_scene_node_map.find(scene_node);
-		assert(iter != m_scene_node_map.end());
-
-		node = iter->second;
-	}
-
-	assert(node != nullptr);
-
+	auto node = find_node(scene_node, true);
 	connect(m_time_node->output(), node->input());
 }
 
 void Depsgraph::evaluate(const EvaluationContext * const context, SceneNode *scene_node)
 {
-	DepsNode *node = nullptr;
-
-	if (scene_node->type() == SCE_NODE_OBJECT) {
-		auto object = static_cast<Object *>(scene_node);
-		auto iter = m_object_graph_map.find(object->graph());
-		assert(iter != m_object_graph_map.end());
-
-		node = iter->second;
-	}
-	else {
-		auto iter = m_scene_node_map.find(scene_node);
-		assert(iter != m_scene_node_map.end());
-
-		node = iter->second;
-	}
-
-	assert(node != nullptr);
+	auto node = find_node(scene_node, true);
 
 	m_need_update |= (m_state != DEG_STATE_OBJECT);
 	m_state = DEG_STATE_OBJECT;
@@ -492,7 +498,7 @@ static inline auto is_linked(DepsNode *node)
 
 static inline auto is_linked(DepsInputSocket *socket)
 {
-	return socket->link != nullptr;
+	return !socket->links.empty();
 }
 
 static inline auto get_input(DepsNode *node, size_t /*index*/)
@@ -502,7 +508,7 @@ static inline auto get_input(DepsNode *node, size_t /*index*/)
 
 static inline auto get_link_parent(DepsInputSocket *socket)
 {
-	return socket->link->parent;
+	return socket->links[0]->parent;
 }
 
 static inline auto num_inputs(DepsNode */*node*/)

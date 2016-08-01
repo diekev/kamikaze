@@ -183,6 +183,40 @@ void Scene::evalObjectDag(const EvaluationContext * const context, SceneNode *no
 	m_depsgraph->evaluate(context, node);
 }
 
+void Scene::connect(SceneNode *node_from, SceneNode *node_to)
+{
+	auto from_type = node_from->type();
+	auto to_type = node_to->type();
+
+	bool do_connect = false;
+
+	if (from_type == to_type) {
+		if (from_type == SCE_NODE_OBJECT) {
+			auto from_ob = static_cast<Object *>(node_from);
+			auto to_ob = static_cast<Object *>(node_to);
+
+			from_ob->addChild(to_ob);
+
+			do_connect = true;
+		}
+		else {
+			std::cerr << "Cannot connect two simulations together!\n";
+		}
+	}
+	else {
+		if (from_type == SCE_NODE_OBJECT) {
+			do_connect = true;
+		}
+		else {
+			std::cerr << "Cannot connect a simulation to an object!\n";
+		}
+	}
+
+	if (do_connect) {
+		m_depsgraph->connect(node_from, node_to);
+	}
+}
+
 int Scene::startFrame() const
 {
 	return m_start_frame;

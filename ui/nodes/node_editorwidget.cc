@@ -1097,6 +1097,7 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 		m_current_scene->installEventFilter(this);
 		m_editor_mode = EDITOR_MODE_OBJECT;
 		m_view->setScene(m_current_scene);
+		m_context->edit_mode = true;
 
 		action->setText(NODE_EXIT_OBJECT);
 
@@ -1108,6 +1109,7 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 		m_current_scene = m_scene_scene;
 		m_view->setScene(m_current_scene);
 		m_editor_mode = EDITOR_MODE_SCENE;
+		m_context->edit_mode = false;
 
 		action->setText(NODE_ENTER_OBJECT);
 
@@ -1134,6 +1136,9 @@ void QtNodeEditor::update_state(int event_type)
 
 		/* add node item for the object's graph output node */
 		if (scene_node->type() == SCE_NODE_OBJECT) {
+			/* Go into edit mode to make sure object graph is updated properly. */
+			m_context->edit_mode = true;
+
 			auto object = static_cast<Object *>(scene_node);
 			auto graph = object->graph();
 			auto output_node = graph->output();
@@ -1164,6 +1169,9 @@ void QtNodeEditor::update_state(int event_type)
 				this->connectNodes(node_item, node_item->output(0),
 				                   out_node_item, out_node_item->input(0));
 			}
+
+			/* Leave edit mode. */
+			m_context->edit_mode = false;
 		}
 
 		if (this->m_editor_mode == EDITOR_MODE_SCENE) {
@@ -1241,39 +1249,50 @@ void QtNodeEditor::removeNodeEx(QtNode *node)
 void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
 {
 	auto scene = m_context->scene;
-	auto object = static_cast<Object *>(scene->current_node());
-	auto graph = object->graph();
 
-	auto node_from = from->getNode();
-	auto node_to = to->getNode();
+	if (m_context->edit_mode) {
+		auto object = static_cast<Object *>(scene->current_node());
+		auto graph = object->graph();
 
-	auto output_socket = node_from->output(socket_from.toStdString());
-	auto input_socket = node_to->input(socket_to.toStdString());
+		auto node_from = from->getNode();
+		auto node_to = to->getNode();
 
-	assert((output_socket != nullptr) && (input_socket != nullptr));
+		auto output_socket = node_from->output(socket_from.toStdString());
+		auto input_socket = node_to->input(socket_to.toStdString());
 
-	graph->connect(output_socket, input_socket);
+		assert((output_socket != nullptr) && (input_socket != nullptr));
 
-	scene->evalObjectDag(m_context, object);
+		graph->connect(output_socket, input_socket);
+
+		scene->evalObjectDag(m_context, object);
+	}
+	else {
+		auto node_from = static_cast<ObjectNodeItem *>(from)->scene_node();
+		auto node_to = static_cast<ObjectNodeItem *>(to)->scene_node();
+
+		scene->connect(node_from, node_to);
+	}
 }
 
 void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
 {
-	auto scene = m_context->scene;
-	auto object = static_cast<Object *>(scene->current_node());
-	auto graph = object->graph();
+	if (m_context->edit_mode) {
+		auto scene = m_context->scene;
+		auto object = static_cast<Object *>(scene->current_node());
+		auto graph = object->graph();
 
-	auto node_from = from->getNode();
-	auto node_to = to->getNode();
+		auto node_from = from->getNode();
+		auto node_to = to->getNode();
 
-	auto output_socket = node_from->output(socket_from.toStdString());
-	auto input_socket = node_to->input(socket_to.toStdString());
+		auto output_socket = node_from->output(socket_from.toStdString());
+		auto input_socket = node_to->input(socket_to.toStdString());
 
-	assert((output_socket != nullptr) && (input_socket != nullptr));
+		assert((output_socket != nullptr) && (input_socket != nullptr));
 
-	graph->disconnect(output_socket, input_socket);
+		graph->disconnect(output_socket, input_socket);
 
-	scene->evalObjectDag(m_context, object);
+		scene->evalObjectDag(m_context, object);
+	}
 }
 
 /* ************************************************************************** */

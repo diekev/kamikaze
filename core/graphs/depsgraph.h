@@ -42,7 +42,7 @@ struct DepsOutputSocket;
 
 struct DepsInputSocket {
 	DepsNode *parent = nullptr;
-	DepsOutputSocket *link = nullptr;
+	std::vector<DepsOutputSocket *> links{};
 
 	DepsInputSocket() = default;
 };
@@ -173,6 +173,8 @@ public:
 	Depsgraph(const Depsgraph &other) = delete;
 	Depsgraph &operator=(const Depsgraph &other) = delete;
 
+	void connect(SceneNode *from, SceneNode *to);
+
 	void connect(DepsOutputSocket *from, DepsInputSocket *to);
 	void disconnect(DepsOutputSocket *from, DepsInputSocket *to);
 
@@ -190,4 +192,5 @@ private:
 	void build(DepsNode *root);
 
 	void evaluate_ex(const EvaluationContext* const context, DepsNode *root, TaskNotifier *notifier);
+	DepsNode *find_node(SceneNode *scene_node, bool graph);
 };

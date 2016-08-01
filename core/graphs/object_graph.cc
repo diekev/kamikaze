@@ -159,7 +159,7 @@ OutputNode *Graph::output() const
 void Graph::connect(OutputSocket *from, InputSocket *to)
 {
 	if (to->link != nullptr) {
-		std::cerr << "Input already connected!\n";
+		std::cerr << "Graph::connect, input already connected!\n";
 		return;
 	}
 
