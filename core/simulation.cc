@@ -44,10 +44,19 @@ void Simulation::step(const EvaluationContext * const context)
 	}
 
 	if (scene->currentFrame() == m_start_frame) {
-		/* save object state */
+		/* Save object state. */
 		sync_states();
+
+		m_last_frame = scene->currentFrame();
 		return;
 	}
+
+	/* Make sure we didn't advance too much. */
+	if (scene->currentFrame() != m_last_frame + 1) {
+		return;
+	}
+
+	m_last_frame = scene->currentFrame();
 
 	auto gravity = glm::vec3(0.0f, -9.80665f, 0.0f);
 	auto time_step = (context->time_direction == TIME_DIR_BACKWARD) ? -0.1f : 0.1f;
