@@ -304,7 +304,7 @@ void Depsgraph::create_node(SceneNode *scene_node)
 		m_scene_node_map[scene_node] = node;
 
 		/* Simulation depends on time. */
-		connect(node->output(), m_time_node->input());
+		connect(m_time_node->output(), node->input());
 	}
 
 	m_need_update = true;
