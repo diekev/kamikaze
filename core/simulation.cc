@@ -83,7 +83,7 @@ void Simulation::sync_states()
 			continue;
 		}
 
-		Object *object = static_cast<Object *>(input->link->parent);
+		auto object = static_cast<Object *>(input->link->parent);
 
 		auto iter = m_states.find(object);
 
