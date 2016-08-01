@@ -74,7 +74,7 @@ void PropertiesWidget::update_state(int event_type)
 		return;
 	}
 
-	if (event_type == OBJECT_ADDED) {
+	if (event_type == OBJECT_ADDED || event_type == OBJECT_SELECTED) {
 		auto scene_node = scene->current_node();
 		persona = scene_node;
 	}
