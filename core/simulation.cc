@@ -31,7 +31,7 @@
 
 Simulation::Simulation()
 {
-	m_name = "Simulation";
+	m_name = "Basic Simulation";
 	add_input("Input");
 }
 

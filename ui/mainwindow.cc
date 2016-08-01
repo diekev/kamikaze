@@ -128,7 +128,7 @@ void MainWindow::generateObjectMenu()
 
 	m_command_factory->registerType("add simulation", AddSimulationCmd::registerSelf);
 
-	action = m_add_object_menu->addAction("Add Simulation");
+	action = m_add_object_menu->addAction("Basic Simulation");
 	action->setData(QVariant::fromValue(QString("add simulation")));
 
 	connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
