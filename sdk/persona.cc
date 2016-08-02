@@ -66,7 +66,10 @@ void Persona::set_prop_visible(const std::string &prop_name, bool visible)
 	}
 }
 
-void Persona::update_properties() {}
+bool Persona::update_properties()
+{
+	return false;
+}
 
 int Persona::eval_int(const std::string &prop_name)
 {
