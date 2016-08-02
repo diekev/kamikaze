@@ -126,9 +126,9 @@ void PropertiesWidget::tagObjectUpdate()
 void PropertiesWidget::updateProperties()
 {
 	auto scene = m_context->scene;
-	auto object = scene->currentObject();
+	auto scene_node = scene->current_node();
 
-	if (!object) {
+	if (!scene_node) {
 		return;
 	}
 
@@ -136,7 +136,7 @@ void PropertiesWidget::updateProperties()
 	auto set_context = true;
 
 	if (m_context->edit_mode) {
-		auto graph = object->graph();
+		auto graph = static_cast<Object *>(scene_node)->graph();
 		auto node = graph->active_node();
 
 		if (node == nullptr) {
@@ -149,7 +149,7 @@ void PropertiesWidget::updateProperties()
 		set_context = node->isLinked();
 	}
 	else {
-		persona = object;
+		persona = scene_node;
 	}
 
 	if (persona->update_properties()) {

@@ -46,7 +46,7 @@ public:
 	void step(const EvaluationContext * const context);
 
 	void sync_states();
-	void update_properties() override;
+	bool update_properties() override;
 
 private:
 	float eval_gravity();

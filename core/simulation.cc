@@ -107,10 +107,11 @@ Simulation::Simulation()
 	set_prop_min_max(0.0f, 100.0f);
 }
 
-void Simulation::update_properties()
+bool Simulation::update_properties()
 {
 	auto gravity_index = eval_enum("Gravity");
 	set_prop_visible("Gravity (custom)", (gravity_index == GRVT_CUSTOM));
+	return true;
 }
 
 float Simulation::eval_gravity()
