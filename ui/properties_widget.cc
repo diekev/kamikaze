@@ -45,6 +45,7 @@ PropertiesWidget::PropertiesWidget(QWidget *parent)
     , m_scroll(new QScrollArea())
     , m_layout(new QGridLayout(m_widget))
     , m_hbox_layout(new QHBoxLayout())
+    , m_callback(new ParamCallback(m_layout))
 {
 	setLayout(m_hbox_layout);
 
@@ -100,12 +101,14 @@ void PropertiesWidget::update_state(int event_type)
 		set_context = node->isLinked();
 	}
 	else if (event_type == OBJECT_REMOVED || event_type == NODE_REMOVED) {
-		clear_layout(m_layout);
+		m_callback->clear();
 		return;
 	}
 	else {
 		return;
 	}
+
+	m_callback->clear();
 
 	drawProperties(persona, set_context);
 }
@@ -153,69 +156,64 @@ void PropertiesWidget::updateProperties()
 	}
 
 	if (persona->update_properties()) {
-		drawProperties(persona, set_context);
+		for (Property &prop : persona->props()) {
+			m_callback->setVisible(prop.name.c_str(), prop.visible);
+		}
 	}
 }
 
 void PropertiesWidget::drawProperties(Persona *persona, bool set_context)
 {
-	clear_layout(m_layout);
-
-	ParamCallback cb(m_layout);
-	ParamCallback *callback = &cb;
+	persona->update_properties();
 
 	for (Property &prop : persona->props()) {
-		if (!prop.visible) {
-			continue;
-		}
-
 		assert(!prop.data.empty());
 
 		switch (prop.type) {
 			case property_type::prop_bool:
-				bool_param(callback,
+				bool_param(m_callback,
 				           prop.name.c_str(),
 				           any_cast<bool>(&prop.data),
 				           any_cast<bool>(prop.data));
 				break;
 			case property_type::prop_float:
-				float_param(callback,
+				float_param(m_callback,
 				            prop.name.c_str(),
 				            any_cast<float>(&prop.data),
 				            prop.min, prop.max,
 				            any_cast<float>(prop.data));
 				break;
 			case property_type::prop_int:
-				int_param(callback,
+				int_param(m_callback,
 				          prop.name.c_str(),
 				          any_cast<int>(&prop.data),
 				          prop.min, prop.max,
 				          any_cast<int>(prop.data));
 				break;
 			case property_type::prop_enum:
-				enum_param(callback,
+				enum_param(m_callback,
 				           prop.name.c_str(),
 				           any_cast<int>(&prop.data),
 				           prop.enum_items,
 				           any_cast<int>(prop.data));
 				break;
 			case property_type::prop_vec3:
-				xyz_param(callback,
+				xyz_param(m_callback,
 				          prop.name.c_str(),
 				          &(any_cast<glm::vec3>(&prop.data)->x));
 				break;
 			case property_type::prop_input_file:
-				input_file_param(callback,
+				input_file_param(m_callback,
 				                 prop.name.c_str(),
 				                 any_cast<std::string>(&prop.data));
 				break;
 			case property_type::prop_output_file:
-				output_file_param(callback,
+				output_file_param(m_callback,
 				                  prop.name.c_str(),
 				                  any_cast<std::string>(&prop.data));
 				break;
 			case property_type::prop_string:
-				string_param(callback,
+				string_param(m_callback,
 				             prop.name.c_str(),
 				             any_cast<std::string>(&prop.data),
 				             any_cast<std::string>(prop.data).c_str());
@@ -223,18 +221,20 @@ void PropertiesWidget::drawProperties(Persona *persona, bool set_context)
 		}
 
 		if (!prop.tooltip.empty()) {
-			param_tooltip(callback, prop.tooltip.c_str());
+			param_tooltip(m_callback, prop.tooltip.c_str());
 		}
+
+		m_callback->setVisible(prop.name.c_str(), prop.visible);
 	}
 
 	if (set_context) {
 		if (m_context->edit_mode) {
-			cb.setContext(this, SLOT(evalObjectGraph()));
+			m_callback->setContext(this, SLOT(evalObjectGraph()));
 		}
 		else {
-			cb.setContext(this, SLOT(tagObjectUpdate()));
+			m_callback->setContext(this, SLOT(tagObjectUpdate()));
 		}
 	}
 
-	cb.setContext(this, SLOT(updateProperties()));
+	m_callback->setContext(this, SLOT(updateProperties()));
 }

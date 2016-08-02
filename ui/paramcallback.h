@@ -25,8 +25,11 @@
 #pragma once
 
 #include <QObject>
+#include <unordered_map>
 
 class QGridLayout;
+
+using widget_pair = std::pair<QWidget *, QWidget *>;
 
 class ParamCallback {
 	QGridLayout *m_layout;
@@ -34,12 +37,18 @@ class ParamCallback {
 	int m_item_count;
 
 	std::vector<QWidget *> m_widgets;
+	std::unordered_map<std::string, widget_pair> m_widget_map;
 
 public:
 	explicit ParamCallback(QGridLayout *layout);
 
 	void addWidget(QWidget *widget, const QString &name);
 	void setTooltip(const QString &tooltip);
+
+	void clear();
+
+	void setVisible(bool yesno);
+	void setVisible(const QString &name, bool yesno);
 
 	template <typename SlotType>
 	void setContext(QObject *context, SlotType slot)

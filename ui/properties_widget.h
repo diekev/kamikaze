@@ -28,6 +28,7 @@
 
 #include "context.h"
 
+class ParamCallback;
 class Persona;
 class QFrame;
 class QGridLayout;
@@ -41,6 +42,7 @@ class PropertiesWidget : public QWidget, public ContextListener {
 	QScrollArea *m_scroll;
 	QGridLayout *m_layout;
 	QHBoxLayout *m_hbox_layout;
+	ParamCallback *m_callback;
 
 public:
 	explicit PropertiesWidget(QWidget *parent = nullptr);
