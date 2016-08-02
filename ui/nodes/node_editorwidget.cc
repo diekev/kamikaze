@@ -1097,6 +1097,7 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 		m_current_scene->installEventFilter(this);
 		m_editor_mode = EDITOR_MODE_OBJECT;
 		m_view->setScene(m_current_scene);
+		m_context->edit_mode = true;
 
 		action->setText(NODE_EXIT_OBJECT);
 
@@ -1108,6 +1109,7 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 		m_current_scene = m_scene_scene;
 		m_view->setScene(m_current_scene);
 		m_editor_mode = EDITOR_MODE_SCENE;
+		m_context->edit_mode = false;
 
 		action->setText(NODE_ENTER_OBJECT);
 

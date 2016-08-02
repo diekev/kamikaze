@@ -63,6 +63,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	m_progress_bar->setVisible(false);
 
 	/* setup context */
+	m_context.edit_mode = false;
 	m_context.animation = false;
 	m_context.scene = m_main->scene();
 	m_context.node_factory = m_main->nodeFactory();
@@ -238,9 +239,6 @@ void MainWindow::handleCommand()
 	 * should be handled better. */
 	auto cmd = (*m_command_factory)(data);
 	cmd->setName(name);
-
-	/* TODO: handle this in a better way. */
-	m_context.edit_mode = (false /*ui->graph_editor->editor_mode() == EDITOR_MODE_OBJECT*/);
 
 	/* Execute the command in the current context, the manager will push the
 	* command on the undo stack. */
