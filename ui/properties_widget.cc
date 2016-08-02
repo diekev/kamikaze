@@ -74,7 +74,7 @@ void PropertiesWidget::update_state(int event_type)
 		return;
 	}
 
-	if (event_type == OBJECT_ADDED) {
+	if (event_type == OBJECT_ADDED || event_type == OBJECT_SELECTED) {
 		auto object = scene->currentObject();
 		persona = object;
 	}
@@ -170,7 +170,7 @@ void PropertiesWidget::update_state(int event_type)
 	}
 
 	if (set_context) {
-		if (event_type == OBJECT_ADDED) {
+		if (event_type == OBJECT_ADDED || event_type == OBJECT_SELECTED) {
 			cb.setContext(this, SLOT(tagObjectUpdate()));
 		}
 		else if (event_type == NODE_SELECTED) {
