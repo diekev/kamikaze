@@ -100,11 +100,62 @@ void PropertiesWidget::update_state(int event_type)
 		return;
 	}
 
+	drawProperties(persona, set_context);
+}
+
+void PropertiesWidget::evalObjectGraph()
+{
+	auto scene = m_context->scene;
+
+	scene->evalObjectDag(m_context, scene->currentObject());
+	scene->notify_listeners(-1);
+}
+
+void PropertiesWidget::tagObjectUpdate()
+{
+	m_context->scene->tagObjectUpdate();
+}
+
+void PropertiesWidget::updateProperties()
+{
+	auto scene = m_context->scene;
+	auto object = scene->currentObject();
+
+	if (!object) {
+		return;
+	}
+
+	Persona *persona = nullptr;
+	auto set_context = true;
+
+	if (m_context->edit_mode) {
+		auto graph = object->graph();
+		auto node = graph->active_node();
+
+		if (node == nullptr) {
+			return;
+		}
+
+		persona = node;
+
+		/* Only update/evaluate the graph if the node is connected. */
+		set_context = node->isLinked();
+	}
+	else {
+		persona = object;
+	}
+
+	if (persona->update_properties()) {
+		drawProperties(persona, set_context);
+	}
+}
+
+void PropertiesWidget::drawProperties(Persona *persona, bool set_context)
+{
 	clear_layout(m_layout);
+
 	ParamCallback cb(m_layout);
 	ParamCallback *callback = &cb;
-
-	persona->update_properties();
 
 	for (Property &prop : persona->props()) {
 		if (!prop.visible) {
@@ -170,24 +221,13 @@ void PropertiesWidget::update_state(int event_type)
 	}
 
 	if (set_context) {
-		if (event_type == OBJECT_ADDED || event_type == OBJECT_SELECTED) {
-			cb.setContext(this, SLOT(tagObjectUpdate()));
-		}
-		else if (event_type == NODE_SELECTED) {
+		if (m_context->edit_mode) {
 			cb.setContext(this, SLOT(evalObjectGraph()));
 		}
+		else {
+			cb.setContext(this, SLOT(tagObjectUpdate()));
+		}
 	}
-}
 
-void PropertiesWidget::evalObjectGraph()
-{
-	auto scene = m_context->scene;
-
-	scene->evalObjectDag(m_context, scene->currentObject());
-	scene->notify_listeners(-1);
-}
-
-void PropertiesWidget::tagObjectUpdate()
-{
-	m_context->scene->tagObjectUpdate();
+	cb.setContext(this, SLOT(updateProperties()));
 }
