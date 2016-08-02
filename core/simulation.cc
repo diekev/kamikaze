@@ -29,10 +29,99 @@
 #include "object.h"
 #include "scene.h"
 
+struct GravityData {
+	int index;
+	const char *name;
+	float value;
+};
+
+enum {
+	GRVT_CALLISTO,
+	GRVT_CERES,
+	GRVT_EARTH,
+	GRVT_ERIS,
+	GRVT_EUROPA,
+	GRVT_GANYMEDE,
+	GRVT_IO,
+	GRVT_JUPITER,
+	GRVT_MARS,
+	GRVT_MERCURY,
+	GRVT_MOON,
+	GRVT_NEPTUN,
+	GRVT_OBERON,
+	GRVT_PLUTO,
+	GRVT_SATURN,
+	GRVT_SUN,
+	GRVT_TITAN,
+	GRVT_TITANIA,
+	GRVT_TRITON,
+	GRVT_URANUS,
+	GRVT_VENUS,
+
+	GRVT_CUSTOM,
+};
+
+/* From https://en.wikipedia.org/wiki/Gravity_of_Earth */
+static GravityData gravities[] = {
+    { GRVT_CALLISTO, "Callisto",  1.235f },
+    { GRVT_CERES,    "Ceres",     0.28f },
+    { GRVT_EARTH,    "Earth",     9.80665f },
+    { GRVT_ERIS,     "Eris",      0.82f },
+    { GRVT_EUROPA,   "Europa",    1.314f },
+    { GRVT_GANYMEDE, "Ganymede",  1.428f },
+    { GRVT_IO,       "Io",        1.796f },
+    { GRVT_JUPITER,  "Jupiter",  24.79f },
+    { GRVT_MARS,     "Mars",      3.711f },
+    { GRVT_MERCURY,  "Mercury",   3.703f },
+    { GRVT_MOON,     "Moon",      1.625f },
+    { GRVT_NEPTUN,   "Neptune",  11.15f },
+    { GRVT_OBERON,   "Oberon",    0.346f },
+    { GRVT_PLUTO,    "Pluto",     0.62f },
+    { GRVT_SATURN,   "Saturn",   10.44f },
+    { GRVT_SUN,      "Sun",     274.1f },
+    { GRVT_TITAN,    "Titan",     1.352f },
+    { GRVT_TITANIA,  "Titania",   0.379f },
+    { GRVT_TRITON,   "Triton",    0.779f },
+    { GRVT_URANUS,   "Uranus",    8.69f },
+    { GRVT_VENUS,    "Venus",     8.872f },
+    { GRVT_CUSTOM,   "Custom",    0.0f },
+};
+
 Simulation::Simulation()
 {
 	m_name = "Basic Simulation";
 	add_input("Input");
+
+	EnumProperty gravity_enum;
+
+	for (const GravityData &gravity : gravities) {
+		gravity_enum.insert(gravity.name, gravity.index);
+	}
+
+	add_prop("Gravity", property_type::prop_enum);
+	set_prop_enum_values(gravity_enum);
+	set_prop_default_value_int(GRVT_EARTH);
+
+	add_prop("Gravity (custom)", property_type::prop_float);
+	set_prop_default_value_float(1.0f);
+	set_prop_min_max(0.0f, 100.0f);
+}
+
+void Simulation::update_properties()
+{
+	auto gravity_index = eval_enum("Gravity");
+	set_prop_visible("Gravity (custom)", (gravity_index == GRVT_CUSTOM));
+}
+
+float Simulation::eval_gravity()
+{
+	auto gravity_index = eval_enum("Gravity");
+
+	if (gravity_index == GRVT_CUSTOM) {
+		return eval_float("Gravity (custom)");
+	}
+
+	return gravities[gravity_index].value;
 }
 
 void Simulation::step(const EvaluationContext * const context)
@@ -58,8 +147,9 @@ void Simulation::step(const EvaluationContext * const context)
 
 	m_last_frame = scene->currentFrame();
 
-	auto gravity = glm::vec3(0.0f, -9.80665f, 0.0f);
-	auto time_step = (context->time_direction == TIME_DIR_BACKWARD) ? -0.1f : 0.1f;
+	const auto gravity = glm::vec3(0.0f, -eval_gravity(), 0.0f);
+	const auto frame_time = 1.0f / scene->framesPerSecond();
+	const auto time_step = (context->time_direction == TIME_DIR_BACKWARD) ? -frame_time : frame_time;
 
 	for (SceneInputSocket *input : m_inputs) {
 		if (!input->link) {
