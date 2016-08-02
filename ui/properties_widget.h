@@ -28,6 +28,7 @@
 
 #include "context.h"
 
+class Persona;
 class QFrame;
 class QGridLayout;
 class QHBoxLayout;
@@ -46,7 +47,11 @@ public:
 
 	void update_state(int event_type) override;
 
+private:
+	void drawProperties(Persona *persona, bool set_context);
+
 private Q_SLOTS:
 	void evalObjectGraph();
 	void tagObjectUpdate();
+	void updateProperties();
 };

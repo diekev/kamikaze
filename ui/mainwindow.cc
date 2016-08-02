@@ -63,6 +63,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	m_progress_bar->setVisible(false);
 
 	/* setup context */
+	m_context.edit_mode = false;
 	m_context.animation = false;
 	m_context.edit_mode = false;
 	m_context.scene = m_main->scene();
