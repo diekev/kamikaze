@@ -83,7 +83,7 @@ void PropertiesWidget::update_state(int event_type)
 		auto scene_node = scene->current_node();
 
 		if (scene_node->type() != SCE_NODE_OBJECT) {
-			clear_layout(m_layout);
+			m_callback->clear();
 			return;
 		}
 
