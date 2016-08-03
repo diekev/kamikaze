@@ -129,7 +129,6 @@ void PropertiesWidget::updateProperties()
 	}
 
 	Persona *persona = nullptr;
-	auto set_context = true;
 
 	if (m_context->edit_mode) {
 		auto graph = object->graph();
@@ -140,9 +139,6 @@ void PropertiesWidget::updateProperties()
 		}
 
 		persona = node;
-
-		/* Only update/evaluate the graph if the node is connected. */
-		set_context = node->isLinked();
 	}
 	else {
 		persona = object;
