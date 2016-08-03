@@ -65,6 +65,12 @@ PropertiesWidget::PropertiesWidget(QWidget *parent)
 	m_hbox_layout->addWidget(m_scroll);
 }
 
+PropertiesWidget::~PropertiesWidget()
+{
+	m_callback->clear();
+	delete m_callback;
+}
+
 void PropertiesWidget::update_state(int event_type)
 {
 	Persona *persona = nullptr;

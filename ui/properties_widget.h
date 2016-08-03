@@ -46,6 +46,7 @@ class PropertiesWidget : public QWidget, public ContextListener {
 
 public:
 	explicit PropertiesWidget(QWidget *parent = nullptr);
+	~PropertiesWidget();
 
 	void update_state(int event_type) override;
 
