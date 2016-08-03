@@ -87,9 +87,10 @@ static GravityData gravities[] = {
     { GRVT_CUSTOM,   "Custom",    0.0f },
 };
 
-Simulation::Simulation()
+Simulation::Simulation(Solver *solver)
+    : m_solver(solver)
 {
-	m_name = "Basic Simulation";
+	m_name = m_solver->name();
 	add_input("Input");
 
 	EnumProperty gravity_enum;
@@ -105,6 +106,17 @@ Simulation::Simulation()
 	add_prop("Gravity (custom)", property_type::prop_float);
 	set_prop_default_value_float(1.0f);
 	set_prop_min_max(0.0f, 100.0f);
+
+	/* TODO: get properties from solver */
+
+//	for (auto &prop : m_solver->props()) {
+//		props.push_back(prop);
+//	}
+}
+
+Simulation::~Simulation()
+{
+	delete m_solver;
 }
 
 bool Simulation::update_properties()
@@ -148,9 +160,9 @@ void Simulation::step(const EvaluationContext * const context)
 
 	m_last_frame = scene->currentFrame();
 
-	const auto gravity = glm::vec3(0.0f, -eval_gravity(), 0.0f);
+	m_simcontext.gravity = glm::vec3(0.0f, -eval_gravity(), 0.0f);
 	const auto frame_time = 1.0f / scene->framesPerSecond();
-	const auto time_step = (context->time_direction == TIME_DIR_BACKWARD) ? -frame_time : frame_time;
+	m_simcontext.time_step = (context->time_direction == TIME_DIR_BACKWARD) ? -frame_time : frame_time;
 
 	for (SceneInputSocket *input : m_inputs) {
 		if (!input->link) {
@@ -159,11 +171,7 @@ void Simulation::step(const EvaluationContext * const context)
 
 		Object *object = static_cast<Object *>(input->link->parent);
 
-		auto pos = object->eval_vec3("Position");
-		pos += time_step * gravity;
-		object->set_prop_value("Position", pos);
-
-		object->updateMatrix();
+		m_solver->solve_for_object(m_simcontext, object);
 	}
 }
 
@@ -186,4 +194,18 @@ void Simulation::sync_states()
 			object->updateMatrix();
 		}
 	}
+}
+
+const char *FreeFallSolver::name() const
+{
+	return "Free Fall Solver";
+}
+
+void FreeFallSolver::solve_for_object(const SimulationContext &context, Object *object)
+{
+	auto pos = object->eval_vec3("Position");
+	pos += context.time_step * context.gravity;
+	object->set_prop_value("Position", pos);
+
+	object->updateMatrix();
 }

@@ -163,7 +163,8 @@ Command *AddPresetObjectCmd::registerSelf()
 void AddSimulationCmd::execute(EvaluationContext *context)
 {
 	auto scene = context->scene;
-	auto simulation = new Simulation;
+	auto solver = new FreeFallSolver();
+	auto simulation = new Simulation(solver);
 
 	scene->addObject(simulation);
 }

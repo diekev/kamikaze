@@ -30,13 +30,43 @@
 
 static constexpr auto INVALID_FRAME = std::numeric_limits<int>::max();
 
+struct SimulationContext {
+	glm::vec3 gravity;
+	float time_step;
+};
+
+/* ************************************************************************** */
+
+class Solver : public Persona {
+public:
+	virtual ~Solver() = default;
+
+	virtual const char *name() const = 0;
+	virtual void solve_for_object(const SimulationContext &context, Object *ob) = 0;
+};
+
+class FreeFallSolver : public Solver {
+public:
+	const char *name() const override;
+	void solve_for_object(const SimulationContext &context, Object *ob) override;
+};
+
+/* ************************************************************************** */
+
 class Simulation : public SceneNode {
 	std::unordered_map<Object *, glm::vec3> m_states;
 	int m_start_frame = INVALID_FRAME;
 	int m_last_frame = INVALID_FRAME;
 
+	Solver *m_solver;
+	SimulationContext m_simcontext;
+
 public:
-	Simulation();
+	/* Prevent from having simulation with no solver. */
+	Simulation() = delete;
+
+	Simulation(Solver *solver);
+	~Simulation();
 
 	int type() const override
 	{
