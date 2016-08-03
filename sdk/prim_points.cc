@@ -131,6 +131,10 @@ Primitive *PrimPoints::copy() const
 	auto points = prim->points();
 	points->resize(this->points()->size());
 
+	for (size_t i = 0, e = points->size(); i < e; ++i) {
+		(*points)[i] = m_points[i];
+	}
+
 	prim->tagUpdate();
 	return prim;
 }
