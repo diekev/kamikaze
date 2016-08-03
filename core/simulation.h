@@ -60,7 +60,7 @@ public:
 /* ************************************************************************** */
 
 class Simulation : public SceneNode {
-	std::unordered_map<Object *, glm::vec3> m_states;
+	std::unordered_map<Object *, PrimitiveCollection *> m_states;
 	int m_start_frame = INVALID_FRAME;
 	int m_last_frame = INVALID_FRAME;
 

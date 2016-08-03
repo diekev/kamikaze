@@ -117,6 +117,10 @@ Simulation::Simulation(Solver *solver)
 Simulation::~Simulation()
 {
 	delete m_solver;
+
+	for (auto &state : m_states) {
+		delete state.second;
+	}
 }
 
 bool Simulation::update_properties()
@@ -187,11 +191,12 @@ void Simulation::sync_states()
 		auto iter = m_states.find(object);
 
 		if (iter == m_states.end()) {
-			m_states[object] = object->eval_vec3("Position");
+			m_states[object] = object->collection()->copy();
 		}
 		else {
-			object->set_prop_value("Position", iter->second);
-			object->updateMatrix();
+			auto collection = object->collection();
+			object->collection(iter->second->copy());
+			delete collection;
 		}
 	}
 }
@@ -225,7 +230,6 @@ void SimpleParticleSolver::solve_for_object(const SimulationContext &context, Ob
 {
 	/* Only work on points primitive. */
 	for (Primitive *prim : primitive_iterator(object->collection(), PrimPoints::id)) {
-		std::cerr << "Solving....\n";
 		auto particles = static_cast<PrimPoints *>(prim);
 		auto points = particles->points();
 
