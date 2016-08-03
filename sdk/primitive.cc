@@ -339,6 +339,15 @@ primitive_iterator::primitive_iterator(const PrimitiveCollection *collection, in
 {
 	m_iter = collection->primitives().begin();
 	m_end = collection->primitives().end();
+
+	/* Make sure the first primitive is of the right type. */
+	for (const auto &primitive : collection->primitives()) {
+		if (primitive->typeID() == type) {
+			break;
+		}
+
+		++m_iter;
+	}
 }
 
 primitive_iterator::primitive_iterator(const primitive_iterator &rhs)
