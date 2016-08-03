@@ -196,6 +196,8 @@ void Simulation::sync_states()
 	}
 }
 
+/* ************************************************************************** */
+
 const char *FreeFallSolver::name() const
 {
 	return "Free Fall Solver";
@@ -208,4 +210,29 @@ void FreeFallSolver::solve_for_object(const SimulationContext &context, Object *
 	object->set_prop_value("Position", pos);
 
 	object->updateMatrix();
+}
+
+/* ************************************************************************** */
+
+#include <kamikaze/prim_points.h>
+
+const char *SimpleParticleSolver::name() const
+{
+	return "Simple Particle Solver";
+}
+
+void SimpleParticleSolver::solve_for_object(const SimulationContext &context, Object *object)
+{
+	/* Only work on points primitive. */
+	for (Primitive *prim : primitive_iterator(object->collection(), PrimPoints::id)) {
+		std::cerr << "Solving....\n";
+		auto particles = static_cast<PrimPoints *>(prim);
+		auto points = particles->points();
+
+		for (size_t i = 0, e = points->size(); i < e; ++i) {
+			(*points)[i] += context.time_step * context.gravity;
+		}
+
+		prim->tagUpdate();
+	}
 }

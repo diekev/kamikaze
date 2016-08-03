@@ -42,13 +42,19 @@ public:
 	virtual ~Solver() = default;
 
 	virtual const char *name() const = 0;
-	virtual void solve_for_object(const SimulationContext &context, Object *ob) = 0;
+	virtual void solve_for_object(const SimulationContext &context, Object *object) = 0;
 };
 
 class FreeFallSolver : public Solver {
 public:
 	const char *name() const override;
-	void solve_for_object(const SimulationContext &context, Object *ob) override;
+	void solve_for_object(const SimulationContext &context, Object *object) override;
+};
+
+class SimpleParticleSolver : public Solver {
+public:
+	const char *name() const override;
+	void solve_for_object(const SimulationContext &context, Object *object) override;
 };
 
 /* ************************************************************************** */
