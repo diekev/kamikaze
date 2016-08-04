@@ -396,12 +396,10 @@ solver_flag &operator&=(solver_flag &lhs, solver_flag rhs)
 	return (lhs = lhs & rhs);
 }
 
-
 solver_flag &operator|=(solver_flag &lhs, solver_flag rhs)
 {
 	return (lhs = lhs | rhs);
 }
-
 
 solver_flag &operator^=(solver_flag &lhs, solver_flag rhs)
 {
