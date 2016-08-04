@@ -30,10 +30,14 @@
 class NodeFactory;
 class PrimitiveFactory;
 class Scene;
+class SolverFactory;
 
 class Main final {
+	/* Factories. */
 	PrimitiveFactory *m_primitive_factory;
 	NodeFactory *m_node_factory;
+	SolverFactory *m_solver_factory;
+
 	Scene *m_scene;
 
 	std::vector<filesystem::shared_library> m_plugins;
@@ -49,7 +53,10 @@ public:
 	void initTypes();
 	void loadPlugins();
 
+	/* Factories. */
 	PrimitiveFactory *primitiveFactory() const;
 	NodeFactory *nodeFactory() const;
+	SolverFactory *solverFactory() const;
+
 	Scene *scene() const;
 };

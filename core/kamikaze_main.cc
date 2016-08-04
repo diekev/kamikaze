@@ -33,6 +33,8 @@
 
 #include <dlfcn.h>
 
+#include "simulation.h"
+
 #include "graphs/object_nodes.h"
 #include "scene.h"
 
@@ -65,6 +67,7 @@ static std::vector<fs::shared_library> load_plugins(const fs::path &path)
 Main::Main()
     : m_primitive_factory(new PrimitiveFactory)
     , m_node_factory(new NodeFactory)
+    , m_solver_factory(new SolverFactory)
     , m_scene(new Scene)
 {}
 
@@ -73,6 +76,7 @@ Main::~Main()
 	delete m_primitive_factory;
 	delete m_node_factory;
 	delete m_scene;
+	delete m_solver_factory;
 }
 
 void Main::loadPlugins()
@@ -105,6 +109,7 @@ void Main::loadPlugins()
 void Main::initTypes()
 {
 	register_builtin_nodes(m_node_factory);
+	register_builtin_solvers(m_solver_factory);
 
 	/* primitive types */
 
@@ -129,4 +134,9 @@ NodeFactory *Main::nodeFactory() const
 Scene *Main::scene() const
 {
 	return m_scene;
+}
+
+SolverFactory *Main::solverFactory() const
+{
+	return m_solver_factory;
 }

@@ -57,6 +57,57 @@ public:
 	void solve_for_object(const SimulationContext &context, Object *object) override;
 };
 
+class SolverFactory final {
+public:
+	typedef Solver *(*factory_func)(void);
+
+	/**
+	 * @brief registerType Register a new element in this factory.
+	 *
+	 * @param key The key associate @ func to.
+	 * @param func A function pointer with signature 'Solver *(void)'.
+	 *
+	 * @return The number of entries after registering the new element.
+	 */
+	size_t registerType(const std::string &key, factory_func func);
+
+	/**
+	 * @brief operator() Create a Solver based on the given key.
+	 *
+	 * @param key The key to lookup.
+	 * @return A new Solver object corresponding to the given key.
+	 */
+	Solver *operator()(const std::string &key);
+
+	/**
+	 * @brief numEntries The number of entries registered in this factory.
+	 *
+	 * @return The number of entries registered in this factory, 0 if empty.
+	 */
+	size_t numEntries() const;
+
+	/**
+	 * @brief keys Keys registered in this factory.
+	 *
+	 * @return A vector containing the keys registered in this factory.
+	 */
+	std::vector<std::string> keys() const;
+
+	/**
+	 * @brief registered Check whether or not a key has been registered in this
+	 *                   factory.
+	 *
+	 * @param key The key to lookup.
+	 * @return True if the key is found, false otherwise.
+	 */
+	bool registered(const std::string &key) const;
+
+private:
+	std::unordered_map<std::string, factory_func> m_map;
+};
+
+void register_builtin_solvers(SolverFactory *factory);
+
 /* ************************************************************************** */
 
 class Simulation : public SceneNode {

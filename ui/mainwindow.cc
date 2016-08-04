@@ -37,6 +37,8 @@
 #include "core/kamikaze_main.h"
 #include "core/object.h"
 #include "core/object_ops.h"
+#include "core/simulation.h"
+
 
 #include "node_editorwidget.h"
 #include "outliner_widget.h"
@@ -128,10 +130,12 @@ void MainWindow::generateObjectMenu()
 
 	m_command_factory->registerType("add simulation", AddSimulationCmd::registerSelf);
 
-	action = m_add_object_menu->addAction("Basic Simulation");
-	action->setData(QVariant::fromValue(QString("add simulation")));
+	for (const auto &key : m_main->solverFactory()->keys()) {
+		auto action = m_add_object_menu->addAction(key.c_str());
+		action->setData(QVariant::fromValue(QString("add simulation")));
 
-	connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
+		connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
+	}
 }
 
 void MainWindow::generateDebugMenu()
@@ -246,6 +250,10 @@ void MainWindow::handleCommand()
 	 * should be handled better. */
 	auto cmd = (*m_command_factory)(data);
 	cmd->setName(name);
+
+	if (data == "add simulation") {
+		static_cast<AddSimulationCmd *>(cmd)->set_solver_factory(m_main->solverFactory());
+	}
 
 	/* Execute the command in the current context, the manager will push the
 	* command on the undo stack. */

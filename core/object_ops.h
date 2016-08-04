@@ -28,6 +28,7 @@
 
 class Object;
 class Scene;
+class SolverFactory;
 
 class AddObjectCmd : public Command {
 	Object *m_object = nullptr;
@@ -78,6 +79,8 @@ public:
 };
 
 class AddSimulationCmd : public Command {
+	SolverFactory *m_solver_factory;
+
 public:
 	AddSimulationCmd() = default;
 	~AddSimulationCmd() = default;
@@ -85,6 +88,7 @@ public:
 	void execute(EvaluationContext *context) override;
 	void undo() override;
 	void redo() override;
+	void set_solver_factory(SolverFactory *solver_factory);
 
 	static Command *registerSelf();
 };

@@ -163,7 +163,7 @@ Command *AddPresetObjectCmd::registerSelf()
 void AddSimulationCmd::execute(EvaluationContext *context)
 {
 	auto scene = context->scene;
-	auto solver = new SimpleParticleSolver();
+	auto solver = (*m_solver_factory)(m_name);
 	auto simulation = new Simulation(solver);
 
 	scene->addObject(simulation);
@@ -177,6 +177,11 @@ void AddSimulationCmd::undo()
 void AddSimulationCmd::redo()
 {
 	/* TODO */
+}
+
+void AddSimulationCmd::set_solver_factory(SolverFactory *solver_factory)
+{
+	m_solver_factory = solver_factory;
 }
 
 Command *AddSimulationCmd::registerSelf()
