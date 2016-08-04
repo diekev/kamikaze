@@ -204,6 +204,7 @@ void Simulation::sync_states()
 				auto particles = static_cast<PrimPoints *>(prim);
 				auto points = particles->points();
 
+				particles->addAttribute("velocity", ATTR_TYPE_VEC3, points->size());
 				auto attr = particles->addAttribute("collision", ATTR_TYPE_BYTE, points->size());
 
 				for (size_t i = 0, e = points->size(); i < e; ++i) {
@@ -273,29 +274,31 @@ void SimpleParticleSolver::solve_for_object(const SimulationContext &context, Ob
 		auto particles = static_cast<PrimPoints *>(prim);
 		auto points = particles->points();
 
-		auto attr = particles->addAttribute("collision", ATTR_TYPE_BYTE, points->size());
+		auto collision_attr = particles->addAttribute("collision", ATTR_TYPE_BYTE, points->size());
+		auto velocity_attr = particles->addAttribute("velocity", ATTR_TYPE_VEC3, points->size());
 
 		for (size_t i = 0, e = points->size(); i < e; ++i) {
 			/* We have a collision. */
-			if (attr->byte(i)) {
+			if (collision_attr->byte(i)) {
 				continue;
 			}
 
 			/* compute velocity: v = f/m */
 			const auto &force = context.time_step * context.gravity;
 			const auto &velocity = force;
+			velocity_attr->vec3(i, velocity);
+
+			(*points)[i] += velocity;
 			auto pos = (*points)[i];
 
 			/* Get pos in object space. */
 			//pos = pos * glm::mat3(object->matrix());
 			pos = glm::mat3(object->matrix()) * pos + object->eval_vec3("Position");
 
-			(*points)[i] += velocity;
-
 			if (check_collision(&plane, pos, velocity)) {
 				(*points)[i][1] = plane.pos[1] - object->eval_vec3("Position")[1];
 				/* Do collision response */
-				attr->byte(i, true);
+				collision_attr->byte(i, true);
 			}
 		}
 
