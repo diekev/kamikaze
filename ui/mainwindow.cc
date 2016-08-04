@@ -65,7 +65,6 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	/* setup context */
 	m_context.edit_mode = false;
 	m_context.animation = false;
-	m_context.edit_mode = false;
 	m_context.scene = m_main->scene();
 	m_context.node_factory = m_main->nodeFactory();
 	m_context.primitive_factory = m_main->primitiveFactory();

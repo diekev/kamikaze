@@ -31,8 +31,8 @@
 static constexpr auto INVALID_FRAME = std::numeric_limits<int>::max();
 
 struct SimulationContext {
-	glm::vec3 gravity;
-	float time_step;
+	glm::vec3 gravity = glm::vec3(0.0f, 0.0f, 0.0f);
+	float time_step = 0.0f;
 };
 
 /* ************************************************************************** */
@@ -64,14 +64,14 @@ class Simulation : public SceneNode {
 	int m_start_frame = INVALID_FRAME;
 	int m_last_frame = INVALID_FRAME;
 
-	Solver *m_solver;
-	SimulationContext m_simcontext;
+	Solver *m_solver = nullptr;
+	SimulationContext m_simcontext = {};
 
 public:
 	/* Prevent from having simulation with no solver. */
 	Simulation() = delete;
 
-	Simulation(Solver *solver);
+	explicit Simulation(Solver *solver);
 	~Simulation();
 
 	int type() const override
