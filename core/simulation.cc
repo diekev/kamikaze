@@ -292,13 +292,14 @@ void SimpleParticleSolver::solve_for_object(const SimulationContext &context, Ob
 			//pos = pos * glm::mat3(object->matrix());
 			pos = glm::mat3(object->matrix()) * pos + object->eval_vec3("Position");
 
+			(*points)[i] += velocity;
+
 			if (check_collision(&plane, pos, velocity)) {
+				(*points)[i][1] = plane.pos[1] - object->eval_vec3("Position")[1];
 				/* Do collision response */
 				++collinding_particles;
 				attr->byte(i, true);
 			}
-
-			(*points)[i] += velocity;
 		}
 
 		prim->tagUpdate();
