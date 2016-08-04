@@ -221,20 +221,9 @@ void Simulation::sync_states()
 				object->set_prop_value("Size", state.scale);
 				object->updateMatrix();
 			}
-
-			/* TODO: do that elsewhere. */
-			for (Primitive *prim : primitive_iterator(object->collection(), PrimPoints::id)) {
-				auto particles = static_cast<PrimPoints *>(prim);
-				auto points = particles->points();
-
-				particles->addAttribute("velocity", ATTR_TYPE_VEC3, points->size());
-				auto attr = particles->addAttribute("collision", ATTR_TYPE_BYTE, points->size());
-
-				for (size_t i = 0, e = points->size(); i < e; ++i) {
-					attr->byte(false);
-				}
-			}
 		}
+
+		m_solver->add_required_attributes(object);
 	}
 }
 
@@ -384,6 +373,21 @@ void SimpleParticleSolver::solve_for_object(const SimulationContext &context, Ob
 		}
 
 		prim->tagUpdate();
+	}
+}
+
+void SimpleParticleSolver::add_required_attributes(Object *object)
+{
+	for (Primitive *prim : primitive_iterator(object->collection(), PrimPoints::id)) {
+		auto particles = static_cast<PrimPoints *>(prim);
+		auto points = particles->points();
+
+		particles->addAttribute("velocity", ATTR_TYPE_VEC3, points->size());
+		auto attr = particles->addAttribute("collision", ATTR_TYPE_BYTE, points->size());
+
+		for (size_t i = 0, e = points->size(); i < e; ++i) {
+			attr->byte(false);
+		}
 	}
 }
 

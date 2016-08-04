@@ -107,6 +107,8 @@ public:
 
 	virtual const char *name() const = 0;
 	virtual void solve_for_object(const SimulationContext &context, Object *object) = 0;
+
+	virtual void add_required_attributes(Object *) {}
 };
 
 class FreeFallSolver : public Solver {
@@ -123,6 +125,8 @@ public:
 
 	const char *name() const override;
 	void solve_for_object(const SimulationContext &context, Object *object) override;
+
+	void add_required_attributes(Object *object);
 };
 
 class SolverFactory final {
