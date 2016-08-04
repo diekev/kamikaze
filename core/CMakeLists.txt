@@ -106,6 +106,7 @@ set(ICONS
 	icons/icon_pause.png
 	icons/icon_play_forward.png
 	icons/icon_play_backward.png
+	icons/icon_point_cloud_cube.png
 	icons/icon_step_forward.png
 	icons/icon_step_backward.png
 	icons/icon_stop.png
