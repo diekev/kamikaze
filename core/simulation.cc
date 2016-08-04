@@ -25,6 +25,7 @@
 #include "simulation.h"
 
 #include <kamikaze/context.h>
+#include <kamikaze/prim_points.h>
 
 #include "object.h"
 #include "scene.h"
@@ -197,6 +198,18 @@ void Simulation::sync_states()
 			auto collection = object->collection();
 			object->collection(iter->second->copy());
 			delete collection;
+
+			/* TODO: do that elsewhere. */
+			for (Primitive *prim : primitive_iterator(object->collection(), PrimPoints::id)) {
+				auto particles = static_cast<PrimPoints *>(prim);
+				auto points = particles->points();
+
+				auto attr = particles->addAttribute("collision", ATTR_TYPE_BYTE, points->size());
+
+				for (size_t i = 0, e = points->size(); i < e; ++i) {
+					attr->byte(false);
+				}
+			}
 		}
 	}
 }
@@ -219,7 +232,27 @@ void FreeFallSolver::solve_for_object(const SimulationContext &context, Object *
 
 /* ************************************************************************** */
 
-#include <kamikaze/prim_points.h>
+struct PhysicsPlane {
+	glm::vec3 pos;
+	glm::vec3 nor;
+};
+
+static bool check_collision(PhysicsPlane *plane, const glm::vec3 &pos, const glm::vec3 &vel)
+{
+	const auto &XPdotN = glm::dot(pos - plane->pos, plane->nor);
+
+	/* Is it within epsilon of the plane? */
+	if (XPdotN >= std::numeric_limits<float>::epsilon()) {
+		return false;
+	}
+
+	/* Is it going towards the plane (less than zero)? */
+	if (glm::dot(plane->nor, vel) >= 0.0f) {
+		return false;
+	}
+
+	return true;
+}
 
 const char *SimpleParticleSolver::name() const
 {
@@ -228,13 +261,44 @@ const char *SimpleParticleSolver::name() const
 
 void SimpleParticleSolver::solve_for_object(const SimulationContext &context, Object *object)
 {
+	/* TODO: expose this somehow. */
+//	const auto &mass = 0.05f;
+
+	PhysicsPlane plane;
+	plane.pos = glm::vec3(0.0f, 0.0f, 0.0f);
+	plane.nor = glm::vec3(0.0f, 1.0f, 0.0f);
+
 	/* Only work on points primitive. */
 	for (Primitive *prim : primitive_iterator(object->collection(), PrimPoints::id)) {
 		auto particles = static_cast<PrimPoints *>(prim);
 		auto points = particles->points();
 
+		auto attr = particles->addAttribute("collision", ATTR_TYPE_BYTE, points->size());
+
+		int collinding_particles = 0;
+
 		for (size_t i = 0, e = points->size(); i < e; ++i) {
-			(*points)[i] += context.time_step * context.gravity;
+			/* We have a collision. */
+			if (attr->byte(i)) {
+				continue;
+			}
+
+			/* compute velocity: v = f/m */
+			const auto &force = context.time_step * context.gravity;
+			const auto &velocity = force;
+			auto pos = (*points)[i];
+
+			/* Get pos in object space. */
+			//pos = pos * glm::mat3(object->matrix());
+			pos = glm::mat3(object->matrix()) * pos + object->eval_vec3("Position");
+
+			if (check_collision(&plane, pos, velocity)) {
+				/* Do collision response */
+				++collinding_particles;
+				attr->byte(i, true);
+			}
+
+			(*points)[i] += velocity;
 		}
 
 		prim->tagUpdate();
