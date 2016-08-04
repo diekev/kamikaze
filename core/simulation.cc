@@ -120,7 +120,7 @@ Simulation::~Simulation()
 	delete m_solver;
 
 	for (auto &state : m_states) {
-		delete state.second;
+		delete state.second.collection;
 	}
 }
 
@@ -192,12 +192,35 @@ void Simulation::sync_states()
 		auto iter = m_states.find(object);
 
 		if (iter == m_states.end()) {
-			m_states[object] = object->collection()->copy();
+			ObjectState state;
+
+			if ((m_solver->flags() & solver_flag::data) != 0) {
+				state.collection = object->collection()->copy();
+			}
+
+			if ((m_solver->flags() & solver_flag::transform) != 0) {
+				state.pos = object->eval_vec3("Position");
+				state.rot = object->eval_vec3("Rotation");
+				state.scale = object->eval_vec3("Size");
+			}
+
+			m_states[object] = state;
 		}
 		else {
-			auto collection = object->collection();
-			object->collection(iter->second->copy());
-			delete collection;
+			const ObjectState &state = iter->second;
+
+			if ((m_solver->flags() & solver_flag::data) != 0) {
+				auto collection = object->collection();
+				object->collection(state.collection->copy());
+				delete collection;
+			}
+
+			if ((m_solver->flags() & solver_flag::transform) != 0) {
+				object->set_prop_value("Position", state.pos);
+				object->set_prop_value("Rotation", state.rot);
+				object->set_prop_value("Size", state.scale);
+				object->updateMatrix();
+			}
 
 			/* TODO: do that elsewhere. */
 			for (Primitive *prim : primitive_iterator(object->collection(), PrimPoints::id)) {
@@ -265,6 +288,11 @@ void register_builtin_solvers(SolverFactory *factory)
 
 /* ************************************************************************** */
 
+FreeFallSolver::FreeFallSolver()
+{
+	set_flags(solver_flag::transform);
+}
+
 const char *FreeFallSolver::name() const
 {
 	return "Free Fall Solver";
@@ -301,6 +329,11 @@ static bool check_collision(PhysicsPlane *plane, const glm::vec3 &pos, const glm
 	}
 
 	return true;
+}
+
+SimpleParticleSolver::SimpleParticleSolver()
+{
+	set_flags(solver_flag::data);
 }
 
 const char *SimpleParticleSolver::name() const
@@ -352,4 +385,36 @@ void SimpleParticleSolver::solve_for_object(const SimulationContext &context, Ob
 
 		prim->tagUpdate();
 	}
+}
+
+solver_flag &operator&=(solver_flag &lhs, solver_flag rhs)
+{
+	return (lhs = lhs & rhs);
+}
+
+
+solver_flag &operator|=(solver_flag &lhs, solver_flag rhs)
+{
+	return (lhs = lhs | rhs);
+}
+
+
+solver_flag &operator^=(solver_flag &lhs, solver_flag rhs)
+{
+	return (lhs = lhs ^ rhs);
+}
+
+solver_flag Solver::flags()
+{
+	return m_flags;
+}
+
+void Solver::set_flags(solver_flag flags)
+{
+	m_flags |= flags;
+}
+
+void Solver::unset_flags(solver_flag flags)
+{
+	m_flags &= ~flags;
 }

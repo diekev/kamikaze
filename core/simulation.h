@@ -35,11 +35,75 @@ struct SimulationContext {
 	float time_step = 0.0f;
 };
 
+struct ObjectState {
+	PrimitiveCollection *collection = nullptr;
+	glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::vec3 rot = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::vec3 scale = glm::vec3(0.0f, 0.0f, 0.0f);
+};
+
+/* ************************************************************************** */
+
+enum class solver_flag : char {
+	transform = (1 << 0),
+	data      = (1 << 1),
+};
+
+constexpr solver_flag operator&(solver_flag lhs, solver_flag rhs)
+{
+	return static_cast<solver_flag>(static_cast<int>(lhs) & static_cast<int>(rhs));
+}
+
+constexpr solver_flag operator|(solver_flag lhs, solver_flag rhs)
+{
+	return static_cast<solver_flag>(static_cast<int>(lhs) | static_cast<int>(rhs));
+}
+
+constexpr solver_flag operator^(solver_flag lhs, solver_flag rhs)
+{
+	return static_cast<solver_flag>(static_cast<int>(lhs) ^ static_cast<int>(rhs));
+}
+
+constexpr solver_flag operator~(solver_flag lhs)
+{
+	return static_cast<solver_flag>(~static_cast<int>(lhs));
+}
+
+solver_flag &operator|=(solver_flag &lhs, solver_flag rhs);
+solver_flag &operator&=(solver_flag &lhs, solver_flag rhs);
+solver_flag &operator^=(solver_flag &lhs, solver_flag rhs);
+
+constexpr bool operator==(solver_flag lhs, int rhs)
+{
+	return static_cast<int>(lhs) == rhs;
+}
+
+constexpr bool operator!=(solver_flag lhs, int rhs)
+{
+	return !(lhs == rhs);
+}
+
+constexpr bool operator==(int lhs, solver_flag rhs)
+{
+	return lhs == static_cast<int>(rhs);
+}
+
+constexpr bool operator!=(int lhs, solver_flag rhs)
+{
+	return !(lhs == rhs);
+}
+
 /* ************************************************************************** */
 
 class Solver : public Persona {
+	solver_flag m_flags = static_cast<solver_flag>(0);
+
 public:
 	virtual ~Solver() = default;
+
+	solver_flag flags();
+	void set_flags(solver_flag flags);
+	void unset_flags(solver_flag flags);
 
 	virtual const char *name() const = 0;
 	virtual void solve_for_object(const SimulationContext &context, Object *object) = 0;
@@ -47,12 +111,16 @@ public:
 
 class FreeFallSolver : public Solver {
 public:
+	FreeFallSolver();
+
 	const char *name() const override;
 	void solve_for_object(const SimulationContext &context, Object *object) override;
 };
 
 class SimpleParticleSolver : public Solver {
 public:
+	SimpleParticleSolver();
+
 	const char *name() const override;
 	void solve_for_object(const SimulationContext &context, Object *object) override;
 };
@@ -111,7 +179,7 @@ void register_builtin_solvers(SolverFactory *factory);
 /* ************************************************************************** */
 
 class Simulation : public SceneNode {
-	std::unordered_map<Object *, PrimitiveCollection *> m_states;
+	std::unordered_map<Object *, ObjectState> m_states;
 	int m_start_frame = INVALID_FRAME;
 	int m_last_frame = INVALID_FRAME;
 
