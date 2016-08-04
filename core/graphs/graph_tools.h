@@ -30,8 +30,8 @@
 template <typename NodeType>
 static void topology_sort(const std::vector<NodeType *> &nodes, std::vector<NodeType *> &r_stack)
 {
-	r_stack.clear();
-	r_stack.reserve(nodes.size());
+	std::vector<NodeType *> sorted_stack;
+	sorted_stack.reserve(nodes.size());
 
 	/* 1. Store each node degree in an array. */
 	std::vector<NodeType *> stack;
@@ -60,7 +60,7 @@ static void topology_sort(const std::vector<NodeType *> &nodes, std::vector<Node
 	while (!stack.empty()) {
 		/* 3a. ...dequeue and output a node... */
 		auto node = stack.back();
-		r_stack.push_back(node);
+		sorted_stack.push_back(node);
 		stack.pop_back();
 
 		/* Get vertices adjacent to this vertex. */
@@ -91,4 +91,6 @@ static void topology_sort(const std::vector<NodeType *> &nodes, std::vector<Node
 			}
 		}
 	}
+
+	r_stack = sorted_stack;
 }
