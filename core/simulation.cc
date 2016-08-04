@@ -275,8 +275,6 @@ void SimpleParticleSolver::solve_for_object(const SimulationContext &context, Ob
 
 		auto attr = particles->addAttribute("collision", ATTR_TYPE_BYTE, points->size());
 
-		int collinding_particles = 0;
-
 		for (size_t i = 0, e = points->size(); i < e; ++i) {
 			/* We have a collision. */
 			if (attr->byte(i)) {
@@ -297,7 +295,6 @@ void SimpleParticleSolver::solve_for_object(const SimulationContext &context, Ob
 			if (check_collision(&plane, pos, velocity)) {
 				(*points)[i][1] = plane.pos[1] - object->eval_vec3("Position")[1];
 				/* Do collision response */
-				++collinding_particles;
 				attr->byte(i, true);
 			}
 		}
