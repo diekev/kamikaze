@@ -212,7 +212,7 @@ void Scene::disconnect(const EvaluationContext * const context, SceneNode *node_
 	from->links.erase(iter);
 
 	m_depsgraph->disconnect(node_from, node_to);
-	m_depsgraph->evaluate(context, node_from);
+	m_depsgraph->evaluate(context, node_to);
 }
 
 int Scene::startFrame() const
