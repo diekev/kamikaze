@@ -28,18 +28,61 @@
 
 class EvaluationContext;
 
-enum {
-	TIME_CHANGED,
+/* - 0x000000ff Category.
+ * - 0x0000ff00 Action.
+ */
 
-	OBJECT_ADDED,
-	OBJECT_REMOVED,
-	OBJECT_MODIFIED,
-	OBJECT_SELECTED,
+enum class event_type {
+	/* Category. */
+	object = (1 << 0),
+	node   = (2 << 0),
+	time   = (3 << 0),
 
-	NODE_ADDED,
-	NODE_REMOVED,
-	NODE_SELECTED,
+	/* Action. */
+	added     = (1 << 8),
+	removed   = (2 << 8),
+	selected  = (3 << 8),
+	modified  = (4 << 8),
 };
+
+constexpr event_type operator&(event_type lhs, event_type rhs)
+{
+	return static_cast<event_type>(static_cast<int>(lhs) & static_cast<int>(rhs));
+}
+
+constexpr event_type operator&(event_type lhs, int rhs)
+{
+	return static_cast<event_type>(static_cast<int>(lhs) & rhs);
+}
+
+constexpr event_type operator|(event_type lhs, event_type rhs)
+{
+	return static_cast<event_type>(static_cast<int>(lhs) | static_cast<int>(rhs));
+}
+
+constexpr event_type operator^(event_type lhs, event_type rhs)
+{
+	return static_cast<event_type>(static_cast<int>(lhs) ^ static_cast<int>(rhs));
+}
+
+constexpr event_type operator~(event_type lhs)
+{
+	return static_cast<event_type>(~static_cast<int>(lhs));
+}
+
+event_type &operator|=(event_type &lhs, event_type rhs);
+event_type &operator&=(event_type &lhs, event_type rhs);
+event_type &operator^=(event_type &lhs, event_type rhs);
+
+constexpr auto get_action(event_type etype)
+{
+	return etype & 0x0000ff00;
+}
+
+constexpr auto get_category(event_type etype)
+{
+	return etype & 0x000000ff;
+}
 
 class ContextListener {
 protected:
@@ -50,7 +93,7 @@ public:
 
 	void listens(EvaluationContext *eval_ctx);
 
-	virtual void update_state(int event_type) = 0;
+	virtual void update_state(event_type event) = 0;
 };
 
 class Listened {
@@ -61,5 +104,5 @@ public:
 
 	void remove_listener(ContextListener *listener);
 
-	void notify_listeners(int event_type);
+	void notify_listeners(event_type event);
 };

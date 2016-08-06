@@ -59,7 +59,7 @@ class TimeLineWidget : public QWidget, public ContextListener {
 public:
 	explicit TimeLineWidget(QWidget *parent = nullptr);
 
-	void update_state(int event_type) override;
+	void update_state(event_type event) override;
 
 private Q_SLOTS:
 	void setStartFrame(int value) const;

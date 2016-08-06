@@ -401,7 +401,7 @@ void Depsgraph::evaluate_ex(const EvaluationContext* const context, DepsNode *ro
 		node->process(context, notifier);
 	}
 
-	context->scene->notify_listeners(-1);
+	context->scene->notify_listeners(static_cast<event_type>(-1));
 }
 
 const std::vector<DepsNode *> &Depsgraph::nodes() const

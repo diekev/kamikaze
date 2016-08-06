@@ -39,6 +39,8 @@
 #include "core/object.h"
 #include "core/scene.h"
 
+#include "util/utils.h"
+
 PropertiesWidget::PropertiesWidget(QWidget *parent)
     : QWidget(parent)
     , m_widget(new QWidget())
@@ -71,7 +73,7 @@ PropertiesWidget::~PropertiesWidget()
 	delete m_callback;
 }
 
-void PropertiesWidget::update_state(int event_type)
+void PropertiesWidget::update_state(event_type event)
 {
 	Persona *persona = nullptr;
 	bool set_context = true;
@@ -81,27 +83,39 @@ void PropertiesWidget::update_state(int event_type)
 		return;
 	}
 
-	if (event_type == OBJECT_ADDED || event_type == OBJECT_SELECTED) {
-		auto object = scene->currentObject();
-		persona = object;
-	}
-	else if (event_type == NODE_SELECTED) {
-		auto object = scene->currentObject();
-		auto graph = object->graph();
-		auto node = graph->active_node();
+	const auto &event_category = get_category(event);
+	const auto &event_action = get_action(event);
 
-		if (!node) {
+	if (event_category == event_type::object) {
+		if (is_elem(event_action, event_type::added, event_type::selected)) {
+			auto object = scene->currentObject();
+			persona = object;
+		}
+		else if (is_elem(event_action, event_type::removed)) {
+			m_callback->clear();
 			return;
 		}
-
-		persona = node;
-
-		/* Only update/evaluate the graph if the node is connected. */
-		set_context = node->isLinked();
 	}
-	else if (event_type == OBJECT_REMOVED || event_type == NODE_REMOVED) {
-		m_callback->clear();
-		return;
+	else if (event_category == (event_type::node | event_type::selected)) {
+		if (is_elem(event_action, event_type::selected)) {
+			auto object = scene->currentObject();
+			auto graph = object->graph();
+			auto node = graph->active_node();
+
+			if (!node) {
+				return;
+			}
+
+			persona = node;
+
+			/* Only update/evaluate the graph if the node is connected. */
+			set_context = node->isLinked();
+
+		}
+		else if (is_elem(event_action, event_type::removed)) {
+			m_callback->clear();
+			return;
+		}
 	}
 	else {
 		return;
@@ -117,7 +131,7 @@ void PropertiesWidget::evalObjectGraph()
 	auto scene = m_context->scene;
 
 	scene->evalObjectDag(m_context, scene->currentObject());
-	scene->notify_listeners(-1);
+	scene->notify_listeners(static_cast<event_type>(-1));
 }
 
 void PropertiesWidget::tagObjectUpdate()

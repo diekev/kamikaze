@@ -29,6 +29,21 @@
 
 #include "scene.h"
 
+event_type &operator&=(event_type &lhs, event_type rhs)
+{
+	return (lhs = lhs & rhs);
+}
+
+event_type &operator|=(event_type &lhs, event_type rhs)
+{
+	return (lhs = lhs | rhs);
+}
+
+event_type &operator^=(event_type &lhs, event_type rhs)
+{
+	return (lhs = lhs ^ rhs);
+}
+
 ContextListener::~ContextListener()
 {
 	if (m_context->scene) {
@@ -53,9 +68,9 @@ void Listened::remove_listener(ContextListener *listener)
 	m_listeners.erase(iter);
 }
 
-void Listened::notify_listeners(int event_type)
+void Listened::notify_listeners(event_type event)
 {
 	for (auto &listener : m_listeners) {
-		listener->update_state(event_type);
+		listener->update_state(event);
 	}
 }

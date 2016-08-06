@@ -54,7 +54,7 @@ void Scene::removeObject(Object *object)
 
 	assert(iter != m_objects.end());
 
-	notify_listeners(OBJECT_REMOVED);
+	notify_listeners(event_type::object | event_type::removed);
 
 	m_objects.erase(iter);
 	m_depsgraph->remove_node(object);
@@ -77,7 +77,7 @@ void Scene::addObject(Object *object)
 
 	m_depsgraph->create_node(object);
 
-	notify_listeners(OBJECT_ADDED);
+	notify_listeners(event_type::object | event_type::added);
 }
 
 void Scene::intersect(const Ray &/*ray*/)
@@ -109,7 +109,7 @@ void Scene::selectObject(const glm::vec3 &pos)
 
 	if (selected_object != -1 && m_active_object != m_objects[selected_object]) {
 		m_active_object = m_objects[selected_object];
-		notify_listeners(OBJECT_SELECTED);
+		notify_listeners(event_type::object | event_type::selected);
 	}
 }
 
@@ -141,7 +141,7 @@ void Scene::tagObjectUpdate()
 		}
 	}
 
-	notify_listeners(OBJECT_MODIFIED);
+	notify_listeners(event_type::object | event_type::modified);
 }
 
 bool Scene::ensureUniqueName(QString &name) const
@@ -161,7 +161,7 @@ bool Scene::ensureUniqueName(QString &name) const
 void Scene::setActiveObject(Object *object)
 {
 	m_active_object = object;
-	notify_listeners(OBJECT_SELECTED);
+	notify_listeners(event_type::object | event_type::selected);
 }
 
 void Scene::updateForNewFrame(const EvaluationContext * const context)
@@ -182,7 +182,7 @@ int Scene::startFrame() const
 void Scene::startFrame(int value)
 {
 	m_start_frame = value;
-	notify_listeners(TIME_CHANGED);
+	notify_listeners(event_type::time | event_type::modified);
 }
 
 int Scene::endFrame() const
@@ -193,7 +193,7 @@ int Scene::endFrame() const
 void Scene::endFrame(int value)
 {
 	m_end_frame = value;
-	notify_listeners(TIME_CHANGED);
+	notify_listeners(event_type::time | event_type::modified);
 }
 
 int Scene::currentFrame() const
@@ -204,7 +204,7 @@ int Scene::currentFrame() const
 void Scene::currentFrame(int value)
 {
 	m_cur_frame = value;
-	notify_listeners(TIME_CHANGED);
+	notify_listeners(event_type::time | event_type::modified);
 }
 
 float Scene::framesPerSecond() const
@@ -215,7 +215,7 @@ float Scene::framesPerSecond() const
 void Scene::framesPerSecond(float value)
 {
 	m_fps = value;
-	notify_listeners(TIME_CHANGED);
+	notify_listeners(event_type::time | event_type::modified);
 }
 
 const std::vector<Object *> &Scene::objects() const

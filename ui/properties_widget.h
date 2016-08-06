@@ -48,7 +48,7 @@ public:
 	explicit PropertiesWidget(QWidget *parent = nullptr);
 	~PropertiesWidget();
 
-	void update_state(int event_type) override;
+	void update_state(event_type event) override;
 
 private:
 	void drawProperties(Persona *persona, bool set_context);

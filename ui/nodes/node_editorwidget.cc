@@ -592,7 +592,7 @@ void QtNodeEditor::selectNode(QtNode *node, QGraphicsSceneMouseEvent *mouseEvent
 		auto object = m_context->scene->currentObject();
 		auto graph = object->graph();
 		graph->active_node(node->getNode());
-		m_context->scene->notify_listeners(NODE_SELECTED);
+		m_context->scene->notify_listeners(event_type::node | event_type::selected);
 	}
 
 	toFront(node);
@@ -717,7 +717,7 @@ void QtNodeEditor::removeNode(QtNode *node)
 		removeNodeEx(node);
 		m_current_scene->removeItem(node);
 		delete node;
-		m_context->scene->notify_listeners(NODE_REMOVED);
+		m_context->scene->notify_listeners(event_type::node | event_type::removed);
 	}
 }
 
@@ -1117,9 +1117,9 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 	}
 }
 
-void QtNodeEditor::update_state(int event_type)
+void QtNodeEditor::update_state(event_type event)
 {
-	if (event_type == OBJECT_ADDED) {
+	if (event == (event_type::object | event_type::added)) {
 		auto object = m_context->scene->currentObject();
 
 		if (object == nullptr) {
@@ -1179,7 +1179,7 @@ void QtNodeEditor::update_state(int event_type)
 			m_view->setScene(m_current_scene);
 		}
 	}
-	else if (event_type == OBJECT_REMOVED) {
+	else if (event == (event_type::object | event_type::removed)) {
 		auto object = m_context->scene->currentObject();
 
 		for (auto item : m_current_scene->items()) {
@@ -1196,7 +1196,7 @@ void QtNodeEditor::update_state(int event_type)
 			}
 		}
 	}
-	else if (event_type == NODE_ADDED) {
+	else if (event == (event_type::node | event_type::added)) {
 		auto object = m_context->scene->currentObject();
 
 		if (object == nullptr) {
