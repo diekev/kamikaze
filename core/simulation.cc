@@ -343,32 +343,25 @@ void SimpleParticleSolver::solve_for_object(const SimulationContext &context, Ob
 	for (Primitive *prim : primitive_iterator(object->collection(), PrimPoints::id)) {
 		auto particles = static_cast<PrimPoints *>(prim);
 		auto points = particles->points();
-
-		auto collision_attr = particles->addAttribute("collision", ATTR_TYPE_BYTE, points->size());
 		auto velocity_attr = particles->addAttribute("velocity", ATTR_TYPE_VEC3, points->size());
 
 		for (size_t i = 0, e = points->size(); i < e; ++i) {
-			/* We have a collision. */
-			if (collision_attr->byte(i)) {
-				continue;
-			}
-
 			/* compute velocity: v = f/m */
 			const auto &force = context.time_step * context.gravity;
-			const auto &velocity = force;
+			const auto &velocity = velocity_attr->vec3(i) + force;
 			velocity_attr->vec3(i, velocity);
 
 			(*points)[i] += velocity;
 			auto pos = (*points)[i];
 
 			/* Get pos in object space. */
-			//pos = pos * glm::mat3(object->matrix());
 			pos = glm::mat3(object->matrix()) * pos + object->eval_vec3("Position");
 
 			if (check_collision(&plane, pos, velocity)) {
-				(*points)[i][1] = plane.pos[1] - object->eval_vec3("Position")[1];
+//				const auto &delta = plane.pos - object->eval_vec3("Position");
+//				(*points)[i][1] = delta[1];
 				/* Do collision response */
-				collision_attr->byte(i, true);
+				velocity_attr->vec3(i, -velocity);
 			}
 		}
 
@@ -381,12 +374,10 @@ void SimpleParticleSolver::add_required_attributes(Object *object)
 	for (Primitive *prim : primitive_iterator(object->collection(), PrimPoints::id)) {
 		auto particles = static_cast<PrimPoints *>(prim);
 		auto points = particles->points();
-
-		particles->addAttribute("velocity", ATTR_TYPE_VEC3, points->size());
-		auto attr = particles->addAttribute("collision", ATTR_TYPE_BYTE, points->size());
+		auto vel_attr = particles->addAttribute("velocity", ATTR_TYPE_VEC3, points->size());
 
 		for (size_t i = 0, e = points->size(); i < e; ++i) {
-			attr->byte(false);
+			vel_attr->vec3(i, glm::vec3(0.0f, 0.0f, 0.0f));
 		}
 	}
 }
