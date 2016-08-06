@@ -215,6 +215,26 @@ void Scene::disconnect(const EvaluationContext * const context, SceneNode *node_
 	m_depsgraph->evaluate(context, node_to);
 }
 
+int Scene::flags() const
+{
+	return m_flags;
+}
+
+void Scene::set_flags(int flag)
+{
+	m_flags |= flag;
+}
+
+void Scene::unset_flags(int flag)
+{
+	m_flags &= ~flag;
+}
+
+bool Scene::has_flags(int flag)
+{
+	return (m_flags & flag) != 0;
+}
+
 int Scene::startFrame() const
 {
 	return m_start_frame;

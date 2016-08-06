@@ -58,12 +58,17 @@ struct SceneInputSocket {
 	{}
 };
 
+enum {
+	SNODE_OL_EXPANDED = (1 << 0),  /* Is it expanded in the outliner? */
+};
+
 class SceneNode : public Persona {
 protected:
-	std::vector<SceneInputSocket *> m_inputs;
-	std::vector<SceneOutputSocket *> m_outputs;
+	std::vector<SceneInputSocket *> m_inputs = {};
+	std::vector<SceneOutputSocket *> m_outputs = {};
 
-	std::string m_name;
+	std::string m_name = "";
+	int m_flags = 0;
 
 public:
 	virtual ~SceneNode()
@@ -111,6 +116,26 @@ public:
 	const QString name() const
 	{
 		return QString::fromStdString(m_name);
+	}
+
+	inline int flags() const
+	{
+		return m_flags;
+	}
+
+	inline void set_flags(int flag)
+	{
+		m_flags |= flag;
+	}
+
+	inline void unset_flags(int flag)
+	{
+		m_flags &= ~flag;
+	}
+
+	inline bool has_flags(int flag) const
+	{
+		return (m_flags & flag) != 0;
 	}
 };
 

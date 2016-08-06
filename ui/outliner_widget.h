@@ -86,6 +86,7 @@ public:
 	void wheelEvent(QWheelEvent *e) override;
 
 public Q_SLOTS:
+	void handleItemCollapsed(QTreeWidgetItem *item);
 	void handleItemExpanded(QTreeWidgetItem *item);
 	void handleItemSelection();
 };
