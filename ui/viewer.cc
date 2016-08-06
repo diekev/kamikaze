@@ -121,7 +121,7 @@ void Viewer::paintGL()
 				continue;
 			}
 
-			const bool active_object = (object == m_context->scene->current_node());
+			const bool active_object = (object == m_context->scene->active_node());
 
 			const auto collection = object->collection();
 
@@ -224,7 +224,7 @@ void Viewer::keyPressEvent(QKeyEvent *e)
 {
 	switch (e->key()) {
 		case Qt::Key_Delete:
-			m_context->scene->removeObject(m_context->scene->current_node());
+			m_context->scene->removeObject(m_context->scene->active_node());
 			break;
 		default:
 			break;

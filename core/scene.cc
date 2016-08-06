@@ -120,7 +120,7 @@ Depsgraph *Scene::depsgraph()
 	return m_depsgraph;
 }
 
-SceneNode *Scene::current_node()
+SceneNode *Scene::active_node()
 {
 	if (!m_nodes.empty()) {
 		return m_active_node;
@@ -205,7 +205,7 @@ void Scene::disconnect(const EvaluationContext * const context, SceneNode *node_
 	auto iter = std::find(from->links.begin(), from->links.end(), node_to->inputs()[0]);
 
 	if (iter == from->links.end()) {
-		std::cerr << "Depsgraph::disconnect, cannot find output!\n";
+		std::cerr << "Scene::disconnect, cannot find output!\n";
 		return;
 	}
 

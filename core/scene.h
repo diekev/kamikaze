@@ -53,7 +53,7 @@ public:
 	Scene();
 	~Scene();
 
-	SceneNode *current_node();
+	SceneNode *active_node();
 	void set_active_node(SceneNode *node);
 
 	void addObject(SceneNode *node);
