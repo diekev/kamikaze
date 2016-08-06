@@ -114,12 +114,14 @@ void Viewer::paintGL()
 	}
 
 	if (m_context->scene != nullptr) {
-		for (auto &object : m_context->scene->objects()) {
-			if (!object || !object->collection()) {
+		for (auto &node : m_context->scene->nodes()) {
+			auto object = static_cast<Object *>(node);
+
+			if (!object->collection()) {
 				continue;
 			}
 
-			const bool active_object = (object == m_context->scene->currentObject());
+			const bool active_object = (object == m_context->scene->current_node());
 
 			const auto collection = object->collection();
 
@@ -222,7 +224,7 @@ void Viewer::keyPressEvent(QKeyEvent *e)
 {
 	switch (e->key()) {
 		case Qt::Key_Delete:
-			m_context->scene->removeObject(m_context->scene->currentObject());
+			m_context->scene->removeObject(m_context->scene->current_node());
 			break;
 		default:
 			break;

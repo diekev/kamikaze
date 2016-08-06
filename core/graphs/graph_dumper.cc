@@ -373,8 +373,8 @@ kmkz_inline void dump_link(filesystem::File &file,
 
 kmkz_inline void dump_node_links(filesystem::File &file, const DepsNode *node)
 {
-	if (node->input()->link) {
-		dump_link(file, node->input()->link, node->input());
+	for (const auto &output : node->input()->links) {
+		dump_link(file, output, node->input());
 	}
 }
 
