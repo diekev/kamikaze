@@ -1269,6 +1269,7 @@ void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNo
 		auto node_to = static_cast<ObjectNodeItem *>(to)->scene_node();
 
 		scene->connect(m_context, node_from, node_to);
+		scene->notify_listeners(event_type::object | event_type::parented);
 	}
 }
 
@@ -1297,6 +1298,7 @@ void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, Q
 		auto node_to = static_cast<ObjectNodeItem *>(to)->scene_node();
 
 		scene->disconnect(m_context, node_from, node_to);
+		scene->notify_listeners(event_type::object | event_type::parented);
 	}
 }
 

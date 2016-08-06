@@ -122,6 +122,10 @@ void PropertiesWidget::update_state(event_type event)
 		return;
 	}
 
+	if (!persona) {
+		return;
+	}
+
 	m_callback->clear();
 
 	drawProperties(persona, set_context);

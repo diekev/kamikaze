@@ -29,6 +29,8 @@
 #include "core/object.h"
 #include "core/scene.h"
 
+#include "util/utils.h"
+
 /* ************************************************************************** */
 
 SceneTreeWidgetItem::SceneTreeWidgetItem(QWidget *parent)
@@ -128,7 +130,11 @@ OutlinerTreeWidget::OutlinerTreeWidget(QWidget *parent)
 
 void OutlinerTreeWidget::update_state(event_type event)
 {
-	if (event != (event_type::object | event_type::added)) {
+	if (get_category(event) != event_type::object) {
+		return;
+	}
+
+	if (!is_elem(get_action(event), event_type::added, event_type::parented)) {
 		return;
 	}
 
@@ -173,6 +179,12 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 		Scene *scene = scene_item->getScene();
 
 		for (const auto &node : scene->nodes()) {
+			auto object = static_cast<Object *>(node);
+
+			if (object->parent() != nullptr) {
+				continue;
+			}
+
 			auto child = new ObjectTreeWidgetItem(scene_item);
 			child->setNode(node);
 			scene_item->addChild(child);
