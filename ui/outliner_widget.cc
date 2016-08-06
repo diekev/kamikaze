@@ -129,6 +129,9 @@ OutlinerTreeWidget::OutlinerTreeWidget(QWidget *parent)
 	connect(this, SIGNAL(itemExpanded(QTreeWidgetItem *)),
 	        this, SLOT(handleItemExpanded(QTreeWidgetItem *)));
 
+	connect(this, SIGNAL(itemCollapsed(QTreeWidgetItem *)),
+	        this, SLOT(handleItemCollapsed(QTreeWidgetItem *)));
+
 	connect(this, SIGNAL(itemSelectionChanged()),
 	        this, SLOT(handleItemSelection()));
 }
@@ -146,9 +149,13 @@ void OutlinerTreeWidget::update_state(event_type event)
 	/* TODO */
 	clear();
 
-	SceneTreeWidgetItem *item = new SceneTreeWidgetItem(this);
-    item->setScene(m_context->scene);
+	auto scene = m_context->scene;
+	auto item = new SceneTreeWidgetItem(this);
+    item->setScene(scene);
     addTopLevelItem(item);
+
+	/* Need to first add the item to the tree. */
+	item->setExpanded(scene->has_flags(SCENE_OL_EXPANDED));
 }
 
 void OutlinerTreeWidget::keyPressEvent(QKeyEvent *e)
@@ -182,6 +189,7 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 
 	if (scene_item && !scene_item->visited()) {
 		Scene *scene = scene_item->getScene();
+		scene->set_flags(SCENE_OL_EXPANDED);
 
 		for (const auto &node : scene->nodes()) {
 			if (node->type() == SCE_NODE_OBJECT) {
@@ -196,6 +204,7 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 			child->setNode(node);
 			child->setSelected(node == scene->active_node());
 			scene_item->addChild(child);
+			child->setExpanded(node->has_flags(SNODE_OL_EXPANDED));
 		}
 
 		scene_item->setVisited();
@@ -206,6 +215,7 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 
 	if (object_item && !object_item->visited()) {
 		auto node = object_item->getNode();
+		node->set_flags(SNODE_OL_EXPANDED);
 
 		if (node->type() == SCE_NODE_OBJECT) {
 			auto object = static_cast<Object *>(node);
@@ -219,6 +229,25 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 		}
 
 		object_item->setVisited();
+		return;
+	}
+}
+
+void OutlinerTreeWidget::handleItemCollapsed(QTreeWidgetItem *item)
+{
+	auto scene_item = dynamic_cast<SceneTreeWidgetItem *>(item);
+
+	if (scene_item) {
+		Scene *scene = scene_item->getScene();
+		scene->unset_flags(SCENE_OL_EXPANDED);
+		return;
+	}
+
+	auto object_item = dynamic_cast<ObjectTreeWidgetItem *>(item);
+
+	if (object_item) {
+		auto node = object_item->getNode();
+		node->unset_flags(SNODE_OL_EXPANDED);
 		return;
 	}
 }

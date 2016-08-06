@@ -37,6 +37,10 @@ class SceneNode;
 class Object;
 class Simulation;
 
+enum {
+	SCENE_OL_EXPANDED = (1 << 0),  /* Is it expanded in the outliner? */
+};
+
 class Scene : public Listened {
 	std::vector<SceneNode *> m_nodes = {};
 	SceneNode *m_active_node = nullptr;
@@ -48,6 +52,8 @@ class Scene : public Listened {
 	int m_end_frame = 250;
 	int m_cur_frame = 0;
 	float m_fps = 24.0f;
+
+	int m_flags = 0;
 
 public:
 	Scene();
@@ -89,6 +95,11 @@ public:
 
 	void connect(const EvaluationContext * const context, SceneNode *node_from, SceneNode *node_to);
 	void disconnect(const EvaluationContext * const context, SceneNode *node_from, SceneNode *node_to);
+
+	int flags() const;
+	void set_flags(int flag);
+	void unset_flags(int flag);
+	bool has_flags(int flag);
 
 private:
 	bool ensureUniqueName(QString &name) const;
