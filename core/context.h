@@ -43,6 +43,7 @@ enum class event_type {
 	removed   = (2 << 8),
 	selected  = (3 << 8),
 	modified  = (4 << 8),
+	parented  = (5 << 8),
 };
 
 constexpr event_type operator&(event_type lhs, event_type rhs)

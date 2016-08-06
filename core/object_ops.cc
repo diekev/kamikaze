@@ -77,7 +77,7 @@ Command *AddObjectCmd::registerSelf()
 void AddNodeCmd::execute(EvaluationContext *context)
 {
 	m_scene = context->scene;
-	auto scene_node = m_scene->current_node();
+	auto scene_node = m_scene->active_node();
 
 	if (scene_node == nullptr || scene_node->type() != SCE_NODE_OBJECT) {
 		return;
@@ -117,7 +117,7 @@ void AddPresetObjectCmd::execute(EvaluationContext *context)
 	auto node = (*context->node_factory)(m_name);
 
 	if (context->edit_mode) {
-		auto scene_node = m_scene->current_node();
+		auto scene_node = m_scene->active_node();
 
 		/* Sanity check. */
 		if (scene_node == nullptr || scene_node->type() != SCE_NODE_OBJECT) {

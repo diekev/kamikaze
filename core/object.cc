@@ -119,6 +119,14 @@ void Object::addChild(Object *child)
 	child->parent(this);
 }
 
+void Object::removeChild(Object *child)
+{
+	auto iter = std::find(m_children.begin(), m_children.end(), child);
+	assert(iter != m_children.end());
+	m_children.erase(iter);
+	child->parent(nullptr);
+}
+
 const std::vector<Object *> &Object::children() const
 {
 	return m_children;

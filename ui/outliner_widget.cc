@@ -29,6 +29,8 @@
 #include "core/object.h"
 #include "core/scene.h"
 
+#include "util/utils.h"
+
 /* ************************************************************************** */
 
 SceneTreeWidgetItem::SceneTreeWidgetItem(QWidget *parent)
@@ -133,7 +135,11 @@ OutlinerTreeWidget::OutlinerTreeWidget(QWidget *parent)
 
 void OutlinerTreeWidget::update_state(event_type event)
 {
-	if (event != (event_type::object | event_type::added)) {
+	if (get_category(event) != event_type::object) {
+		return;
+	}
+
+	if (!is_elem(get_action(event), event_type::added, event_type::parented)) {
 		return;
 	}
 
@@ -178,8 +184,17 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 		Scene *scene = scene_item->getScene();
 
 		for (const auto &node : scene->nodes()) {
+			if (node->type() == SCE_NODE_OBJECT) {
+				auto object = static_cast<Object *>(node);
+
+				if (object->parent() != nullptr) {
+					continue;
+				}
+			}
+
 			auto child = new ObjectTreeWidgetItem(scene_item);
 			child->setNode(node);
+			child->setSelected(node == scene->active_node());
 			scene_item->addChild(child);
 		}
 
@@ -198,6 +213,7 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 			for (const auto &child : object->children()) {
 				auto child_item = new ObjectTreeWidgetItem(object_item);
 				child_item->setNode(child);
+				child_item->setSelected(child == m_context->scene->active_node());
 				object_item->addChild(child_item);
 			}
 		}

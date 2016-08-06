@@ -125,7 +125,7 @@ Depsgraph *Scene::depsgraph()
 	return m_depsgraph;
 }
 
-SceneNode *Scene::current_node()
+SceneNode *Scene::active_node()
 {
 	if (!m_nodes.empty()) {
 		return m_active_node;
@@ -219,6 +219,29 @@ void Scene::connect(const EvaluationContext * const context, SceneNode *node_fro
 		m_depsgraph->connect(node_from, node_to);
 		m_depsgraph->evaluate(context, node_from);
 	}
+}
+
+void Scene::disconnect(const EvaluationContext * const context, SceneNode *node_from, SceneNode *node_to)
+{
+	auto from_ob = static_cast<Object *>(node_from);
+	auto to_ob = static_cast<Object *>(node_to);
+
+	from_ob->removeChild(to_ob);
+
+	node_to->inputs()[0]->link = nullptr;
+
+	auto from = node_from->outputs()[0];
+	auto iter = std::find(from->links.begin(), from->links.end(), node_to->inputs()[0]);
+
+	if (iter == from->links.end()) {
+		std::cerr << "Scene::disconnect, cannot find output!\n";
+		return;
+	}
+
+	from->links.erase(iter);
+
+	m_depsgraph->disconnect(node_from, node_to);
+	m_depsgraph->evaluate(context, node_to);
 }
 
 int Scene::startFrame() const

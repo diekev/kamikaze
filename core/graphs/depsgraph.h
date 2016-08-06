@@ -174,6 +174,7 @@ public:
 	Depsgraph &operator=(const Depsgraph &other) = delete;
 
 	void connect(SceneNode *from, SceneNode *to);
+	void disconnect(SceneNode *from, SceneNode *to);
 
 	void connect(DepsOutputSocket *from, DepsInputSocket *to);
 	void disconnect(DepsOutputSocket *from, DepsInputSocket *to);
