@@ -268,7 +268,7 @@ void MainWindow::addTimeLineWidget()
 
 	TimeLineWidget *time_line = new TimeLineWidget(dock);
 	time_line->listens(&m_context);
-	time_line->update_state(TIME_CHANGED);
+	time_line->update_state(event_type::time | event_type::modified);
 
 	dock->setWidget(time_line);
 	dock->setAllowedAreas(Qt::AllDockWidgetAreas);
@@ -285,7 +285,7 @@ void MainWindow::addGraphEditorWidget()
 	graph_editor->listens(&m_context);
 	graph_editor->setAddNodeMenu(m_add_nodes_menu);
 	/* XXX - graph editor needs to be able to draw the scene from the scratch. */
-	graph_editor->update_state(-1);
+	graph_editor->update_state(static_cast<event_type>(-1));
 
 	dock->setWidget(graph_editor);
 	dock->setAllowedAreas(Qt::AllDockWidgetAreas);
@@ -301,7 +301,7 @@ void MainWindow::addGLViewerWidget()
 
 		Viewer *glviewer = new Viewer(m_viewer_dock);
 		glviewer->listens(&m_context);
-		glviewer->update_state(-1);
+		glviewer->update_state(static_cast<event_type>(-1));
 
 		m_viewer_dock->setWidget(glviewer);
 		m_viewer_dock->setAllowedAreas(Qt::AllDockWidgetAreas);
@@ -320,7 +320,7 @@ void MainWindow::addOutlinerWidget()
 	OutlinerTreeWidget *outliner = new OutlinerTreeWidget(dock);
 	outliner->listens(&m_context);
 	/* XXX - outliner needs to be able to draw the scene from the scratch. */
-	outliner->update_state(OBJECT_ADDED);
+	outliner->update_state(event_type::object | event_type::added);
 
 	dock->setWidget(outliner);
 	dock->setAllowedAreas(Qt::AllDockWidgetAreas);
@@ -363,7 +363,7 @@ void MainWindow::addPropertiesWidget()
 
 	PropertiesWidget *properties = new PropertiesWidget(dock);
 	properties->listens(&m_context);
-	properties->update_state(-1);
+	properties->update_state(static_cast<event_type>(-1));
 
 	dock->setWidget(properties);
 	dock->setAllowedAreas(Qt::AllDockWidgetAreas);

@@ -56,9 +56,9 @@ Viewer::~Viewer()
 	delete m_viewer_context;
 }
 
-void Viewer::update_state(int event_type)
+void Viewer::update_state(event_type event)
 {
-	if (event_type == NODE_ADDED) {
+	if (event == (event_type::node | event_type::added)) {
 		return;
 	}
 

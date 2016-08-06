@@ -131,9 +131,9 @@ OutlinerTreeWidget::OutlinerTreeWidget(QWidget *parent)
 	        this, SLOT(handleItemSelection()));
 }
 
-void OutlinerTreeWidget::update_state(int event_type)
+void OutlinerTreeWidget::update_state(event_type event)
 {
-	if (event_type != OBJECT_ADDED) {
+	if (event != (event_type::object | event_type::added)) {
 		return;
 	}
 

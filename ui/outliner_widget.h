@@ -76,7 +76,7 @@ class OutlinerTreeWidget : public QTreeWidget, public ContextListener {
 public:
 	explicit OutlinerTreeWidget(QWidget *parent = nullptr);
 
-	void update_state(int event_type) override;
+	void update_state(event_type event) override;
 
 	/* Events. */
 	void keyPressEvent(QKeyEvent *e) override;

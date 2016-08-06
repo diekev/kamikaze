@@ -189,9 +189,9 @@ TimeLineWidget::TimeLineWidget(QWidget *parent)
 	connect(m_timer, SIGNAL(timeout()), this, SLOT(updateFrame()));
 }
 
-void TimeLineWidget::update_state(int event_type)
+void TimeLineWidget::update_state(event_type event)
 {
-	if (event_type != TIME_CHANGED) {
+	if (event != (event_type::time | event_type::modified)) {
 		return;
 	}
 
@@ -261,14 +261,14 @@ void TimeLineWidget::playForward()
 {
 	m_context->animation = true;
 	m_context->time_direction = TIME_DIR_FORWARD;
-	m_context->scene->notify_listeners(TIME_CHANGED);
+	m_context->scene->notify_listeners(event_type::time | event_type::modified);
 }
 
 void TimeLineWidget::playBackward()
 {
 	m_context->animation = true;
 	m_context->time_direction = TIME_DIR_BACKWARD;
-	m_context->scene->notify_listeners(TIME_CHANGED);
+	m_context->scene->notify_listeners(event_type::time | event_type::modified);
 }
 
 void TimeLineWidget::stepForward()
@@ -292,7 +292,7 @@ void TimeLineWidget::stepBackward()
 void TimeLineWidget::stopAnimation()
 {
 	m_context->animation = false;
-	m_context->scene->notify_listeners(TIME_CHANGED);
+	m_context->scene->notify_listeners(event_type::time | event_type::modified);
 }
 
 void TimeLineWidget::updateFrame() const

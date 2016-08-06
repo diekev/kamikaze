@@ -152,7 +152,7 @@ public:
 		return m_editor_mode;
 	}
 
-	void update_state(int event_type) override;
+	void update_state(event_type event) override;
 
 public Q_SLOTS:
 	/* Activated when a contextmenu item is selected */

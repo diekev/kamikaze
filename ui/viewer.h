@@ -61,7 +61,7 @@ public:
 	explicit Viewer(QWidget *parent = nullptr);
 	~Viewer();
 
-	void update_state(int event_type) override;
+	void update_state(event_type event) override;
 
 	void initializeGL();
 	void paintGL();
