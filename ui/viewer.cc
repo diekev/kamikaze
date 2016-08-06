@@ -125,6 +125,10 @@ void Viewer::paintGL()
 
 			const auto collection = object->collection();
 
+			if (object->parent()) {
+				m_stack.push(object->parent()->matrix());
+			}
+
 			m_stack.push(object->matrix());
 
 			for (auto &prim : collection->primitives()) {
@@ -165,6 +169,10 @@ void Viewer::paintGL()
 			}
 
 			m_stack.pop();
+
+			if (object->parent()) {
+				m_stack.pop();
+			}
 		}
 	}
 }
