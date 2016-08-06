@@ -754,8 +754,6 @@ void QtNodeEditor::removeConnection(QtConnection *connection)
 
 	connectionRemoved(base.first, base.second->getPortName(),
 	                  target.first, target.second->getPortName());
-
-	m_current_scene->removeItem(connection);
 }
 
 void QtNodeEditor::connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock)
