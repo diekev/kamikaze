@@ -153,6 +153,7 @@ public:
 	void clearCache();
 
 	void addChild(Object *child);
+	void removeChild(Object *child);
 	const std::vector<Object *> &children() const;
 
 	Object *parent() const;

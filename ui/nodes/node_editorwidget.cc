@@ -1274,8 +1274,9 @@ void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNo
 
 void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
 {
+	auto scene = m_context->scene;
+
 	if (m_context->edit_mode) {
-		auto scene = m_context->scene;
 		auto object = static_cast<Object *>(scene->current_node());
 		auto graph = object->graph();
 
@@ -1290,6 +1291,12 @@ void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, Q
 		graph->disconnect(output_socket, input_socket);
 
 		scene->evalObjectDag(m_context, object);
+	}
+	else {
+		auto node_from = static_cast<ObjectNodeItem *>(from)->scene_node();
+		auto node_to = static_cast<ObjectNodeItem *>(to)->scene_node();
+
+		scene->disconnect(m_context, node_from, node_to);
 	}
 }
 
