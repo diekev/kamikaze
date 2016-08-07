@@ -225,6 +225,7 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 			child_item->setNode(child);
 			child_item->setSelected(child == m_context->scene->active_node());
 			object_item->addChild(child_item);
+			child_item->setExpanded(child->has_flags(SNODE_OL_EXPANDED));
 		}
 
 		object_item->setVisited();
