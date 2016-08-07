@@ -24,10 +24,10 @@
 
 #pragma once
 
+#include <kamikaze/factory.h>
+
 #include <stack>
 #include <unordered_map>
-
-#include "factory.h"
 
 class EvaluationContext;
 class ParamCallback;
