@@ -87,7 +87,7 @@ float FloatSpinBox::value() const
 
 void FloatSpinBox::setRange(float min, float max)
 {
-	if (min != 0.0f && min < 1.0f) {
+	if (min > 0.0f && min < 1.0f) {
 		m_scale = 1.0f / min;
 	}
 	else {
@@ -95,6 +95,7 @@ void FloatSpinBox::setRange(float min, float max)
 	}
 
 	m_slider->setRange(min * m_scale, max * m_scale);
+	m_spin_box->setRange(min * m_scale, max * m_scale);
 }
 
 /* ********************************** */
@@ -146,6 +147,7 @@ int IntSpinBox::value() const
 void IntSpinBox::setRange(int min, int max)
 {
 	m_slider->setRange(min, max);
+	m_spin_box->setRange(min, max);
 }
 
 /* ********************************** */
