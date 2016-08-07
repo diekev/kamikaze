@@ -25,10 +25,13 @@
 #include "simulation.h"
 
 #include <kamikaze/context.h>
+#include <kamikaze/mesh.h>
 #include <kamikaze/prim_points.h>
 
 #include "object.h"
 #include "scene.h"
+
+#include "util/utils_glm.h"
 
 struct GravityData {
 	int index;
@@ -273,6 +276,7 @@ void register_builtin_solvers(SolverFactory *factory)
 {
 	factory->registerType("Free Fall Solver", []() -> Solver* { return new FreeFallSolver; });
 	factory->registerType("Simple Particle Solver", []() -> Solver* { return new SimpleParticleSolver; });
+	factory->registerType("Simple RBD Solver", []() -> Solver* { return new SimpleRBDSolver; });
 }
 
 /* ************************************************************************** */
@@ -381,6 +385,98 @@ void SimpleParticleSolver::add_required_attributes(Object *object)
 		}
 	}
 }
+
+/* ************************************************************************** */
+
+SimpleRBDSolver::SimpleRBDSolver()
+{
+	set_flags(solver_flag::data);
+}
+
+const char *SimpleRBDSolver::name() const
+{
+	return "Simple RBD Solver";
+}
+
+void SimpleRBDSolver::solve_for_object(const SimulationContext &context, Object *object)
+{
+	/* TODO: expose this somehow. */
+//	const auto &mass = 1.0f;
+
+	PhysicsPlane plane;
+	plane.pos = glm::vec3(0.0f, 0.0f, 0.0f);
+	plane.nor = glm::vec3(0.0f, 1.0f, 0.0f);
+
+	/* Only work on points primitive. */
+	for (Primitive *prim : primitive_iterator(object->collection(), Mesh::id)) {
+		std::cerr << "=========================\n";
+
+		auto mesh = static_cast<Mesh *>(prim);
+		auto points = mesh->points();
+		auto velocity_attr = mesh->attribute("velocity", ATTR_TYPE_VEC3);
+
+		std::cerr << "Number of points: " << points->size() << '\n';
+
+		const auto &force = context.time_step * context.gravity;
+		auto center_of_mass = glm::vec3(0.0f, 0.0f, 0.0f);
+		auto pos = glm::vec3(0.0f, 0.0f, 0.0f);
+
+		/* Compute center of mass: x = sum_i(m_i*x_i)/M, where:
+		 * - m_i: mass of the individual points
+		 * - x_i: positions of the individual points
+		 * - M: mass of the object
+		 *
+		 *  TODO: mass of the individual points
+		 */
+		for (size_t i = 0, e = points->size(); i < e; ++i) {
+			pos = glm::mat3(object->matrix()) * (*points)[i] + object->eval_vec3("Position");
+			center_of_mass += pos;
+		}
+
+		/* TODO: mass of the object */
+		center_of_mass /= points->size();
+
+		std::cerr << "Center of mass: " << center_of_mass << '\n';
+
+		auto torque = glm::vec3(0.0f, 0.0f, 0.0f);
+
+		/* Compute torque. */
+		for (size_t i = 0, e = points->size(); i < e; ++i) {
+			pos = glm::mat3(object->matrix()) * (*points)[i] + object->eval_vec3("Position");
+			torque += (pos - center_of_mass) * force;
+		}
+
+		std::cerr << "Torque: " << torque << '\n';
+
+		for (size_t i = 0, e = points->size(); i < e; ++i) {
+			/* compute velocity: v = f/m */
+			const auto &velocity = velocity_attr->vec3(i) + force;
+			velocity_attr->vec3(i, velocity);
+
+			(*points)[i] += velocity;
+		}
+
+		prim->tagUpdate();
+	}
+}
+
+void SimpleRBDSolver::add_required_attributes(Object *object)
+{
+	for (Primitive *prim : primitive_iterator(object->collection(), Mesh::id)) {
+		auto mesh = static_cast<Mesh *>(prim);
+		auto points = mesh->points();
+		auto vel_attr = mesh->addAttribute("velocity", ATTR_TYPE_VEC3, points->size());
+
+		for (size_t i = 0, e = points->size(); i < e; ++i) {
+			vel_attr->vec3(i, glm::vec3(0.0f, 0.0f, 0.0f));
+		}
+
+		auto torque_attr = mesh->addAttribute("torque", ATTR_TYPE_VEC3, 1);
+		torque_attr->float_(0, 0.0f);
+	}
+}
+
+/* ************************************************************************** */
 
 solver_flag &operator&=(solver_flag &lhs, solver_flag rhs)
 {

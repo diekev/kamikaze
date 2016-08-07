@@ -135,6 +135,18 @@ public:
 
 /* ************************************************************************** */
 
+class SimpleRBDSolver : public Solver {
+public:
+	SimpleRBDSolver();
+
+	const char *name() const override;
+	void solve_for_object(const SimulationContext &context, Object *object) override;
+
+	void add_required_attributes(Object *object) override;
+};
+
+/* ************************************************************************** */
+
 class SolverFactory final {
 public:
 	typedef Solver *(*factory_func)(void);
