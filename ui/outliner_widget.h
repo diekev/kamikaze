@@ -78,12 +78,6 @@ public:
 
 	void update_state(event_type event) override;
 
-	/* Events. */
-	void keyPressEvent(QKeyEvent *e) override;
-	void mouseMoveEvent(QMouseEvent *e) override;
-	void mousePressEvent(QMouseEvent *e) override;
-	void mouseReleaseEvent(QMouseEvent *e) override;
-	void wheelEvent(QWheelEvent *e) override;
 	void dropEvent(QDropEvent *event) override;
 
 public Q_SLOTS:

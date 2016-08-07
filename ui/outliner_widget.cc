@@ -162,31 +162,6 @@ void OutlinerTreeWidget::update_state(event_type event)
 	item->setExpanded(scene->has_flags(SCENE_OL_EXPANDED));
 }
 
-void OutlinerTreeWidget::keyPressEvent(QKeyEvent *e)
-{
-	return QTreeWidget::keyPressEvent(e);
-}
-
-void OutlinerTreeWidget::mouseMoveEvent(QMouseEvent *e)
-{
-	return QTreeWidget::mouseMoveEvent(e);
-}
-
-void OutlinerTreeWidget::mousePressEvent(QMouseEvent *e)
-{
-	return QTreeWidget::mousePressEvent(e);
-}
-
-void OutlinerTreeWidget::mouseReleaseEvent(QMouseEvent *e)
-{
-	return QTreeWidget::mouseReleaseEvent(e);
-}
-
-void OutlinerTreeWidget::wheelEvent(QWheelEvent *e)
-{
-	return QTreeWidget::wheelEvent(e);
-}
-
 void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 {
 	auto scene_item = dynamic_cast<SceneTreeWidgetItem *>(item);
