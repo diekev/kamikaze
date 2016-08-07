@@ -27,10 +27,11 @@
 #include <vector>
 #include <utils/filesystem.h>
 
+#include "simulation.h"
+
 class NodeFactory;
 class PrimitiveFactory;
 class Scene;
-class SolverFactory;
 
 class Main final {
 	/* Factories. */

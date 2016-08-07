@@ -232,51 +232,11 @@ void Simulation::sync_states()
 
 /* ************************************************************************** */
 
-size_t SolverFactory::registerType(const std::string &name, SolverFactory::factory_func func)
-{
-	const auto iter = m_map.find(name);
-	assert(iter == m_map.end());
-
-	m_map[name] = func;
-	return m_map.size();
-}
-
-Solver *SolverFactory::operator()(const std::string &name)
-{
-	const auto iter = m_map.find(name);
-	assert(iter != m_map.end());
-
-	return iter->second();
-}
-
-size_t SolverFactory::numEntries() const
-{
-	return m_map.size();
-}
-
-std::vector<std::string> SolverFactory::keys() const
-{
-	std::vector<std::string> v;
-
-	for (const auto &entry : m_map) {
-		v.push_back(entry.first);
-	}
-
-	return v;
-}
-
-bool SolverFactory::registered(const std::string &key) const
-{
-	return (m_map.find(key) != m_map.end());
-}
-
-/* ************************************************************************** */
-
 void register_builtin_solvers(SolverFactory *factory)
 {
-	factory->registerType("Free Fall Solver", []() -> Solver* { return new FreeFallSolver; });
-	factory->registerType("Simple Particle Solver", []() -> Solver* { return new SimpleParticleSolver; });
-	factory->registerType("Simple RBD Solver", []() -> Solver* { return new SimpleRBDSolver; });
+	REGISTER_SOLVER(factory, "Free Fall Solver", FreeFallSolver);
+	REGISTER_SOLVER(factory, "Simple Particle Solver", SimpleParticleSolver);
+	REGISTER_SOLVER(factory, "Simple RBD Solver", SimpleRBDSolver);
 }
 
 /* ************************************************************************** */

@@ -24,11 +24,11 @@
 
 #pragma once
 
+#include "simulation.h"
 #include "undo.h"
 
 class Object;
 class Scene;
-class SolverFactory;
 
 class AddObjectCmd : public Command {
 	Object *m_object = nullptr;
