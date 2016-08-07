@@ -320,6 +320,7 @@ void MainWindow::addGraphOutlinerWidget()
 
 	OutlinerTreeWidget *outliner = new OutlinerTreeWidget(outliner_dock);
 	outliner->listens(&m_context);
+	outliner->update_state(event_type::object | event_type::added);
 
 	outliner_dock->setWidget(outliner);
 	outliner_dock->setAllowedAreas(Qt::AllDockWidgetAreas);
