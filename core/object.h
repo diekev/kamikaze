@@ -41,7 +41,6 @@ class PrimitiveCollection;
 
 class Object : public Persona {
 	PrimitiveCollection *m_collection = nullptr;
-	PrimitiveCache m_cache;
 
 	glm::mat4 m_matrix = glm::mat4(0.0f);
 	glm::mat4 m_inv_matrix = glm::mat4(0.0f);
@@ -73,7 +72,6 @@ public:
 	const std::string name() const;
 
 	void updateMatrix();
-	void clearCache();
 
 	void addChild(Object *child);
 	const std::vector<Object *> &children() const;

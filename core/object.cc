@@ -57,7 +57,6 @@ Object::Object()
 Object::~Object()
 {
 	delete m_graph;
-	m_cache.clear();
 }
 
 PrimitiveCollection *Object::collection() const
@@ -82,7 +81,6 @@ const glm::mat4 &Object::matrix() const
 
 void Object::addNode(Node *node)
 {
-	node->setPrimitiveCache(&m_cache);
 	m_graph->add(node);
 	m_graph->active_node(node);
 }
@@ -116,11 +114,6 @@ void Object::updateMatrix()
 	m_matrix = glm::scale(m_matrix, m_scale);
 
 	m_inv_matrix = glm::inverse(m_matrix);
-}
-
-void Object::clearCache()
-{
-	m_cache.clear();
 }
 
 void Object::addChild(Object *child)
