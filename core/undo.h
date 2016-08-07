@@ -59,3 +59,6 @@ public:
 };
 
 using CommandFactory = Factory<Command>;
+
+#define REGISTER_COMMAND(factory, name, type) \
+	REGISTER_TYPE(factory, name, Command, type)

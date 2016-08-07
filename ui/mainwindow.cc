@@ -118,7 +118,7 @@ void MainWindow::redo() const
 
 void MainWindow::generateObjectMenu()
 {
-	m_command_factory->register_type("add object", AddObjectCmd::registerSelf);
+	REGISTER_COMMAND(m_command_factory, "add object", AddObjectCmd);
 
 	m_add_object_menu = menuBar()->addMenu("Add Object");
 	auto action = m_add_object_menu->addAction("Empty Object");
@@ -143,7 +143,8 @@ void MainWindow::generateDebugMenu()
 
 void MainWindow::generateNodeMenu()
 {
-	m_command_factory->register_type("add node", AddNodeCmd::registerSelf);
+	REGISTER_COMMAND(m_command_factory, "add node", AddNodeCmd);
+
 	m_add_nodes_menu = menuBar()->addMenu("Add Node");
 
 	for (const auto &category : m_main->nodeFactory()->categories()) {
@@ -200,7 +201,7 @@ void MainWindow::generateEditMenu()
 
 void MainWindow::generatePresetMenu()
 {
-	m_command_factory->register_type("add preset", AddPresetObjectCmd::registerSelf);
+	REGISTER_COMMAND(m_command_factory, "add preset", AddPresetObjectCmd);
 
 	m_tool_bar = new QToolBar();
 	addToolBar(Qt::TopToolBarArea, m_tool_bar);

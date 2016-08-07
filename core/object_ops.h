@@ -43,8 +43,6 @@ public:
 	void execute(EvaluationContext *context) override;
 	void undo() override;
 	void redo() override;
-
-	static Command *registerSelf();
 };
 
 class AddNodeCmd : public Command {
@@ -58,8 +56,6 @@ public:
 	void execute(EvaluationContext *context) override;
 	void undo() override;
 	void redo() override;
-
-	static Command *registerSelf();
 };
 
 class AddPresetObjectCmd : public Command {
@@ -73,6 +69,4 @@ public:
 	void execute(EvaluationContext *context) override;
 	void undo() override;
 	void redo() override;
-
-	static Command *registerSelf();
 };
