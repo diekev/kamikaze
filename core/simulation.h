@@ -111,6 +111,8 @@ public:
 	virtual void add_required_attributes(Object *) {}
 };
 
+/* ************************************************************************** */
+
 class FreeFallSolver : public Solver {
 public:
 	FreeFallSolver();
@@ -119,6 +121,8 @@ public:
 	void solve_for_object(const SimulationContext &context, Object *object) override;
 };
 
+/* ************************************************************************** */
+
 class SimpleParticleSolver : public Solver {
 public:
 	SimpleParticleSolver();
@@ -126,8 +130,10 @@ public:
 	const char *name() const override;
 	void solve_for_object(const SimulationContext &context, Object *object) override;
 
-	void add_required_attributes(Object *object);
+	void add_required_attributes(Object *object) override;
 };
+
+/* ************************************************************************** */
 
 class SolverFactory final {
 public:
