@@ -44,8 +44,6 @@ public:
 	void execute(EvaluationContext *context) override;
 	void undo() override;
 	void redo() override;
-
-	static Command *registerSelf();
 };
 
 class AddNodeCmd : public Command {
@@ -59,8 +57,6 @@ public:
 	void execute(EvaluationContext *context) override;
 	void undo() override;
 	void redo() override;
-
-	static Command *registerSelf();
 };
 
 class AddPresetObjectCmd : public Command {
@@ -74,8 +70,6 @@ public:
 	void execute(EvaluationContext *context) override;
 	void undo() override;
 	void redo() override;
-
-	static Command *registerSelf();
 };
 
 class AddSimulationCmd : public Command {
@@ -89,6 +83,4 @@ public:
 	void undo() override;
 	void redo() override;
 	void set_solver_factory(SolverFactory *solver_factory);
-
-	static Command *registerSelf();
 };

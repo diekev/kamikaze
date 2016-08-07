@@ -51,7 +51,6 @@ set(SHADERS
 add_library(kmk_core STATIC
 	camera.h
 	context.h
-	factory.h
 	grid.h
 	kamikaze_main.h
 	object.h

@@ -67,11 +67,6 @@ void AddObjectCmd::redo()
 	m_was_undone = false;
 }
 
-Command *AddObjectCmd::registerSelf()
-{
-	return new AddObjectCmd;
-}
-
 /* **************************** add node command **************************** */
 
 void AddNodeCmd::execute(EvaluationContext *context)
@@ -101,11 +96,6 @@ void AddNodeCmd::undo()
 void AddNodeCmd::redo()
 {
 	/* TODO */
-}
-
-Command *AddNodeCmd::registerSelf()
-{
-	return new AddNodeCmd;
 }
 
 /* **************************** add torus command **************************** */
@@ -153,11 +143,6 @@ void AddPresetObjectCmd::redo()
 	/* TODO */
 }
 
-Command *AddPresetObjectCmd::registerSelf()
-{
-	return new AddPresetObjectCmd;
-}
-
 /* ************************* add simulation command ************************* */
 
 void AddSimulationCmd::execute(EvaluationContext *context)
@@ -182,9 +167,4 @@ void AddSimulationCmd::redo()
 void AddSimulationCmd::set_solver_factory(SolverFactory *solver_factory)
 {
 	m_solver_factory = solver_factory;
-}
-
-Command *AddSimulationCmd::registerSelf()
-{
-	return new AddSimulationCmd;
 }

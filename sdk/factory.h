@@ -22,21 +22,25 @@
  *
  */
 
+#pragma once
+
 #include <cassert>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 template <typename Base, typename Key = std::string>
 class Factory final {
 public:
 	typedef Base *(*factory_func)(void);
 
-	void registerType(const Key &name, factory_func func)
+	size_t register_type(const Key &name, factory_func func)
 	{
 		const auto iter = m_map.find(name);
 		assert(iter == m_map.end());
 
 		m_map[name] = func;
+		return num_entries();
 	}
 
 	Base *operator()(const Key &name)
@@ -47,6 +51,31 @@ public:
 		return iter->second();
 	}
 
+	inline size_t num_entries() const
+	{
+		return m_map.size();
+	}
+
+	std::vector<std::string> keys() const
+	{
+		std::vector<std::string> v;
+		v.reserve(num_entries());
+
+		for (const auto &entry : m_map) {
+			v.push_back(entry.first);
+		}
+
+		return v;
+	}
+
+	bool registered(const std::string &key) const
+	{
+		return (m_map.find(key) != m_map.end());
+	}
+
 private:
 	std::unordered_map<Key, factory_func> m_map;
 };
+
+#define REGISTER_TYPE(factory, key, base, type) \
+	factory->register_type(key, []() -> base* { return new type(); })

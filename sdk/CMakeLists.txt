@@ -58,6 +58,7 @@ set(HEADERS
 	attribute.h
 	context.h
 	cube.h
+	factory.h
 	geomlists.h
 	mesh.h
 	nodes.h

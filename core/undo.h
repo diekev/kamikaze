@@ -24,10 +24,10 @@
 
 #pragma once
 
+#include <kamikaze/factory.h>
+
 #include <stack>
 #include <unordered_map>
-
-#include "factory.h"
 
 class EvaluationContext;
 class ParamCallback;
@@ -59,3 +59,6 @@ public:
 };
 
 using CommandFactory = Factory<Command>;
+
+#define REGISTER_COMMAND(factory, name, type) \
+	REGISTER_TYPE(factory, name, Command, type)

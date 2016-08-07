@@ -120,7 +120,7 @@ void MainWindow::redo() const
 
 void MainWindow::generateObjectMenu()
 {
-	m_command_factory->registerType("add object", AddObjectCmd::registerSelf);
+	REGISTER_COMMAND(m_command_factory, "add object", AddObjectCmd);
 
 	m_add_object_menu = menuBar()->addMenu("Add Object");
 	auto action = m_add_object_menu->addAction("Empty Object");
@@ -128,7 +128,7 @@ void MainWindow::generateObjectMenu()
 
 	connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
 
-	m_command_factory->registerType("add simulation", AddSimulationCmd::registerSelf);
+	REGISTER_COMMAND(m_command_factory, "add simulation", AddSimulationCmd);
 
 	for (const auto &key : m_main->solverFactory()->keys()) {
 		auto action = m_add_object_menu->addAction(key.c_str());
@@ -154,7 +154,8 @@ void MainWindow::generateDebugMenu()
 
 void MainWindow::generateNodeMenu()
 {
-	m_command_factory->registerType("add node", AddNodeCmd::registerSelf);
+	REGISTER_COMMAND(m_command_factory, "add node", AddNodeCmd);
+
 	m_add_nodes_menu = menuBar()->addMenu("Add Node");
 
 	for (const auto &category : m_main->nodeFactory()->categories()) {
@@ -211,7 +212,7 @@ void MainWindow::generateEditMenu()
 
 void MainWindow::generatePresetMenu()
 {
-	m_command_factory->registerType("add preset", AddPresetObjectCmd::registerSelf);
+	REGISTER_COMMAND(m_command_factory, "add preset", AddPresetObjectCmd);
 
 	m_tool_bar = new QToolBar();
 	addToolBar(Qt::TopToolBarArea, m_tool_bar);
