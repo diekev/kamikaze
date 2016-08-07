@@ -28,12 +28,11 @@
 
 #include <kamikaze/nodes.h>
 #include <kamikaze/primitive.h>
+#include <kamikaze/util_string.h>
 
 #include "object.h"
 
 #include "graphs/depsgraph.h"
-
-#include "util/util_string.h"
 
 Scene::Scene()
     : m_depsgraph(new Depsgraph)
@@ -67,7 +66,8 @@ void Scene::removeObject(SceneNode *node)
 
 void Scene::addObject(SceneNode *node)
 {
-	QString name = node->name();
+	auto name = node->name();
+
 	if (ensureUniqueName(name)) {
 		node->name(name);
 	}
@@ -148,9 +148,9 @@ void Scene::tagObjectUpdate()
 	notify_listeners(event_type::object | event_type::modified);
 }
 
-bool Scene::ensureUniqueName(QString &name) const
+bool Scene::ensureUniqueName(std::string &name) const
 {
-	return ensure_unique_name(name, [&](const QString &str)
+	return ensure_unique_name(name, [&](const std::string &str)
 	{
 		for (const auto &object : m_nodes) {
 			if (object->name() == str) {

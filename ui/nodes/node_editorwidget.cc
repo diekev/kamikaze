@@ -1124,7 +1124,7 @@ void QtNodeEditor::update_state(event_type event)
 			return;
 		}
 
-		auto obnode_item = new ObjectNodeItem(scene_node, scene_node->name());
+		auto obnode_item = new ObjectNodeItem(scene_node, scene_node->name().c_str());
 		obnode_item->setTitleColor(Qt::white);
 		obnode_item->alignTitle(ALIGNED_CENTER);
 

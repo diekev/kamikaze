@@ -27,6 +27,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "util_render.h"
+#include "util_string.h"
 
 bool Primitive::intersect(const Ray &ray, float &min) const
 {
@@ -154,86 +155,6 @@ void PrimitiveCache::clear()
 	}
 
 	m_collections.clear();
-}
-
-/* ********************************************** */
-
-size_t PrimitiveFactory::registerType(const std::string &name, PrimitiveFactory::factory_func func)
-{
-	const auto iter = m_map.find(name);
-	assert(iter == m_map.end());
-
-	m_map[name] = func;
-	return m_map.size();
-}
-
-Primitive *PrimitiveFactory::operator()(const std::string &name)
-{
-	const auto iter = m_map.find(name);
-	assert(iter != m_map.end());
-
-	return iter->second();
-}
-
-size_t PrimitiveFactory::numEntries() const
-{
-	return m_map.size();
-}
-
-std::vector<std::string> PrimitiveFactory::keys() const
-{
-	std::vector<std::string> v;
-
-	for (const auto &entry : m_map) {
-		v.push_back(entry.first);
-	}
-
-	return v;
-}
-
-bool PrimitiveFactory::registered(const std::string &key) const
-{
-	return (m_map.find(key) != m_map.end());
-}
-
-/* ********************************************** */
-
-template <typename OpType>
-bool ensure_unique_name(std::string &name, const OpType &op)
-{
-	if (op(name)) {
-		return false;
-	}
-
-	std::string temp = name + ".0000";
-	const auto temp_size = temp.size();
-	int number = 0;
-
-	do {
-		++number;
-
-		if (number < 10) {
-			temp[temp_size - 1] = number;
-		}
-		else if (number < 100) {
-			temp[temp_size - 1] = number % 10;
-			temp[temp_size - 2] = number / 10;
-		}
-		else if (number < 1000) {
-			temp[temp_size - 1] = number % 10;
-			temp[temp_size - 2] = (number % 100) / 10;
-			temp[temp_size - 3] = number / 100;
-		}
-		else {
-			temp[temp_size - 1] = number % 10;
-			temp[temp_size - 2] = (number % 100) / 10;
-			temp[temp_size - 3] = (number % 1000) / 100;
-			temp[temp_size - 4] = number / 1000;
-		}
-	} while (!op(temp));
-
-	name = temp;
-	return true;
 }
 
 /* ********************************************** */

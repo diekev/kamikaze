@@ -66,8 +66,8 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	m_context.edit_mode = false;
 	m_context.animation = false;
 	m_context.scene = m_main->scene();
-	m_context.node_factory = m_main->nodeFactory();
-	m_context.primitive_factory = m_main->primitiveFactory();
+	m_context.node_factory = m_main->node_factory();
+	m_context.primitive_factory = m_main->primitive_factory();
 	m_context.main_window = this;
 
 	m_has_glwindow = false;
@@ -147,10 +147,10 @@ void MainWindow::generateNodeMenu()
 
 	m_add_nodes_menu = menuBar()->addMenu("Add Node");
 
-	for (const auto &category : m_main->nodeFactory()->categories()) {
+	for (const auto &category : m_main->node_factory()->categories()) {
 		auto sub_menu = m_add_nodes_menu->addMenu(category.c_str());
 
-		for (const auto &key : m_main->nodeFactory()->keys(category)) {
+		for (const auto &key : m_main->node_factory()->keys(category)) {
 			auto action = sub_menu->addAction(key.c_str());
 			action->setData(QVariant::fromValue(QString("add node")));
 

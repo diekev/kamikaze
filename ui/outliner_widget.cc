@@ -86,7 +86,7 @@ SceneNode *ObjectTreeWidgetItem::getNode() const
 void ObjectTreeWidgetItem::setNode(SceneNode *scene_node)
 {
 	m_scene_node = scene_node;
-	setText(0, m_scene_node->name());
+	setText(0, m_scene_node->name().c_str());
 
 	if (this->numChildren() > 0) {
 		setChildIndicatorPolicy(QTreeWidgetItem::ShowIndicator);

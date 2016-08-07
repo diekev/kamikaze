@@ -108,14 +108,14 @@ public:
 		return m_outputs;
 	}
 
-	void name(const QString &name)
+	void name(const std::string &name)
 	{
-		m_name = name.toStdString();
+		m_name = name;
 	}
 
-	const QString name() const
+	const std::string &name() const
 	{
-		return QString::fromStdString(m_name);
+		return m_name;
 	}
 
 	inline int flags() const
