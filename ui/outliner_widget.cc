@@ -281,7 +281,7 @@ void OutlinerTreeWidget::dropEvent(QDropEvent *event)
 		return;
 	}
 
-	QTreeWidgetItem *item = itemAt(event->pos());
+	auto item = itemAt(event->pos());
 
 	if (!item) {
 		return;
