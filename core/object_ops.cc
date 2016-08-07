@@ -66,11 +66,6 @@ void AddObjectCmd::redo()
 	m_was_undone = false;
 }
 
-Command *AddObjectCmd::registerSelf()
-{
-	return new AddObjectCmd;
-}
-
 /* **************************** add node command **************************** */
 
 void AddNodeCmd::execute(EvaluationContext *context)
@@ -100,11 +95,6 @@ void AddNodeCmd::undo()
 void AddNodeCmd::redo()
 {
 	/* TODO */
-}
-
-Command *AddNodeCmd::registerSelf()
-{
-	return new AddNodeCmd;
 }
 
 /* **************************** add torus command **************************** */
@@ -150,9 +140,4 @@ void AddPresetObjectCmd::undo()
 void AddPresetObjectCmd::redo()
 {
 	/* TODO */
-}
-
-Command *AddPresetObjectCmd::registerSelf()
-{
-	return new AddPresetObjectCmd;
 }
