@@ -145,7 +145,7 @@ public:
 	}
 
 	/* Called for creating new connections, e.g. during node dropping. */
-	void connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock);
+	void connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock, bool notify);
 
 	int editor_mode() const
 	{
@@ -172,7 +172,7 @@ private:
 	void removeNodeEx(QtNode *node);
 
 	/* Called when nodes are connected. */
-	void nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to);
+	void nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to, bool notify);
 
 	/* Called when nodes are disconnected. */
 	void connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to);

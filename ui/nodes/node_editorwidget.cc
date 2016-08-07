@@ -756,14 +756,14 @@ void QtNodeEditor::removeConnection(QtConnection *connection)
 	                  target.first, target.second->getPortName());
 }
 
-void QtNodeEditor::connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock)
+void QtNodeEditor::connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock, bool notify)
 {
 	from->createActiveConnection(from_sock, from_sock->pos());
 	to_sock->createConnection(from->m_active_connection);
 
 	from->m_active_connection = nullptr;
 
-	nodesConnected(from, from_sock->getPortName(), to, to_sock->getPortName());
+	nodesConnected(from, from_sock->getPortName(), to, to_sock->getPortName(), true);
 }
 
 void QtNodeEditor::splitConnectionWithNode(QtNode *node)
@@ -779,10 +779,10 @@ void QtNodeEditor::splitConnectionWithNode(QtNode *node)
 	                  target.first, target.second->getPortName());
 
 	/* connect from base port to first input port in node */
-	connectNodes(base.first, base.second, node, node->input(0));
+	connectNodes(base.first, base.second, node, node->input(0), false);
 
 	/* connect from first output port in node to target port */
-	connectNodes(node, node->output(0), target.first, target.second);
+	connectNodes(node, node->output(0), target.first, target.second, true);
 }
 
 void QtNodeEditor::connectionEstablished(QtConnection *connection)
@@ -792,7 +792,7 @@ void QtNodeEditor::connectionEstablished(QtConnection *connection)
 	const auto &target = pairs.second;
 
 	nodesConnected(base.first, base.second->getPortName(),
-	               target.first, target.second->getPortName());
+	               target.first, target.second->getPortName(), true);
 }
 
 void QtNodeEditor::removeAllSelelected()
@@ -1161,7 +1161,7 @@ void QtNodeEditor::update_state(event_type event)
 				obnode_item->addNode(node_item);
 
 				this->connectNodes(node_item, node_item->output(0),
-				                   out_node_item, out_node_item->input(0));
+				                   out_node_item, out_node_item->input(0), true);
 			}
 		}
 
@@ -1237,7 +1237,7 @@ void QtNodeEditor::removeNodeEx(QtNode *node)
 	}
 }
 
-void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
+void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to, bool notify)
 {
 	auto scene = m_context->scene;
 	auto object = scene->currentObject();
@@ -1253,7 +1253,11 @@ void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNo
 
 	graph->connect(output_socket, input_socket);
 
-	scene->evalObjectDag(m_context, object);
+	/* Needed to prevent updating needlessly the graph when dropping a node on
+	 * a connection. */
+	if (notify) {
+		scene->evalObjectDag(m_context, object);
+	}
 }
 
 void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
