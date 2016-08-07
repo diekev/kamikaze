@@ -84,6 +84,7 @@ public:
 	void mousePressEvent(QMouseEvent *e) override;
 	void mouseReleaseEvent(QMouseEvent *e) override;
 	void wheelEvent(QWheelEvent *e) override;
+	void dropEvent(QDropEvent *event) override;
 
 public Q_SLOTS:
 	void handleItemCollapsed(QTreeWidgetItem *item);

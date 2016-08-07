@@ -26,6 +26,8 @@
 
 #include <kamikaze/context.h>
 
+#include <QDropEvent>
+
 #include "core/object.h"
 #include "core/scene.h"
 
@@ -72,7 +74,9 @@ ObjectTreeWidgetItem::ObjectTreeWidgetItem(QTreeWidgetItem *parent)
     : QTreeWidgetItem(parent)
     , m_scene_node(nullptr)
     , m_visited(false)
-{}
+{
+	setFlags(flags() | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled);
+}
 
 SceneNode *ObjectTreeWidgetItem::getNode() const
 {
@@ -121,7 +125,8 @@ OutlinerTreeWidget::OutlinerTreeWidget(QWidget *parent)
 	setAutoScroll(false);
 	setUniformRowHeights(true);
 	setSelectionMode(SingleSelection);
-	setDragDropMode(NoDragDrop);
+	setDragDropMode(InternalMove);
+	setDragEnabled(true);
 	setFocusPolicy(Qt::NoFocus);
 	setContextMenuPolicy(Qt::CustomContextMenu);
 	setHeaderHidden(true);
@@ -138,6 +143,10 @@ OutlinerTreeWidget::OutlinerTreeWidget(QWidget *parent)
 
 void OutlinerTreeWidget::update_state(event_type event)
 {
+	if (event == static_cast<event_type>(-1)) {
+		return;
+	}
+
 	if (get_category(event) != event_type::object) {
 		return;
 	}
@@ -274,4 +283,37 @@ void OutlinerTreeWidget::handleItemSelection()
 		m_context->scene->set_active_node(object_item->getNode());
 		return;
 	}
+}
+
+void OutlinerTreeWidget::dropEvent(QDropEvent *event)
+{
+	if (event->source() != this) {
+		return;
+	}
+
+	auto item = itemAt(event->pos());
+
+	if (!item) {
+		return;
+	}
+
+	auto object_item = dynamic_cast<ObjectTreeWidgetItem *>(item);
+
+	if (!object_item) {
+		return;
+	}
+
+	auto source_item = dynamic_cast<ObjectTreeWidgetItem *>(selectedItems()[0]);
+
+	if (!source_item) {
+		return;
+	}
+
+	if (source_item == object_item) {
+		return;
+	}
+
+	m_context->scene->connect(m_context, object_item->getNode(), source_item->getNode());
+
+	QTreeView::dropEvent(event);
 }

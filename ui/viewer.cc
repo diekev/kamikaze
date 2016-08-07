@@ -111,7 +111,7 @@ void Viewer::paintGL()
 	m_viewer_context->setProjection(P);
 	m_viewer_context->setMVP(MVP);
 	m_viewer_context->setNormal(glm::inverseTranspose(glm::mat3(MV)));
-	m_viewer_context->setMatrix(glm::mat4(1.0f));
+	m_viewer_context->setMatrix(m_stack.top());
 
 	if (m_draw_grid) {
 		m_grid->render(m_viewer_context);
@@ -133,6 +133,12 @@ void Viewer::paintGL()
 
 			const auto collection = object->collection();
 
+			if (object->parent()) {
+				m_stack.push(object->parent()->matrix());
+			}
+
+			m_stack.push(object->matrix());
+
 			for (auto &prim : collection->primitives()) {
 				/* update prim before drawing */
 				prim->update();
@@ -142,7 +148,9 @@ void Viewer::paintGL()
 					prim->bbox()->render(m_viewer_context, false);
 				}
 
-				m_viewer_context->setMatrix(object->matrix() * prim->matrix());
+				m_stack.push(prim->matrix());
+
+				m_viewer_context->setMatrix(m_stack.top());
 
 				prim->render(m_viewer_context, false);
 
@@ -164,6 +172,14 @@ void Viewer::paintGL()
 					glStencilMask(0xff);
 					glEnable(GL_DEPTH_TEST);
 				}
+
+				m_stack.pop();
+			}
+
+			m_stack.pop();
+
+			if (object->parent()) {
+				m_stack.pop();
 			}
 		}
 	}
