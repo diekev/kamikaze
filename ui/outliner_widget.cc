@@ -33,6 +33,8 @@
 
 #include "util/utils.h"
 
+//#define DRAG_DROP_PARENTING
+
 /* ************************************************************************** */
 
 SceneTreeWidgetItem::SceneTreeWidgetItem(QWidget *parent)
@@ -75,7 +77,10 @@ ObjectTreeWidgetItem::ObjectTreeWidgetItem(QTreeWidgetItem *parent)
     , m_scene_node(nullptr)
     , m_visited(false)
 {
+
+#ifdef DRAG_DROP_PARENTING
 	setFlags(flags() | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled);
+#endif
 }
 
 SceneNode *ObjectTreeWidgetItem::getNode() const
@@ -120,8 +125,13 @@ OutlinerTreeWidget::OutlinerTreeWidget(QWidget *parent)
 	setAutoScroll(false);
 	setUniformRowHeights(true);
 	setSelectionMode(SingleSelection);
+#ifdef DRAG_DROP_PARENTING
 	setDragDropMode(InternalMove);
 	setDragEnabled(true);
+#else
+	setDragDropMode(NoDragDrop);
+	setDragEnabled(false);
+#endif
 	setFocusPolicy(Qt::NoFocus);
 	setContextMenuPolicy(Qt::CustomContextMenu);
 	setHeaderHidden(true);
@@ -257,6 +267,7 @@ void OutlinerTreeWidget::dropEvent(QDropEvent *event)
 		return;
 	}
 
+#ifdef DRAG_DROP_PARENTING
 	auto item = itemAt(event->pos());
 
 	if (!item) {
@@ -280,6 +291,7 @@ void OutlinerTreeWidget::dropEvent(QDropEvent *event)
 	}
 
 	m_context->scene->connect(m_context, object_item->getNode(), source_item->getNode());
+#endif
 
 	QTreeView::dropEvent(event);
 }
