@@ -40,12 +40,15 @@ Object::Object()
     : m_graph(new Graph)
 {
 	add_prop("Position", property_type::prop_vec3);
+	set_prop_min_max(-10.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3(0.0f, 0.0f, 0.0f));
 
 	add_prop("Rotation", property_type::prop_vec3);
+	set_prop_min_max(0.0f, 360.0f);
 	set_prop_default_value_vec3(glm::vec3(0.0f, 0.0f, 0.0f));
 
 	add_prop("Size", property_type::prop_vec3);
+	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3(1.0f, 1.0f, 1.0f));
 
 	updateMatrix();
