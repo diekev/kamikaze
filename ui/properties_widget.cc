@@ -96,7 +96,7 @@ void PropertiesWidget::update_state(event_type event)
 			return;
 		}
 	}
-	else if (event_category == (event_type::node | event_type::selected)) {
+	else if (event_category == (event_type::node)) {
 		if (is_elem(event_action, event_type::selected)) {
 			auto object = scene->currentObject();
 			auto graph = object->graph();
