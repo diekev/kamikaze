@@ -69,6 +69,7 @@ set(HEADERS
 	renderbuffer.h
 	util_parallel.h
 	util_render.h
+	util_string.h
 )
 
 add_library(kamikaze SHARED

@@ -80,7 +80,7 @@ Object *ObjectTreeWidgetItem::getObject() const
 void ObjectTreeWidgetItem::setObject(Object *object)
 {
 	m_object = object;
-	setText(0, m_object->name());
+	setText(0, m_object->name().c_str());
 
 	if (this->numChildren() > 0) {
 		setChildIndicatorPolicy(QTreeWidgetItem::ShowIndicator);

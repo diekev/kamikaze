@@ -103,7 +103,7 @@ const Object *DepsObjectNode::object() const
 
 const char *DepsObjectNode::name() const
 {
-	return m_object->name().toStdString().c_str();
+	return m_object->name().c_str();
 }
 
 /* ************************************************************************** */

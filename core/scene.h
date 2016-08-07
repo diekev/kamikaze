@@ -85,5 +85,5 @@ public:
 
 	void evalObjectDag(const EvaluationContext * const context, Object *object);
 private:
-	bool ensureUniqueName(QString &name) const;
+	bool ensureUniqueName(std::string &name) const;
 };

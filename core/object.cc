@@ -89,14 +89,14 @@ Graph *Object::graph() const
 	return m_graph;
 }
 
-void Object::name(const QString &name)
+void Object::name(const std::string &name)
 {
-	m_name = name.toStdString();
+	m_name = name;
 }
 
-const QString Object::name() const
+const std::string Object::name() const
 {
-	return QString::fromStdString(m_name);
+	return m_name;
 }
 
 void Object::updateMatrix()

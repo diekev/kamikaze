@@ -69,8 +69,8 @@ public:
 
 	Graph *graph() const;
 
-	void name(const QString &name);
-	const QString name() const;
+	void name(const std::string &name);
+	const std::string name() const;
 
 	void updateMatrix();
 	void clearCache();

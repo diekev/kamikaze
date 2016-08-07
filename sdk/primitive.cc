@@ -27,6 +27,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "util_render.h"
+#include "util_string.h"
 
 bool Primitive::intersect(const Ray &ray, float &min) const
 {
@@ -154,46 +155,6 @@ void PrimitiveCache::clear()
 	}
 
 	m_collections.clear();
-}
-
-/* ********************************************** */
-
-template <typename OpType>
-bool ensure_unique_name(std::string &name, const OpType &op)
-{
-	if (op(name)) {
-		return false;
-	}
-
-	std::string temp = name + ".0000";
-	const auto temp_size = temp.size();
-	int number = 0;
-
-	do {
-		++number;
-
-		if (number < 10) {
-			temp[temp_size - 1] = number;
-		}
-		else if (number < 100) {
-			temp[temp_size - 1] = number % 10;
-			temp[temp_size - 2] = number / 10;
-		}
-		else if (number < 1000) {
-			temp[temp_size - 1] = number % 10;
-			temp[temp_size - 2] = (number % 100) / 10;
-			temp[temp_size - 3] = number / 100;
-		}
-		else {
-			temp[temp_size - 1] = number % 10;
-			temp[temp_size - 2] = (number % 100) / 10;
-			temp[temp_size - 3] = (number % 1000) / 100;
-			temp[temp_size - 4] = number / 1000;
-		}
-	} while (!op(temp));
-
-	name = temp;
-	return true;
 }
 
 /* ********************************************** */
