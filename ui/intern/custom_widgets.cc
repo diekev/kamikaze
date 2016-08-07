@@ -55,7 +55,7 @@ FloatSpinBox::FloatSpinBox(QWidget *parent)
 	m_spin_box->setButtonSymbols(QAbstractSpinBox::NoButtons);
 	m_spin_box->setReadOnly(true);
 
-	setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+	setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
 	connect(m_slider, SIGNAL(sliderReleased()), this, SLOT(ValueChanged()));
 	connect(m_slider, SIGNAL(valueChanged(int)), this, SLOT(updateLabel(int)));
@@ -87,7 +87,7 @@ float FloatSpinBox::value() const
 
 void FloatSpinBox::setRange(float min, float max)
 {
-	if (min != 0.0f && min < 1.0f) {
+	if (min > 0.0f && min < 1.0f) {
 		m_scale = 1.0f / min;
 	}
 	else {
@@ -95,6 +95,7 @@ void FloatSpinBox::setRange(float min, float max)
 	}
 
 	m_slider->setRange(min * m_scale, max * m_scale);
+	m_spin_box->setRange(min * m_scale, max * m_scale);
 }
 
 /* ********************************** */
@@ -114,7 +115,7 @@ IntSpinBox::IntSpinBox(QWidget *parent)
 	m_spin_box->setButtonSymbols(QAbstractSpinBox::NoButtons);
 	m_spin_box->setReadOnly(true);
 
-	setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+	setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
 	connect(m_slider, SIGNAL(sliderReleased()), this, SLOT(ValueChanged()));
 	connect(m_slider, SIGNAL(valueChanged(int)), this, SLOT(updateLabel(int)));
@@ -146,6 +147,7 @@ int IntSpinBox::value() const
 void IntSpinBox::setRange(int min, int max)
 {
 	m_slider->setRange(min, max);
+	m_spin_box->setRange(min, max);
 }
 
 /* ********************************** */
@@ -165,7 +167,7 @@ XYZSpinBox::XYZSpinBox(QWidget *parent)
 	m_layout->addWidget(m_y);
 	m_layout->addWidget(m_z);
 
-	setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+	setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
 	m_layout->setSpacing(0);
 }
