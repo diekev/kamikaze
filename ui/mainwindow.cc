@@ -339,6 +339,9 @@ void MainWindow::addGraphOutlinerWidget()
 	addDockWidget(Qt::RightDockWidgetArea, graph_dock);
 
 	tabifyDockWidget(graph_dock, outliner_dock);
+
+	/* Make sure the graph editor visible by default. */
+	graph_dock->raise();
 }
 
 void MainWindow::addPropertiesWidget()
