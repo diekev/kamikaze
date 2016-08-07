@@ -160,7 +160,8 @@ void OutlinerTreeWidget::update_state(event_type event)
 		return;
 	}
 
-	/* TODO */
+	/* For now we clear and recreate everything from scratch on every call for
+	 * updates. Maybe there is a slightly better way to do so. */
 	clear();
 
 	auto scene = m_context->scene;

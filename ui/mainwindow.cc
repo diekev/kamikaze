@@ -304,7 +304,6 @@ void MainWindow::addOutlinerWidget()
 
 	OutlinerTreeWidget *outliner = new OutlinerTreeWidget(dock);
 	outliner->listens(&m_context);
-	/* XXX - outliner needs to be able to draw the scene from the scratch. */
 	outliner->update_state(event_type::object | event_type::added);
 
 	dock->setWidget(outliner);
@@ -320,6 +319,7 @@ void MainWindow::addGraphOutlinerWidget()
 
 	OutlinerTreeWidget *outliner = new OutlinerTreeWidget(outliner_dock);
 	outliner->listens(&m_context);
+	outliner->update_state(event_type::object | event_type::added);
 
 	outliner_dock->setWidget(outliner);
 	outliner_dock->setAllowedAreas(Qt::AllDockWidgetAreas);
