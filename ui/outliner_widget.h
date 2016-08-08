@@ -39,10 +39,9 @@ class SceneTreeWidgetItem : public QWidget, public QTreeWidgetItem {
     bool m_visited;
 
 public:
-    explicit SceneTreeWidgetItem(QWidget *parent = nullptr);
+    explicit SceneTreeWidgetItem(Scene *scene, QWidget *parent = nullptr);
 
     Scene *getScene() const;
-    void setScene(Scene *scene);
 
     bool visited() const;
     void setVisited();
@@ -55,10 +54,9 @@ class ObjectTreeWidgetItem : public QTreeWidgetItem {
     bool m_visited;
 
 public:
-    explicit ObjectTreeWidgetItem(QTreeWidgetItem *parent = nullptr);
+    explicit ObjectTreeWidgetItem(SceneNode *scene_node, QTreeWidgetItem *parent = nullptr);
 
     SceneNode *getNode() const;
-    void setNode(SceneNode *scene_node);
 
     bool visited() const;
     void setVisited();
