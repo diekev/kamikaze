@@ -46,8 +46,6 @@ public:
 
     bool visited() const;
     void setVisited();
-
-    int numChildren() const;
 };
 
 /* ************************************************************************** */

@@ -67,11 +67,6 @@ void SceneTreeWidgetItem::setVisited()
 	m_visited = true;
 }
 
-int SceneTreeWidgetItem::numChildren() const
-{
-	return m_scene->nodes().size();
-}
-
 /* ************************************************************************** */
 
 ObjectTreeWidgetItem::ObjectTreeWidgetItem(QTreeWidgetItem *parent)
