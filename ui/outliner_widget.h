@@ -28,7 +28,7 @@
 
 #include "context.h"
 
-class Object;
+class Node;
 class Scene;
 class SceneNode;
 
@@ -64,8 +64,17 @@ public:
 
     bool visited() const;
     void setVisited();
+};
 
-    int numChildren() const;
+/* ************************************************************************** */
+
+class ObjectNodeTreeWidgetItem : public QTreeWidgetItem {
+	Node *m_node;
+
+public:
+    explicit ObjectNodeTreeWidgetItem(Node *node, QTreeWidgetItem *parent = nullptr);
+
+    Node *getNode() const;
 };
 
 /* ************************************************************************** */

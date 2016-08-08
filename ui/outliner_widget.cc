@@ -25,9 +25,11 @@
 #include "outliner_widget.h"
 
 #include <kamikaze/context.h>
+#include <kamikaze/nodes.h>
 
 #include <QDropEvent>
 
+#include "core/graphs/object_graph.h"
 #include "core/object.h"
 #include "core/scene.h"
 
@@ -93,9 +95,7 @@ void ObjectTreeWidgetItem::setNode(SceneNode *scene_node)
 	m_scene_node = scene_node;
 	setText(0, m_scene_node->name().c_str());
 
-	if (this->numChildren() > 0) {
-		setChildIndicatorPolicy(QTreeWidgetItem::ShowIndicator);
-	}
+	setChildIndicatorPolicy(QTreeWidgetItem::ShowIndicator);
 }
 
 bool ObjectTreeWidgetItem::visited() const
@@ -108,10 +108,18 @@ void ObjectTreeWidgetItem::setVisited()
 	m_visited = true;
 }
 
-int ObjectTreeWidgetItem::numChildren() const
+/* ************************************************************************** */
+
+ObjectNodeTreeWidgetItem::ObjectNodeTreeWidgetItem(Node *node, QTreeWidgetItem *parent)
+    : QTreeWidgetItem(parent)
+    , m_node(node)
 {
-	auto node = getNode();
-	return static_cast<Object *>(node)->children().size();
+	setText(0, m_node->name().c_str());
+}
+
+Node *ObjectNodeTreeWidgetItem::getNode() const
+{
+	return m_node;
 }
 
 /* ************************************************************************** */
@@ -202,9 +210,14 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 	auto object_item = dynamic_cast<ObjectTreeWidgetItem *>(item);
 
 	if (object_item && !object_item->visited()) {
-		auto node = object_item->getNode();
-		node->set_flags(SNODE_OL_EXPANDED);
-		auto object = static_cast<Object *>(node);
+		auto scene_node = object_item->getNode();
+		scene_node->set_flags(SNODE_OL_EXPANDED);
+		auto object = static_cast<Object *>(scene_node);
+
+		for (const auto &node : object->graph()->nodes()) {
+			auto node_item = new ObjectNodeTreeWidgetItem(node, object_item);
+			object_item->addChild(node_item);
+		}
 
 		for (const auto &child : object->children()) {
 			auto child_item = new ObjectTreeWidgetItem(object_item);
