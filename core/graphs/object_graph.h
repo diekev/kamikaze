@@ -25,6 +25,7 @@
 #pragma once
 
 #include <kamikaze/nodes.h>
+#include <kamikaze/primitive.h>
 #include <vector>
 
 class InputSocket;
@@ -36,6 +37,8 @@ class Graph {
 	std::vector<Node *> m_stack;
 
 	Node *m_active_node = nullptr;
+
+	PrimitiveCache m_cache;
 
 	bool m_need_update;
 
@@ -58,4 +61,6 @@ public:
 
 	void active_node(Node *node);
 	Node *active_node() const;
+
+	void clear_cache();
 };

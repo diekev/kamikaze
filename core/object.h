@@ -148,7 +148,6 @@ class PrimitiveCollection;
 
 class Object : public SceneNode {
 	PrimitiveCollection *m_collection = nullptr;
-	PrimitiveCache m_cache;
 
 	glm::mat4 m_matrix = glm::mat4(0.0f);
 	glm::mat4 m_inv_matrix = glm::mat4(0.0f);
@@ -175,7 +174,6 @@ public:
 	Graph *graph() const;
 
 	void updateMatrix();
-	void clearCache();
 
 	void addChild(Object *child);
 	void removeChild(Object *child);

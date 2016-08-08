@@ -32,11 +32,11 @@
 #include "scene.h"
 
 class Main final {
+	std::vector<filesystem::shared_library> m_plugins;
+
 	std::unique_ptr<PrimitiveFactory> m_primitive_factory;
 	std::unique_ptr<NodeFactory> m_node_factory;
 	std::unique_ptr<Scene> m_scene;
-
-	std::vector<filesystem::shared_library> m_plugins;
 
 public:
 	Main();
