@@ -111,7 +111,6 @@ void PropertiesWidget::update_state(event_type event)
 
 			/* Only update/evaluate the graph if the node is connected. */
 			set_context = node->isLinked();
-
 		}
 		else if (is_elem(event_action, event_type::removed)) {
 			m_callback->clear();
