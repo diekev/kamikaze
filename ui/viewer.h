@@ -27,6 +27,7 @@
 #include <glm/glm.hpp>
 #include <GL/glew.h>  /* needs to be included before QGLWidget (includes gl.h) */
 #include <QGLWidget>
+#include <stack>
 
 #include "context.h"
 #include "util/util_input.h"
@@ -35,6 +36,31 @@ class Camera;
 class Grid;
 class Scene;
 class ViewerContext;
+
+class MatrixStack {
+	std::stack<glm::mat4, std::vector<glm::mat4>> m_stack;
+
+public:
+	MatrixStack()
+	{
+		m_stack.push(glm::mat4(1.0f));
+	}
+
+	inline void push(const glm::mat4 &mat)
+	{
+		m_stack.push(m_stack.top() * mat);
+	}
+
+	inline void pop()
+	{
+		m_stack.pop();
+	}
+
+	inline const glm::mat4 &top() const
+	{
+		return m_stack.top();
+	}
+};
 
 class Viewer : public QGLWidget, public ContextListener {
 	Q_OBJECT
@@ -49,6 +75,8 @@ class Viewer : public QGLWidget, public ContextListener {
 	Camera *m_camera = nullptr;
 	Grid *m_grid = nullptr;
 	ViewerContext *m_viewer_context = nullptr;
+
+	MatrixStack m_stack = {};
 
 	/* Get the world space position of the given point. */
 	glm::vec3 unproject(const glm::vec3 &pos) const;
