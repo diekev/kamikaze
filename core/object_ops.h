@@ -29,6 +29,7 @@
 
 class Object;
 class Scene;
+class SolverFactory;
 
 class AddObjectCmd : public Command {
 	Object *m_object = nullptr;

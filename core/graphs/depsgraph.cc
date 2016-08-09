@@ -295,6 +295,14 @@ DepsNode *Depsgraph::find_node(SceneNode *scene_node, bool graph)
 	return node;
 }
 
+void Depsgraph::disconnect(SceneNode *from, SceneNode *to)
+{
+	auto from_deps_node = find_node(from, false);
+	auto to_deps_node = find_node(to, true);
+
+	disconnect(from_deps_node->output(), to_deps_node->input());
+}
+
 void Depsgraph::connect(DepsOutputSocket *from, DepsInputSocket *to)
 {
 	to->links.push_back(from);
