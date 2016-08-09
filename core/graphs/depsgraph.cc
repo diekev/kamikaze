@@ -212,7 +212,7 @@ void SimulationDepsNode::process(const EvaluationContext * const context, TaskNo
 
 const char *SimulationDepsNode::name() const
 {
-	return "Simulation";
+	return m_simulation->name().c_str();
 }
 
 /* ************************************************************************** */
