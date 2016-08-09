@@ -319,7 +319,7 @@ void SimpleParticleSolver::solve_for_object(const SimulationContext &context, Ob
 			auto pos = (*points)[i];
 
 			/* Get pos in object space. */
-			pos = glm::mat3(object->matrix()) * pos + object->eval_vec3("Position");
+			pos = object->matrix() * pos;
 
 			if (check_collision(&plane, pos, velocity)) {
 //				const auto &delta = plane.pos - object->eval_vec3("Position");
@@ -389,7 +389,7 @@ void SimpleRBDSolver::solve_for_object(const SimulationContext &context, Object 
 		 *  TODO: mass of the individual points
 		 */
 		for (size_t i = 0, e = points->size(); i < e; ++i) {
-			pos = glm::mat3(object->matrix()) * (*points)[i] + object->eval_vec3("Position");
+			pos = object->matrix() * (*points)[i];
 			center_of_mass += pos;
 		}
 
@@ -402,7 +402,7 @@ void SimpleRBDSolver::solve_for_object(const SimulationContext &context, Object 
 
 		/* Compute torque. */
 		for (size_t i = 0, e = points->size(); i < e; ++i) {
-			pos = glm::mat3(object->matrix()) * (*points)[i] + object->eval_vec3("Position");
+			pos = object->matrix() * (*points)[i];
 			torque += (pos - center_of_mass) * force;
 		}
 
