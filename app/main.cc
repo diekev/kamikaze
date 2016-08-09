@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 	Main main;
 
 	splash->showMessage("Initializing types...");
-	main.initTypes();
+	main.initialize();
 
 	splash->showMessage("Loading plugins...");
 	main.loadPlugins();

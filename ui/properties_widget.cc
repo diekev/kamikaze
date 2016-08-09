@@ -96,7 +96,7 @@ void PropertiesWidget::update_state(event_type event)
 			return;
 		}
 	}
-	else if (event_category == (event_type::node | event_type::selected)) {
+	else if (event_category == (event_type::node)) {
 		if (is_elem(event_action, event_type::selected)) {
 			auto scene_node = scene->active_node();
 
@@ -117,7 +117,6 @@ void PropertiesWidget::update_state(event_type event)
 
 			/* Only update/evaluate the graph if the node is connected. */
 			set_context = node->isLinked();
-
 		}
 		else if (is_elem(event_action, event_type::removed)) {
 			m_callback->clear();
@@ -128,7 +127,7 @@ void PropertiesWidget::update_state(event_type event)
 		return;
 	}
 
-	if (!persona) {
+	if (persona == nullptr) {
 		return;
 	}
 
@@ -220,7 +219,8 @@ void PropertiesWidget::drawProperties(Persona *persona, bool set_context)
 			case property_type::prop_vec3:
 				xyz_param(m_callback,
 				          prop.name.c_str(),
-				          &(any_cast<glm::vec3>(&prop.data)->x));
+				          &(any_cast<glm::vec3>(&prop.data)->x),
+				          prop.min, prop.max);
 				break;
 			case property_type::prop_input_file:
 				input_file_param(m_callback,

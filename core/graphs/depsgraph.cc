@@ -81,7 +81,6 @@ void DepsObjectNode::pre_process()
 {
 	/* TODO: what's the purpose of this again? */
 	m_object->collection(nullptr);
-	m_object->clearCache();
 }
 
 void DepsObjectNode::process(const EvaluationContext * const /*context*/, TaskNotifier */*notifier*/)
@@ -104,7 +103,7 @@ const Object *DepsObjectNode::object() const
 
 const char *DepsObjectNode::name() const
 {
-	return m_object->name().toStdString().c_str();
+	return m_object->name().c_str();
 }
 
 /* ************************************************************************** */
@@ -112,6 +111,11 @@ const char *DepsObjectNode::name() const
 ObjectGraphDepsNode::ObjectGraphDepsNode(Graph *graph)
     : m_graph(graph)
 {}
+
+void ObjectGraphDepsNode::pre_process()
+{
+	m_graph->clear_cache();
+}
 
 void ObjectGraphDepsNode::process(const EvaluationContext * const context, TaskNotifier *notifier)
 {

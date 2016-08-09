@@ -67,6 +67,7 @@ add_library(kmk_core STATIC
 	graphs/graph_tools.h
 	graphs/object_graph.h
 	graphs/object_nodes.h
+	graphs/scene_node.h
 
 	camera.cc
 	context.cc
@@ -83,6 +84,7 @@ add_library(kmk_core STATIC
 	graphs/graph_dumper.cc
 	graphs/object_graph.cc
 	graphs/object_nodes.cc
+	graphs/scene_node.cc
 
 	${SHADERS}
 )

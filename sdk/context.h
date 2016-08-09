@@ -26,9 +26,10 @@
 
 #include <glm/glm.hpp>
 
+#include "primitive.h"
+
 class MainWindow;
 class NodeFactory;
-class PrimitiveFactory;
 class Scene;
 
 enum {

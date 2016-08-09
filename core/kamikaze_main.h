@@ -24,40 +24,35 @@
 
 #pragma once
 
-#include <vector>
+#include <kamikaze/nodes.h>
+#include <kamikaze/primitive.h>
+
 #include <utils/filesystem.h>
 
+#include "scene.h"
 #include "simulation.h"
 
-class NodeFactory;
-class PrimitiveFactory;
-class Scene;
-
 class Main final {
-	/* Factories. */
-	PrimitiveFactory *m_primitive_factory;
-	NodeFactory *m_node_factory;
-	SolverFactory *m_solver_factory;
-
-	Scene *m_scene;
-
 	std::vector<filesystem::shared_library> m_plugins;
+
+	std::unique_ptr<PrimitiveFactory> m_primitive_factory;
+	std::unique_ptr<NodeFactory> m_node_factory;
+	std::unique_ptr<SolverFactory> m_solver_factory;
+	std::unique_ptr<Scene> m_scene;
 
 public:
 	Main();
-	~Main();
 
 	/* Disallow copy. */
 	Main(const Main &other) = delete;
 	Main &operator=(const Main &other) = delete;
 
-	void initTypes();
+	void initialize();
 	void loadPlugins();
 
 	/* Factories. */
-	PrimitiveFactory *primitiveFactory() const;
-	NodeFactory *nodeFactory() const;
-	SolverFactory *solverFactory() const;
-
+	PrimitiveFactory *primitive_factory() const;
+	NodeFactory *node_factory() const;
+	SolverFactory *solver_factory() const;
 	Scene *scene() const;
 };

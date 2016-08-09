@@ -76,6 +76,7 @@ TransformNode::TransformNode()
 	set_prop_enum_values(rot_enum_prop);
 
 	add_prop("Translate", property_type::prop_vec3);
+	set_prop_min_max(-10.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
 
 	add_prop("Rotate", property_type::prop_vec3);
@@ -83,9 +84,11 @@ TransformNode::TransformNode()
 	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
 
 	add_prop("Scale", property_type::prop_vec3);
+	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
 
 	add_prop("Pivot", property_type::prop_vec3);
+	set_prop_min_max(-10.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
 
 	add_prop("Uniform Scale", property_type::prop_float);
@@ -163,9 +166,11 @@ CreateBoxNode::CreateBoxNode()
 	addOutput("Prim");
 
 	add_prop("Size", property_type::prop_vec3);
+	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
 
 	add_prop("Center", property_type::prop_vec3);
+	set_prop_min_max(-10.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
 
 	add_prop("Uniform Scale", property_type::prop_float);
@@ -236,6 +241,7 @@ CreateTorusNode::CreateTorusNode()
 	addOutput("Prim");
 
 	add_prop("Center", property_type::prop_vec3);
+	set_prop_min_max(-10.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
 
 	add_prop("Major Radius", property_type::prop_float);
@@ -340,9 +346,11 @@ CreateGridNode::CreateGridNode()
 	addOutput("Prim");
 
 	add_prop("Center", property_type::prop_vec3);
+	set_prop_min_max(-10.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
 
 	add_prop("Size", property_type::prop_vec3);
+	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
 
 	add_prop("Rows", property_type::prop_int);

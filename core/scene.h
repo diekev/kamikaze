@@ -102,5 +102,5 @@ public:
 	bool has_flags(int flag);
 
 private:
-	bool ensureUniqueName(QString &name) const;
+	bool ensureUniqueName(std::string &name) const;
 };

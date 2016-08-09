@@ -44,6 +44,8 @@ Graph::~Graph()
 	for (auto &node : m_nodes) {
 		delete node;
 	}
+
+	clear_cache();
 }
 
 const std::vector<Node *> &Graph::nodes() const
@@ -54,6 +56,7 @@ const std::vector<Node *> &Graph::nodes() const
 void Graph::add(Node *node)
 {
 	m_nodes.push_back(node);
+	node->setPrimitiveCache(&m_cache);
 }
 
 void Graph::remove(Node *node)
@@ -192,4 +195,9 @@ void Graph::active_node(Node *node)
 Node *Graph::active_node() const
 {
 	return m_active_node;
+}
+
+void Graph::clear_cache()
+{
+	m_cache.clear();
 }

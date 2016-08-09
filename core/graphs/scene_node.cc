@@ -15,52 +15,58 @@
  * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * The Original Code is Copyright (C) 2015 Kévin Dietrich.
+ * The Original Code is Copyright (C) 2016 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
  *
  */
 
-#pragma once
+#include "scene_node.h"
 
-#include <kamikaze/nodes.h>
-#include <kamikaze/primitive.h>
-#include <vector>
+SceneNode::~SceneNode()
+{
+	for (auto &input : m_inputs) {
+		delete input;
+	}
 
-class InputSocket;
-class OutputNode;
-class OutputSocket;
+	for (auto &output : m_outputs) {
+		delete output;
+	}
+}
 
-class Graph {
-	std::vector<Node *> m_nodes;
-	std::vector<Node *> m_stack;
+void SceneNode::add_input(const std::string &name)
+{
+	auto socket = new SceneInputSocket(name);
+	socket->parent = this;
 
-	Node *m_active_node = nullptr;
+	this->m_inputs.push_back(socket);
+}
 
-	PrimitiveCache m_cache;
+void SceneNode::add_output(const std::string &name)
+{
+	auto socket = new SceneOutputSocket(name);
+	socket->parent = this;
 
-	bool m_need_update;
+	this->m_outputs.push_back(socket);
+}
 
-public:
-	Graph();
-	~Graph();
+const std::vector<SceneInputSocket *> &SceneNode::inputs()
+{
+	return m_inputs;
+}
 
-	void add(Node *node);
-	void remove(Node *node);
+const std::vector<SceneOutputSocket *> &SceneNode::outputs()
+{
+	return m_outputs;
+}
 
-	void connect(OutputSocket *from, InputSocket *to);
-	void disconnect(OutputSocket *from, InputSocket *to);
+void SceneNode::name(const std::string &name)
+{
+	m_name = name;
+}
 
-	void build();
-
-	OutputNode *output() const;
-
-	const std::vector<Node *> &nodes() const;
-	const std::vector<Node *> &finished_stack() const;
-
-	void active_node(Node *node);
-	Node *active_node() const;
-
-	void clear_cache();
-};
+const std::string &SceneNode::name() const
+{
+	return m_name;
+}

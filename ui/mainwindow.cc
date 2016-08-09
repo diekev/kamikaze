@@ -68,8 +68,8 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	m_context.edit_mode = false;
 	m_context.animation = false;
 	m_context.scene = m_main->scene();
-	m_context.node_factory = m_main->nodeFactory();
-	m_context.primitive_factory = m_main->primitiveFactory();
+	m_context.node_factory = m_main->node_factory();
+	m_context.primitive_factory = m_main->primitive_factory();
 	m_context.main_window = this;
 
 	m_has_glwindow = false;
@@ -130,7 +130,7 @@ void MainWindow::generateObjectMenu()
 
 	REGISTER_COMMAND(m_command_factory, "add simulation", AddSimulationCmd);
 
-	for (const auto &key : m_main->solverFactory()->keys()) {
+	for (const auto &key : m_main->solver_factory()->keys()) {
 		auto action = m_add_object_menu->addAction(key.c_str());
 		action->setData(QVariant::fromValue(QString("add simulation")));
 
@@ -158,10 +158,10 @@ void MainWindow::generateNodeMenu()
 
 	m_add_nodes_menu = menuBar()->addMenu("Add Node");
 
-	for (const auto &category : m_main->nodeFactory()->categories()) {
+	for (const auto &category : m_main->node_factory()->categories()) {
 		auto sub_menu = m_add_nodes_menu->addMenu(category.c_str());
 
-		for (const auto &key : m_main->nodeFactory()->keys(category)) {
+		for (const auto &key : m_main->node_factory()->keys(category)) {
 			auto action = sub_menu->addAction(key.c_str());
 			action->setData(QVariant::fromValue(QString("add node")));
 
@@ -254,7 +254,7 @@ void MainWindow::handleCommand()
 	cmd->setName(name);
 
 	if (data == "add simulation") {
-		static_cast<AddSimulationCmd *>(cmd)->set_solver_factory(m_main->solverFactory());
+		static_cast<AddSimulationCmd *>(cmd)->set_solver_factory(m_main->solver_factory());
 	}
 
 	/* Execute the command in the current context, the manager will push the
@@ -320,7 +320,6 @@ void MainWindow::addOutlinerWidget()
 
 	OutlinerTreeWidget *outliner = new OutlinerTreeWidget(dock);
 	outliner->listens(&m_context);
-	/* XXX - outliner needs to be able to draw the scene from the scratch. */
 	outliner->update_state(event_type::object | event_type::added);
 
 	dock->setWidget(outliner);
@@ -336,6 +335,7 @@ void MainWindow::addGraphOutlinerWidget()
 
 	OutlinerTreeWidget *outliner = new OutlinerTreeWidget(outliner_dock);
 	outliner->listens(&m_context);
+	outliner->update_state(event_type::object | event_type::added);
 
 	outliner_dock->setWidget(outliner);
 	outliner_dock->setAllowedAreas(Qt::AllDockWidgetAreas);
@@ -355,6 +355,9 @@ void MainWindow::addGraphOutlinerWidget()
 	addDockWidget(Qt::RightDockWidgetArea, graph_dock);
 
 	tabifyDockWidget(graph_dock, outliner_dock);
+
+	/* Make sure the graph editor visible by default. */
+	graph_dock->raise();
 }
 
 void MainWindow::addPropertiesWidget()

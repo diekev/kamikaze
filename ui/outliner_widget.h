@@ -28,7 +28,7 @@
 
 #include "context.h"
 
-class Object;
+class Node;
 class Scene;
 class SceneNode;
 
@@ -39,15 +39,12 @@ class SceneTreeWidgetItem : public QWidget, public QTreeWidgetItem {
     bool m_visited;
 
 public:
-    explicit SceneTreeWidgetItem(QWidget *parent = nullptr);
+    explicit SceneTreeWidgetItem(Scene *scene, QWidget *parent = nullptr);
 
     Scene *getScene() const;
-    void setScene(Scene *scene);
 
     bool visited() const;
     void setVisited();
-
-    int numChildren() const;
 };
 
 /* ************************************************************************** */
@@ -57,15 +54,23 @@ class ObjectTreeWidgetItem : public QTreeWidgetItem {
     bool m_visited;
 
 public:
-    explicit ObjectTreeWidgetItem(QTreeWidgetItem *parent = nullptr);
+    explicit ObjectTreeWidgetItem(SceneNode *scene_node, QTreeWidgetItem *parent = nullptr);
 
     SceneNode *getNode() const;
-    void setNode(SceneNode *scene_node);
 
     bool visited() const;
     void setVisited();
+};
 
-    int numChildren() const;
+/* ************************************************************************** */
+
+class ObjectNodeTreeWidgetItem : public QTreeWidgetItem {
+	Node *m_node;
+
+public:
+    explicit ObjectNodeTreeWidgetItem(Node *node, QTreeWidgetItem *parent = nullptr);
+
+    Node *getNode() const;
 };
 
 /* ************************************************************************** */
@@ -78,12 +83,6 @@ public:
 
 	void update_state(event_type event) override;
 
-	/* Events. */
-	void keyPressEvent(QKeyEvent *e) override;
-	void mouseMoveEvent(QMouseEvent *e) override;
-	void mousePressEvent(QMouseEvent *e) override;
-	void mouseReleaseEvent(QMouseEvent *e) override;
-	void wheelEvent(QWheelEvent *e) override;
 	void dropEvent(QDropEvent *event) override;
 
 public Q_SLOTS:
