@@ -30,7 +30,8 @@
 #include <QString>
 
 #include <kamikaze/primitive.h>
-#include <kamikaze/persona.h>
+
+#include "graphs/scene_node.h"
 
 class EvaluationContext;
 class Graph;
@@ -39,15 +40,13 @@ class ParamCallback;
 class Primitive;
 class PrimitiveCollection;
 
-class Object : public Persona {
+class Object : public SceneNode {
 	PrimitiveCollection *m_collection = nullptr;
 
 	glm::mat4 m_matrix = glm::mat4(0.0f);
 	glm::mat4 m_inv_matrix = glm::mat4(0.0f);
 
 	Graph *m_graph;
-
-	std::string m_name;
 
 	Object *m_parent = nullptr;
 	std::vector<Object *> m_children;
@@ -68,12 +67,10 @@ public:
 
 	Graph *graph() const;
 
-	void name(const std::string &name);
-	const std::string name() const;
-
 	void updateMatrix();
 
 	void addChild(Object *child);
+	void removeChild(Object *child);
 	const std::vector<Object *> &children() const;
 
 	Object *parent() const;

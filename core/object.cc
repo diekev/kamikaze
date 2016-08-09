@@ -39,6 +39,9 @@
 Object::Object()
     : m_graph(new Graph)
 {
+	add_input("Parent");
+	add_output("Child");
+
 	add_prop("Position", property_type::prop_vec3);
 	set_prop_min_max(-10.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -90,16 +93,6 @@ Graph *Object::graph() const
 	return m_graph;
 }
 
-void Object::name(const std::string &name)
-{
-	m_name = name;
-}
-
-const std::string Object::name() const
-{
-	return m_name;
-}
-
 void Object::updateMatrix()
 {
 	const auto m_pos = eval_vec3("Position");
@@ -120,6 +113,14 @@ void Object::addChild(Object *child)
 {
 	m_children.push_back(child);
 	child->parent(this);
+}
+
+void Object::removeChild(Object *child)
+{
+	auto iter = std::find(m_children.begin(), m_children.end(), child);
+	assert(iter != m_children.end());
+	m_children.erase(iter);
+	child->parent(nullptr);
 }
 
 const std::vector<Object *> &Object::children() const

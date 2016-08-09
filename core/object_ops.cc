@@ -71,7 +71,13 @@ void AddObjectCmd::redo()
 void AddNodeCmd::execute(EvaluationContext *context)
 {
 	m_scene = context->scene;
-	m_object = m_scene->currentObject();
+	auto scene_node = m_scene->active_node();
+
+	if (scene_node == nullptr) {
+		return;
+	}
+
+	m_object = static_cast<Object *>(scene_node);
 
 	assert(m_object != nullptr);
 
@@ -100,7 +106,14 @@ void AddPresetObjectCmd::execute(EvaluationContext *context)
 	auto node = (*context->node_factory)(m_name);
 
 	if (context->edit_mode) {
-		m_object = m_scene->currentObject();
+		auto scene_node = m_scene->active_node();
+
+		/* Sanity check. */
+		if (scene_node == nullptr) {
+			return;
+		}
+
+		m_object = static_cast<Object *>(scene_node);
 	}
 	else {
 		m_object = new Object;

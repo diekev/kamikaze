@@ -40,41 +40,42 @@ Scene::Scene()
 
 Scene::~Scene()
 {
-	for (auto &object : m_objects) {
-		delete object;
+	for (auto &node : m_nodes) {
+		delete node;
 	}
 
 	delete m_depsgraph;
 }
 
-void Scene::removeObject(Object *object)
+void Scene::removeObject(SceneNode *node)
 {
-	auto iter = std::find(m_objects.begin(), m_objects.end(), object);
+	auto iter = std::find(m_nodes.begin(), m_nodes.end(), node);
 
-	assert(iter != m_objects.end());
+	assert(iter != m_nodes.end());
 
 	notify_listeners(event_type::object | event_type::removed);
 
-	m_objects.erase(iter);
-	m_depsgraph->remove_node(object);
-	delete object;
+	m_nodes.erase(iter);
+	m_depsgraph->remove_node(node);
+	delete node;
 
-	if (object == m_active_object) {
-		m_active_object = nullptr;
+	if (node == m_active_node) {
+		m_active_node = nullptr;
 	}
 }
 
-void Scene::addObject(Object *object)
+void Scene::addObject(SceneNode *node)
 {
-	auto name = object->name();
+	auto name = node->name();
+
 	if (ensureUniqueName(name)) {
-		object->name(name);
+		node->name(name);
 	}
 
-	m_objects.push_back(object);
-	m_active_object = object;
+	m_nodes.push_back(node);
+	m_active_node = node;
 
-	m_depsgraph->create_node(object);
+	m_depsgraph->create_node(node);
 
 	notify_listeners(event_type::object | event_type::added);
 }
@@ -89,7 +90,9 @@ void Scene::selectObject(const glm::vec3 &pos)
 	float min = 1000.0f;
 	int selected_object = -1, index = 0;
 
-	for (auto &object : m_objects) {
+	for (auto &node : m_nodes) {
+		auto object = static_cast<Object *>(node);
+
 		if (!object || !object->collection()) {
 			continue;
 		}
@@ -106,8 +109,8 @@ void Scene::selectObject(const glm::vec3 &pos)
 		++index;
 	}
 
-	if (selected_object != -1 && m_active_object != m_objects[selected_object]) {
-		m_active_object = m_objects[selected_object];
+	if (selected_object != -1 && m_active_node != m_nodes[selected_object]) {
+		m_active_node = m_nodes[selected_object];
 		notify_listeners(event_type::object | event_type::selected);
 	}
 }
@@ -117,10 +120,10 @@ Depsgraph *Scene::depsgraph()
 	return m_depsgraph;
 }
 
-Object *Scene::currentObject()
+SceneNode *Scene::active_node()
 {
-	if (!m_objects.empty()) {
-		return m_active_object;
+	if (!m_nodes.empty()) {
+		return m_active_node;
 	}
 
 	return nullptr;
@@ -128,14 +131,16 @@ Object *Scene::currentObject()
 
 void Scene::tagObjectUpdate()
 {
-	if (!m_active_object) {
+	if (!m_active_node) {
 		return;
 	}
 
-	m_active_object->updateMatrix();
+	auto object = static_cast<Object *>(m_active_node);
 
-	if (m_active_object->collection()) {
-		for (auto &prim : m_active_object->collection()->primitives()) {
+	object->updateMatrix();
+
+	if (object->collection()) {
+		for (auto &prim : object->collection()->primitives()) {
 			prim->tagUpdate();
 		}
 	}
@@ -147,7 +152,7 @@ bool Scene::ensureUniqueName(std::string &name) const
 {
 	return ensure_unique_name(name, [&](const std::string &str)
 	{
-		for (const auto &object : m_objects) {
+		for (const auto &object : m_nodes) {
 			if (object->name() == str) {
 				return false;
 			}
@@ -157,9 +162,9 @@ bool Scene::ensureUniqueName(std::string &name) const
 	});
 }
 
-void Scene::setActiveObject(Object *object)
+void Scene::set_active_node(SceneNode *node)
 {
-	m_active_object = object;
+	m_active_node = node;
 	notify_listeners(event_type::object | event_type::selected);
 }
 
@@ -168,9 +173,66 @@ void Scene::updateForNewFrame(const EvaluationContext * const context)
 	m_depsgraph->evaluate_for_time_change(context);
 }
 
-void Scene::evalObjectDag(const EvaluationContext * const context, Object *object)
+void Scene::evalObjectDag(const EvaluationContext * const context, SceneNode *node)
 {
-	m_depsgraph->evaluate(context, object);
+	m_depsgraph->evaluate(context, node);
+}
+
+void Scene::connect(const EvaluationContext * const context, SceneNode *node_from, SceneNode *node_to)
+{
+	auto from_ob = static_cast<Object *>(node_from);
+	auto to_ob = static_cast<Object *>(node_to);
+
+	from_ob->addChild(to_ob);
+
+	node_to->inputs()[0]->link = node_from->outputs()[0];
+	node_from->outputs()[0]->links.push_back(node_to->inputs()[0]);
+
+	m_depsgraph->connect(node_from, node_to);
+	m_depsgraph->evaluate(context, node_from);
+}
+
+void Scene::disconnect(const EvaluationContext * const context, SceneNode *node_from, SceneNode *node_to)
+{
+	auto from_ob = static_cast<Object *>(node_from);
+	auto to_ob = static_cast<Object *>(node_to);
+
+	from_ob->removeChild(to_ob);
+
+	node_to->inputs()[0]->link = nullptr;
+
+	auto from = node_from->outputs()[0];
+	auto iter = std::find(from->links.begin(), from->links.end(), node_to->inputs()[0]);
+
+	if (iter == from->links.end()) {
+		std::cerr << "Scene::disconnect, cannot find output!\n";
+		return;
+	}
+
+	from->links.erase(iter);
+
+	m_depsgraph->disconnect(node_from, node_to);
+	m_depsgraph->evaluate(context, node_to);
+}
+
+int Scene::flags() const
+{
+	return m_flags;
+}
+
+void Scene::set_flags(int flag)
+{
+	m_flags |= flag;
+}
+
+void Scene::unset_flags(int flag)
+{
+	m_flags &= ~flag;
+}
+
+bool Scene::has_flags(int flag)
+{
+	return (m_flags & flag) != 0;
 }
 
 int Scene::startFrame() const
@@ -217,7 +279,7 @@ void Scene::framesPerSecond(float value)
 	notify_listeners(event_type::time | event_type::modified);
 }
 
-const std::vector<Object *> &Scene::objects() const
+const std::vector<SceneNode *> &Scene::nodes() const
 {
-	return m_objects;
+	return m_nodes;
 }

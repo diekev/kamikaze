@@ -304,7 +304,6 @@ void MainWindow::addOutlinerWidget()
 
 	OutlinerTreeWidget *outliner = new OutlinerTreeWidget(dock);
 	outliner->listens(&m_context);
-	/* XXX - outliner needs to be able to draw the scene from the scratch. */
 	outliner->update_state(event_type::object | event_type::added);
 
 	dock->setWidget(outliner);
@@ -440,11 +439,13 @@ void MainWindow::dumpGraph()
 	auto scene = m_context.scene;
 
 	if (data == "dump_object_graph") {
-		auto object = scene->currentObject();
+		auto scene_node = scene->active_node();
 
-		if (!object) {
+		if (!scene_node) {
 			return;
 		}
+
+		auto object = static_cast<Object *>(scene_node);
 
 		GraphDumper gd(object->graph());
 		gd("/tmp/object_graph.gv");

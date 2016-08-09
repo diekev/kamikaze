@@ -589,7 +589,7 @@ void QtNodeEditor::selectNode(QtNode *node, QGraphicsSceneMouseEvent *mouseEvent
 		setActiveObject(static_cast<ObjectNodeItem *>(node));
 	}
 	else {
-		auto object = m_context->scene->currentObject();
+		auto object = static_cast<Object *>(m_context->scene->active_node());
 		auto graph = object->graph();
 		graph->active_node(node->getNode());
 		m_context->scene->notify_listeners(event_type::node | event_type::selected);
@@ -704,7 +704,7 @@ void QtNodeEditor::removeNode(QtNode *node)
 	}
 
 	if (is_object_node(node)) {
-		auto object = static_cast<ObjectNodeItem *>(node)->object();
+		auto object = static_cast<ObjectNodeItem *>(node)->scene_node();
 
 		/* TODO: first we delete the node then the object, so we avoid issues
 		 * when the scene sends the notifier that the object was deleted. */
@@ -1118,13 +1118,13 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 void QtNodeEditor::update_state(event_type event)
 {
 	if (event == (event_type::object | event_type::added)) {
-		auto object = m_context->scene->currentObject();
+		auto scene_node = m_context->scene->active_node();
 
-		if (object == nullptr) {
+		if (scene_node == nullptr) {
 			return;
 		}
 
-		auto obnode_item = new ObjectNodeItem(object, object->name().c_str());
+		auto obnode_item = new ObjectNodeItem(scene_node, scene_node->name().c_str());
 		obnode_item->setTitleColor(Qt::white);
 		obnode_item->alignTitle(ALIGNED_CENTER);
 
@@ -1134,6 +1134,10 @@ void QtNodeEditor::update_state(event_type event)
 
 		/* add node item for the object's graph output node */
 		{
+			/* Go into edit mode to make sure object graph is updated properly. */
+			m_context->edit_mode = true;
+
+			auto object = static_cast<Object *>(scene_node);
 			auto graph = object->graph();
 			auto output_node = graph->output();
 
@@ -1163,6 +1167,9 @@ void QtNodeEditor::update_state(event_type event)
 				this->connectNodes(node_item, node_item->output(0),
 				                   out_node_item, out_node_item->input(0), true);
 			}
+
+			/* Leave edit mode. */
+			m_context->edit_mode = false;
 		}
 
 		if (this->m_editor_mode == EDITOR_MODE_SCENE) {
@@ -1178,7 +1185,7 @@ void QtNodeEditor::update_state(event_type event)
 		}
 	}
 	else if (event == (event_type::object | event_type::removed)) {
-		auto object = m_context->scene->currentObject();
+		auto object = m_context->scene->active_node();
 
 		for (auto item : m_current_scene->items()) {
 			if (!is_object_node(item)) {
@@ -1187,7 +1194,7 @@ void QtNodeEditor::update_state(event_type event)
 
 			auto obnode = static_cast<ObjectNodeItem *>(item);
 
-			if (obnode->object() == object) {
+			if (obnode->scene_node() == object) {
 				m_current_scene->removeItem(item);
 				delete item;
 				break;
@@ -1195,7 +1202,7 @@ void QtNodeEditor::update_state(event_type event)
 		}
 	}
 	else if (event == (event_type::node | event_type::added)) {
-		auto object = m_context->scene->currentObject();
+		auto object = static_cast<Object *>(m_context->scene->active_node());
 
 		if (object == nullptr) {
 			return;
@@ -1219,13 +1226,13 @@ void QtNodeEditor::update_state(event_type event)
 
 void QtNodeEditor::setActiveObject(ObjectNodeItem *node)
 {
-	m_context->scene->setActiveObject(node->object());
+	m_context->scene->set_active_node(node->scene_node());
 }
 
 void QtNodeEditor::removeNodeEx(QtNode *node)
 {
 	auto scene = m_context->scene;
-	auto object = scene->currentObject();
+	auto object = static_cast<Object *>(scene->active_node());
 	auto graph = object->graph();
 
 	const auto was_connected = node->getNode()->isLinked();
@@ -1240,43 +1247,63 @@ void QtNodeEditor::removeNodeEx(QtNode *node)
 void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to, bool notify)
 {
 	auto scene = m_context->scene;
-	auto object = scene->currentObject();
-	auto graph = object->graph();
 
-	auto node_from = from->getNode();
-	auto node_to = to->getNode();
+	if (m_context->edit_mode) {
+		auto object = static_cast<Object *>(scene->active_node());
+		auto graph = object->graph();
 
-	auto output_socket = node_from->output(socket_from.toStdString());
-	auto input_socket = node_to->input(socket_to.toStdString());
+		auto node_from = from->getNode();
+		auto node_to = to->getNode();
 
-	assert((output_socket != nullptr) && (input_socket != nullptr));
+		auto output_socket = node_from->output(socket_from.toStdString());
+		auto input_socket = node_to->input(socket_to.toStdString());
 
-	graph->connect(output_socket, input_socket);
+		assert((output_socket != nullptr) && (input_socket != nullptr));
 
-	/* Needed to prevent updating needlessly the graph when dropping a node on
-	 * a connection. */
-	if (notify) {
-		scene->evalObjectDag(m_context, object);
+		graph->connect(output_socket, input_socket);
+
+		/* Needed to prevent updating needlessly the graph when dropping a node on
+		 * a connection. */
+		if (notify) {
+			scene->evalObjectDag(m_context, object);
+		}
+	}
+	else {
+		auto node_from = static_cast<ObjectNodeItem *>(from)->scene_node();
+		auto node_to = static_cast<ObjectNodeItem *>(to)->scene_node();
+
+		scene->connect(m_context, node_from, node_to);
+		scene->notify_listeners(event_type::object | event_type::parented);
 	}
 }
 
 void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
 {
 	auto scene = m_context->scene;
-	auto object = scene->currentObject();
-	auto graph = object->graph();
 
-	auto node_from = from->getNode();
-	auto node_to = to->getNode();
+	if (m_context->edit_mode) {
+		auto object = static_cast<Object *>(scene->active_node());
+		auto graph = object->graph();
 
-	auto output_socket = node_from->output(socket_from.toStdString());
-	auto input_socket = node_to->input(socket_to.toStdString());
+		auto node_from = from->getNode();
+		auto node_to = to->getNode();
 
-	assert((output_socket != nullptr) && (input_socket != nullptr));
+		auto output_socket = node_from->output(socket_from.toStdString());
+		auto input_socket = node_to->input(socket_to.toStdString());
 
-	graph->disconnect(output_socket, input_socket);
+		assert((output_socket != nullptr) && (input_socket != nullptr));
 
-	scene->evalObjectDag(m_context, object);
+		graph->disconnect(output_socket, input_socket);
+
+		scene->evalObjectDag(m_context, object);
+	}
+	else {
+		auto node_from = static_cast<ObjectNodeItem *>(from)->scene_node();
+		auto node_to = static_cast<ObjectNodeItem *>(to)->scene_node();
+
+		scene->disconnect(m_context, node_from, node_to);
+		scene->notify_listeners(event_type::object | event_type::parented);
+	}
 }
 
 /* ************************************************************************** */

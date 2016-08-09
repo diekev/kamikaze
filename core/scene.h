@@ -33,11 +33,17 @@
 class Depsgraph;
 class EvaluationContext;
 class Node;
+class SceneNode;
 class Object;
+class Simulation;
+
+enum {
+	SCENE_OL_EXPANDED = (1 << 0),  /* Is it expanded in the outliner? */
+};
 
 class Scene : public Listened {
-	std::vector<Object *> m_objects = {};
-	Object *m_active_object = nullptr;
+	std::vector<SceneNode *> m_nodes = {};
+	SceneNode *m_active_node = nullptr;
 	int m_mode = 0;
 
 	Depsgraph *m_depsgraph = nullptr;
@@ -47,15 +53,17 @@ class Scene : public Listened {
 	int m_cur_frame = 0;
 	float m_fps = 24.0f;
 
+	int m_flags = 0;
+
 public:
 	Scene();
 	~Scene();
 
-	Object *currentObject();
-	void setActiveObject(Object *object);
+	SceneNode *active_node();
+	void set_active_node(SceneNode *node);
 
-	void addObject(Object *object);
-	void removeObject(Object *object);
+	void addObject(SceneNode *node);
+	void removeObject(SceneNode *node);
 
 	void intersect(const Ray &ray);
 
@@ -79,11 +87,20 @@ public:
 
 	void updateForNewFrame(const EvaluationContext * const context);
 
-	const std::vector<Object *> &objects() const;
+	const std::vector<SceneNode *> &nodes() const;
 
 	void tagObjectUpdate();
 
-	void evalObjectDag(const EvaluationContext * const context, Object *object);
+	void evalObjectDag(const EvaluationContext * const context, SceneNode *node);
+
+	void connect(const EvaluationContext * const context, SceneNode *node_from, SceneNode *node_to);
+	void disconnect(const EvaluationContext * const context, SceneNode *node_from, SceneNode *node_to);
+
+	int flags() const;
+	void set_flags(int flag);
+	void unset_flags(int flag);
+	bool has_flags(int flag);
+
 private:
 	bool ensureUniqueName(std::string &name) const;
 };

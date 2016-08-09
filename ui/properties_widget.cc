@@ -79,7 +79,7 @@ void PropertiesWidget::update_state(event_type event)
 	bool set_context = true;
 	auto scene = m_context->scene;
 
-	if (scene->currentObject() == nullptr) {
+	if (scene->active_node() == nullptr) {
 		return;
 	}
 
@@ -88,8 +88,8 @@ void PropertiesWidget::update_state(event_type event)
 
 	if (event_category == event_type::object) {
 		if (is_elem(event_action, event_type::added, event_type::selected)) {
-			auto object = scene->currentObject();
-			persona = object;
+			auto scene_node = scene->active_node();
+			persona = scene_node;
 		}
 		else if (is_elem(event_action, event_type::removed)) {
 			m_callback->clear();
@@ -98,7 +98,8 @@ void PropertiesWidget::update_state(event_type event)
 	}
 	else if (event_category == (event_type::node)) {
 		if (is_elem(event_action, event_type::selected)) {
-			auto object = scene->currentObject();
+			auto scene_node = scene->active_node();
+			auto object = static_cast<Object *>(scene_node);
 			auto graph = object->graph();
 			auto node = graph->active_node();
 
@@ -133,7 +134,7 @@ void PropertiesWidget::evalObjectGraph()
 {
 	auto scene = m_context->scene;
 
-	scene->evalObjectDag(m_context, scene->currentObject());
+	scene->evalObjectDag(m_context, scene->active_node());
 	scene->notify_listeners(static_cast<event_type>(-1));
 }
 
@@ -145,16 +146,16 @@ void PropertiesWidget::tagObjectUpdate()
 void PropertiesWidget::updateProperties()
 {
 	auto scene = m_context->scene;
-	auto object = scene->currentObject();
+	auto scene_node = scene->active_node();
 
-	if (!object) {
+	if (!scene_node) {
 		return;
 	}
 
 	Persona *persona = nullptr;
 
 	if (m_context->edit_mode) {
-		auto graph = object->graph();
+		auto graph = static_cast<Object *>(scene_node)->graph();
 		auto node = graph->active_node();
 
 		if (node == nullptr) {
@@ -164,7 +165,7 @@ void PropertiesWidget::updateProperties()
 		persona = node;
 	}
 	else {
-		persona = object;
+		persona = scene_node;
 	}
 
 	if (persona->update_properties()) {
