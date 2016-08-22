@@ -1095,7 +1095,7 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 		m_current_scene->installEventFilter(this);
 		m_editor_mode = EDITOR_MODE_OBJECT;
 		m_view->setScene(m_current_scene);
-		m_context->edit_mode = true;
+		m_context->eval_ctx->edit_mode = true;
 
 		action->setText(NODE_EXIT_OBJECT);
 
@@ -1107,7 +1107,7 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 		m_current_scene = m_scene_scene;
 		m_view->setScene(m_current_scene);
 		m_editor_mode = EDITOR_MODE_SCENE;
-		m_context->edit_mode = false;
+		m_context->eval_ctx->edit_mode = false;
 
 		action->setText(NODE_ENTER_OBJECT);
 
@@ -1135,7 +1135,7 @@ void QtNodeEditor::update_state(event_type event)
 		/* add node item for the object's graph output node */
 		{
 			/* Go into edit mode to make sure object graph is updated properly. */
-			m_context->edit_mode = true;
+			m_context->eval_ctx->edit_mode = true;
 
 			auto object = static_cast<Object *>(scene_node);
 			auto graph = object->graph();
@@ -1169,7 +1169,7 @@ void QtNodeEditor::update_state(event_type event)
 			}
 
 			/* Leave edit mode. */
-			m_context->edit_mode = false;
+			m_context->eval_ctx->edit_mode = false;
 		}
 
 		if (this->m_editor_mode == EDITOR_MODE_SCENE) {
@@ -1240,7 +1240,7 @@ void QtNodeEditor::removeNodeEx(QtNode *node)
 	graph->remove(node->getNode());
 
 	if (was_connected) {
-		scene->evalObjectDag(m_context, object);
+		scene->evalObjectDag(*m_context, object);
 	}
 }
 
@@ -1248,7 +1248,7 @@ void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNo
 {
 	auto scene = m_context->scene;
 
-	if (m_context->edit_mode) {
+	if (m_context->eval_ctx->edit_mode) {
 		auto object = static_cast<Object *>(scene->active_node());
 		auto graph = object->graph();
 
@@ -1265,14 +1265,14 @@ void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNo
 		/* Needed to prevent updating needlessly the graph when dropping a node on
 		 * a connection. */
 		if (notify) {
-			scene->evalObjectDag(m_context, object);
+			scene->evalObjectDag(*m_context, object);
 		}
 	}
 	else {
 		auto node_from = static_cast<ObjectNodeItem *>(from)->scene_node();
 		auto node_to = static_cast<ObjectNodeItem *>(to)->scene_node();
 
-		scene->connect(m_context, node_from, node_to);
+		scene->connect(*m_context, node_from, node_to);
 		scene->notify_listeners(event_type::object | event_type::parented);
 	}
 }
@@ -1281,7 +1281,7 @@ void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, Q
 {
 	auto scene = m_context->scene;
 
-	if (m_context->edit_mode) {
+	if (m_context->eval_ctx->edit_mode) {
 		auto object = static_cast<Object *>(scene->active_node());
 		auto graph = object->graph();
 
@@ -1295,13 +1295,13 @@ void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, Q
 
 		graph->disconnect(output_socket, input_socket);
 
-		scene->evalObjectDag(m_context, object);
+		scene->evalObjectDag(*m_context, object);
 	}
 	else {
 		auto node_from = static_cast<ObjectNodeItem *>(from)->scene_node();
 		auto node_to = static_cast<ObjectNodeItem *>(to)->scene_node();
 
-		scene->disconnect(m_context, node_from, node_to);
+		scene->disconnect(*m_context, node_from, node_to);
 		scene->notify_listeners(event_type::object | event_type::parented);
 	}
 }

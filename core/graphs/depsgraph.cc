@@ -82,7 +82,7 @@ void DepsObjectNode::pre_process()
 	m_object->collection(nullptr);
 }
 
-void DepsObjectNode::process(const EvaluationContext * const /*context*/, TaskNotifier */*notifier*/)
+void DepsObjectNode::process(const Context & /*context*/, TaskNotifier */*notifier*/)
 {
 	/* The graph should already have been updated. */
 	auto graph = m_object->graph();
@@ -116,7 +116,7 @@ void ObjectGraphDepsNode::pre_process()
 	m_graph->clear_cache();
 }
 
-void ObjectGraphDepsNode::process(const EvaluationContext * const context, TaskNotifier *notifier)
+void ObjectGraphDepsNode::process(const Context &context, TaskNotifier *notifier)
 {
 	auto output_node = m_graph->output();
 
@@ -148,13 +148,16 @@ void ObjectGraphDepsNode::process(const EvaluationContext * const context, TaskN
 
 	for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter) {
 		Node *node = *iter;
+		PrimitiveCollection *collection = nullptr;
 
 		if (node->inputs().empty()) {
-			node->buildCollection(context);
+			collection = new PrimitiveCollection(context.primitive_factory);
 		}
 		else {
-			node->collection(node->getInputCollection(0ul));
+			collection = node->getInputCollection(0ul);
 		}
+
+		node->collection(collection);
 
 		if (node->collection()) {
 			node->process();
@@ -188,7 +191,7 @@ const char *ObjectGraphDepsNode::name() const
 
 /* ************************************************************************** */
 
-void TimeDepsNode::process(const EvaluationContext * const /*context*/, TaskNotifier */*notifier*/)
+void TimeDepsNode::process(const Context & /*context*/, TaskNotifier */*notifier*/)
 {
 	/* Pass. */
 }
@@ -207,18 +210,18 @@ class GraphEvalTask : public Task {
 	DepsNode *m_root;
 
 public:
-	GraphEvalTask(Depsgraph *graph, const EvaluationContext * const context, DepsNode *root);
+	GraphEvalTask(Depsgraph *graph, const Context &context, DepsNode *root);
 
-	void start(const EvaluationContext * const context) override;
+	void start(const Context &context) override;
 };
 
-GraphEvalTask::GraphEvalTask(Depsgraph *graph, const EvaluationContext * const context, DepsNode *root)
+GraphEvalTask::GraphEvalTask(Depsgraph *graph, const Context &context, DepsNode *root)
     : Task(context)
     , m_graph(graph)
     , m_root(root)
 {}
 
-void GraphEvalTask::start(const EvaluationContext * const context)
+void GraphEvalTask::start(const Context &context)
 {
 	m_graph->evaluate_ex(context, m_root, m_notifier.get());
 }
@@ -386,7 +389,7 @@ void Depsgraph::connect_to_time(SceneNode *scene_node)
 	connect(m_time_node->output(), node->input());
 }
 
-void Depsgraph::evaluate(const EvaluationContext * const context, SceneNode *scene_node)
+void Depsgraph::evaluate(const Context &context, SceneNode *scene_node)
 {
 	auto node = find_node(scene_node, true);
 
@@ -410,7 +413,7 @@ void Depsgraph::evaluate(const EvaluationContext * const context, SceneNode *sce
 	tbb::task::enqueue(*t);
 }
 
-void Depsgraph::evaluate_for_time_change(const EvaluationContext * const context)
+void Depsgraph::evaluate_for_time_change(const Context &context)
 {
 	m_need_update |= (m_state != DEG_STATE_TIME);
 	m_state = DEG_STATE_TIME;
@@ -418,7 +421,7 @@ void Depsgraph::evaluate_for_time_change(const EvaluationContext * const context
 	evaluate_ex(context, m_time_node, nullptr);
 }
 
-void Depsgraph::evaluate_ex(const EvaluationContext* const context, DepsNode *root, TaskNotifier *notifier)
+void Depsgraph::evaluate_ex(const Context &context, DepsNode *root, TaskNotifier *notifier)
 {
 	if (m_need_update) {
 		build(root);
@@ -445,7 +448,7 @@ void Depsgraph::evaluate_ex(const EvaluationContext* const context, DepsNode *ro
 		node->process(context, notifier);
 	}
 
-	context->scene->notify_listeners(static_cast<event_type>(-1));
+	context.scene->notify_listeners(static_cast<event_type>(-1));
 }
 
 const std::vector<DepsNode *> &Depsgraph::nodes() const

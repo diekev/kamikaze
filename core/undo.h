@@ -29,7 +29,7 @@
 #include <stack>
 #include <unordered_map>
 
-class EvaluationContext;
+class Context;
 class ParamCallback;
 
 class Command {
@@ -39,7 +39,7 @@ protected:
 public:
 	virtual ~Command() = default;
 
-	virtual void execute(EvaluationContext *context) = 0;
+	virtual void execute(const Context &context) = 0;
 	virtual void undo() = 0;
 	virtual void redo() = 0;
 
@@ -53,7 +53,7 @@ class CommandManager final {
 public:
 	~CommandManager();
 
-	void execute(Command *command, EvaluationContext *context);
+	void execute(Command *command, const Context &context);
 	void undo();
 	void redo();
 };

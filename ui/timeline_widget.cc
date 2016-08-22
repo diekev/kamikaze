@@ -210,7 +210,7 @@ void TimeLineWidget::update_state(event_type event)
 	m_fps->setValue(scene->framesPerSecond());
 
 	/* Start or stop the animation. */
-	if (m_context->animation) {
+	if (m_context->eval_ctx->animation) {
 		m_timer->start(1000 / m_fps->value());
 	}
 	else {
@@ -234,7 +234,7 @@ void TimeLineWidget::setCurrentFrame(int value) const
 {
 	auto scene = m_context->scene;
 	scene->currentFrame(value);
-	scene->updateForNewFrame(m_context);
+	scene->updateForNewFrame(*m_context);
 }
 
 void TimeLineWidget::setFPS(double value) const
@@ -247,51 +247,51 @@ void TimeLineWidget::goToStartFrame() const
 {
 	auto scene = m_context->scene;
 	scene->currentFrame(scene->startFrame());
-	scene->updateForNewFrame(m_context);
+	scene->updateForNewFrame(*m_context);
 }
 
 void TimeLineWidget::goToEndFrame() const
 {
 	auto scene = m_context->scene;
 	scene->currentFrame(scene->endFrame());
-	scene->updateForNewFrame(m_context);
+	scene->updateForNewFrame(*m_context);
 }
 
 void TimeLineWidget::playForward()
 {
-	m_context->animation = true;
-	m_context->time_direction = TIME_DIR_FORWARD;
+	m_context->eval_ctx->animation = true;
+	m_context->eval_ctx->time_direction = TIME_DIR_FORWARD;
 	m_context->scene->notify_listeners(event_type::time | event_type::modified);
 }
 
 void TimeLineWidget::playBackward()
 {
-	m_context->animation = true;
-	m_context->time_direction = TIME_DIR_BACKWARD;
+	m_context->eval_ctx->animation = true;
+	m_context->eval_ctx->time_direction = TIME_DIR_BACKWARD;
 	m_context->scene->notify_listeners(event_type::time | event_type::modified);
 }
 
 void TimeLineWidget::stepForward()
 {
-	m_context->time_direction = TIME_DIR_FORWARD;
+	m_context->eval_ctx->time_direction = TIME_DIR_FORWARD;
 
 	auto scene = m_context->scene;
 	scene->currentFrame(scene->currentFrame() + 1);
-	scene->updateForNewFrame(m_context);
+	scene->updateForNewFrame(*m_context);
 }
 
 void TimeLineWidget::stepBackward()
 {
-	m_context->time_direction = TIME_DIR_BACKWARD;
+	m_context->eval_ctx->time_direction = TIME_DIR_BACKWARD;
 
 	auto scene = m_context->scene;
 	scene->currentFrame(scene->currentFrame() - 1);
-	scene->updateForNewFrame(m_context);
+	scene->updateForNewFrame(*m_context);
 }
 
 void TimeLineWidget::stopAnimation()
 {
-	m_context->animation = false;
+	m_context->eval_ctx->animation = false;
 	m_context->scene->notify_listeners(event_type::time | event_type::modified);
 }
 
@@ -300,7 +300,7 @@ void TimeLineWidget::updateFrame() const
 	auto scene = m_context->scene;
 	auto value = scene->currentFrame();
 
-	if (m_context->time_direction == TIME_DIR_FORWARD) {
+	if (m_context->eval_ctx->time_direction == TIME_DIR_FORWARD) {
 		++value;
 
 		if (value > scene->endFrame()) {
@@ -316,5 +316,5 @@ void TimeLineWidget::updateFrame() const
 	}
 
 	scene->currentFrame(value);
-	scene->updateForNewFrame(m_context);
+	scene->updateForNewFrame(*m_context);
 }

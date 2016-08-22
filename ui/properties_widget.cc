@@ -134,7 +134,7 @@ void PropertiesWidget::evalObjectGraph()
 {
 	auto scene = m_context->scene;
 
-	scene->evalObjectDag(m_context, scene->active_node());
+	scene->evalObjectDag(*m_context, scene->active_node());
 	scene->notify_listeners(static_cast<event_type>(-1));
 }
 
@@ -154,7 +154,7 @@ void PropertiesWidget::updateProperties()
 
 	Persona *persona = nullptr;
 
-	if (m_context->edit_mode) {
+	if (m_context->eval_ctx->edit_mode) {
 		auto graph = static_cast<Object *>(scene_node)->graph();
 		auto node = graph->active_node();
 
@@ -242,7 +242,7 @@ void PropertiesWidget::drawProperties(Persona *persona, bool set_context)
 	}
 
 	if (set_context) {
-		if (m_context->edit_mode) {
+		if (m_context->eval_ctx->edit_mode) {
 			m_callback->setContext(this, SLOT(evalObjectGraph()));
 		}
 		else {

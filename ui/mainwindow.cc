@@ -63,8 +63,9 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	m_progress_bar->setVisible(false);
 
 	/* setup context */
-	m_context.edit_mode = false;
-	m_context.animation = false;
+	m_eval_context.edit_mode = false;
+	m_eval_context.animation = false;
+	m_context.eval_ctx = &m_eval_context;
 	m_context.scene = m_main->scene();
 	m_context.node_factory = m_main->node_factory();
 	m_context.primitive_factory = m_main->primitive_factory();
@@ -243,7 +244,7 @@ void MainWindow::handleCommand()
 
 	/* Execute the command in the current context, the manager will push the
 	* command on the undo stack. */
-	m_command_manager->execute(cmd, &m_context);
+	m_command_manager->execute(cmd, m_context);
 }
 
 void MainWindow::addTimeLineWidget()
