@@ -29,7 +29,7 @@
 #include <QGLWidget>
 #include <stack>
 
-#include "context.h"
+#include "widgetbase.h"
 #include "util/util_input.h"
 
 class Camera;
@@ -62,7 +62,7 @@ public:
 	}
 };
 
-class Viewer : public QGLWidget, public ContextListener {
+class Viewer : public QGLWidget {
 	Q_OBJECT
 
 	int m_mouse_button = MOUSE_NONE;
@@ -78,6 +78,9 @@ class Viewer : public QGLWidget, public ContextListener {
 
 	MatrixStack m_stack = {};
 
+	Context *m_context;
+	WidgetBase *m_base;
+
 	/* Get the world space position of the given point. */
 	glm::vec3 unproject(const glm::vec3 &pos) const;
 
@@ -88,8 +91,6 @@ public Q_SLOTS:
 public:
 	explicit Viewer(QWidget *parent = nullptr);
 	~Viewer();
-
-	void update_state(event_type event) override;
 
 	void initializeGL();
 	void paintGL();
@@ -106,4 +107,27 @@ public:
 
 	/* Select the object at screen pos (x, y). */
 	void selectObject(int x, int y) const;
+
+	void set_context(Context *context)
+	{
+		m_context = context;
+	}
+
+	void set_base(WidgetBase *base)
+	{
+		m_base = base;
+	}
+};
+
+/* ************************************************************************** */
+
+class ViewerWidget : public WidgetBase {
+	Q_OBJECT
+
+	Viewer *m_viewer;
+
+public:
+	explicit ViewerWidget(QWidget *parent = nullptr);
+
+	void update_state(event_type event) override;
 };

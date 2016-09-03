@@ -41,7 +41,7 @@ public:
 	AddObjectCmd() = default;
 	~AddObjectCmd();
 
-	void execute(EvaluationContext *context) override;
+	void execute(const Context &context) override;
 	void undo() override;
 	void redo() override;
 };
@@ -54,7 +54,7 @@ public:
 	AddNodeCmd() = default;
 	~AddNodeCmd() = default;
 
-	void execute(EvaluationContext *context) override;
+	void execute(const Context &context) override;
 	void undo() override;
 	void redo() override;
 };
@@ -67,7 +67,7 @@ public:
 	AddPresetObjectCmd() = default;
 	~AddPresetObjectCmd() = default;
 
-	void execute(EvaluationContext *context) override;
+	void execute(const Context &context) override;
 	void undo() override;
 	void redo() override;
 };

@@ -23,6 +23,7 @@
  */
 
 #include <QApplication>
+#include <QFile>
 #include <QSplashScreen>
 
 #include "core/kamikaze_main.h"
@@ -33,6 +34,12 @@ int main(int argc, char *argv[])
 	QApplication a(argc, argv);
 	QCoreApplication::setOrganizationName("giraffeenfeu");
 	QCoreApplication::setApplicationName("Kamikaze");
+
+	QFile file("styles/main.qss");
+	file.open(QFile::ReadOnly);
+	QString style_sheet = QLatin1String(file.readAll());
+
+	qApp->setStyleSheet(style_sheet);
 
 	auto pixmap = QPixmap(600, 600);
 	pixmap.fill(Qt::gray);

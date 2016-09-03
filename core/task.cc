@@ -56,8 +56,8 @@ void TaskNotifier::signalEnd()
 
 /* ************************ */
 
-Task::Task(const EvaluationContext * const context)
-    : m_notifier(new TaskNotifier(context->main_window))
+Task::Task(const Context &context)
+    : m_notifier(new TaskNotifier(context.main_window))
     , m_context(context)
 {}
 

@@ -65,12 +65,14 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	m_progress_bar->setVisible(false);
 
 	/* setup context */
-	m_context.edit_mode = false;
-	m_context.animation = false;
+	m_eval_context.edit_mode = false;
+	m_eval_context.animation = false;
+	m_context.eval_ctx = &m_eval_context;
 	m_context.scene = m_main->scene();
 	m_context.node_factory = m_main->node_factory();
 	m_context.primitive_factory = m_main->primitive_factory();
 	m_context.main_window = this;
+	m_context.active_widget = nullptr;
 
 	m_has_glwindow = false;
 
@@ -80,8 +82,6 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	addTimeLineWidget();
 
 	setCentralWidget(nullptr);
-
-	setupPalette();
 }
 
 MainWindow::~MainWindow()
@@ -259,12 +259,12 @@ void MainWindow::handleCommand()
 
 	/* Execute the command in the current context, the manager will push the
 	* command on the undo stack. */
-	m_command_manager->execute(cmd, &m_context);
+	m_command_manager->execute(cmd, m_context);
 }
 
 void MainWindow::addTimeLineWidget()
 {
-	QDockWidget *dock = new QDockWidget("Time Line", this);
+	auto dock = new QDockWidget("Time Line", this);
 	dock->setAttribute(Qt::WA_DeleteOnClose);
 
 	TimeLineWidget *time_line = new TimeLineWidget(dock);
@@ -279,7 +279,7 @@ void MainWindow::addTimeLineWidget()
 
 void MainWindow::addGraphEditorWidget()
 {
-	QDockWidget *dock = new QDockWidget("Graph Editor", this);
+	auto dock = new QDockWidget("Graph Editor", this);
 	dock->setAttribute(Qt::WA_DeleteOnClose);
 
 	QtNodeEditor *graph_editor = new QtNodeEditor(dock);
@@ -300,7 +300,7 @@ void MainWindow::addGLViewerWidget()
 	if (m_viewer_dock == nullptr) {
 		m_viewer_dock = new QDockWidget("Viewport", this);
 
-		Viewer *glviewer = new Viewer(m_viewer_dock);
+		ViewerWidget *glviewer = new ViewerWidget(m_viewer_dock);
 		glviewer->listens(&m_context);
 		glviewer->update_state(static_cast<event_type>(-1));
 
@@ -315,7 +315,7 @@ void MainWindow::addGLViewerWidget()
 
 void MainWindow::addOutlinerWidget()
 {
-	QDockWidget *dock = new QDockWidget("Outliner", this);
+	auto dock = new QDockWidget("Outliner", this);
 	dock->setAttribute(Qt::WA_DeleteOnClose);
 
 	OutlinerTreeWidget *outliner = new OutlinerTreeWidget(dock);
@@ -330,7 +330,7 @@ void MainWindow::addOutlinerWidget()
 
 void MainWindow::addGraphOutlinerWidget()
 {
-	QDockWidget *outliner_dock = new QDockWidget("Outliner", this);
+	auto outliner_dock = new QDockWidget("Outliner", this);
 	outliner_dock->setAttribute(Qt::WA_DeleteOnClose);
 
 	OutlinerTreeWidget *outliner = new OutlinerTreeWidget(outliner_dock);
@@ -342,7 +342,7 @@ void MainWindow::addGraphOutlinerWidget()
 
 	addDockWidget(Qt::RightDockWidgetArea, outliner_dock);
 
-	QDockWidget *graph_dock = new QDockWidget("Graph Editor", this);
+	auto graph_dock = new QDockWidget("Graph Editor", this);
 	graph_dock->setAttribute(Qt::WA_DeleteOnClose);
 
 	QtNodeEditor *graph_editor = new QtNodeEditor(graph_dock);
@@ -362,7 +362,7 @@ void MainWindow::addGraphOutlinerWidget()
 
 void MainWindow::addPropertiesWidget()
 {
-	QDockWidget *dock = new QDockWidget("Properties", this);
+	auto dock = new QDockWidget("Properties", this);
 	dock->setAttribute(Qt::WA_DeleteOnClose);
 
 	PropertiesWidget *properties = new PropertiesWidget(dock);
@@ -373,74 +373,6 @@ void MainWindow::addPropertiesWidget()
 	dock->setAllowedAreas(Qt::AllDockWidgetAreas);
 
 	addDockWidget(Qt::RightDockWidgetArea, dock);
-}
-
-void MainWindow::setupPalette()
-{
-	QPalette palette;
-	QBrush brush(QColor(255, 255, 255, 255));
-	brush.setStyle(Qt::SolidPattern);
-	palette.setBrush(QPalette::Active, QPalette::WindowText, brush);
-	QBrush brush1(QColor(127, 127, 127, 255));
-	brush1.setStyle(Qt::SolidPattern);
-	palette.setBrush(QPalette::Active, QPalette::Button, brush1);
-	QBrush brush2(QColor(191, 191, 191, 255));
-	brush2.setStyle(Qt::SolidPattern);
-	palette.setBrush(QPalette::Active, QPalette::Light, brush2);
-	QBrush brush3(QColor(159, 159, 159, 255));
-	brush3.setStyle(Qt::SolidPattern);
-	palette.setBrush(QPalette::Active, QPalette::Midlight, brush3);
-	QBrush brush4(QColor(63, 63, 63, 255));
-	brush4.setStyle(Qt::SolidPattern);
-	palette.setBrush(QPalette::Active, QPalette::Dark, brush4);
-	QBrush brush5(QColor(84, 84, 84, 255));
-	brush5.setStyle(Qt::SolidPattern);
-	palette.setBrush(QPalette::Active, QPalette::Mid, brush5);
-	palette.setBrush(QPalette::Active, QPalette::Text, brush);
-	palette.setBrush(QPalette::Active, QPalette::BrightText, brush);
-	palette.setBrush(QPalette::Active, QPalette::ButtonText, brush);
-	QBrush brush6(QColor(0, 0, 0, 255));
-	brush6.setStyle(Qt::SolidPattern);
-	palette.setBrush(QPalette::Active, QPalette::Base, brush6);
-	palette.setBrush(QPalette::Active, QPalette::Window, brush1);
-	palette.setBrush(QPalette::Active, QPalette::Shadow, brush6);
-	palette.setBrush(QPalette::Active, QPalette::AlternateBase, brush4);
-	QBrush brush7(QColor(255, 255, 220, 255));
-	brush7.setStyle(Qt::SolidPattern);
-	palette.setBrush(QPalette::Active, QPalette::ToolTipBase, brush7);
-	palette.setBrush(QPalette::Active, QPalette::ToolTipText, brush6);
-	palette.setBrush(QPalette::Inactive, QPalette::WindowText, brush);
-	palette.setBrush(QPalette::Inactive, QPalette::Button, brush1);
-	palette.setBrush(QPalette::Inactive, QPalette::Light, brush2);
-	palette.setBrush(QPalette::Inactive, QPalette::Midlight, brush3);
-	palette.setBrush(QPalette::Inactive, QPalette::Dark, brush4);
-	palette.setBrush(QPalette::Inactive, QPalette::Mid, brush5);
-	palette.setBrush(QPalette::Inactive, QPalette::Text, brush);
-	palette.setBrush(QPalette::Inactive, QPalette::BrightText, brush);
-	palette.setBrush(QPalette::Inactive, QPalette::ButtonText, brush);
-	palette.setBrush(QPalette::Inactive, QPalette::Base, brush6);
-	palette.setBrush(QPalette::Inactive, QPalette::Window, brush1);
-	palette.setBrush(QPalette::Inactive, QPalette::Shadow, brush6);
-	palette.setBrush(QPalette::Inactive, QPalette::AlternateBase, brush4);
-	palette.setBrush(QPalette::Inactive, QPalette::ToolTipBase, brush7);
-	palette.setBrush(QPalette::Inactive, QPalette::ToolTipText, brush6);
-	palette.setBrush(QPalette::Disabled, QPalette::WindowText, brush4);
-	palette.setBrush(QPalette::Disabled, QPalette::Button, brush1);
-	palette.setBrush(QPalette::Disabled, QPalette::Light, brush2);
-	palette.setBrush(QPalette::Disabled, QPalette::Midlight, brush3);
-	palette.setBrush(QPalette::Disabled, QPalette::Dark, brush4);
-	palette.setBrush(QPalette::Disabled, QPalette::Mid, brush5);
-	palette.setBrush(QPalette::Disabled, QPalette::Text, brush4);
-	palette.setBrush(QPalette::Disabled, QPalette::BrightText, brush);
-	palette.setBrush(QPalette::Disabled, QPalette::ButtonText, brush4);
-	palette.setBrush(QPalette::Disabled, QPalette::Base, brush1);
-	palette.setBrush(QPalette::Disabled, QPalette::Window, brush1);
-	palette.setBrush(QPalette::Disabled, QPalette::Shadow, brush6);
-	palette.setBrush(QPalette::Disabled, QPalette::AlternateBase, brush1);
-	palette.setBrush(QPalette::Disabled, QPalette::ToolTipBase, brush7);
-	palette.setBrush(QPalette::Disabled, QPalette::ToolTipText, brush6);
-
-	setPalette(palette);
 }
 
 void MainWindow::dumpGraph()

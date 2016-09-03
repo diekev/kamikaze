@@ -173,17 +173,17 @@ void Scene::set_active_node(SceneNode *node)
 	notify_listeners(event_type::object | event_type::selected);
 }
 
-void Scene::updateForNewFrame(const EvaluationContext * const context)
+void Scene::updateForNewFrame(const Context &context)
 {
 	m_depsgraph->evaluate_for_time_change(context);
 }
 
-void Scene::evalObjectDag(const EvaluationContext * const context, SceneNode *node)
+void Scene::evalObjectDag(const Context &context, SceneNode *node)
 {
 	m_depsgraph->evaluate(context, node);
 }
 
-void Scene::connect(const EvaluationContext * const context, SceneNode *node_from, SceneNode *node_to)
+void Scene::connect(const Context &context, SceneNode *node_from, SceneNode *node_to)
 {
 	auto from_type = node_from->type();
 	auto to_type = node_to->type();
@@ -221,7 +221,7 @@ void Scene::connect(const EvaluationContext * const context, SceneNode *node_fro
 	}
 }
 
-void Scene::disconnect(const EvaluationContext * const context, SceneNode *node_from, SceneNode *node_to)
+void Scene::disconnect(const Context &context, SceneNode *node_from, SceneNode *node_to)
 {
 	auto from_ob = static_cast<Object *>(node_from);
 	auto to_ob = static_cast<Object *>(node_to);

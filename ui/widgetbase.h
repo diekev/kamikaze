@@ -22,54 +22,27 @@
  *
  */
 
-#include "undo.h"
+#pragma once
 
-#include "util/util_memory.h"
+#include <QWidget>
 
-void Command::setName(const std::string &name)
-{
-	m_name = name;
-}
+#include "context.h"
 
-CommandManager::~CommandManager()
-{
-	release_stack_memory(m_undo_commands);
-	release_stack_memory(m_redo_commands);
-}
+class QFrame;
+class QHBoxLayout;
 
-void CommandManager::execute(Command *command, const Context &context)
-{
-	command->execute(context);
-	m_undo_commands.push(command);
-}
+class WidgetBase : public QWidget, public ContextListener {
+protected:
+	QFrame *m_frame;
+	QHBoxLayout *m_layout;
+	QHBoxLayout *m_main_layout;
 
-static void undo_redo_ex(std::stack<Command *> &pop_stack,
-                         std::stack<Command *> &push_stack,
-                         bool redo)
-{
-	if (pop_stack.empty()) {
-		return;
-	}
+public:
+	explicit WidgetBase(QWidget *parent = nullptr);
+	virtual ~WidgetBase() = default;
 
-	auto command = pop_stack.top();
-	pop_stack.pop();
+	void active(bool yesno);
+	void set_active();
 
-	if (redo) {
-		command->redo();
-	}
-	else {
-		command->undo();
-	}
-
-	push_stack.push(command);
-}
-
-void CommandManager::undo()
-{
-	undo_redo_ex(m_undo_commands, m_redo_commands, false);
-}
-
-void CommandManager::redo()
-{
-	undo_redo_ex(m_redo_commands, m_undo_commands, true);
-}
+	void mousePressEvent(QMouseEvent *e) override;
+};

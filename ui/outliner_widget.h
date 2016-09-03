@@ -26,7 +26,7 @@
 
 #include <QTreeWidget>
 
-#include "context.h"
+#include "widgetbase.h"
 
 class Node;
 class Scene;
@@ -75,15 +75,32 @@ public:
 
 /* ************************************************************************** */
 
-class OutlinerTreeWidget : public QTreeWidget, public ContextListener {
+class TreeWidget : public QTreeWidget {
+	WidgetBase *m_base;
+
+public:
+	explicit TreeWidget(QWidget *parent = nullptr);
+
+	void set_base(WidgetBase *base);
+
+	void mousePressEvent(QMouseEvent *e) override;
+	void dropEvent(QDropEvent *event) override;
+};
+
+/* ************************************************************************** */
+
+/* This is to add a level of indirection because we can't have an object derive
+ * from both QTreeWidget and WidgetBase, and we can't apparently use virtual
+ * inheritance with Qt classes. */
+class OutlinerTreeWidget : public WidgetBase {
 	Q_OBJECT
+
+	TreeWidget *m_tree_widget;
 
 public:
 	explicit OutlinerTreeWidget(QWidget *parent = nullptr);
 
 	void update_state(event_type event) override;
-
-	void dropEvent(QDropEvent *event) override;
 
 public Q_SLOTS:
 	void handleItemCollapsed(QTreeWidgetItem *item);

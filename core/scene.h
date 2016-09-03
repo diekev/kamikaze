@@ -85,16 +85,16 @@ public:
 	float framesPerSecond() const;
 	void framesPerSecond(float value);
 
-	void updateForNewFrame(const EvaluationContext * const context);
+	void updateForNewFrame(const Context &context);
 
 	const std::vector<SceneNode *> &nodes() const;
 
 	void tagObjectUpdate();
 
-	void evalObjectDag(const EvaluationContext * const context, SceneNode *node);
+	void evalObjectDag(const Context &context, SceneNode *node);
 
-	void connect(const EvaluationContext * const context, SceneNode *node_from, SceneNode *node_to);
-	void disconnect(const EvaluationContext * const context, SceneNode *node_from, SceneNode *node_to);
+	void connect(const Context &context, SceneNode *node_from, SceneNode *node_to);
+	void disconnect(const Context &context, SceneNode *node_from, SceneNode *node_to);
 
 	int flags() const;
 	void set_flags(int flag);

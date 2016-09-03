@@ -51,9 +51,9 @@ ContextListener::~ContextListener()
 	}
 }
 
-void ContextListener::listens(EvaluationContext *eval_ctx)
+void ContextListener::listens(Context *ctx)
 {
-	m_context = eval_ctx;
+	m_context = ctx;
 	m_context->scene->add_listener(this);
 }
 

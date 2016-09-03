@@ -24,20 +24,10 @@
 
 #pragma once
 
-#include <glm/glm.hpp>
-#include <memory>
-
-#include <QString>
-
-#include <kamikaze/primitive.h>
-
 #include "graphs/scene_node.h"
 
-class EvaluationContext;
 class Graph;
 class Node;
-class ParamCallback;
-class Primitive;
 class PrimitiveCollection;
 
 class Object : public SceneNode {

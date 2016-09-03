@@ -38,11 +38,6 @@ enum {
 };
 
 struct EvaluationContext {
-	Scene *scene;
-	PrimitiveFactory *primitive_factory;
-	NodeFactory *node_factory;
-	MainWindow *main_window;
-
 	/** Whether we are currently editing the graph of an object. */
 	bool edit_mode;
 
