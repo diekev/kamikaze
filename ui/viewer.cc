@@ -314,6 +314,8 @@ void Viewer::drawGrid(bool b)
 	update();
 }
 
+/* ************************************************************************** */
+
 ViewerWidget::ViewerWidget(QWidget *parent)
     : WidgetBase(parent)
     , m_viewer(new Viewer(this))

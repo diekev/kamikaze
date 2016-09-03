@@ -90,7 +90,7 @@ TimeLineWidget::TimeLineWidget(QWidget *parent)
 	m_start_frame->setToolTip("Start Frame");
 
 	m_end_frame = new QSpinBox(m_frame);
-	m_end_frame->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+	m_end_frame->setAlignment(Qt::AlignRight | Qt::AlignTrailing | Qt::AlignVCenter);
 	m_end_frame->setMaximum(500000);
 	m_end_frame->setValue(250);
 	m_start_frame->setToolTip("End Frame");
@@ -155,7 +155,7 @@ TimeLineWidget::TimeLineWidget(QWidget *parent)
 	/* --------------------------------- fps -------------------------------- */
 
 	m_fps = new QDoubleSpinBox(m_frame);
-	m_fps->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+	m_fps->setAlignment(Qt::AlignRight | Qt::AlignTrailing | Qt::AlignVCenter);
 	m_fps->setValue(24);
 	m_fps->setToolTip("Frame Rate");
 
@@ -163,7 +163,7 @@ TimeLineWidget::TimeLineWidget(QWidget *parent)
 
 	m_vbox_layout->addLayout(m_tc_layout);
 
-	/* ------------------------- finalize ------------------------- */
+	/* ------------------------------ finalize ------------------------------ */
 
 	setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
