@@ -31,10 +31,12 @@
 #include <kamikaze/context.h>
 
 #include <QApplication>
+#include <QCheckBox>
 #include <QColorDialog>
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QKeyEvent>
+#include <QPushButton>
 #include <QTimer>
 
 #include "camera.h"
@@ -315,8 +317,26 @@ ViewerWidget::ViewerWidget(QWidget *parent)
     : WidgetBase(parent)
     , m_viewer(new Viewer(this))
 {
-	m_main_layout->addWidget(m_viewer);
 	m_viewer->set_base(this);
+
+	auto vert_layout = new QVBoxLayout();
+	vert_layout->addWidget(m_viewer);
+
+	auto horiz_layout = new QHBoxLayout();
+
+	auto push_button = new QPushButton("Change Color");
+	push_button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+	connect(push_button, SIGNAL(clicked()), m_viewer, SLOT(changeBackground()));
+	horiz_layout->addWidget(push_button);
+
+	auto check = new QCheckBox("Draw Box");
+	check->setChecked(true);
+	connect(check, SIGNAL(toggled(bool)), m_viewer, SLOT(drawGrid(bool)));
+	horiz_layout->addWidget(check);
+
+	vert_layout->addLayout(horiz_layout);
+
+	m_main_layout->addLayout(vert_layout);
 }
 
 void ViewerWidget::update_state(event_type /*event*/)
