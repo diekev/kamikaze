@@ -27,6 +27,7 @@
 #include <QMainWindow>
 
 #include <kamikaze/context.h>
+#include "core/context.h"
 
 #include "core/undo.h"
 
@@ -46,7 +47,8 @@ class MainWindow : public QMainWindow {
 
 	bool m_has_glwindow;
 
-	EvaluationContext m_context;
+	Context m_context;
+	EvaluationContext m_eval_context;
 
 	QMenu *m_add_object_menu;
 	QMenu *m_add_nodes_menu;
@@ -54,6 +56,8 @@ class MainWindow : public QMainWindow {
 	QMenu *m_add_window_menu;
 
 	QToolBar *m_tool_bar;
+
+	QDockWidget *m_viewer_dock = nullptr;
 
 public:
 	explicit MainWindow(Main *main, QWidget *parent = nullptr);
@@ -73,8 +77,6 @@ private:
 	void generatePresetMenu();
 	void generateDebugMenu();
 
-	void setupPalette();
-
 private Q_SLOTS:
 	/* Undo & commands */
 	void undo() const;
@@ -87,7 +89,6 @@ private Q_SLOTS:
 	void addGLViewerWidget();
 	void addOutlinerWidget();
 	void addPropertiesWidget();
-	void viewerDeleted();
 
 	void dumpGraph();
 };

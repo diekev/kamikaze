@@ -24,31 +24,25 @@
 
 #pragma once
 
-#include <kamikaze/nodes.h>
-#include <kamikaze/primitive.h>
+#include <QWidget>
 
-#include <utils/filesystem.h>
+#include "context.h"
 
-#include "scene.h"
+class QFrame;
+class QHBoxLayout;
 
-class Main final {
-	std::vector<filesystem::shared_library> m_plugins;
-
-	std::unique_ptr<PrimitiveFactory> m_primitive_factory;
-	std::unique_ptr<NodeFactory> m_node_factory;
-	std::unique_ptr<Scene> m_scene;
+class WidgetBase : public QWidget, public ContextListener {
+protected:
+	QFrame *m_frame;
+	QHBoxLayout *m_layout;
+	QHBoxLayout *m_main_layout;
 
 public:
-	Main();
+	explicit WidgetBase(QWidget *parent = nullptr);
+	virtual ~WidgetBase() = default;
 
-	/* Disallow copy. */
-	Main(const Main &other) = delete;
-	Main &operator=(const Main &other) = delete;
+	void active(bool yesno);
+	void set_active();
 
-	void initialize();
-	void loadPlugins();
-
-	PrimitiveFactory *primitive_factory() const;
-	NodeFactory *node_factory() const;
-	Scene *scene() const;
+	void mousePressEvent(QMouseEvent *e) override;
 };

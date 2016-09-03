@@ -26,22 +26,25 @@
 
 #include <glm/glm.hpp>
 
+#include "primitive.h"
+
 class MainWindow;
 class NodeFactory;
-class PrimitiveFactory;
 class Scene;
 
-struct EvaluationContext {
-	Scene *scene;
-	PrimitiveFactory *primitive_factory;
-	NodeFactory *node_factory;
-	MainWindow *main_window;
+enum {
+	TIME_DIR_FORWARD = 0,
+	TIME_DIR_BACKWARD = 1,
+};
 
+struct EvaluationContext {
 	/** Whether we are currently editing the graph of an object. */
 	bool edit_mode;
 
 	/** Whether we are currently playing an animation. */
 	bool animation;
+
+	char time_direction;
 };
 
 class ViewerContext {

@@ -21,7 +21,8 @@
 #pragma once
 
 #include <QGraphicsView>
-#include <QWidget>
+
+#include "widgetbase.h"
 
 #include "scene.h"
 
@@ -51,7 +52,7 @@ protected:
 	void wheelEvent(QWheelEvent *event) override;
 };
 
-class QtNodeEditor : public QWidget, public ContextListener {
+class QtNodeEditor : public WidgetBase {
 	Q_OBJECT
 
 	NodeView *m_view;
@@ -145,14 +146,14 @@ public:
 	}
 
 	/* Called for creating new connections, e.g. during node dropping. */
-	void connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock);
+	void connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock, bool notify);
 
 	int editor_mode() const
 	{
 		return m_editor_mode;
 	}
 
-	void update_state(int event_type) override;
+	void update_state(event_type event) override;
 
 public Q_SLOTS:
 	/* Activated when a contextmenu item is selected */
@@ -168,14 +169,11 @@ private:
 	/* Called when an object node is selected. */
 	void setActiveObject(ObjectNodeItem *node);
 
-	/* Called when an object node is removed. */
-	void removeObject(ObjectNodeItem *node);
-
 	/* Called when a node is removed. */
 	void removeNodeEx(QtNode *node);
 
 	/* Called when nodes are connected. */
-	void nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to);
+	void nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to, bool notify);
 
 	/* Called when nodes are disconnected. */
 	void connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to);

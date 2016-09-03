@@ -68,13 +68,6 @@ Main::Main()
     , m_scene(new Scene)
 {}
 
-Main::~Main()
-{
-	delete m_primitive_factory;
-	delete m_node_factory;
-	delete m_scene;
-}
-
 void Main::loadPlugins()
 {
 	m_plugins = load_plugins("plugins");
@@ -90,43 +83,43 @@ void Main::loadPlugins()
 		auto register_figures = fs::dso_function<void(PrimitiveFactory *)>(symbol);
 
 		if (register_figures) {
-			register_figures(m_primitive_factory);
+			register_figures(this->primitive_factory());
 		}
 
 		symbol = plugin("new_kamikaze_node", ec);
 		auto register_node = fs::dso_function<void(NodeFactory *)>(symbol);
 
 		if (register_node) {
-			register_node(m_node_factory);
+			register_node(this->node_factory());
 		}
 	}
 }
 
-void Main::initTypes()
+void Main::initialize()
 {
-	register_builtin_nodes(m_node_factory);
+	register_builtin_nodes(this->node_factory());
 
 	/* primitive types */
 
 	{
-		auto factory = m_primitive_factory;
+		auto factory = this->primitive_factory();
 
 		Mesh::id = REGISTER_PRIMITIVE("Mesh", Mesh);
 		PrimPoints::id = REGISTER_PRIMITIVE("PrimPoints", PrimPoints);
 	}
 }
 
-PrimitiveFactory *Main::primitiveFactory() const
+PrimitiveFactory *Main::primitive_factory() const
 {
-	return m_primitive_factory;
+	return m_primitive_factory.get();
 }
 
-NodeFactory *Main::nodeFactory() const
+NodeFactory *Main::node_factory() const
 {
-	return m_node_factory;
+	return m_node_factory.get();
 }
 
 Scene *Main::scene() const
 {
-	return m_scene;
+	return m_scene.get();
 }

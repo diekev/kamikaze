@@ -39,121 +39,190 @@
 #include "core/object.h"
 #include "core/scene.h"
 
+#include "util/utils.h"
+
 PropertiesWidget::PropertiesWidget(QWidget *parent)
-    : QWidget(parent)
+    : WidgetBase(parent)
     , m_widget(new QWidget())
     , m_scroll(new QScrollArea())
-    , m_layout(new QGridLayout(m_widget))
-    , m_hbox_layout(new QHBoxLayout())
+    , m_glayout(new QGridLayout(m_widget))
+    , m_callback(new ParamCallback(m_glayout))
 {
-	setLayout(m_hbox_layout);
-
-	QSizePolicy sizePolicy2(QSizePolicy::Preferred, QSizePolicy::Preferred);
-	sizePolicy2.setHorizontalStretch(0);
-	sizePolicy2.setVerticalStretch(0);
-	sizePolicy2.setHeightForWidth(m_widget->sizePolicy().hasHeightForWidth());
-
-	m_widget->setSizePolicy(sizePolicy2);
+	m_widget->setSizePolicy(m_frame->sizePolicy());
 
 	m_scroll->setWidget(m_widget);
 	m_scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 	m_scroll->setWidgetResizable(true);
-	m_scroll->setFrameShape(QFrame::StyledPanel);
-	m_scroll->setFrameShadow(QFrame::Raised);
 
-	m_hbox_layout->addWidget(m_scroll);
+	/* Hide scroll area's frame. */
+	m_scroll->setFrameStyle(0);
+
+	m_main_layout->addWidget(m_scroll);
 }
 
-void PropertiesWidget::update_state(int event_type)
+PropertiesWidget::~PropertiesWidget()
+{
+	m_callback->clear();
+	delete m_callback;
+}
+
+void PropertiesWidget::update_state(event_type event)
 {
 	Persona *persona = nullptr;
 	bool set_context = true;
 	auto scene = m_context->scene;
 
-	if (scene->currentObject() == nullptr) {
+	if (scene->active_node() == nullptr) {
 		return;
 	}
 
-	if (event_type == OBJECT_ADDED) {
-		auto object = scene->currentObject();
-		persona = object;
-	}
-	else if (event_type == NODE_SELECTED) {
-		auto object = scene->currentObject();
-		auto graph = object->graph();
-		auto node = graph->active_node();
+	const auto &event_category = get_category(event);
+	const auto &event_action = get_action(event);
 
-		if (!node) {
+	if (event_category == event_type::object) {
+		if (is_elem(event_action, event_type::added, event_type::selected)) {
+			auto scene_node = scene->active_node();
+			persona = scene_node;
+		}
+		else if (is_elem(event_action, event_type::removed)) {
+			m_callback->clear();
 			return;
 		}
+	}
+	else if (event_category == (event_type::node)) {
+		if (is_elem(event_action, event_type::selected)) {
+			auto scene_node = scene->active_node();
+			auto object = static_cast<Object *>(scene_node);
+			auto graph = object->graph();
+			auto node = graph->active_node();
 
-		persona = node;
+			if (!node) {
+				return;
+			}
 
-		/* Only update/evaluate the graph if the node is connected. */
-		set_context = node->isLinked();
+			persona = node;
+
+			/* Only update/evaluate the graph if the node is connected. */
+			set_context = node->isLinked();
+		}
+		else if (is_elem(event_action, event_type::removed)) {
+			m_callback->clear();
+			return;
+		}
 	}
 	else {
 		return;
 	}
 
-	clear_layout(m_layout);
-	ParamCallback cb(m_layout);
-	ParamCallback *callback = &cb;
+	if (persona == nullptr) {
+		return;
+	}
 
+	m_callback->clear();
+
+	drawProperties(persona, set_context);
+}
+
+void PropertiesWidget::evalObjectGraph()
+{
+	this->set_active();
+	auto scene = m_context->scene;
+
+	scene->evalObjectDag(*m_context, scene->active_node());
+	scene->notify_listeners(static_cast<event_type>(-1));
+}
+
+void PropertiesWidget::tagObjectUpdate()
+{
+	this->set_active();
+	m_context->scene->tagObjectUpdate();
+}
+
+void PropertiesWidget::updateProperties()
+{
+	auto scene = m_context->scene;
+	auto scene_node = scene->active_node();
+
+	if (!scene_node) {
+		return;
+	}
+
+	Persona *persona = nullptr;
+
+	if (m_context->eval_ctx->edit_mode) {
+		auto graph = static_cast<Object *>(scene_node)->graph();
+		auto node = graph->active_node();
+
+		if (node == nullptr) {
+			return;
+		}
+
+		persona = node;
+	}
+	else {
+		persona = scene_node;
+	}
+
+	if (persona->update_properties()) {
+		for (Property &prop : persona->props()) {
+			m_callback->setVisible(prop.name.c_str(), prop.visible);
+		}
+	}
+}
+
+void PropertiesWidget::drawProperties(Persona *persona, bool set_context)
+{
 	persona->update_properties();
 
 	for (Property &prop : persona->props()) {
-		if (!prop.visible) {
-			continue;
-		}
-
 		assert(!prop.data.empty());
 
 		switch (prop.type) {
 			case property_type::prop_bool:
-				bool_param(callback,
+				bool_param(m_callback,
 				           prop.name.c_str(),
 				           any_cast<bool>(&prop.data),
 				           any_cast<bool>(prop.data));
 				break;
 			case property_type::prop_float:
-				float_param(callback,
+				float_param(m_callback,
 				            prop.name.c_str(),
 				            any_cast<float>(&prop.data),
 				            prop.min, prop.max,
 				            any_cast<float>(prop.data));
 				break;
 			case property_type::prop_int:
-				int_param(callback,
+				int_param(m_callback,
 				          prop.name.c_str(),
 				          any_cast<int>(&prop.data),
 				          prop.min, prop.max,
 				          any_cast<int>(prop.data));
 				break;
 			case property_type::prop_enum:
-				enum_param(callback,
+				enum_param(m_callback,
 				           prop.name.c_str(),
 				           any_cast<int>(&prop.data),
 				           prop.enum_items,
 				           any_cast<int>(prop.data));
 				break;
 			case property_type::prop_vec3:
-				xyz_param(callback,
+				xyz_param(m_callback,
 				          prop.name.c_str(),
-				          &(any_cast<glm::vec3>(&prop.data)->x));
+				          &(any_cast<glm::vec3>(&prop.data)->x),
+				          prop.min, prop.max);
 				break;
 			case property_type::prop_input_file:
-				input_file_param(callback,
+				input_file_param(m_callback,
 				                 prop.name.c_str(),
 				                 any_cast<std::string>(&prop.data));
 				break;
 			case property_type::prop_output_file:
-				output_file_param(callback,
+				output_file_param(m_callback,
 				                  prop.name.c_str(),
 				                  any_cast<std::string>(&prop.data));
 				break;
 			case property_type::prop_string:
-				string_param(callback,
+				string_param(m_callback,
 				             prop.name.c_str(),
 				             any_cast<std::string>(&prop.data),
 				             any_cast<std::string>(prop.data).c_str());
@@ -161,29 +230,20 @@ void PropertiesWidget::update_state(int event_type)
 		}
 
 		if (!prop.tooltip.empty()) {
-			param_tooltip(callback, prop.tooltip.c_str());
+			param_tooltip(m_callback, prop.tooltip.c_str());
 		}
+
+		m_callback->setVisible(prop.name.c_str(), prop.visible);
 	}
 
 	if (set_context) {
-		if (event_type == OBJECT_ADDED) {
-			cb.setContext(this, SLOT(tagObjectUpdate()));
+		if (m_context->eval_ctx->edit_mode) {
+			m_callback->setContext(this, SLOT(evalObjectGraph()));
 		}
-		else if (event_type == NODE_SELECTED) {
-			cb.setContext(this, SLOT(evalObjectGraph()));
+		else {
+			m_callback->setContext(this, SLOT(tagObjectUpdate()));
 		}
 	}
-}
 
-void PropertiesWidget::evalObjectGraph()
-{
-	auto scene = m_context->scene;
-
-	scene->evalObjectDag(m_context, scene->currentObject());
-	scene->notify_listeners(-1);
-}
-
-void PropertiesWidget::tagObjectUpdate()
-{
-	m_context->scene->tagObjectUpdate();
+	m_callback->setContext(this, SLOT(updateProperties()));
 }

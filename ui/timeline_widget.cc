@@ -38,23 +38,43 @@
 
 #include "core/scene.h"
 
+#include "utils_ui.h"
+
+enum {
+	TC_FIRST_FRAME = 0,
+	TC_PLAY_BACKWARD,
+	TC_PLAY_BWD_FRAME,
+	TC_STOP,
+	TC_PLAY_FWD_FRAME,
+	TC_PLAY_FORWARD,
+	TC_LAST_FRAME,
+
+	/* Only add values above this line. */
+	TC_NUM_CONTROLS,
+};
+
+static UIButData transport_controls[TC_NUM_CONTROLS] = {
+    { TC_FIRST_FRAME,    "Jump To First Frame",     "icons/icon_jump_first.png" },
+    { TC_PLAY_BACKWARD,  "Play Backwards",          "icons/icon_play_backward.png" },
+    { TC_PLAY_BWD_FRAME, "Play Back One Frame",     "icons/icon_step_backward.png" }, // left arrow
+    { TC_STOP,           "Stop",                    "icons/icon_stop.png" }, // spacebar
+    { TC_PLAY_FWD_FRAME, "Play Forwards One Frame", "icons/icon_step_forward.png" }, // right arrow
+    { TC_PLAY_FORWARD,   "Play Forwards",           "icons/icon_play_forward.png" }, // spacebar
+    { TC_LAST_FRAME,     "Jump To Last Frame",      "icons/icon_jump_last.png" },
+};
+
 TimeLineWidget::TimeLineWidget(QWidget *parent)
-    : QWidget(parent)
+    : WidgetBase(parent)
     , m_timer(new QTimer(this))
 {
-	m_frame = new QFrame(this);
+	m_vbox_layout = new QVBoxLayout();
+	m_main_layout->addLayout(m_vbox_layout);
 
-	QSizePolicy sizePolicy2(QSizePolicy::Preferred, QSizePolicy::Preferred);
-	sizePolicy2.setHorizontalStretch(0);
-	sizePolicy2.setVerticalStretch(0);
-	sizePolicy2.setHeightForWidth(m_frame->sizePolicy().hasHeightForWidth());
+	m_num_layout = new QHBoxLayout();
+	m_num_layout->setSizeConstraint(QLayout::SetMinimumSize);
 
-	m_frame->setSizePolicy(sizePolicy2);
-	m_frame->setFrameShape(QFrame::StyledPanel);
-	m_frame->setFrameShadow(QFrame::Raised);
+	/* ------------------------------ jog bar ------------------------------- */
 
-	m_layout = new QHBoxLayout();
-	m_hbox_layout = new QHBoxLayout(m_frame);
 	m_slider = new QSlider(m_frame);
 	m_slider->setMouseTracking(false);
 	m_slider->setValue(0);
@@ -63,33 +83,27 @@ TimeLineWidget::TimeLineWidget(QWidget *parent)
 	m_slider->setTickInterval(0);
 	m_slider->setMaximum(250);
 
-	m_hbox_layout->addWidget(m_slider);
-
-	m_grid_layout = new QGridLayout();
-	m_grid_layout->setSizeConstraint(QLayout::SetMinimumSize);
+	m_start_frame = new QSpinBox(m_frame);
+	m_start_frame->setAlignment(Qt::AlignRight | Qt::AlignTrailing | Qt::AlignVCenter);
+	m_start_frame->setMaximum(500000);
+	m_start_frame->setValue(0);
+	m_start_frame->setToolTip("Start Frame");
 
 	m_end_frame = new QSpinBox(m_frame);
-	m_end_frame->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+	m_end_frame->setAlignment(Qt::AlignRight | Qt::AlignTrailing | Qt::AlignVCenter);
 	m_end_frame->setMaximum(500000);
 	m_end_frame->setValue(250);
+	m_start_frame->setToolTip("End Frame");
 
-	m_grid_layout->addWidget(m_end_frame, 1, 2, 1, 1);
+	m_num_layout->addWidget(m_start_frame);
+	m_num_layout->addWidget(m_slider);
+	m_num_layout->addWidget(m_end_frame);
 
-	m_fps = new QDoubleSpinBox(m_frame);
-	m_fps->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
-	m_fps->setValue(24);
+	m_vbox_layout->addLayout(m_num_layout);
 
-	m_grid_layout->addWidget(m_fps, 2, 2, 1, 1);
+	/* ------------------------- current selection -------------------------- */
 
-	m_start_frame = new QSpinBox(m_frame);
-	m_start_frame->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
-	m_start_frame->setMaximum(500000);
-
-	m_grid_layout->addWidget(m_start_frame, 1, 0, 1, 1);
-
-	m_begin_but = new QPushButton(m_frame);
-
-	m_grid_layout->addWidget(m_begin_but, 0, 0, 1, 1);
+	m_tc_layout = new QHBoxLayout();
 
 	m_cur_frame = new QSpinBox(m_frame);
 	m_cur_frame->setAlignment(Qt::AlignCenter);
@@ -97,42 +111,73 @@ TimeLineWidget::TimeLineWidget(QWidget *parent)
 	m_cur_frame->setButtonSymbols(QAbstractSpinBox::NoButtons);
 	m_cur_frame->setProperty("showGroupSeparator", QVariant(false));
 	m_cur_frame->setMaximum(500000);
+	m_cur_frame->setToolTip("Current Frame");
 
-	m_grid_layout->addWidget(m_cur_frame, 1, 1, 1, 1);
+	m_tc_layout->addWidget(m_cur_frame);
+	m_tc_layout->addStretch();
 
-	m_start_but = new QPushButton(m_frame);
-	m_grid_layout->addWidget(m_start_but, 0, 1, 1, 1);
+	/* ------------------------- transport controls ------------------------- */
 
-	m_end_but = new QPushButton(m_frame);
-	m_grid_layout->addWidget(m_end_but, 0, 2, 1, 1);
+	for (const UIButData &transport_control : transport_controls) {
+		auto button = new QPushButton(m_frame);
+		button->setToolTip(transport_control.name);
+		button->setIcon(QIcon(transport_control.icon_path));
 
-	m_label = new QLabel(m_frame);
-	m_grid_layout->addWidget(m_label, 2, 1, 1, 1);
+		switch (transport_control.value) {
+			case TC_FIRST_FRAME:
+				connect(button, SIGNAL(clicked()), this, SLOT(goToStartFrame()));
+				break;
+			case TC_PLAY_BACKWARD:
+				connect(button, SIGNAL(clicked()), this, SLOT(playBackward()));
+				break;
+			case TC_PLAY_BWD_FRAME:
+				connect(button, SIGNAL(clicked()), this, SLOT(stepBackward()));
+				break;
+			case TC_STOP:
+				connect(button, SIGNAL(clicked()), this, SLOT(stopAnimation()));
+				break;
+			case TC_PLAY_FWD_FRAME:
+				connect(button, SIGNAL(clicked()), this, SLOT(stepForward()));
+				break;
+			case TC_PLAY_FORWARD:
+				connect(button, SIGNAL(clicked()), this, SLOT(playForward()));
+				break;
+			case TC_LAST_FRAME:
+				connect(button, SIGNAL(clicked()), this, SLOT(goToEndFrame()));
+				break;
+		}
 
-	m_hbox_layout->addLayout(m_grid_layout);
+		m_tc_layout->addWidget(button);
+	}
 
-	m_start_but->setIcon(QIcon("icons/icon_play_forward.png"));
-	m_begin_but->setIcon(QIcon("icons/icon_jump_first.png"));
-	m_end_but->setIcon(QIcon("icons/icon_jump_last.png"));
+	m_tc_layout->addStretch();
 
-	m_layout->addWidget(m_frame);
-	setLayout(m_layout);
+	/* --------------------------------- fps -------------------------------- */
+
+	m_fps = new QDoubleSpinBox(m_frame);
+	m_fps->setAlignment(Qt::AlignRight | Qt::AlignTrailing | Qt::AlignVCenter);
+	m_fps->setValue(24);
+	m_fps->setToolTip("Frame Rate");
+
+	m_tc_layout->addWidget(m_fps);
+
+	m_vbox_layout->addLayout(m_tc_layout);
+
+	/* ------------------------------ finalize ------------------------------ */
+
+	setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
 	connect(m_start_frame, SIGNAL(valueChanged(int)), this, SLOT(setStartFrame(int)));
 	connect(m_end_frame, SIGNAL(valueChanged(int)), this, SLOT(setEndFrame(int)));
-	connect(m_slider, SIGNAL(valueChanged(int)), m_cur_frame, SLOT(setValue(int)));
+	connect(m_slider, SIGNAL(valueChanged(int)), this, SLOT(setCurrentFrame(int)));
 	connect(m_fps, SIGNAL(valueChanged(double)), this, SLOT(setFPS(double)));
-
-	connect(m_begin_but, SIGNAL(clicked()), this, SLOT(goToStartFrame()));
-	connect(m_start_but, SIGNAL(clicked()), this, SLOT(startAnimation()));
-	connect(m_end_but, SIGNAL(clicked()), this, SLOT(goToEndFrame()));
 
 	connect(m_timer, SIGNAL(timeout()), this, SLOT(updateFrame()));
 }
 
-void TimeLineWidget::update_state(int event_type)
+void TimeLineWidget::update_state(event_type event)
 {
-	if (event_type != TIME_CHANGED) {
+	if (event != (event_type::time | event_type::modified)) {
 		return;
 	}
 
@@ -144,66 +189,129 @@ void TimeLineWidget::update_state(int event_type)
 	m_slider->setMaximum(scene->endFrame());
 	m_end_frame->setValue(scene->endFrame());
 
+	m_cur_frame->setValue(scene->currentFrame());
+
 	m_slider->setValue(scene->currentFrame());
 
 	m_fps->setValue(scene->framesPerSecond());
 
 	/* Start or stop the animation. */
-	if (m_context->animation) {
-		m_start_but->setIcon(QIcon("icons/icon_pause.png"));
+	if (m_context->eval_ctx->animation) {
 		m_timer->start(1000 / m_fps->value());
 	}
 	else {
-		m_start_but->setIcon(QIcon("icons/icon_play_forward.png"));
 		m_timer->stop();
 	}
 }
 
-void TimeLineWidget::setStartFrame(int value) const
+void TimeLineWidget::setStartFrame(int value)
 {
+	this->set_active();
 	auto scene = m_context->scene;
 	scene->startFrame(value);
 }
 
-void TimeLineWidget::setEndFrame(int value) const
+void TimeLineWidget::setEndFrame(int value)
 {
+	this->set_active();
 	auto scene = m_context->scene;
 	scene->endFrame(value);
 }
 
-void TimeLineWidget::setFPS(double value) const
+void TimeLineWidget::setCurrentFrame(int value)
 {
+	this->set_active();
+	auto scene = m_context->scene;
+	scene->currentFrame(value);
+	scene->updateForNewFrame(*m_context);
+}
+
+void TimeLineWidget::setFPS(double value)
+{
+	this->set_active();
 	auto scene = m_context->scene;
 	scene->framesPerSecond(value);
 }
 
-void TimeLineWidget::goToStartFrame() const
+void TimeLineWidget::goToStartFrame()
 {
+	this->set_active();
 	auto scene = m_context->scene;
 	scene->currentFrame(scene->startFrame());
+	scene->updateForNewFrame(*m_context);
 }
 
-void TimeLineWidget::goToEndFrame() const
+void TimeLineWidget::goToEndFrame()
 {
+	this->set_active();
 	auto scene = m_context->scene;
 	scene->currentFrame(scene->endFrame());
+	scene->updateForNewFrame(*m_context);
 }
 
-void TimeLineWidget::startAnimation()
+void TimeLineWidget::playForward()
 {
-	m_context->animation = !m_context->animation;
-	m_context->scene->notify_listeners(TIME_CHANGED);
+	this->set_active();
+	m_context->eval_ctx->animation = true;
+	m_context->eval_ctx->time_direction = TIME_DIR_FORWARD;
+	m_context->scene->notify_listeners(event_type::time | event_type::modified);
+}
+
+void TimeLineWidget::playBackward()
+{
+	this->set_active();
+	m_context->eval_ctx->animation = true;
+	m_context->eval_ctx->time_direction = TIME_DIR_BACKWARD;
+	m_context->scene->notify_listeners(event_type::time | event_type::modified);
+}
+
+void TimeLineWidget::stepForward()
+{
+	this->set_active();
+	m_context->eval_ctx->time_direction = TIME_DIR_FORWARD;
+
+	auto scene = m_context->scene;
+	scene->currentFrame(scene->currentFrame() + 1);
+	scene->updateForNewFrame(*m_context);
+}
+
+void TimeLineWidget::stepBackward()
+{
+	this->set_active();
+	m_context->eval_ctx->time_direction = TIME_DIR_BACKWARD;
+
+	auto scene = m_context->scene;
+	scene->currentFrame(scene->currentFrame() - 1);
+	scene->updateForNewFrame(*m_context);
+}
+
+void TimeLineWidget::stopAnimation()
+{
+	this->set_active();
+	m_context->eval_ctx->animation = false;
+	m_context->scene->notify_listeners(event_type::time | event_type::modified);
 }
 
 void TimeLineWidget::updateFrame() const
 {
 	auto scene = m_context->scene;
-	auto value = scene->currentFrame() + 1;
+	auto value = scene->currentFrame();
 
-	if (value == scene->endFrame()) {
-		value = 0;
+	if (m_context->eval_ctx->time_direction == TIME_DIR_FORWARD) {
+		++value;
+
+		if (value > scene->endFrame()) {
+			value = scene->startFrame();
+		}
+	}
+	else {
+		--value;
+
+		if (value < scene->startFrame()) {
+			value = scene->endFrame();
+		}
 	}
 
 	scene->currentFrame(value);
-	scene->updateForNewFrame(m_context);
+	scene->updateForNewFrame(*m_context);
 }

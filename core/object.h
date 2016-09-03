@@ -24,30 +24,19 @@
 
 #pragma once
 
-#include <glm/glm.hpp>
-#include <memory>
-
-#include <QString>
-
-#include <kamikaze/primitive.h>
-#include <kamikaze/persona.h>
+#include "graphs/scene_node.h"
 
 #include "transformable.h"
 
 class EvaluationContext;
 class Graph;
 class Node;
-class ParamCallback;
-class Primitive;
 class PrimitiveCollection;
 
-class Object : public Persona, public Transformable {
+class Object : public SceneNode, public Transformable {
 	PrimitiveCollection *m_collection = nullptr;
-	PrimitiveCache m_cache;
 
 	Graph *m_graph;
-
-	std::string m_name;
 
 	Object *m_parent = nullptr;
 	std::vector<Object *> m_children;
@@ -64,12 +53,10 @@ public:
 
 	Graph *graph() const;
 
-	void name(const QString &name);
-	const QString name() const;
-
-	void clearCache();
+	void updateMatrix();
 
 	void addChild(Object *child);
+	void removeChild(Object *child);
 	const std::vector<Object *> &children() const;
 
 	Object *parent() const;

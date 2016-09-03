@@ -24,29 +24,34 @@
 
 #pragma once
 
-#include <QWidget>
+#include "widgetbase.h"
 
-#include "context.h"
-
+class ParamCallback;
+class Persona;
 class QFrame;
 class QGridLayout;
 class QHBoxLayout;
 class QScrollArea;
 
-class PropertiesWidget : public QWidget, public ContextListener {
+class PropertiesWidget : public WidgetBase {
 	Q_OBJECT
 
 	QWidget *m_widget;
 	QScrollArea *m_scroll;
-	QGridLayout *m_layout;
-	QHBoxLayout *m_hbox_layout;
+	QGridLayout *m_glayout;
+	ParamCallback *m_callback;
 
 public:
 	explicit PropertiesWidget(QWidget *parent = nullptr);
+	~PropertiesWidget();
 
-	void update_state(int event_type) override;
+	void update_state(event_type event) override;
+
+private:
+	void drawProperties(Persona *persona, bool set_context);
 
 private Q_SLOTS:
 	void evalObjectGraph();
 	void tagObjectUpdate();
+	void updateProperties();
 };

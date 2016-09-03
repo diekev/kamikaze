@@ -25,6 +25,7 @@
 #pragma once
 
 #include <kamikaze/nodes.h>
+#include <kamikaze/primitive.h>
 #include <vector>
 
 class InputSocket;
@@ -37,9 +38,9 @@ class Graph {
 
 	Node *m_active_node = nullptr;
 
-	bool m_need_update;
+	PrimitiveCache m_cache;
 
-	void topology_sort();
+	bool m_need_update;
 
 public:
 	Graph();
@@ -60,4 +61,6 @@ public:
 
 	void active_node(Node *node);
 	Node *active_node() const;
+
+	void clear_cache();
 };

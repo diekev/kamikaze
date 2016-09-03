@@ -92,10 +92,13 @@ static inline bool is_connection(QGraphicsItem *item)
 /* ************************************************************************** */
 
 QtNodeEditor::QtNodeEditor(QWidget *parent)
-    : QWidget(parent)
+    : WidgetBase(parent)
+    , m_view(new NodeView(this))
 {
-	QVBoxLayout *mainLayout = new QVBoxLayout;
-	m_view = new NodeView(this);
+	m_main_layout->addWidget(m_view);
+
+	/* Hide graphics view's frame. */
+	m_view->setStyleSheet("border: 0px");
 
 	m_scene_scene = new QtNodeGraphicsScene();
 	m_scene_scene->installEventFilter(this);
@@ -107,7 +110,7 @@ QtNodeEditor::QtNodeEditor(QWidget *parent)
 	m_view->setInteractive(true);
 	m_view->setMouseTracking(true);
 	m_view->setBackgroundBrush(QBrush(QColor(127, 127, 127)));
-	mainLayout->addWidget(m_view);
+
 	m_rubber_band = nullptr;
 	m_hover_connection = nullptr;
 	m_active_connection = nullptr;
@@ -162,7 +165,6 @@ QtNodeEditor::QtNodeEditor(QWidget *parent)
 	setMenuCollapseExpandEnabled(true);
 	setContextMenuPolicy(Qt::CustomContextMenu);
 	connect(m_context_menu, SIGNAL(triggered(QAction*)), this, SLOT(contextMenuItemSelected(QAction*)));
-	setLayout(mainLayout);
 }
 
 QtNodeEditor::~QtNodeEditor()
@@ -311,6 +313,7 @@ bool QtNodeEditor::eventFilter(QObject *object, QEvent *event)
 	switch (static_cast<int>(event->type())) {
 		case QEvent::GraphicsSceneMousePress:
 			mouseClickHandler(mouseEvent);
+			this->set_active();
 			break;
 		case QEvent::GraphicsSceneMouseDoubleClick:
 			mouseDoubleClickHandler(mouseEvent);
@@ -589,10 +592,10 @@ void QtNodeEditor::selectNode(QtNode *node, QGraphicsSceneMouseEvent *mouseEvent
 		setActiveObject(static_cast<ObjectNodeItem *>(node));
 	}
 	else {
-		auto object = m_context->scene->currentObject();
+		auto object = static_cast<Object *>(m_context->scene->active_node());
 		auto graph = object->graph();
 		graph->active_node(node->getNode());
-		m_context->scene->notify_listeners(NODE_SELECTED);
+		m_context->scene->notify_listeners(event_type::node | event_type::selected);
 	}
 
 	toFront(node);
@@ -704,15 +707,21 @@ void QtNodeEditor::removeNode(QtNode *node)
 	}
 
 	if (is_object_node(node)) {
-		removeObject(static_cast<ObjectNodeItem *>(node));
+		auto object = static_cast<ObjectNodeItem *>(node)->scene_node();
+
+		/* TODO: first we delete the node then the object, so we avoid issues
+		 * when the scene sends the notifier that the object was deleted. */
+		m_current_scene->removeItem(node);
+		delete node;
+
+		m_context->scene->removeObject(object);
 	}
 	else {
-		m_context->scene->notify_listeners(NODE_REMOVED);
+		removeNodeEx(node);
+		m_current_scene->removeItem(node);
+		delete node;
+		m_context->scene->notify_listeners(event_type::node | event_type::removed);
 	}
-
-	m_current_scene->removeItem(node);
-
-	delete node;
 }
 
 using node_port_pair = std::pair<QtNode *, QtPort *>;
@@ -748,18 +757,16 @@ void QtNodeEditor::removeConnection(QtConnection *connection)
 
 	connectionRemoved(base.first, base.second->getPortName(),
 	                  target.first, target.second->getPortName());
-
-	m_current_scene->removeItem(connection);
 }
 
-void QtNodeEditor::connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock)
+void QtNodeEditor::connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock, bool notify)
 {
 	from->createActiveConnection(from_sock, from_sock->pos());
 	to_sock->createConnection(from->m_active_connection);
 
 	from->m_active_connection = nullptr;
 
-	nodesConnected(from, from_sock->getPortName(), to, to_sock->getPortName());
+	nodesConnected(from, from_sock->getPortName(), to, to_sock->getPortName(), true);
 }
 
 void QtNodeEditor::splitConnectionWithNode(QtNode *node)
@@ -775,10 +782,10 @@ void QtNodeEditor::splitConnectionWithNode(QtNode *node)
 	                  target.first, target.second->getPortName());
 
 	/* connect from base port to first input port in node */
-	connectNodes(base.first, base.second, node, node->input(0));
+	connectNodes(base.first, base.second, node, node->input(0), false);
 
 	/* connect from first output port in node to target port */
-	connectNodes(node, node->output(0), target.first, target.second);
+	connectNodes(node, node->output(0), target.first, target.second, true);
 }
 
 void QtNodeEditor::connectionEstablished(QtConnection *connection)
@@ -788,7 +795,7 @@ void QtNodeEditor::connectionEstablished(QtConnection *connection)
 	const auto &target = pairs.second;
 
 	nodesConnected(base.first, base.second->getPortName(),
-	               target.first, target.second->getPortName());
+	               target.first, target.second->getPortName(), true);
 }
 
 void QtNodeEditor::removeAllSelelected()
@@ -1091,6 +1098,7 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 		m_current_scene->installEventFilter(this);
 		m_editor_mode = EDITOR_MODE_OBJECT;
 		m_view->setScene(m_current_scene);
+		m_context->eval_ctx->edit_mode = true;
 
 		action->setText(NODE_EXIT_OBJECT);
 
@@ -1102,6 +1110,7 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 		m_current_scene = m_scene_scene;
 		m_view->setScene(m_current_scene);
 		m_editor_mode = EDITOR_MODE_SCENE;
+		m_context->eval_ctx->edit_mode = false;
 
 		action->setText(NODE_ENTER_OBJECT);
 
@@ -1109,21 +1118,29 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 	}
 }
 
-void QtNodeEditor::update_state(int event_type)
+void QtNodeEditor::update_state(event_type event)
 {
-	if (event_type == OBJECT_ADDED) {
-		auto object = m_context->scene->currentObject();
+	if (event == (event_type::object | event_type::added)) {
+		auto scene_node = m_context->scene->active_node();
 
-		if (object == nullptr) {
+		if (scene_node == nullptr) {
 			return;
 		}
 
-		auto obnode_item = new ObjectNodeItem(object, object->name());
+		auto obnode_item = new ObjectNodeItem(scene_node, scene_node->name().c_str());
 		obnode_item->setTitleColor(Qt::white);
 		obnode_item->alignTitle(ALIGNED_CENTER);
 
+		deselectAll();
+		m_selected_nodes.append(obnode_item);
+		obnode_item->setSelected(true);
+
 		/* add node item for the object's graph output node */
 		{
+			/* Go into edit mode to make sure object graph is updated properly. */
+			m_context->eval_ctx->edit_mode = true;
+
+			auto object = static_cast<Object *>(scene_node);
 			auto graph = object->graph();
 			auto output_node = graph->output();
 
@@ -1151,14 +1168,44 @@ void QtNodeEditor::update_state(int event_type)
 				obnode_item->addNode(node_item);
 
 				this->connectNodes(node_item, node_item->output(0),
-				                   out_node_item, out_node_item->input(0));
+				                   out_node_item, out_node_item->input(0), true);
 			}
+
+			/* Leave edit mode. */
+			m_context->eval_ctx->edit_mode = false;
 		}
 
-		this->addNode(obnode_item);
+		if (this->m_editor_mode == EDITOR_MODE_SCENE) {
+			this->addNode(obnode_item);
+		}
+		else {
+			obnode_item->setEditor(this);
+			obnode_item->setScene(m_scene_scene);
+			m_scene_scene->addItem(obnode_item);
+			m_current_scene = obnode_item->nodeScene();
+			m_current_scene->installEventFilter(this);
+			m_view->setScene(m_current_scene);
+		}
 	}
-	else if (event_type == NODE_ADDED) {
-		auto object = m_context->scene->currentObject();
+	else if (event == (event_type::object | event_type::removed)) {
+		auto object = m_context->scene->active_node();
+
+		for (auto item : m_current_scene->items()) {
+			if (!is_object_node(item)) {
+				continue;
+			}
+
+			auto obnode = static_cast<ObjectNodeItem *>(item);
+
+			if (obnode->scene_node() == object) {
+				m_current_scene->removeItem(item);
+				delete item;
+				break;
+			}
+		}
+	}
+	else if (event == (event_type::node | event_type::added)) {
+		auto object = static_cast<Object *>(m_context->scene->active_node());
 
 		if (object == nullptr) {
 			return;
@@ -1182,18 +1229,13 @@ void QtNodeEditor::update_state(int event_type)
 
 void QtNodeEditor::setActiveObject(ObjectNodeItem *node)
 {
-	m_context->scene->setActiveObject(node->object());
-}
-
-void QtNodeEditor::removeObject(ObjectNodeItem *node)
-{
-	m_context->scene->removeObject(node->object());
+	m_context->scene->set_active_node(node->scene_node());
 }
 
 void QtNodeEditor::removeNodeEx(QtNode *node)
 {
 	auto scene = m_context->scene;
-	auto object = scene->currentObject();
+	auto object = static_cast<Object *>(scene->active_node());
 	auto graph = object->graph();
 
 	const auto was_connected = node->getNode()->isLinked();
@@ -1201,46 +1243,70 @@ void QtNodeEditor::removeNodeEx(QtNode *node)
 	graph->remove(node->getNode());
 
 	if (was_connected) {
-		scene->evalObjectDag(m_context, object);
+		scene->evalObjectDag(*m_context, object);
 	}
 }
 
-void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
+void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to, bool notify)
 {
 	auto scene = m_context->scene;
-	auto object = scene->currentObject();
-	auto graph = object->graph();
 
-	auto node_from = from->getNode();
-	auto node_to = to->getNode();
+	if (m_context->eval_ctx->edit_mode) {
+		auto object = static_cast<Object *>(scene->active_node());
+		auto graph = object->graph();
 
-	auto output_socket = node_from->output(socket_from.toStdString());
-	auto input_socket = node_to->input(socket_to.toStdString());
+		auto node_from = from->getNode();
+		auto node_to = to->getNode();
 
-	assert((output_socket != nullptr) && (input_socket != nullptr));
+		auto output_socket = node_from->output(socket_from.toStdString());
+		auto input_socket = node_to->input(socket_to.toStdString());
 
-	graph->connect(output_socket, input_socket);
+		assert((output_socket != nullptr) && (input_socket != nullptr));
 
-	scene->evalObjectDag(m_context, object);
+		graph->connect(output_socket, input_socket);
+
+		/* Needed to prevent updating needlessly the graph when dropping a node on
+		 * a connection. */
+		if (notify) {
+			scene->evalObjectDag(*m_context, object);
+		}
+	}
+	else {
+		auto node_from = static_cast<ObjectNodeItem *>(from)->scene_node();
+		auto node_to = static_cast<ObjectNodeItem *>(to)->scene_node();
+
+		scene->connect(*m_context, node_from, node_to);
+		scene->notify_listeners(event_type::object | event_type::parented);
+	}
 }
 
 void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
 {
 	auto scene = m_context->scene;
-	auto object = scene->currentObject();
-	auto graph = object->graph();
 
-	auto node_from = from->getNode();
-	auto node_to = to->getNode();
+	if (m_context->eval_ctx->edit_mode) {
+		auto object = static_cast<Object *>(scene->active_node());
+		auto graph = object->graph();
 
-	auto output_socket = node_from->output(socket_from.toStdString());
-	auto input_socket = node_to->input(socket_to.toStdString());
+		auto node_from = from->getNode();
+		auto node_to = to->getNode();
 
-	assert((output_socket != nullptr) && (input_socket != nullptr));
+		auto output_socket = node_from->output(socket_from.toStdString());
+		auto input_socket = node_to->input(socket_to.toStdString());
 
-	graph->disconnect(output_socket, input_socket);
+		assert((output_socket != nullptr) && (input_socket != nullptr));
 
-	scene->evalObjectDag(m_context, object);
+		graph->disconnect(output_socket, input_socket);
+
+		scene->evalObjectDag(*m_context, object);
+	}
+	else {
+		auto node_from = static_cast<ObjectNodeItem *>(from)->scene_node();
+		auto node_to = static_cast<ObjectNodeItem *>(to)->scene_node();
+
+		scene->disconnect(*m_context, node_from, node_to);
+		scene->notify_listeners(event_type::object | event_type::parented);
+	}
 }
 
 /* ************************************************************************** */
