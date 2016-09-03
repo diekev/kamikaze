@@ -304,6 +304,7 @@ void Viewer::changeBackground()
 	if (color.isValid()) {
 		m_bg = glm::vec4(color.redF(), color.greenF(), color.blueF(), 1.0f);
 		glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
+		update();
 	}
 }
 
