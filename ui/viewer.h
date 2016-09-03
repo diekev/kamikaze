@@ -28,8 +28,9 @@
 #include <GL/glew.h>  /* needs to be included before QGLWidget (includes gl.h) */
 #include <QGLWidget>
 #include <QGraphicsView>
+#include <stack>
 
-#include "context.h"
+#include "widgetbase.h"
 #include "util/util_input.h"
 
 class Camera;
@@ -39,7 +40,34 @@ class ViewerContext;
 
 /* ************************************************************************** */
 
-class OpenGLScene : public QGraphicsScene, public ContextListener {
+class MatrixStack {
+	std::stack<glm::mat4, std::vector<glm::mat4>> m_stack;
+
+public:
+	MatrixStack()
+	{
+		m_stack.push(glm::mat4(1.0f));
+	}
+
+	inline void push(const glm::mat4 &mat)
+	{
+		m_stack.push(m_stack.top() * mat);
+	}
+
+	inline void pop()
+	{
+		m_stack.pop();
+	}
+
+	inline const glm::mat4 &top() const
+	{
+		return m_stack.top();
+	}
+};
+
+/* ************************************************************************** */
+
+class OpenGLScene : public QGraphicsScene {
 	Q_OBJECT
 
 	int m_mouse_button = MOUSE_NONE;
@@ -55,6 +83,11 @@ class OpenGLScene : public QGraphicsScene, public ContextListener {
 
 	bool m_initialized = false;
 
+	MatrixStack m_stack = {};
+
+	Context *m_context;
+	WidgetBase *m_base;
+
 	/* Get the world space position of the given point. */
 	glm::vec3 unproject(const glm::vec3 &pos) const;
 
@@ -65,8 +98,6 @@ public Q_SLOTS:
 public:
 	OpenGLScene();
 	~OpenGLScene();
-
-	void update_state(int event_type) override;
 
 	void initializeGL();
 	void resize(int w, int h);
@@ -84,6 +115,16 @@ public:
 
 	/* Select the object at screen pos (x, y). */
 	void selectObject(int x, int y) const;
+
+	void set_context(Context *context)
+	{
+		m_context = context;
+	}
+
+	void set_base(WidgetBase *base)
+	{
+		m_base = base;
+	}
 };
 
 /* ************************************************************************** */
@@ -100,4 +141,17 @@ public:
 
 protected:
 	void resizeEvent(QResizeEvent *event);
+};
+
+/* ************************************************************************** */
+
+class ViewerWidget : public WidgetBase {
+	Q_OBJECT
+
+	GraphicsViewer *m_viewer;
+
+public:
+	explicit ViewerWidget(QWidget *parent = nullptr);
+
+	void update_state(event_type event) override;
 };

@@ -28,7 +28,7 @@
 #include <QObject>
 #include <tbb/task.h>
 
-class EvaluationContext;
+class Context;
 class MainWindow;
 
 /* Apparently we can not have a class derived from both a QObject and a
@@ -54,12 +54,12 @@ Q_SIGNALS:
 class Task : public tbb::task {
 protected:
 	std::unique_ptr<TaskNotifier> m_notifier = nullptr;
-	const EvaluationContext *m_context = nullptr;
+	const Context &m_context;
 
 public:
-	explicit Task(const EvaluationContext * const context);
+	explicit Task(const Context &context);
 
 	tbb::task *execute() override;
 
-	virtual void start(const EvaluationContext * const context) = 0;
+	virtual void start(const Context &context) = 0;
 };

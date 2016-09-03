@@ -24,14 +24,10 @@
 
 #pragma once
 
-#include <QWidget>
-
-#include "context.h"
+#include "widgetbase.h"
 
 class QDoubleSpinBox;
-class QFrame;
 class QGridLayout;
-class QHBoxLayout;
 class QLabel;
 class QSlider;
 class QPushButton;
@@ -39,13 +35,11 @@ class QSpinBox;
 class QVBoxLayout;
 class Scene;
 
-class TimeLineWidget : public QWidget, public ContextListener {
+class TimeLineWidget : public WidgetBase {
 	Q_OBJECT
 
-	QFrame *m_frame;
 	QSlider *m_slider;
 
-	QHBoxLayout *m_layout;
 	QHBoxLayout *m_tc_layout;
 	QHBoxLayout *m_num_layout;
 	QVBoxLayout *m_vbox_layout;
@@ -59,16 +53,16 @@ class TimeLineWidget : public QWidget, public ContextListener {
 public:
 	explicit TimeLineWidget(QWidget *parent = nullptr);
 
-	void update_state(int event_type) override;
+	void update_state(event_type event) override;
 
 private Q_SLOTS:
-	void setStartFrame(int value) const;
-	void setCurrentFrame(int value) const;
-	void setEndFrame(int value) const;
-	void setFPS(double value) const;
+	void setStartFrame(int value);
+	void setCurrentFrame(int value);
+	void setEndFrame(int value);
+	void setFPS(double value);
 
-	void goToStartFrame() const;
-	void goToEndFrame() const;
+	void goToStartFrame();
+	void goToEndFrame();
 
 	void playBackward();
 	void playForward();

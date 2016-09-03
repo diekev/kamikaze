@@ -27,6 +27,8 @@
 #include <QGridLayout>
 #include <QLabel>
 
+#include "utils_ui.h"
+
 ParamCallback::ParamCallback(QGridLayout *layout)
     : m_layout(layout)
     , m_last_widget(nullptr)
@@ -35,11 +37,13 @@ ParamCallback::ParamCallback(QGridLayout *layout)
 
 void ParamCallback::addWidget(QWidget *widget, const QString &name)
 {
-	m_layout->addWidget(new QLabel(name), m_item_count, 0);
+	auto label = new QLabel(name);
+	m_layout->addWidget(label, m_item_count, 0);
 	m_layout->addWidget(widget, m_item_count, 1);
 
 	m_last_widget = widget;
 	m_widgets.push_back(widget);
+	m_widget_map[name.toStdString()] = std::make_pair(label, widget);
 
 	++m_item_count;
 }
@@ -49,4 +53,25 @@ void ParamCallback::setTooltip(const QString &tooltip)
 	if (m_last_widget) {
 		m_last_widget->setToolTip(tooltip);
 	}
+}
+
+void ParamCallback::clear()
+{
+	m_widget_map.clear();
+	m_widgets.clear();
+	clear_layout(m_layout);
+}
+
+void ParamCallback::setVisible(bool yesno)
+{
+	if (m_last_widget) {
+		m_last_widget->setVisible(yesno);
+	}
+}
+
+void ParamCallback::setVisible(const QString &name, bool yesno)
+{
+	widget_pair widgets = m_widget_map[name.toStdString()];
+	widgets.first->setVisible(yesno);
+	widgets.second->setVisible(yesno);
 }

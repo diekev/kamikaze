@@ -28,6 +28,7 @@
 
 class Object;
 class Scene;
+class SolverFactory;
 
 class AddObjectCmd : public Command {
 	Object *m_object = nullptr;
@@ -40,11 +41,9 @@ public:
 	AddObjectCmd() = default;
 	~AddObjectCmd();
 
-	void execute(EvaluationContext *context) override;
+	void execute(const Context &context) override;
 	void undo() override;
 	void redo() override;
-
-	static Command *registerSelf();
 };
 
 class AddNodeCmd : public Command {
@@ -55,11 +54,9 @@ public:
 	AddNodeCmd() = default;
 	~AddNodeCmd() = default;
 
-	void execute(EvaluationContext *context) override;
+	void execute(const Context &context) override;
 	void undo() override;
 	void redo() override;
-
-	static Command *registerSelf();
 };
 
 class AddPresetObjectCmd : public Command {
@@ -70,9 +67,7 @@ public:
 	AddPresetObjectCmd() = default;
 	~AddPresetObjectCmd() = default;
 
-	void execute(EvaluationContext *context) override;
+	void execute(const Context &context) override;
 	void undo() override;
 	void redo() override;
-
-	static Command *registerSelf();
 };

@@ -31,9 +31,13 @@
 #include <kamikaze/context.h>
 
 #include <QApplication>
+#include <QCheckBox>
 #include <QColorDialog>
+#include <QFrame>
 #include <QGraphicsSceneMouseEvent>
+#include <QHBoxLayout>
 #include <QKeyEvent>
+#include <QPushButton>
 #include <QResizeEvent>
 #include <QTimer>
 
@@ -46,7 +50,8 @@
 /* ************************************************************************** */
 
 OpenGLScene::OpenGLScene()
-    : m_viewer_context(new ViewerContext)
+    : m_camera(new Camera(0, 0))
+    , m_viewer_context(new ViewerContext)
 {}
 
 OpenGLScene::~OpenGLScene()
@@ -54,11 +59,6 @@ OpenGLScene::~OpenGLScene()
 	delete m_camera;
 	delete m_grid;
 	delete m_viewer_context;
-}
-
-void Viewer::update_state(int /*event_type*/)
-{
-	update();
 }
 
 void OpenGLScene::initializeGL()
@@ -120,21 +120,35 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &/*rect*/)
 	m_viewer_context->setProjection(P);
 	m_viewer_context->setMVP(MVP);
 	m_viewer_context->setNormal(glm::inverseTranspose(glm::mat3(MV)));
-	m_viewer_context->setMatrix(glm::mat4(1.0f));
+	m_viewer_context->setMatrix(m_stack.top());
 
 	if (m_draw_grid) {
 		m_grid->render(m_viewer_context);
 	}
 
+	/* XXX - only happens on initialization, but not nice. Better to construct
+	 * context listeners with valid context. */
+	if (!m_context) {
+		return;
+	}
+
 	if (m_context->scene != nullptr) {
-		for (auto &object : m_context->scene->objects()) {
-			if (!object || !object->collection()) {
+		for (auto &node : m_context->scene->nodes()) {
+			auto object = static_cast<Object *>(node);
+
+			if (!object->collection()) {
 				continue;
 			}
 
-			const bool active_object = (object == m_context->scene->currentObject());
+			const bool active_object = (object == m_context->scene->active_node());
 
 			const auto collection = object->collection();
+
+			if (object->parent()) {
+				m_stack.push(object->parent()->matrix());
+			}
+
+			m_stack.push(object->matrix());
 
 			for (auto &prim : collection->primitives()) {
 				/* update prim before drawing */
@@ -145,7 +159,9 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &/*rect*/)
 					prim->bbox()->render(m_viewer_context, false);
 				}
 
-				m_viewer_context->setMatrix(object->matrix() * prim->matrix());
+				m_stack.push(prim->matrix());
+
+				m_viewer_context->setMatrix(m_stack.top());
 
 				prim->render(m_viewer_context, false);
 
@@ -167,6 +183,14 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &/*rect*/)
 					glStencilMask(0xff);
 					glEnable(GL_DEPTH_TEST);
 				}
+
+				m_stack.pop();
+			}
+
+			m_stack.pop();
+
+			if (object->parent()) {
+				m_stack.pop();
 			}
 		}
 	}
@@ -212,6 +236,7 @@ void OpenGLScene::mousePressEvent(QGraphicsSceneMouseEvent *e)
 
 	m_camera->mouseDownEvent(x, y);
 	update();
+	m_base->set_active();
 }
 
 void OpenGLScene::mouseMoveEvent(QGraphicsSceneMouseEvent *e)
@@ -236,11 +261,13 @@ void OpenGLScene::keyPressEvent(QKeyEvent *e)
 {
 	switch (e->key()) {
 		case Qt::Key_Delete:
-			m_context->scene->removeObject(m_context->scene->currentObject());
+			m_context->scene->removeObject(m_context->scene->active_node());
 			break;
 		default:
 			break;
 	}
+
+	m_base->set_active();
 }
 
 void OpenGLScene::wheelEvent(QGraphicsSceneWheelEvent *e)
@@ -253,12 +280,6 @@ void OpenGLScene::wheelEvent(QGraphicsSceneWheelEvent *e)
 	}
 
 	m_camera->mouseWheelEvent(m_mouse_button);
-}
-
-void OpenGLScene::setScene(Scene *scene)
-{
-	m_scene = scene;
-	update();
 }
 
 void OpenGLScene::intersectScene(int x, int y) const
@@ -296,6 +317,7 @@ void OpenGLScene::changeBackground()
 	if (color.isValid()) {
 		m_bg = glm::vec4(color.redF(), color.greenF(), color.blueF(), 1.0f);
 		glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
+		update();
 	}
 }
 
@@ -325,7 +347,7 @@ QDialog *createDialog(const QString &windowTitle)
 GraphicsViewer::GraphicsViewer(QWidget *parent)
     : QGraphicsView(parent)
 {
-	GLScene(new OpenGLScene);
+	GLScene(new OpenGLScene());
 
 	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -333,19 +355,19 @@ GraphicsViewer::GraphicsViewer(QWidget *parent)
 	setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
 
 	QWidget *instructions = createDialog(tr("Instructions"));
-     instructions->layout()->addWidget(new QLabel(
-         tr("Use mouse wheel to zoom model, and click and "
-            "drag to rotate model")));
-     instructions->layout()->addWidget(new QLabel(
-         tr("Move the sun around to change the light "
-            "position")));
+	instructions->layout()->addWidget(new QLabel(
+	                                      tr("Use mouse wheel to zoom model, and click and "
+	                                         "drag to rotate model")));
+	instructions->layout()->addWidget(new QLabel(
+	                                      tr("Move the sun around to change the light "
+	                                         "position")));
 
-     m_glscene->addWidget(instructions);
+	m_glscene->addWidget(instructions);
 
-	 for (auto items : m_glscene->items()) {
-		 std::cerr << "There is an item\n";
-		 items->setPos(250, 250);
-	 }
+	for (auto items : m_glscene->items()) {
+		std::cerr << "There is an item\n";
+		items->setPos(250, 250);
+	}
 }
 
 GraphicsViewer::~GraphicsViewer()
@@ -372,4 +394,40 @@ void GraphicsViewer::resizeEvent(QResizeEvent *event)
 
 		QGraphicsView::resizeEvent(event);
 	}
+}
+
+/* ************************************************************************** */
+
+ViewerWidget::ViewerWidget(QWidget *parent)
+    : WidgetBase(parent)
+    , m_viewer(new GraphicsViewer(this))
+{
+	auto scene = m_viewer->GLScene();
+
+	scene->set_base(this);
+
+	auto vert_layout = new QVBoxLayout();
+	vert_layout->addWidget(m_viewer);
+
+	auto horiz_layout = new QHBoxLayout();
+
+	auto push_button = new QPushButton("Change Color");
+	push_button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+	connect(push_button, SIGNAL(clicked()), scene, SLOT(changeBackground()));
+	horiz_layout->addWidget(push_button);
+
+	auto check = new QCheckBox("Draw Box");
+	check->setChecked(true);
+	connect(check, SIGNAL(toggled(bool)), scene, SLOT(drawGrid(bool)));
+	horiz_layout->addWidget(check);
+
+	vert_layout->addLayout(horiz_layout);
+
+	m_main_layout->addLayout(vert_layout);
+}
+
+void ViewerWidget::update_state(event_type /*event*/)
+{
+	m_viewer->GLScene()->set_context(m_context);
+	m_viewer->update();
 }

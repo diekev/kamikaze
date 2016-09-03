@@ -24,13 +24,16 @@
 
 #pragma once
 
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
 class DepsNode;
+class Context;
 class EvaluationContext;
 class Graph;
 class Object;
+class SceneNode;
 class TaskNotifier;
 
 struct DepsInputSocket;
@@ -40,7 +43,7 @@ struct DepsOutputSocket;
 
 struct DepsInputSocket {
 	DepsNode *parent = nullptr;
-	DepsOutputSocket *link = nullptr;
+	std::vector<DepsOutputSocket *> links{};
 
 	DepsInputSocket() = default;
 };
@@ -63,7 +66,7 @@ public:
 
 	virtual ~DepsNode() = default;
 	virtual void pre_process() {}
-	virtual void process(const EvaluationContext * const context, TaskNotifier *notifier) = 0;
+	virtual void process(const Context &context, TaskNotifier *notifier) = 0;
 
 	DepsInputSocket *input();
 	const DepsInputSocket *input() const;
@@ -87,7 +90,7 @@ public:
 	~DepsObjectNode() = default;
 
 	void pre_process() override;
-	void process(const EvaluationContext * const context, TaskNotifier *notifier) override;
+	void process(const Context &context, TaskNotifier *notifier) override;
 
 	Object *object();
 	const Object *object() const;
@@ -106,7 +109,8 @@ public:
 
 	~ObjectGraphDepsNode() = default;
 
-	void process(const EvaluationContext * const context, TaskNotifier *notifier) override;
+	void pre_process() override;
+	void process(const Context &context, TaskNotifier *notifier) override;
 
 	Graph *graph();
 	const Graph *graph() const;
@@ -121,7 +125,7 @@ public:
 	TimeDepsNode() = default;
 	~TimeDepsNode() = default;
 
-	void process(const EvaluationContext * const context, TaskNotifier *notifier) override;
+	void process(const Context &context, TaskNotifier *notifier) override;
 
 	const char *name() const override;
 };
@@ -135,41 +139,45 @@ enum {
 };
 
 class Depsgraph {
-	std::vector<DepsNode *> m_nodes;
+	std::vector<std::shared_ptr<DepsNode>> m_nodes;
 	std::vector<DepsNode *> m_stack;
-	std::unordered_map<Object *, DepsNode *> m_object_map;
+	std::unordered_map<SceneNode *, DepsNode *> m_scene_node_map;
 	std::unordered_map<Graph *, DepsNode *> m_object_graph_map;
 
 	int m_state = DEG_STATE_NONE;
 	bool m_need_update = false;
 
-	TimeDepsNode *m_time_node = nullptr;
+	std::shared_ptr<DepsNode> m_time_node = nullptr;
 
 	friend class GraphEvalTask;
 
 public:
 	Depsgraph();
-	~Depsgraph();
+	~Depsgraph() = default;
 
 	/* Disallow copy. */
 	Depsgraph(const Depsgraph &other) = delete;
 	Depsgraph &operator=(const Depsgraph &other) = delete;
 
+	void connect(SceneNode *from, SceneNode *to);
+	void disconnect(SceneNode *from, SceneNode *to);
+
 	void connect(DepsOutputSocket *from, DepsInputSocket *to);
 	void disconnect(DepsOutputSocket *from, DepsInputSocket *to);
 
-	void create_node(Object *object);
-	void remove_node(Object *object);
+	void create_node(SceneNode *scene_node);
+	void remove_node(SceneNode *scene_node);
 
-	void connect_to_time(Object *object);
+	void connect_to_time(SceneNode *scene_node);
 
-	void evaluate(const EvaluationContext * const context, Object *object);
-	void evaluate_for_time_change(const EvaluationContext * const context);
+	void evaluate(const Context &context, SceneNode *scene_node);
+	void evaluate_for_time_change(const Context &context);
 
-	const std::vector<DepsNode *> &nodes() const;
+	const std::vector<std::shared_ptr<DepsNode> > &nodes() const;
 
 private:
 	void build(DepsNode *root);
 
-	void evaluate_ex(const EvaluationContext* const context, DepsNode *root, TaskNotifier *notifier);
+	void evaluate_ex(const Context &context, DepsNode *root, TaskNotifier *notifier);
+	DepsNode *find_node(SceneNode *scene_node, bool graph);
 };

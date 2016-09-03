@@ -48,10 +48,13 @@ set(SHADERS
 	shaders/volume.vert
 )
 
+set(STYLES
+	styles/main.qss
+)
+
 add_library(kmk_core STATIC
 	camera.h
 	context.h
-	factory.h
 	grid.h
 	kamikaze_main.h
 	object.h
@@ -67,6 +70,7 @@ add_library(kmk_core STATIC
 	graphs/graph_tools.h
 	graphs/object_graph.h
 	graphs/object_nodes.h
+	graphs/scene_node.h
 
 	camera.cc
 	context.cc
@@ -82,8 +86,10 @@ add_library(kmk_core STATIC
 	graphs/graph_dumper.cc
 	graphs/object_graph.cc
 	graphs/object_nodes.cc
+	graphs/scene_node.cc
 
 	${SHADERS}
+	${STYLES}
 )
 
 target_include_directories(kmk_core PUBLIC "${INC_SYS}")
@@ -91,6 +97,11 @@ target_include_directories(kmk_core PUBLIC "${INC_SYS}")
 install(
 	FILES ${SHADERS}
 	DESTINATION shaders
+)
+
+install(
+	FILES ${STYLES}
+	DESTINATION styles
 )
 
 set(ICONS

@@ -25,28 +25,33 @@
 #include "outliner_widget.h"
 
 #include <kamikaze/context.h>
+#include <kamikaze/nodes.h>
 
+#include <QDropEvent>
+#include <QHBoxLayout>
+
+#include "core/graphs/object_graph.h"
 #include "core/object.h"
 #include "core/scene.h"
 
+#include "util/utils.h"
+
+//#define DRAG_DROP_PARENTING
+
 /* ************************************************************************** */
 
-SceneTreeWidgetItem::SceneTreeWidgetItem(QWidget *parent)
+SceneTreeWidgetItem::SceneTreeWidgetItem(Scene *scene, QWidget *parent)
     : QWidget(parent)
-    , m_scene(nullptr)
+    , m_scene(scene)
     , m_visited(false)
-{}
+{
+	setChildIndicatorPolicy(QTreeWidgetItem::ShowIndicator);
+	setText(0, "Scene");
+}
 
 Scene *SceneTreeWidgetItem::getScene() const
 {
 	return m_scene;
-}
-
-void SceneTreeWidgetItem::setScene(Scene *scene)
-{
-	m_scene = scene;
-	setText(0, "Scene");
-	setChildIndicatorPolicy(QTreeWidgetItem::ShowIndicator);
 }
 
 bool SceneTreeWidgetItem::visited() const
@@ -59,32 +64,24 @@ void SceneTreeWidgetItem::setVisited()
 	m_visited = true;
 }
 
-int SceneTreeWidgetItem::numChildren() const
-{
-	return m_scene->objects().size();
-}
-
 /* ************************************************************************** */
 
-ObjectTreeWidgetItem::ObjectTreeWidgetItem(QTreeWidgetItem *parent)
+ObjectTreeWidgetItem::ObjectTreeWidgetItem(SceneNode *scene_node, QTreeWidgetItem *parent)
     : QTreeWidgetItem(parent)
-    , m_object(nullptr)
+    , m_scene_node(scene_node)
     , m_visited(false)
-{}
-
-Object *ObjectTreeWidgetItem::getObject() const
 {
-	return m_object;
+	setChildIndicatorPolicy(QTreeWidgetItem::ShowIndicator);
+	setText(0, m_scene_node->name().c_str());
+
+#ifdef DRAG_DROP_PARENTING
+	setFlags(flags() | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled);
+#endif
 }
 
-void ObjectTreeWidgetItem::setObject(Object *object)
+SceneNode *ObjectTreeWidgetItem::getNode() const
 {
-	m_object = object;
-	setText(0, m_object->name());
-
-	if (this->numChildren() > 0) {
-		setChildIndicatorPolicy(QTreeWidgetItem::ShowIndicator);
-	}
+	return m_scene_node;
 }
 
 bool ObjectTreeWidgetItem::visited() const
@@ -97,14 +94,23 @@ void ObjectTreeWidgetItem::setVisited()
 	m_visited = true;
 }
 
-int ObjectTreeWidgetItem::numChildren() const
+/* ************************************************************************** */
+
+ObjectNodeTreeWidgetItem::ObjectNodeTreeWidgetItem(Node *node, QTreeWidgetItem *parent)
+    : QTreeWidgetItem(parent)
+    , m_node(node)
 {
-	return getObject()->children().size();
+	setText(0, m_node->name().c_str());
+}
+
+Node *ObjectNodeTreeWidgetItem::getNode() const
+{
+	return m_node;
 }
 
 /* ************************************************************************** */
 
-OutlinerTreeWidget::OutlinerTreeWidget(QWidget *parent)
+TreeWidget::TreeWidget(QWidget *parent)
     : QTreeWidget(parent)
 {
 	setIconSize(QSize(20, 20));
@@ -113,55 +119,106 @@ OutlinerTreeWidget::OutlinerTreeWidget(QWidget *parent)
 	setAutoScroll(false);
 	setUniformRowHeights(true);
 	setSelectionMode(SingleSelection);
+#ifdef DRAG_DROP_PARENTING
+	setDragDropMode(InternalMove);
+	setDragEnabled(true);
+#else
 	setDragDropMode(NoDragDrop);
+	setDragEnabled(false);
+#endif
 	setFocusPolicy(Qt::NoFocus);
 	setContextMenuPolicy(Qt::CustomContextMenu);
 	setHeaderHidden(true);
-
-	connect(this, SIGNAL(itemExpanded(QTreeWidgetItem *)),
-	        this, SLOT(handleItemExpanded(QTreeWidgetItem *)));
-
-	connect(this, SIGNAL(itemSelectionChanged()),
-	        this, SLOT(handleItemSelection()));
 }
 
-void OutlinerTreeWidget::update_state(int event_type)
+void TreeWidget::set_base(WidgetBase *base)
 {
-	if (event_type != OBJECT_ADDED) {
+	m_base = base;
+}
+
+void TreeWidget::mousePressEvent(QMouseEvent *e)
+{
+	m_base->set_active();
+	QTreeWidget::mousePressEvent(e);
+}
+
+void TreeWidget::dropEvent(QDropEvent *event)
+{
+	if (event->source() != this) {
 		return;
 	}
 
-	/* TODO */
-	clear();
+#ifdef DRAG_DROP_PARENTING
+	auto item = itemAt(event->pos());
 
-	SceneTreeWidgetItem *item = new SceneTreeWidgetItem(this);
-    item->setScene(m_context->scene);
-    addTopLevelItem(item);
+	if (!item) {
+		return;
+	}
+
+	auto object_item = dynamic_cast<ObjectTreeWidgetItem *>(item);
+
+	if (!object_item) {
+		return;
+	}
+
+	auto source_item = dynamic_cast<ObjectTreeWidgetItem *>(selectedItems()[0]);
+
+	if (!source_item) {
+		return;
+	}
+
+	if (source_item == object_item) {
+		return;
+	}
+
+	m_context->scene->connect(m_context, object_item->getNode(), source_item->getNode());
+#endif
+
+	QTreeView::dropEvent(event);
 }
 
-void OutlinerTreeWidget::keyPressEvent(QKeyEvent *e)
+OutlinerTreeWidget::OutlinerTreeWidget(QWidget *parent)
+    : WidgetBase(parent)
+    , m_tree_widget(new TreeWidget(this))
 {
-	return QTreeWidget::keyPressEvent(e);
+	m_main_layout->addWidget(m_tree_widget);
+
+	m_tree_widget->set_base(this);
+
+	connect(m_tree_widget, SIGNAL(itemExpanded(QTreeWidgetItem *)),
+	        this, SLOT(handleItemExpanded(QTreeWidgetItem *)));
+
+	connect(m_tree_widget, SIGNAL(itemCollapsed(QTreeWidgetItem *)),
+	        this, SLOT(handleItemCollapsed(QTreeWidgetItem *)));
+
+	connect(m_tree_widget, SIGNAL(itemSelectionChanged()),
+	        this, SLOT(handleItemSelection()));
 }
 
-void OutlinerTreeWidget::mouseMoveEvent(QMouseEvent *e)
+void OutlinerTreeWidget::update_state(event_type event)
 {
-	return QTreeWidget::mouseMoveEvent(e);
-}
+	if (event == static_cast<event_type>(-1)) {
+		return;
+	}
 
-void OutlinerTreeWidget::mousePressEvent(QMouseEvent *e)
-{
-	return QTreeWidget::mousePressEvent(e);
-}
+	if (get_category(event) != event_type::object) {
+		return;
+	}
 
-void OutlinerTreeWidget::mouseReleaseEvent(QMouseEvent *e)
-{
-	return QTreeWidget::mouseReleaseEvent(e);
-}
+	if (!is_elem(get_action(event), event_type::added, event_type::parented)) {
+		return;
+	}
 
-void OutlinerTreeWidget::wheelEvent(QWheelEvent *e)
-{
-	return QTreeWidget::wheelEvent(e);
+	/* For now we clear and recreate everything from scratch on every call for
+	 * updates. Maybe there is a slightly better way to do so. */
+	m_tree_widget->clear();
+
+	auto scene = m_context->scene;
+	auto item = new SceneTreeWidgetItem(scene, this);
+    m_tree_widget->addTopLevelItem(item);
+
+	/* Need to first add the item to the tree. */
+	item->setExpanded(scene->has_flags(SCENE_OL_EXPANDED));
 }
 
 void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
@@ -170,11 +227,19 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 
 	if (scene_item && !scene_item->visited()) {
 		Scene *scene = scene_item->getScene();
+		scene->set_flags(SCENE_OL_EXPANDED);
 
-		for (const auto &object : scene->objects()) {
-			auto child = new ObjectTreeWidgetItem(scene_item);
-			child->setObject(object);
+		for (const auto &node : scene->nodes()) {
+			auto object = static_cast<Object *>(node);
+
+			if (object->parent() != nullptr) {
+				continue;
+			}
+
+			auto child = new ObjectTreeWidgetItem(node, scene_item);
+			child->setSelected(node == scene->active_node());
 			scene_item->addChild(child);
+			child->setExpanded(node->has_flags(SNODE_OL_EXPANDED));
 		}
 
 		scene_item->setVisited();
@@ -184,12 +249,20 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 	auto object_item = dynamic_cast<ObjectTreeWidgetItem *>(item);
 
 	if (object_item && !object_item->visited()) {
-		Object *object = object_item->getObject();
+		auto scene_node = object_item->getNode();
+		scene_node->set_flags(SNODE_OL_EXPANDED);
+		auto object = static_cast<Object *>(scene_node);
+
+		for (const auto &node : object->graph()->nodes()) {
+			auto node_item = new ObjectNodeTreeWidgetItem(node, object_item);
+			object_item->addChild(node_item);
+		}
 
 		for (const auto &child : object->children()) {
-			auto child_item = new ObjectTreeWidgetItem(object_item);
-			child_item->setObject(child);
+			auto child_item = new ObjectTreeWidgetItem(child, object_item);
+			child_item->setSelected(child == m_context->scene->active_node());
 			object_item->addChild(child_item);
+			child_item->setExpanded(child->has_flags(SNODE_OL_EXPANDED));
 		}
 
 		object_item->setVisited();
@@ -197,9 +270,28 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 	}
 }
 
+void OutlinerTreeWidget::handleItemCollapsed(QTreeWidgetItem *item)
+{
+	auto scene_item = dynamic_cast<SceneTreeWidgetItem *>(item);
+
+	if (scene_item) {
+		Scene *scene = scene_item->getScene();
+		scene->unset_flags(SCENE_OL_EXPANDED);
+		return;
+	}
+
+	auto object_item = dynamic_cast<ObjectTreeWidgetItem *>(item);
+
+	if (object_item) {
+		auto node = object_item->getNode();
+		node->unset_flags(SNODE_OL_EXPANDED);
+		return;
+	}
+}
+
 void OutlinerTreeWidget::handleItemSelection()
 {
-	auto items = selectedItems();
+	auto items = m_tree_widget->selectedItems();
 
 	if (items.size() != 1) {
 		return;
@@ -216,7 +308,7 @@ void OutlinerTreeWidget::handleItemSelection()
 	auto object_item = dynamic_cast<ObjectTreeWidgetItem *>(item);
 
 	if (object_item) {
-		m_context->scene->setActiveObject(object_item->getObject());
+		m_context->scene->set_active_node(object_item->getNode());
 		return;
 	}
 }

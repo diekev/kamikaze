@@ -22,31 +22,51 @@
  *
  */
 
-#include <cassert>
-#include <string>
-#include <unordered_map>
+#include "scene_node.h"
 
-template <typename Base, typename Key = std::string>
-class Factory final {
-public:
-	typedef Base *(*factory_func)(void);
-
-	void registerType(const Key &name, factory_func func)
-	{
-		const auto iter = m_map.find(name);
-		assert(iter == m_map.end());
-
-		m_map[name] = func;
+SceneNode::~SceneNode()
+{
+	for (auto &input : m_inputs) {
+		delete input;
 	}
 
-	Base *operator()(const Key &name)
-	{
-		const auto iter = m_map.find(name);
-		assert(iter != m_map.end());
-
-		return iter->second();
+	for (auto &output : m_outputs) {
+		delete output;
 	}
+}
 
-private:
-	std::unordered_map<Key, factory_func> m_map;
-};
+void SceneNode::add_input(const std::string &name)
+{
+	auto socket = new SceneInputSocket(name);
+	socket->parent = this;
+
+	this->m_inputs.push_back(socket);
+}
+
+void SceneNode::add_output(const std::string &name)
+{
+	auto socket = new SceneOutputSocket(name);
+	socket->parent = this;
+
+	this->m_outputs.push_back(socket);
+}
+
+const std::vector<SceneInputSocket *> &SceneNode::inputs()
+{
+	return m_inputs;
+}
+
+const std::vector<SceneOutputSocket *> &SceneNode::outputs()
+{
+	return m_outputs;
+}
+
+void SceneNode::name(const std::string &name)
+{
+	m_name = name;
+}
+
+const std::string &SceneNode::name() const
+{
+	return m_name;
+}

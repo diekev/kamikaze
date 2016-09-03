@@ -27,6 +27,7 @@
 #include <QMainWindow>
 
 #include <kamikaze/context.h>
+#include "core/context.h"
 
 #include "core/undo.h"
 
@@ -46,7 +47,8 @@ class MainWindow : public QMainWindow {
 
 	bool m_has_glwindow;
 
-	EvaluationContext m_context;
+	Context m_context;
+	EvaluationContext m_eval_context;
 
 	QMenu *m_add_object_menu;
 	QMenu *m_add_nodes_menu;
@@ -74,8 +76,6 @@ private:
 	void generateNodeMenu();
 	void generatePresetMenu();
 	void generateDebugMenu();
-
-	void setupPalette();
 
 private Q_SLOTS:
 	/* Undo & commands */

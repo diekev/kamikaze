@@ -89,7 +89,7 @@ public:
 
 	void set_prop_visible(const std::string &prop_name, bool visible);
 
-	virtual void update_properties();
+	virtual bool update_properties();
 
 	int eval_int(const std::string &prop_name);
 
