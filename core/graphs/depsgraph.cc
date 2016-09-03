@@ -349,7 +349,6 @@ void Depsgraph::remove_node(SceneNode *scene_node)
 
 		m_object_graph_map.erase(iter);
 		m_nodes.erase(node_iter);
-		delete node;
 	}
 
 	/* Then, delete scene node. */
@@ -378,7 +377,6 @@ void Depsgraph::remove_node(SceneNode *scene_node)
 
 		m_scene_node_map.erase(iter);
 		m_nodes.erase(node_iter);
-		delete node;
 	}
 
 	m_need_update = true;
