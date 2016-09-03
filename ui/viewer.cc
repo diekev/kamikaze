@@ -32,6 +32,8 @@
 
 #include <QApplication>
 #include <QColorDialog>
+#include <QFrame>
+#include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QTimer>
 
@@ -54,11 +56,6 @@ Viewer::~Viewer()
 	delete m_camera;
 	delete m_grid;
 	delete m_viewer_context;
-}
-
-void Viewer::update_state(event_type /*event*/)
-{
-	update();
 }
 
 void Viewer::initializeGL()
@@ -111,6 +108,12 @@ void Viewer::paintGL()
 
 	if (m_draw_grid) {
 		m_grid->render(m_viewer_context);
+	}
+
+	/* XXX - only happens on initialization, but not nice. Better to construct
+     * context listeners with valid context. */
+	if (!m_context) {
+		return;
 	}
 
 	if (m_context->scene != nullptr) {
@@ -215,6 +218,7 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 
 	m_camera->mouseDownEvent(x, y);
 	update();
+	m_base->set_active();
 }
 
 void Viewer::mouseMoveEvent(QMouseEvent *e)
@@ -245,6 +249,8 @@ void Viewer::keyPressEvent(QKeyEvent *e)
 		default:
 			break;
 	}
+
+	m_base->set_active();
 }
 
 void Viewer::wheelEvent(QWheelEvent *e)
@@ -258,6 +264,7 @@ void Viewer::wheelEvent(QWheelEvent *e)
 
 	m_camera->mouseWheelEvent(m_mouse_button);
 	update();
+	m_base->set_active();
 }
 
 void Viewer::intersectScene(int x, int y) const
@@ -302,4 +309,18 @@ void Viewer::drawGrid(bool b)
 {
 	m_draw_grid = b;
 	update();
+}
+
+ViewerWidget::ViewerWidget(QWidget *parent)
+    : WidgetBase(parent)
+    , m_viewer(new Viewer(this))
+{
+	m_main_layout->addWidget(m_viewer);
+	m_viewer->set_base(this);
+}
+
+void ViewerWidget::update_state(event_type /*event*/)
+{
+	m_viewer->set_context(m_context);
+	m_viewer->update();
 }

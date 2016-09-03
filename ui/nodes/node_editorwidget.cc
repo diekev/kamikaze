@@ -92,10 +92,13 @@ static inline bool is_connection(QGraphicsItem *item)
 /* ************************************************************************** */
 
 QtNodeEditor::QtNodeEditor(QWidget *parent)
-    : QWidget(parent)
+    : WidgetBase(parent)
+    , m_view(new NodeView(this))
 {
-	QVBoxLayout *mainLayout = new QVBoxLayout;
-	m_view = new NodeView(this);
+	m_main_layout->addWidget(m_view);
+
+	/* Hide graphics view's frame. */
+	m_view->setStyleSheet("border: 0px");
 
 	m_scene_scene = new QtNodeGraphicsScene();
 	m_scene_scene->installEventFilter(this);
@@ -107,7 +110,7 @@ QtNodeEditor::QtNodeEditor(QWidget *parent)
 	m_view->setInteractive(true);
 	m_view->setMouseTracking(true);
 	m_view->setBackgroundBrush(QBrush(QColor(127, 127, 127)));
-	mainLayout->addWidget(m_view);
+
 	m_rubber_band = nullptr;
 	m_hover_connection = nullptr;
 	m_active_connection = nullptr;
@@ -162,7 +165,6 @@ QtNodeEditor::QtNodeEditor(QWidget *parent)
 	setMenuCollapseExpandEnabled(true);
 	setContextMenuPolicy(Qt::CustomContextMenu);
 	connect(m_context_menu, SIGNAL(triggered(QAction*)), this, SLOT(contextMenuItemSelected(QAction*)));
-	setLayout(mainLayout);
 }
 
 QtNodeEditor::~QtNodeEditor()
@@ -311,6 +313,7 @@ bool QtNodeEditor::eventFilter(QObject *object, QEvent *event)
 	switch (static_cast<int>(event->type())) {
 		case QEvent::GraphicsSceneMousePress:
 			mouseClickHandler(mouseEvent);
+			this->set_active();
 			break;
 		case QEvent::GraphicsSceneMouseDoubleClick:
 			mouseDoubleClickHandler(mouseEvent);

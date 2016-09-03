@@ -24,9 +24,7 @@
 
 #pragma once
 
-#include <QWidget>
-
-#include "context.h"
+#include "widgetbase.h"
 
 class ParamCallback;
 class Persona;
@@ -35,13 +33,12 @@ class QGridLayout;
 class QHBoxLayout;
 class QScrollArea;
 
-class PropertiesWidget : public QWidget, public ContextListener {
+class PropertiesWidget : public WidgetBase {
 	Q_OBJECT
 
 	QWidget *m_widget;
 	QScrollArea *m_scroll;
-	QGridLayout *m_layout;
-	QHBoxLayout *m_hbox_layout;
+	QGridLayout *m_glayout;
 	ParamCallback *m_callback;
 
 public:

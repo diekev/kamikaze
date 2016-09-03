@@ -42,29 +42,22 @@
 #include "util/utils.h"
 
 PropertiesWidget::PropertiesWidget(QWidget *parent)
-    : QWidget(parent)
+    : WidgetBase(parent)
     , m_widget(new QWidget())
     , m_scroll(new QScrollArea())
-    , m_layout(new QGridLayout(m_widget))
-    , m_hbox_layout(new QHBoxLayout())
-    , m_callback(new ParamCallback(m_layout))
+    , m_glayout(new QGridLayout(m_widget))
+    , m_callback(new ParamCallback(m_glayout))
 {
-	setLayout(m_hbox_layout);
-
-	QSizePolicy sizePolicy2(QSizePolicy::Preferred, QSizePolicy::Preferred);
-	sizePolicy2.setHorizontalStretch(0);
-	sizePolicy2.setVerticalStretch(0);
-	sizePolicy2.setHeightForWidth(m_widget->sizePolicy().hasHeightForWidth());
-
-	m_widget->setSizePolicy(sizePolicy2);
+	m_widget->setSizePolicy(m_frame->sizePolicy());
 
 	m_scroll->setWidget(m_widget);
 	m_scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 	m_scroll->setWidgetResizable(true);
-	m_scroll->setFrameShape(QFrame::StyledPanel);
-	m_scroll->setFrameShadow(QFrame::Raised);
 
-	m_hbox_layout->addWidget(m_scroll);
+	/* Hide scroll area's frame. */
+	m_scroll->setFrameStyle(0);
+
+	m_main_layout->addWidget(m_scroll);
 }
 
 PropertiesWidget::~PropertiesWidget()
@@ -132,6 +125,7 @@ void PropertiesWidget::update_state(event_type event)
 
 void PropertiesWidget::evalObjectGraph()
 {
+	this->set_active();
 	auto scene = m_context->scene;
 
 	scene->evalObjectDag(*m_context, scene->active_node());
@@ -140,6 +134,7 @@ void PropertiesWidget::evalObjectGraph()
 
 void PropertiesWidget::tagObjectUpdate()
 {
+	this->set_active();
 	m_context->scene->tagObjectUpdate();
 }
 

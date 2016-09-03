@@ -77,8 +77,6 @@ private:
 	void generatePresetMenu();
 	void generateDebugMenu();
 
-	void setupPalette();
-
 private Q_SLOTS:
 	/* Undo & commands */
 	void undo() const;

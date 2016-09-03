@@ -28,6 +28,7 @@
 #include <kamikaze/nodes.h>
 
 #include <QDropEvent>
+#include <QHBoxLayout>
 
 #include "core/graphs/object_graph.h"
 #include "core/object.h"
@@ -109,7 +110,7 @@ Node *ObjectNodeTreeWidgetItem::getNode() const
 
 /* ************************************************************************** */
 
-OutlinerTreeWidget::OutlinerTreeWidget(QWidget *parent)
+TreeWidget::TreeWidget(QWidget *parent)
     : QTreeWidget(parent)
 {
 	setIconSize(QSize(20, 20));
@@ -128,14 +129,69 @@ OutlinerTreeWidget::OutlinerTreeWidget(QWidget *parent)
 	setFocusPolicy(Qt::NoFocus);
 	setContextMenuPolicy(Qt::CustomContextMenu);
 	setHeaderHidden(true);
+}
 
-	connect(this, SIGNAL(itemExpanded(QTreeWidgetItem *)),
+void TreeWidget::set_base(WidgetBase *base)
+{
+	m_base = base;
+}
+
+void TreeWidget::mousePressEvent(QMouseEvent *e)
+{
+	m_base->set_active();
+	QTreeWidget::mousePressEvent(e);
+}
+
+void TreeWidget::dropEvent(QDropEvent *event)
+{
+	if (event->source() != this) {
+		return;
+	}
+
+#ifdef DRAG_DROP_PARENTING
+	auto item = itemAt(event->pos());
+
+	if (!item) {
+		return;
+	}
+
+	auto object_item = dynamic_cast<ObjectTreeWidgetItem *>(item);
+
+	if (!object_item) {
+		return;
+	}
+
+	auto source_item = dynamic_cast<ObjectTreeWidgetItem *>(selectedItems()[0]);
+
+	if (!source_item) {
+		return;
+	}
+
+	if (source_item == object_item) {
+		return;
+	}
+
+	m_context->scene->connect(m_context, object_item->getNode(), source_item->getNode());
+#endif
+
+	QTreeView::dropEvent(event);
+}
+
+OutlinerTreeWidget::OutlinerTreeWidget(QWidget *parent)
+    : WidgetBase(parent)
+    , m_tree_widget(new TreeWidget(this))
+{
+	m_main_layout->addWidget(m_tree_widget);
+
+	m_tree_widget->set_base(this);
+
+	connect(m_tree_widget, SIGNAL(itemExpanded(QTreeWidgetItem *)),
 	        this, SLOT(handleItemExpanded(QTreeWidgetItem *)));
 
-	connect(this, SIGNAL(itemCollapsed(QTreeWidgetItem *)),
+	connect(m_tree_widget, SIGNAL(itemCollapsed(QTreeWidgetItem *)),
 	        this, SLOT(handleItemCollapsed(QTreeWidgetItem *)));
 
-	connect(this, SIGNAL(itemSelectionChanged()),
+	connect(m_tree_widget, SIGNAL(itemSelectionChanged()),
 	        this, SLOT(handleItemSelection()));
 }
 
@@ -155,11 +211,11 @@ void OutlinerTreeWidget::update_state(event_type event)
 
 	/* For now we clear and recreate everything from scratch on every call for
 	 * updates. Maybe there is a slightly better way to do so. */
-	clear();
+	m_tree_widget->clear();
 
 	auto scene = m_context->scene;
 	auto item = new SceneTreeWidgetItem(scene, this);
-    addTopLevelItem(item);
+    m_tree_widget->addTopLevelItem(item);
 
 	/* Need to first add the item to the tree. */
 	item->setExpanded(scene->has_flags(SCENE_OL_EXPANDED));
@@ -235,7 +291,7 @@ void OutlinerTreeWidget::handleItemCollapsed(QTreeWidgetItem *item)
 
 void OutlinerTreeWidget::handleItemSelection()
 {
-	auto items = selectedItems();
+	auto items = m_tree_widget->selectedItems();
 
 	if (items.size() != 1) {
 		return;
@@ -255,39 +311,4 @@ void OutlinerTreeWidget::handleItemSelection()
 		m_context->scene->set_active_node(object_item->getNode());
 		return;
 	}
-}
-
-void OutlinerTreeWidget::dropEvent(QDropEvent *event)
-{
-	if (event->source() != this) {
-		return;
-	}
-
-#ifdef DRAG_DROP_PARENTING
-	auto item = itemAt(event->pos());
-
-	if (!item) {
-		return;
-	}
-
-	auto object_item = dynamic_cast<ObjectTreeWidgetItem *>(item);
-
-	if (!object_item) {
-		return;
-	}
-
-	auto source_item = dynamic_cast<ObjectTreeWidgetItem *>(selectedItems()[0]);
-
-	if (!source_item) {
-		return;
-	}
-
-	if (source_item == object_item) {
-		return;
-	}
-
-	m_context->scene->connect(m_context, object_item->getNode(), source_item->getNode());
-#endif
-
-	QTreeView::dropEvent(event);
 }

@@ -30,6 +30,7 @@
 class EvaluationContext;
 class MainWindow;
 class Scene;
+class WidgetBase;
 
 /* - 0x000000ff Category.
  * - 0x0000ff00 Action.
@@ -94,6 +95,7 @@ struct Context {
 	PrimitiveFactory *primitive_factory;
 	NodeFactory *node_factory;
 	MainWindow *main_window;
+	WidgetBase *active_widget;
 };
 
 class ContextListener {

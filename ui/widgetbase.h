@@ -24,51 +24,25 @@
 
 #pragma once
 
-#include "widgetbase.h"
+#include <QWidget>
 
-class QDoubleSpinBox;
-class QGridLayout;
-class QLabel;
-class QSlider;
-class QPushButton;
-class QSpinBox;
-class QVBoxLayout;
-class Scene;
+#include "context.h"
 
-class TimeLineWidget : public WidgetBase {
-	Q_OBJECT
+class QFrame;
+class QHBoxLayout;
 
-	QSlider *m_slider;
-
-	QHBoxLayout *m_tc_layout;
-	QHBoxLayout *m_num_layout;
-	QVBoxLayout *m_vbox_layout;
-	QSpinBox *m_end_frame, *m_start_frame, *m_cur_frame;
-	QDoubleSpinBox *m_fps;
-
-	QTimer *m_timer;
-
-	bool m_timer_has_started = false;
+class WidgetBase : public QWidget, public ContextListener {
+protected:
+	QFrame *m_frame;
+	QHBoxLayout *m_layout;
+	QHBoxLayout *m_main_layout;
 
 public:
-	explicit TimeLineWidget(QWidget *parent = nullptr);
+	explicit WidgetBase(QWidget *parent = nullptr);
+	virtual ~WidgetBase() = default;
 
-	void update_state(event_type event) override;
+	void active(bool yesno);
+	void set_active();
 
-private Q_SLOTS:
-	void setStartFrame(int value);
-	void setCurrentFrame(int value);
-	void setEndFrame(int value);
-	void setFPS(double value);
-
-	void goToStartFrame();
-	void goToEndFrame();
-
-	void playBackward();
-	void playForward();
-	void stopAnimation();
-	void stepBackward();
-	void stepForward();
-
-	void updateFrame() const;
+	void mousePressEvent(QMouseEvent *e) override;
 };

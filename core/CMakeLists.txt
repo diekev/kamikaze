@@ -48,6 +48,10 @@ set(SHADERS
 	shaders/volume.vert
 )
 
+set(STYLES
+	styles/main.qss
+)
+
 add_library(kmk_core STATIC
 	camera.h
 	context.h
@@ -85,6 +89,7 @@ add_library(kmk_core STATIC
 	graphs/scene_node.cc
 
 	${SHADERS}
+	${STYLES}
 )
 
 target_include_directories(kmk_core PUBLIC "${INC_SYS}")
@@ -92,6 +97,11 @@ target_include_directories(kmk_core PUBLIC "${INC_SYS}")
 install(
 	FILES ${SHADERS}
 	DESTINATION shaders
+)
+
+install(
+	FILES ${STYLES}
+	DESTINATION styles
 )
 
 set(ICONS

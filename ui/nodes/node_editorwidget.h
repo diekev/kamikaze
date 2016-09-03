@@ -21,7 +21,8 @@
 #pragma once
 
 #include <QGraphicsView>
-#include <QWidget>
+
+#include "widgetbase.h"
 
 #include "scene.h"
 
@@ -51,7 +52,7 @@ protected:
 	void wheelEvent(QWheelEvent *event) override;
 };
 
-class QtNodeEditor : public QWidget, public ContextListener {
+class QtNodeEditor : public WidgetBase {
 	Q_OBJECT
 
 	NodeView *m_view;
