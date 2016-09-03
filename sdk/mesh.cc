@@ -165,6 +165,8 @@ Primitive *Mesh::copy() const
 		delete attr;
 	}
 
+	mesh->m_attributes.clear();
+
 	for (const auto &attr : m_attributes) {
 		mesh->addAttribute(new Attribute(*attr));
 	}

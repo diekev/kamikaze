@@ -172,17 +172,6 @@ void Node::collection(PrimitiveCollection *coll)
 	m_collection = coll;
 }
 
-void Node::buildCollection(const EvaluationContext * const context)
-{
-#if 0
-	if (m_collection != nullptr) {
-		return;
-	}
-#endif
-
-	m_collection = new PrimitiveCollection(context->primitive_factory);
-}
-
 void Node::setPrimitiveCache(PrimitiveCache *cache)
 {
 	m_cache = cache;

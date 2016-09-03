@@ -67,7 +67,7 @@ DepsOutputSocket *DepsNode::output()
 
 bool DepsNode::is_linked() const
 {
-	return (m_input.link != nullptr) || (!m_output.links.empty());
+	return (!m_input.links.empty()) || (!m_output.links.empty());
 }
 
 /* ************************************************************************** */
@@ -80,10 +80,9 @@ void DepsObjectNode::pre_process()
 {
 	/* TODO: what's the purpose of this again? */
 	m_object->collection(nullptr);
-	m_object->clearCache();
 }
 
-void DepsObjectNode::process(const EvaluationContext * const /*context*/, TaskNotifier */*notifier*/)
+void DepsObjectNode::process(const Context & /*context*/, TaskNotifier */*notifier*/)
 {
 	/* The graph should already have been updated. */
 	auto graph = m_object->graph();
@@ -103,7 +102,7 @@ const Object *DepsObjectNode::object() const
 
 const char *DepsObjectNode::name() const
 {
-	return m_object->name().toStdString().c_str();
+	return m_object->name().c_str();
 }
 
 /* ************************************************************************** */
@@ -112,12 +111,20 @@ ObjectGraphDepsNode::ObjectGraphDepsNode(Graph *graph)
     : m_graph(graph)
 {}
 
-void ObjectGraphDepsNode::process(const EvaluationContext * const context, TaskNotifier *notifier)
+void ObjectGraphDepsNode::pre_process()
+{
+	m_graph->clear_cache();
+}
+
+void ObjectGraphDepsNode::process(const Context &context, TaskNotifier *notifier)
 {
 	auto output_node = m_graph->output();
 
 	if (!output_node->isLinked()) {
 		output_node->input(0)->collection = nullptr;
+
+		/* Make sure the node's collection is updated, otherwise can crash. */
+		output_node->process();
 		return;
 	}
 
@@ -141,13 +148,16 @@ void ObjectGraphDepsNode::process(const EvaluationContext * const context, TaskN
 
 	for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter) {
 		Node *node = *iter;
+		PrimitiveCollection *collection = nullptr;
 
 		if (node->inputs().empty()) {
-			node->buildCollection(context);
+			collection = new PrimitiveCollection(context.primitive_factory);
 		}
 		else {
-			node->collection(node->getInputCollection(0ul));
+			collection = node->getInputCollection(0ul);
 		}
+
+		node->collection(collection);
 
 		if (node->collection()) {
 			node->process();
@@ -181,7 +191,7 @@ const char *ObjectGraphDepsNode::name() const
 
 /* ************************************************************************** */
 
-void TimeDepsNode::process(const EvaluationContext * const /*context*/, TaskNotifier */*notifier*/)
+void TimeDepsNode::process(const Context & /*context*/, TaskNotifier */*notifier*/)
 {
 	/* Pass. */
 }
@@ -200,18 +210,18 @@ class GraphEvalTask : public Task {
 	DepsNode *m_root;
 
 public:
-	GraphEvalTask(Depsgraph *graph, const EvaluationContext * const context, DepsNode *root);
+	GraphEvalTask(Depsgraph *graph, const Context &context, DepsNode *root);
 
-	void start(const EvaluationContext * const context) override;
+	void start(const Context &context) override;
 };
 
-GraphEvalTask::GraphEvalTask(Depsgraph *graph, const EvaluationContext * const context, DepsNode *root)
+GraphEvalTask::GraphEvalTask(Depsgraph *graph, const Context &context, DepsNode *root)
     : Task(context)
     , m_graph(graph)
     , m_root(root)
 {}
 
-void GraphEvalTask::start(const EvaluationContext * const context)
+void GraphEvalTask::start(const Context &context)
 {
 	m_graph->evaluate_ex(context, m_root, m_notifier.get());
 }
@@ -224,21 +234,41 @@ Depsgraph::Depsgraph()
 	m_nodes.push_back(m_time_node);
 }
 
-Depsgraph::~Depsgraph()
+void Depsgraph::connect(SceneNode *from, SceneNode *to)
 {
-	for (auto &node : m_nodes) {
-		delete node;
-	}
+	auto from_deps_node = find_node(from, false);
+	auto to_deps_node = find_node(to, true);
+
+	connect(from_deps_node->output(), to_deps_node->input());
+}
+
+void Depsgraph::disconnect(SceneNode *from, SceneNode *to)
+{
+	auto from_deps_node = find_node(from, false);
+	auto to_deps_node = find_node(to, true);
+
+	disconnect(from_deps_node->output(), to_deps_node->input());
+}
+
+DepsNode *Depsgraph::find_node(SceneNode *scene_node, bool graph)
+{
+	DepsNode *node = nullptr;
+
+	/* TODO: find a better way for this. */
+	auto object = static_cast<Object *>(scene_node);
+	auto iter = m_object_graph_map.find(object->graph());
+	assert(iter != m_object_graph_map.end());
+
+	node = iter->second;
+
+	assert(node != nullptr);
+
+	return node;
 }
 
 void Depsgraph::connect(DepsOutputSocket *from, DepsInputSocket *to)
 {
-	if (to->link != nullptr) {
-		std::cerr << "Input already connected!\n";
-		return;
-	}
-
-	to->link = from;
+	to->links.push_back(from);
 	from->links.push_back(to);
 
 	m_need_update = true;
@@ -246,30 +276,43 @@ void Depsgraph::connect(DepsOutputSocket *from, DepsInputSocket *to)
 
 void Depsgraph::disconnect(DepsOutputSocket *from, DepsInputSocket *to)
 {
-	auto iter = std::find(from->links.begin(), from->links.end(), to);
+	{
+		auto iter = std::find(from->links.begin(), from->links.end(), to);
 
-	if (iter == from->links.end()) {
-		std::cerr << "Connection mismatch!\n";
-		return;
+		if (iter == from->links.end()) {
+			std::cerr << "Depsgraph::disconnect, cannot find output!\n";
+			return;
+		}
+
+		from->links.erase(iter);
 	}
 
-	from->links.erase(iter);
-	to->link = nullptr;
+	{
+		auto iter = std::find(to->links.begin(), to->links.end(), from);
+
+		if (iter == to->links.end()) {
+			std::cerr << "Depsgraph::disconnect, cannot find input!\n";
+			return;
+		}
+
+		to->links.erase(iter);
+	}
 
 	m_need_update = true;
 }
 
-void Depsgraph::create_node(Object *object)
+void Depsgraph::create_node(SceneNode *scene_node)
 {
-	DepsObjectNode *node = new DepsObjectNode(object);
+	auto object = static_cast<Object *>(scene_node);
+	auto node = std::shared_ptr<DepsNode>(new DepsObjectNode(object));
 
 	m_nodes.push_back(node);
-	m_object_map[object] = node;
+	m_scene_node_map[scene_node] = node.get();
 
-	ObjectGraphDepsNode *graph_node = new ObjectGraphDepsNode(object->graph());
+	auto graph_node = std::shared_ptr<DepsNode>(new ObjectGraphDepsNode(object->graph()));
 
 	m_nodes.push_back(graph_node);
-	m_object_graph_map[object->graph()] = graph_node;
+	m_object_graph_map[object->graph()] = graph_node.get();
 
 	/* Object depends on its graph. */
 	connect(graph_node->output(), node->input());
@@ -277,21 +320,26 @@ void Depsgraph::create_node(Object *object)
 	m_need_update = true;
 }
 
-void Depsgraph::remove_node(Object *object)
+void Depsgraph::remove_node(SceneNode *scene_node)
 {
 	/* First, remove graph node. */
 	{
+		auto object = static_cast<Object *>(scene_node);
 		auto iter = m_object_graph_map.find(object->graph());
 		assert(iter != m_object_graph_map.end());
 
 		DepsNode *node = iter->second;
 
-		auto node_iter = std::find(m_nodes.begin(), m_nodes.end(), node);
+		auto node_iter = std::find_if(m_nodes.begin(), m_nodes.end(),
+		                              [&node](const std::shared_ptr<DepsNode> &node_ptr)
+		{
+			return node_ptr.get() == node;
+		});
 		assert(node_iter != m_nodes.end());
 
 		/* Disconnect input. */
-		if (node->input()->link) {
-			disconnect(node->input()->link, node->input());
+		for (DepsOutputSocket *output : node->input()->links) {
+			disconnect(output, node->input());
 		}
 
 		/* Disconnect output. */
@@ -301,49 +349,50 @@ void Depsgraph::remove_node(Object *object)
 
 		m_object_graph_map.erase(iter);
 		m_nodes.erase(node_iter);
-		delete node;
 	}
 
-	/* Then, delete object node. */
+	/* Then, delete scene node. */
 	{
-		auto iter = m_object_map.find(object);
-		assert(iter != m_object_map.end());
+		auto iter = m_scene_node_map.find(scene_node);
+		assert(iter != m_scene_node_map.end());
 
 		DepsNode *node = iter->second;
 
-		auto node_iter = std::find(m_nodes.begin(), m_nodes.end(), node);
+		auto node_iter = std::find_if(m_nodes.begin(), m_nodes.end(),
+		                              [&node](const std::shared_ptr<DepsNode> &node_ptr)
+		{
+			return node_ptr.get() == node;
+		});
 		assert(node_iter != m_nodes.end());
+
+		/* Disconnect input. */
+		for (DepsOutputSocket *output : node->input()->links) {
+			disconnect(output, node->input());
+		}
 
 		/* Disconnect output. */
 		for (DepsInputSocket *input : node->output()->links) {
 			disconnect(node->output(), input);
 		}
 
-		m_object_map.erase(iter);
+		m_scene_node_map.erase(iter);
 		m_nodes.erase(node_iter);
-		delete node;
 	}
 
 	m_need_update = true;
 }
 
-void Depsgraph::connect_to_time(Object *object)
+void Depsgraph::connect_to_time(SceneNode *scene_node)
 {
-	auto iter = m_object_graph_map.find(object->graph());
-	assert(iter != m_object_graph_map.end());
-
-	DepsNode *node = iter->second;
+	auto node = find_node(scene_node, true);
 	connect(m_time_node->output(), node->input());
 }
 
-void Depsgraph::evaluate(const EvaluationContext * const context, Object *object)
+void Depsgraph::evaluate(const Context &context, SceneNode *scene_node)
 {
-	auto iter = m_object_graph_map.find(object->graph());
-	assert(iter != m_object_graph_map.end());
+	auto node = find_node(scene_node, true);
 
-	DepsNode *node = iter->second;
-
-	m_need_update = (m_state != DEG_STATE_OBJECT);
+	m_need_update |= (m_state != DEG_STATE_OBJECT);
 	m_state = DEG_STATE_OBJECT;
 
 	/* XXX - see comment in evaluate_ex */
@@ -363,15 +412,15 @@ void Depsgraph::evaluate(const EvaluationContext * const context, Object *object
 	tbb::task::enqueue(*t);
 }
 
-void Depsgraph::evaluate_for_time_change(const EvaluationContext * const context)
+void Depsgraph::evaluate_for_time_change(const Context &context)
 {
-	m_need_update = (m_state != DEG_STATE_TIME);
+	m_need_update |= (m_state != DEG_STATE_TIME);
 	m_state = DEG_STATE_TIME;
 
-	evaluate_ex(context, m_time_node, nullptr);
+	evaluate_ex(context, m_time_node.get(), nullptr);
 }
 
-void Depsgraph::evaluate_ex(const EvaluationContext* const context, DepsNode *root, TaskNotifier *notifier)
+void Depsgraph::evaluate_ex(const Context &context, DepsNode *root, TaskNotifier *notifier)
 {
 	if (m_need_update) {
 		build(root);
@@ -398,10 +447,10 @@ void Depsgraph::evaluate_ex(const EvaluationContext* const context, DepsNode *ro
 		node->process(context, notifier);
 	}
 
-	context->scene->notify_listeners(-1);
+	context.scene->notify_listeners(static_cast<event_type>(-1));
 }
 
-const std::vector<DepsNode *> &Depsgraph::nodes() const
+const std::vector<std::shared_ptr<DepsNode>> &Depsgraph::nodes() const
 {
 	return m_nodes;
 }
@@ -426,7 +475,7 @@ static inline auto is_linked(DepsNode *node)
 
 static inline auto is_linked(DepsInputSocket *socket)
 {
-	return socket->link != nullptr;
+	return !socket->links.empty();
 }
 
 static inline auto get_input(DepsNode *node, size_t /*index*/)
@@ -436,7 +485,7 @@ static inline auto get_input(DepsNode *node, size_t /*index*/)
 
 static inline auto get_link_parent(DepsInputSocket *socket)
 {
-	return socket->link->parent;
+	return socket->links[0]->parent;
 }
 
 static inline auto num_inputs(DepsNode */*node*/)
@@ -464,6 +513,14 @@ void Depsgraph::build(DepsNode *root)
 	}
 	else {
 		/* Sort the whole graph. */
-		topology_sort(m_nodes, m_stack);
+		std::vector<DepsNode *> nodes(m_nodes.size());
+
+		std::transform(m_nodes.begin(), m_nodes.end(), nodes.begin(),
+		               [](const std::shared_ptr<DepsNode> &node) -> DepsNode*
+		{
+			return node.get();
+		});
+
+		topology_sort(nodes, m_stack);
 	}
 }

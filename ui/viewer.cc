@@ -31,8 +31,12 @@
 #include <kamikaze/context.h>
 
 #include <QApplication>
+#include <QCheckBox>
 #include <QColorDialog>
+#include <QFrame>
+#include <QHBoxLayout>
 #include <QKeyEvent>
+#include <QPushButton>
 #include <QTimer>
 
 #include "camera.h"
@@ -54,11 +58,6 @@ Viewer::~Viewer()
 	delete m_camera;
 	delete m_grid;
 	delete m_viewer_context;
-}
-
-void Viewer::update_state(int /*event_type*/)
-{
-	update();
 }
 
 void Viewer::initializeGL()
@@ -107,21 +106,35 @@ void Viewer::paintGL()
 	m_viewer_context->setProjection(P);
 	m_viewer_context->setMVP(MVP);
 	m_viewer_context->setNormal(glm::inverseTranspose(glm::mat3(MV)));
-	m_viewer_context->setMatrix(glm::mat4(1.0f));
+	m_viewer_context->setMatrix(m_stack.top());
 
 	if (m_draw_grid) {
 		m_grid->render(m_viewer_context);
 	}
 
+	/* XXX - only happens on initialization, but not nice. Better to construct
+     * context listeners with valid context. */
+	if (!m_context) {
+		return;
+	}
+
 	if (m_context->scene != nullptr) {
-		for (auto &object : m_context->scene->objects()) {
-			if (!object || !object->collection()) {
+		for (auto &node : m_context->scene->nodes()) {
+			auto object = static_cast<Object *>(node);
+
+			if (!object->collection()) {
 				continue;
 			}
 
-			const bool active_object = (object == m_context->scene->currentObject());
+			const bool active_object = (object == m_context->scene->active_node());
 
 			const auto collection = object->collection();
+
+			if (object->parent()) {
+				m_stack.push(object->parent()->matrix());
+			}
+
+			m_stack.push(object->matrix());
 
 			for (auto &prim : collection->primitives()) {
 				/* update prim before drawing */
@@ -132,7 +145,9 @@ void Viewer::paintGL()
 					prim->bbox()->render(m_viewer_context, false);
 				}
 
-				m_viewer_context->setMatrix(object->matrix() * prim->matrix());
+				m_stack.push(prim->matrix());
+
+				m_viewer_context->setMatrix(m_stack.top());
 
 				prim->render(m_viewer_context, false);
 
@@ -154,6 +169,14 @@ void Viewer::paintGL()
 					glStencilMask(0xff);
 					glEnable(GL_DEPTH_TEST);
 				}
+
+				m_stack.pop();
+			}
+
+			m_stack.pop();
+
+			if (object->parent()) {
+				m_stack.pop();
 			}
 		}
 	}
@@ -197,6 +220,7 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 
 	m_camera->mouseDownEvent(x, y);
 	update();
+	m_base->set_active();
 }
 
 void Viewer::mouseMoveEvent(QMouseEvent *e)
@@ -222,11 +246,13 @@ void Viewer::keyPressEvent(QKeyEvent *e)
 {
 	switch (e->key()) {
 		case Qt::Key_Delete:
-			m_context->scene->removeObject(m_context->scene->currentObject());
+			m_context->scene->removeObject(m_context->scene->active_node());
 			break;
 		default:
 			break;
 	}
+
+	m_base->set_active();
 }
 
 void Viewer::wheelEvent(QWheelEvent *e)
@@ -240,6 +266,7 @@ void Viewer::wheelEvent(QWheelEvent *e)
 
 	m_camera->mouseWheelEvent(m_mouse_button);
 	update();
+	m_base->set_active();
 }
 
 void Viewer::intersectScene(int x, int y) const
@@ -277,6 +304,7 @@ void Viewer::changeBackground()
 	if (color.isValid()) {
 		m_bg = glm::vec4(color.redF(), color.greenF(), color.blueF(), 1.0f);
 		glClearColor(m_bg.r, m_bg.g, m_bg.b, m_bg.a);
+		update();
 	}
 }
 
@@ -284,4 +312,38 @@ void Viewer::drawGrid(bool b)
 {
 	m_draw_grid = b;
 	update();
+}
+
+/* ************************************************************************** */
+
+ViewerWidget::ViewerWidget(QWidget *parent)
+    : WidgetBase(parent)
+    , m_viewer(new Viewer(this))
+{
+	m_viewer->set_base(this);
+
+	auto vert_layout = new QVBoxLayout();
+	vert_layout->addWidget(m_viewer);
+
+	auto horiz_layout = new QHBoxLayout();
+
+	auto push_button = new QPushButton("Change Color");
+	push_button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+	connect(push_button, SIGNAL(clicked()), m_viewer, SLOT(changeBackground()));
+	horiz_layout->addWidget(push_button);
+
+	auto check = new QCheckBox("Draw Box");
+	check->setChecked(true);
+	connect(check, SIGNAL(toggled(bool)), m_viewer, SLOT(drawGrid(bool)));
+	horiz_layout->addWidget(check);
+
+	vert_layout->addLayout(horiz_layout);
+
+	m_main_layout->addLayout(vert_layout);
+}
+
+void ViewerWidget::update_state(event_type /*event*/)
+{
+	m_viewer->set_context(m_context);
+	m_viewer->update();
 }

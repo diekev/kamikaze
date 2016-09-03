@@ -39,13 +39,19 @@
 Object::Object()
     : m_graph(new Graph)
 {
+	add_input("Parent");
+	add_output("Child");
+
 	add_prop("Position", property_type::prop_vec3);
+	set_prop_min_max(-10.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3(0.0f, 0.0f, 0.0f));
 
 	add_prop("Rotation", property_type::prop_vec3);
+	set_prop_min_max(0.0f, 360.0f);
 	set_prop_default_value_vec3(glm::vec3(0.0f, 0.0f, 0.0f));
 
 	add_prop("Size", property_type::prop_vec3);
+	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3(1.0f, 1.0f, 1.0f));
 
 	updateMatrix();
@@ -54,7 +60,6 @@ Object::Object()
 Object::~Object()
 {
 	delete m_graph;
-	m_cache.clear();
 }
 
 PrimitiveCollection *Object::collection() const
@@ -79,7 +84,6 @@ const glm::mat4 &Object::matrix() const
 
 void Object::addNode(Node *node)
 {
-	node->setPrimitiveCache(&m_cache);
 	m_graph->add(node);
 	m_graph->active_node(node);
 }
@@ -87,16 +91,6 @@ void Object::addNode(Node *node)
 Graph *Object::graph() const
 {
 	return m_graph;
-}
-
-void Object::name(const QString &name)
-{
-	m_name = name.toStdString();
-}
-
-const QString Object::name() const
-{
-	return QString::fromStdString(m_name);
 }
 
 void Object::updateMatrix()
@@ -115,15 +109,18 @@ void Object::updateMatrix()
 	m_inv_matrix = glm::inverse(m_matrix);
 }
 
-void Object::clearCache()
-{
-	m_cache.clear();
-}
-
 void Object::addChild(Object *child)
 {
 	m_children.push_back(child);
 	child->parent(this);
+}
+
+void Object::removeChild(Object *child)
+{
+	auto iter = std::find(m_children.begin(), m_children.end(), child);
+	assert(iter != m_children.end());
+	m_children.erase(iter);
+	child->parent(nullptr);
 }
 
 const std::vector<Object *> &Object::children() const

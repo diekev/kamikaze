@@ -26,6 +26,18 @@
 #include <cstdio>
 #include <string>
 
+template <typename T1, typename T2>
+auto is_elem(T1 &&a, T2 &&b) -> bool
+{
+	return a == b;
+}
+
+template <typename T1, typename T2, typename... Ts>
+auto is_elem(T1 &&a, T2 &&b, Ts &&... t) -> bool
+{
+	return a == b || is_elem(a, t...);
+}
+
 /* return current time */
 double time_dt();
 

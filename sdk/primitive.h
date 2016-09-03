@@ -27,32 +27,12 @@
 #include <unordered_map>
 
 #include "cube.h"
+#include "factory.h"
 
 class Modifier;
 class ParamCallback;
-class PrimitiveFactory;
 class Ray;
 class ViewerContext;
-
-extern "C" {
-
-/**
- * @brief new_kamikaze_prims API for plugins to register new primitive types.
- *                           There is no limit to the number of primitives to
- *                           register from a single call to this function.
- * @param factory The factory used to register the new primitives in.
- */
-void new_kamikaze_prims(PrimitiveFactory *factory);
-
-}
-
-/* ********************************************** */
-
-/**
- * Macro to help registering primitives.
- */
-#define REGISTER_PRIMITIVE(name, type) \
-	factory->registerType(name, []() -> Primitive* { return new type; })
 
 /* ********************************************** */
 
@@ -179,54 +159,25 @@ public:
 
 /* ********************************************** */
 
-class PrimitiveFactory final {
-public:
-	typedef Primitive *(*factory_func)(void);
+using PrimitiveFactory = Factory<Primitive>;
 
-	/**
-	 * @brief registerType Register a new element in this factory.
-	 *
-	 * @param key The key associate @ func to.
-	 * @param func A function pointer with signature 'Primitive *(void)'.
-	 *
-	 * @return The number of entries after registering the new element.
-	 */
-	size_t registerType(const std::string &key, factory_func func);
+/**
+ * Macro to help registering primitives.
+ */
+#define REGISTER_PRIMITIVE(name, type) \
+	REGISTER_TYPE(factory, name, Primitive, type)
 
-	/**
-	 * @brief operator() Create a Primitive based on the given key.
-	 *
-	 * @param key The key to lookup.
-	 * @return A new Primitive object corresponding to the given key.
-	 */
-	Primitive *operator()(const std::string &key);
+extern "C" {
 
-	/**
-	 * @brief numEntries The number of entries registered in this factory.
-	 *
-	 * @return The number of entries registered in this factory, 0 if empty.
-	 */
-	size_t numEntries() const;
+/**
+ * @brief new_kamikaze_prims API for plugins to register new primitive types.
+ *                           There is no limit to the number of primitives to
+ *                           register from a single call to this function.
+ * @param factory The factory used to register the new primitives in.
+ */
+void new_kamikaze_prims(PrimitiveFactory *factory);
 
-	/**
-	 * @brief keys Keys registered in this factory.
-	 *
-	 * @return A vector containing the keys registered in this factory.
-	 */
-	std::vector<std::string> keys() const;
-
-	/**
-	 * @brief registered Check whether or not a key has been registered in this
-	 *                   factory.
-	 *
-	 * @param key The key to lookup.
-	 * @return True if the key is found, false otherwise.
-	 */
-	bool registered(const std::string &key) const;
-
-private:
-	std::unordered_map<std::string, factory_func> m_map;
-};
+}
 
 /* ********************************************** */
 

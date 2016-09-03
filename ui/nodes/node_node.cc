@@ -38,6 +38,9 @@ static constexpr auto NODE_BODY_HEIGHT = 32.0f;
 static constexpr auto NODE_PEN_WIDTH_UNSELECTED = 1;
 static constexpr auto NODE_PEN_WIDTH_SELECTED = 1;
 
+static constexpr auto SELECTED_COLOR = "#52b1ee";  /* Light blue. */
+//static constexpr auto SELECTED_COLOR = "#cc7800";  /* Orange. */
+
 QtNode::QtNode(const QString &title, QGraphicsItem *parent)
     : QGraphicsPathItem(parent)
     , m_data(nullptr)
@@ -55,28 +58,21 @@ QtNode::QtNode(const QString &title, QGraphicsItem *parent)
     , m_port_name_color(Qt::white)
     , m_active_connection(nullptr)
 {
-	/* Header */
-
-	QLinearGradient linearGrad(0, 0, 300, NODE_HEADER_HEIGHT);
-	linearGrad.setColorAt(0, QColor("#945555"));
-	linearGrad.setColorAt(0.2, QColor("#3e3e3e"));
-	m_header_brush = QBrush(linearGrad);
-
 	setFlag(QGraphicsItem::ItemIsMovable);
 	setFlag(QGraphicsItem::ItemIsSelectable);
 
-	/* Body */
+	/* Header */
+	m_header_brush = QBrush(QColor("#1f1f1f"));
 
+	/* Body */
 	m_body->setBrush(QColor("#3e3e3e"));
 	m_body->setFlag(QGraphicsItem::ItemStacksBehindParent);
 
 	/* Generic */
-
 	setData(NODE_KEY_GRAPHIC_ITEM_TYPE, QVariant(NODE_VALUE_TYPE_NODE));
 	m_body->setData(NODE_KEY_GRAPHIC_ITEM_TYPE, QVariant(NODE_VALUE_TYPE_NODE_BODY));
 
 	/* Set title */
-
 	m_title_label->setData(NODE_KEY_GRAPHIC_ITEM_TYPE, QVariant(NODE_VALUE_TYPE_HEADER_TITLE));
 	m_title_label->setPlainText(m_title);
 	m_font_header.setPointSize(NODE_HEADER_TITLE_FONT_SIZE);
@@ -344,7 +340,7 @@ void QtNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
 	painter->setBrush(m_header_brush);
 
 	if (isSelected()) {
-		m_pen.setColor("#cc7800");
+		m_pen.setColor(SELECTED_COLOR);
 		m_pen.setWidth(NODE_PEN_WIDTH_SELECTED);
 	}
 	else {

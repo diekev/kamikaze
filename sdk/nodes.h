@@ -194,11 +194,6 @@ public:
 	void collection(PrimitiveCollection *coll);
 
 	/**
-	 * Build this node's collection.
-	 */
-	void buildCollection(const EvaluationContext * const context);
-
-	/**
 	 * Set the primitive cache.
 	 */
 	void setPrimitiveCache(PrimitiveCache *cache);

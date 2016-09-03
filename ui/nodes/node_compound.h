@@ -22,16 +22,16 @@
 
 #include "node_node.h"
 
-class Object;
+class SceneNode;
 class QtNodeGraphicsScene;
 
 class ObjectNodeItem : public QtNode {
 	QVector<QtNode *> m_node_list;
 	QtNodeGraphicsScene *m_node_scene;
-	Object *m_object;
+	SceneNode *m_scene_node;
 
 public:
-	ObjectNodeItem(Object *object, const QString &title, QGraphicsItem *parent = nullptr);
+	ObjectNodeItem(SceneNode *scene_node, const QString &title, QGraphicsItem *parent = nullptr);
 
 	~ObjectNodeItem();
 
@@ -59,5 +59,5 @@ public:
 
 	QtNodeGraphicsScene *nodeScene() const;
 
-	Object *object() const;
+	SceneNode *scene_node() const;
 };

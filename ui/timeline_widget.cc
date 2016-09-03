@@ -64,22 +64,11 @@ static UIButData transport_controls[TC_NUM_CONTROLS] = {
 };
 
 TimeLineWidget::TimeLineWidget(QWidget *parent)
-    : QWidget(parent)
+    : WidgetBase(parent)
     , m_timer(new QTimer(this))
 {
-	m_frame = new QFrame(this);
-
-	QSizePolicy sizePolicy2(QSizePolicy::Preferred, QSizePolicy::Preferred);
-	sizePolicy2.setHorizontalStretch(0);
-	sizePolicy2.setVerticalStretch(0);
-	sizePolicy2.setHeightForWidth(m_frame->sizePolicy().hasHeightForWidth());
-
-	m_frame->setSizePolicy(sizePolicy2);
-	m_frame->setFrameShape(QFrame::StyledPanel);
-	m_frame->setFrameShadow(QFrame::Raised);
-
-	m_layout = new QHBoxLayout();
-	m_vbox_layout = new QVBoxLayout(m_frame);
+	m_vbox_layout = new QVBoxLayout();
+	m_main_layout->addLayout(m_vbox_layout);
 
 	m_num_layout = new QHBoxLayout();
 	m_num_layout->setSizeConstraint(QLayout::SetMinimumSize);
@@ -101,7 +90,7 @@ TimeLineWidget::TimeLineWidget(QWidget *parent)
 	m_start_frame->setToolTip("Start Frame");
 
 	m_end_frame = new QSpinBox(m_frame);
-	m_end_frame->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+	m_end_frame->setAlignment(Qt::AlignRight | Qt::AlignTrailing | Qt::AlignVCenter);
 	m_end_frame->setMaximum(500000);
 	m_end_frame->setValue(250);
 	m_start_frame->setToolTip("End Frame");
@@ -166,7 +155,7 @@ TimeLineWidget::TimeLineWidget(QWidget *parent)
 	/* --------------------------------- fps -------------------------------- */
 
 	m_fps = new QDoubleSpinBox(m_frame);
-	m_fps->setAlignment(Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter);
+	m_fps->setAlignment(Qt::AlignRight | Qt::AlignTrailing | Qt::AlignVCenter);
 	m_fps->setValue(24);
 	m_fps->setToolTip("Frame Rate");
 
@@ -174,11 +163,8 @@ TimeLineWidget::TimeLineWidget(QWidget *parent)
 
 	m_vbox_layout->addLayout(m_tc_layout);
 
-	/* ------------------------- finalize ------------------------- */
+	/* ------------------------------ finalize ------------------------------ */
 
-	m_layout->addWidget(m_frame);
-
-	setLayout(m_layout);
 	setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
 	connect(m_start_frame, SIGNAL(valueChanged(int)), this, SLOT(setStartFrame(int)));
@@ -189,9 +175,9 @@ TimeLineWidget::TimeLineWidget(QWidget *parent)
 	connect(m_timer, SIGNAL(timeout()), this, SLOT(updateFrame()));
 }
 
-void TimeLineWidget::update_state(int event_type)
+void TimeLineWidget::update_state(event_type event)
 {
-	if (event_type != TIME_CHANGED) {
+	if (event != (event_type::time | event_type::modified)) {
 		return;
 	}
 
@@ -210,7 +196,7 @@ void TimeLineWidget::update_state(int event_type)
 	m_fps->setValue(scene->framesPerSecond());
 
 	/* Start or stop the animation. */
-	if (m_context->animation) {
+	if (m_context->eval_ctx->animation) {
 		m_timer->start(1000 / m_fps->value());
 	}
 	else {
@@ -218,78 +204,92 @@ void TimeLineWidget::update_state(int event_type)
 	}
 }
 
-void TimeLineWidget::setStartFrame(int value) const
+void TimeLineWidget::setStartFrame(int value)
 {
+	this->set_active();
 	auto scene = m_context->scene;
 	scene->startFrame(value);
 }
 
-void TimeLineWidget::setEndFrame(int value) const
+void TimeLineWidget::setEndFrame(int value)
 {
+	this->set_active();
 	auto scene = m_context->scene;
 	scene->endFrame(value);
 }
 
-void TimeLineWidget::setCurrentFrame(int value) const
+void TimeLineWidget::setCurrentFrame(int value)
 {
+	this->set_active();
 	auto scene = m_context->scene;
 	scene->currentFrame(value);
+	scene->updateForNewFrame(*m_context);
 }
 
-void TimeLineWidget::setFPS(double value) const
+void TimeLineWidget::setFPS(double value)
 {
+	this->set_active();
 	auto scene = m_context->scene;
 	scene->framesPerSecond(value);
 }
 
-void TimeLineWidget::goToStartFrame() const
+void TimeLineWidget::goToStartFrame()
 {
+	this->set_active();
 	auto scene = m_context->scene;
 	scene->currentFrame(scene->startFrame());
+	scene->updateForNewFrame(*m_context);
 }
 
-void TimeLineWidget::goToEndFrame() const
+void TimeLineWidget::goToEndFrame()
 {
+	this->set_active();
 	auto scene = m_context->scene;
 	scene->currentFrame(scene->endFrame());
+	scene->updateForNewFrame(*m_context);
 }
 
 void TimeLineWidget::playForward()
 {
-	m_context->animation = true;
-	m_context->time_direction = TIME_DIR_FORWARD;
-	m_context->scene->notify_listeners(TIME_CHANGED);
+	this->set_active();
+	m_context->eval_ctx->animation = true;
+	m_context->eval_ctx->time_direction = TIME_DIR_FORWARD;
+	m_context->scene->notify_listeners(event_type::time | event_type::modified);
 }
 
 void TimeLineWidget::playBackward()
 {
-	m_context->animation = true;
-	m_context->time_direction = TIME_DIR_BACKWARD;
-	m_context->scene->notify_listeners(TIME_CHANGED);
+	this->set_active();
+	m_context->eval_ctx->animation = true;
+	m_context->eval_ctx->time_direction = TIME_DIR_BACKWARD;
+	m_context->scene->notify_listeners(event_type::time | event_type::modified);
 }
 
 void TimeLineWidget::stepForward()
 {
-	m_context->time_direction = TIME_DIR_FORWARD;
+	this->set_active();
+	m_context->eval_ctx->time_direction = TIME_DIR_FORWARD;
 
 	auto scene = m_context->scene;
 	scene->currentFrame(scene->currentFrame() + 1);
-	scene->updateForNewFrame(m_context);
+	scene->updateForNewFrame(*m_context);
 }
 
 void TimeLineWidget::stepBackward()
 {
-	m_context->time_direction = TIME_DIR_BACKWARD;
+	this->set_active();
+	m_context->eval_ctx->time_direction = TIME_DIR_BACKWARD;
 
 	auto scene = m_context->scene;
 	scene->currentFrame(scene->currentFrame() - 1);
-	scene->updateForNewFrame(m_context);
+	scene->updateForNewFrame(*m_context);
 }
 
 void TimeLineWidget::stopAnimation()
 {
-	m_context->animation = false;
-	m_context->scene->notify_listeners(TIME_CHANGED);
+	this->set_active();
+	m_context->eval_ctx->animation = false;
+	m_context->scene->notify_listeners(event_type::time | event_type::modified);
 }
 
 void TimeLineWidget::updateFrame() const
@@ -297,7 +297,7 @@ void TimeLineWidget::updateFrame() const
 	auto scene = m_context->scene;
 	auto value = scene->currentFrame();
 
-	if (m_context->time_direction == TIME_DIR_FORWARD) {
+	if (m_context->eval_ctx->time_direction == TIME_DIR_FORWARD) {
 		++value;
 
 		if (value > scene->endFrame()) {
@@ -313,5 +313,5 @@ void TimeLineWidget::updateFrame() const
 	}
 
 	scene->currentFrame(value);
-	scene->updateForNewFrame(m_context);
+	scene->updateForNewFrame(*m_context);
 }

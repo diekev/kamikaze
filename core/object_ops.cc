@@ -43,9 +43,9 @@ AddObjectCmd::~AddObjectCmd()
 	}
 }
 
-void AddObjectCmd::execute(EvaluationContext *context)
+void AddObjectCmd::execute(const Context &context)
 {
-	m_scene = context->scene;
+	m_scene = context.scene;
 
 	m_object = new Object;
 	m_object->name(m_name.c_str());
@@ -66,24 +66,25 @@ void AddObjectCmd::redo()
 	m_was_undone = false;
 }
 
-Command *AddObjectCmd::registerSelf()
-{
-	return new AddObjectCmd;
-}
-
 /* **************************** add node command **************************** */
 
-void AddNodeCmd::execute(EvaluationContext *context)
+void AddNodeCmd::execute(const Context &context)
 {
-	m_scene = context->scene;
-	m_object = m_scene->currentObject();
+	m_scene = context.scene;
+	auto scene_node = m_scene->active_node();
+
+	if (scene_node == nullptr) {
+		return;
+	}
+
+	m_object = static_cast<Object *>(scene_node);
 
 	assert(m_object != nullptr);
 
-	auto node = (*context->node_factory)(m_name);
+	auto node = (*context.node_factory)(m_name);
 	m_object->addNode(node);
 
-	m_scene->notify_listeners(NODE_ADDED);
+	m_scene->notify_listeners(event_type::node | event_type::added);
 }
 
 void AddNodeCmd::undo()
@@ -96,21 +97,23 @@ void AddNodeCmd::redo()
 	/* TODO */
 }
 
-Command *AddNodeCmd::registerSelf()
-{
-	return new AddNodeCmd;
-}
-
 /* **************************** add torus command **************************** */
 
-void AddPresetObjectCmd::execute(EvaluationContext *context)
+void AddPresetObjectCmd::execute(const Context &context)
 {
-	m_scene = context->scene;
+	m_scene = context.scene;
 
-	auto node = (*context->node_factory)(m_name);
+	auto node = (*context.node_factory)(m_name);
 
-	if (context->edit_mode) {
-		m_object = m_scene->currentObject();
+	if (context.eval_ctx->edit_mode) {
+		auto scene_node = m_scene->active_node();
+
+		/* Sanity check. */
+		if (scene_node == nullptr) {
+			return;
+		}
+
+		m_object = static_cast<Object *>(scene_node);
 	}
 	else {
 		m_object = new Object;
@@ -121,11 +124,11 @@ void AddPresetObjectCmd::execute(EvaluationContext *context)
 
 	m_object->addNode(node);
 
-	if (!context->edit_mode) {
+	if (!context.eval_ctx->edit_mode) {
 		m_scene->addObject(m_object);
 	}
 	else {
-		m_scene->notify_listeners(NODE_ADDED);
+		m_scene->notify_listeners(event_type::node | event_type::added);
 	}
 }
 
@@ -137,9 +140,4 @@ void AddPresetObjectCmd::undo()
 void AddPresetObjectCmd::redo()
 {
 	/* TODO */
-}
-
-Command *AddPresetObjectCmd::registerSelf()
-{
-	return new AddPresetObjectCmd;
 }

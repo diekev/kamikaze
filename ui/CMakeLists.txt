@@ -59,6 +59,7 @@ add_library(kmk_ui STATIC
 	timeline_widget.h
 	utils_ui.h
 	viewer.h
+	widgetbase.h
 
 	intern/custom_widgets.h
 	intern/param_widgets.h
@@ -81,6 +82,7 @@ add_library(kmk_ui STATIC
 	timeline_widget.cc
 	utils_ui.cc
 	viewer.cc
+	widgetbase.cc
 
 	intern/custom_widgets.cc
 	intern/param_widgets.cc

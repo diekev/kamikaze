@@ -24,27 +24,40 @@
 
 #pragma once
 
-#include <QString>
+#include <string>
 
 template <typename OpType>
-bool ensure_unique_name(QString &name, const OpType &op)
+bool ensure_unique_name(std::string &name, const OpType &op)
 {
 	if (op(name)) {
 		return false;
 	}
 
-	QString temp;
+	std::string temp = name + ".0000";
+	const auto temp_size = temp.size();
 	int number = 0;
 
 	do {
 		++number;
 
-		QString num = QString::number(number);
-		for (int i = 0, e = 4 - num.size(); i < e; ++i) {
-			num = num.prepend(QChar('0'));
+		if (number < 10) {
+			temp[temp_size - 1] = '0' + number;
 		}
-
-		temp = name + "." + num;
+		else if (number < 100) {
+			temp[temp_size - 1] = '0' + (number % 10);
+			temp[temp_size - 2] = '0' + (number / 10);
+		}
+		else if (number < 1000) {
+			temp[temp_size - 1] = '0' + (number % 10);
+			temp[temp_size - 2] = '0' + ((number % 100) / 10);
+			temp[temp_size - 3] = '0' + (number / 100);
+		}
+		else {
+			temp[temp_size - 1] = '0' + (number % 10);
+			temp[temp_size - 2] = '0' + ((number % 100) / 10);
+			temp[temp_size - 3] = '0' + ((number % 1000) / 100);
+			temp[temp_size - 4] = '0' + (number / 1000);
+		}
 	} while (!op(temp));
 
 	name = temp;
