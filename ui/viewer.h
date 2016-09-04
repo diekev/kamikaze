@@ -78,8 +78,8 @@ class Viewer : public QGLWidget {
 
 	MatrixStack m_stack = {};
 
-	Context *m_context;
-	WidgetBase *m_base;
+	Context *m_context = nullptr;
+	WidgetBase *m_base = nullptr;
 
 	/* Get the world space position of the given point. */
 	glm::vec3 unproject(const glm::vec3 &pos) const;
