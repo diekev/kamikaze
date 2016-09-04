@@ -118,7 +118,7 @@ Grid::~Grid()
 	delete m_zline_buffer;
 }
 
-void Grid::render(const ViewerContext * const context)
+void Grid::render(const ViewerContext &context)
 {
 	m_grid_buffer->render(context, false);
 	m_xline_buffer->render(context, false);

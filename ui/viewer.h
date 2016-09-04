@@ -27,6 +27,7 @@
 #include <glm/glm.hpp>
 #include <GL/glew.h>  /* needs to be included before QGLWidget (includes gl.h) */
 #include <QGLWidget>
+#include <kamikaze/context.h>
 #include <stack>
 
 #include "widgetbase.h"
@@ -74,7 +75,7 @@ class Viewer : public QGLWidget {
 
 	Camera *m_camera = nullptr;
 	Grid *m_grid = nullptr;
-	ViewerContext *m_viewer_context = nullptr;
+	ViewerContext m_viewer_context;
 
 	MatrixStack m_stack = {};
 

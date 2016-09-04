@@ -47,5 +47,5 @@ public:
 	Cube(const Cube &other) = delete;
 	Cube &operator=(const Cube &other) = delete;
 
-	void render(const ViewerContext * const context, const bool for_outline);
+	void render(const ViewerContext &context, const bool for_outline);
 };

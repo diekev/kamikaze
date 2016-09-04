@@ -28,8 +28,6 @@
 #include <glm/gtc/matrix_inverse.hpp>
 #include <iostream>
 
-#include <kamikaze/context.h>
-
 #include <QApplication>
 #include <QCheckBox>
 #include <QColorDialog>
@@ -48,7 +46,7 @@
 Viewer::Viewer(QWidget *parent)
     : QGLWidget(parent)
     , m_camera(new Camera(m_width, m_height))
-    , m_viewer_context(new ViewerContext)
+    , m_viewer_context()
 {
 	setFocusPolicy(Qt::FocusPolicy::StrongFocus);
 }
@@ -57,7 +55,6 @@ Viewer::~Viewer()
 {
 	delete m_camera;
 	delete m_grid;
-	delete m_viewer_context;
 }
 
 void Viewer::initializeGL()
@@ -101,12 +98,12 @@ void Viewer::paintGL()
 	const auto &P = m_camera->P();
 	const auto &MVP = P * MV;
 
-	m_viewer_context->setView(m_camera->dir());
-	m_viewer_context->setModelview(MV);
-	m_viewer_context->setProjection(P);
-	m_viewer_context->setMVP(MVP);
-	m_viewer_context->setNormal(glm::inverseTranspose(glm::mat3(MV)));
-	m_viewer_context->setMatrix(m_stack.top());
+	m_viewer_context.setView(m_camera->dir());
+	m_viewer_context.setModelview(MV);
+	m_viewer_context.setProjection(P);
+	m_viewer_context.setMVP(MVP);
+	m_viewer_context.setNormal(glm::inverseTranspose(glm::mat3(MV)));
+	m_viewer_context.setMatrix(m_stack.top());
 
 	if (m_draw_grid) {
 		m_grid->render(m_viewer_context);
@@ -147,7 +144,7 @@ void Viewer::paintGL()
 
 				m_stack.push(prim->matrix());
 
-				m_viewer_context->setMatrix(m_stack.top());
+				m_viewer_context.setMatrix(m_stack.top());
 
 				prim->render(m_viewer_context, false);
 

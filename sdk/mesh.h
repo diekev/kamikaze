@@ -95,7 +95,7 @@ public:
 
 	void update() override;
 
-	void render(const ViewerContext * const context, const bool for_outline) override;
+	void render(const ViewerContext &context, const bool for_outline) override;
 
 	void prepareRenderData() override;
 

@@ -100,7 +100,7 @@ Cube::~Cube()
 	delete m_buffer;
 }
 
-void Cube::render(const ViewerContext * const context, const bool for_outline)
+void Cube::render(const ViewerContext &context, const bool for_outline)
 {
 	m_buffer->render(context, for_outline);
 }

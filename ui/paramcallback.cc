@@ -35,6 +35,11 @@ ParamCallback::ParamCallback(QGridLayout *layout)
     , m_item_count(0)
 {}
 
+ParamCallback::~ParamCallback()
+{
+	clear();
+}
+
 void ParamCallback::addWidget(QWidget *widget, const QString &name)
 {
 	auto label = new QLabel(name);

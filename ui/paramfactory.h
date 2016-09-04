@@ -40,7 +40,7 @@ class QString;
  * @param max  The maximum value the parameter can have.
  * @param default_value The default value of the parameter.
  */
-void int_param(ParamCallback *cb, const char *name, int *ptr, int min, int max, int default_value);
+void int_param(ParamCallback &cb, const char *name, int *ptr, int min, int max, int default_value);
 
 /**
  * @brief float_param Add a UI parameter for a float property.
@@ -52,7 +52,7 @@ void int_param(ParamCallback *cb, const char *name, int *ptr, int min, int max, 
  * @param max  The maximum value the parameter can have.
  * @param default_value The default value of the parameter.
  */
-void float_param(ParamCallback *cb, const char *name, float *ptr, float min, float max, float default_value);
+void float_param(ParamCallback &cb, const char *name, float *ptr, float min, float max, float default_value);
 
 /**
  * @brief enum_param Add a UI parameter for an enumeration property.
@@ -64,7 +64,7 @@ void float_param(ParamCallback *cb, const char *name, float *ptr, float min, flo
  *              The last item needs to be set to null.
  * @param default_value The default value of the parameter.
  */
-void enum_param(ParamCallback *cb, const char *name, int *ptr, const EnumProperty &prop, int default_value);
+void enum_param(ParamCallback &cb, const char *name, int *ptr, const EnumProperty &prop, int default_value);
 
 /**
  * @brief string_param Add a UI parameter for a string property.
@@ -74,7 +74,7 @@ void enum_param(ParamCallback *cb, const char *name, int *ptr, const EnumPropert
  * @param ptr  The pointer to the string property.
  * @param default_value Default string used as placeholder text.
  */
-void string_param(ParamCallback *cb, const char *name, std::string *ptr, const char *default_value);
+void string_param(ParamCallback &cb, const char *name, std::string *ptr, const char *default_value);
 
 /**
  * @brief bool_param Add a UI parameter for a boolean property.
@@ -84,7 +84,7 @@ void string_param(ParamCallback *cb, const char *name, std::string *ptr, const c
  * @param ptr  The pointer to the boolean property.
  * @param default_value The default value of the parameter.
  */
-void bool_param(ParamCallback *cb, const char *name, bool *ptr, bool default_value);
+void bool_param(ParamCallback &cb, const char *name, bool *ptr, bool default_value);
 
 /**
  * @brief bool_param Add a UI parameter for a vector property.
@@ -93,7 +93,7 @@ void bool_param(ParamCallback *cb, const char *name, bool *ptr, bool default_val
  * @param name The UI name of the parameter.
  * @param ptr  The pointer to the vector property.
  */
-void xyz_param(ParamCallback *cb, const char *name, float ptr[3], float min = 0.0f, float max = 10.0f);
+void xyz_param(ParamCallback &cb, const char *name, float ptr[3], float min = 0.0f, float max = 10.0f);
 
 /**
  * @brief file_param Add a UI parameter for displaying a file selector.
@@ -102,7 +102,7 @@ void xyz_param(ParamCallback *cb, const char *name, float ptr[3], float min = 0.
  * @param name The UI name of the parameter.
  * @param ptr  The pointer to the file name property.
  */
-void file_param(ParamCallback *cb, const char *name, std::string *ptr);
+void file_param(ParamCallback &cb, const char *name, std::string *ptr);
 
 /**
  * @brief file_param Add a UI parameter for displaying a file selector.
@@ -111,7 +111,7 @@ void file_param(ParamCallback *cb, const char *name, std::string *ptr);
  * @param name The UI name of the parameter.
  * @param ptr  The pointer to the file name property.
  */
-void input_file_param(ParamCallback *cb, const char *name, std::string *ptr);
+void input_file_param(ParamCallback &cb, const char *name, std::string *ptr);
 
 /**
  * @brief file_param Add a UI parameter for displaying a file selector.
@@ -120,7 +120,7 @@ void input_file_param(ParamCallback *cb, const char *name, std::string *ptr);
  * @param name The UI name of the parameter.
  * @param ptr  The pointer to the file name property.
  */
-void output_file_param(ParamCallback *cb, const char *name, std::string *ptr);
+void output_file_param(ParamCallback &cb, const char *name, std::string *ptr);
 
 /**
  * @brief param_tooltip Set the tooltip for the last added parameter.
@@ -128,4 +128,4 @@ void output_file_param(ParamCallback *cb, const char *name, std::string *ptr);
  * @param cb The callback used to create the parameter.
  * @param tooltip The parameters tooltip.
  */
-void param_tooltip(ParamCallback *cb, const char *tooltip);
+void param_tooltip(ParamCallback &cb, const char *tooltip);
