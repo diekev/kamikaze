@@ -77,9 +77,9 @@ QMainWindow::separator
 
 QDockWidget::close-button, QDockWidget::float-button
 {
-    border: 1px solid transparent;
-    background: darkgray;
-    padding: 0px;
+	border: 1px solid transparent;
+	background: darkgray;
+	padding: 0px;
 }
 
 QDockWidget::close-button:hover, QDockWidget::float-button:hover
@@ -89,7 +89,18 @@ QDockWidget::close-button:hover, QDockWidget::float-button:hover
 
 QDockWidget::title
 {
-    text-align: left;
+	text-align: left;
 	background: rgb(113, 113, 113);
-    padding-left: 5px;
+	padding-left: 5px;
+}
+
+QMenu::item:selected
+{
+	color: #52b1ee;
+}
+
+QMenuBar::item:selected
+{
+	background-color: rgb(127, 127, 127);
+	color: #52b1ee;
 }
