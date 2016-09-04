@@ -116,7 +116,7 @@ public:
 	                       const void *normals,
 	                       const size_t normals_size);
 
-	void render(const ViewerContext &context, const bool for_outline);
+	void render(const ViewerContext &context);
 
 	ego::Program *program();
 

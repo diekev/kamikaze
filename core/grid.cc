@@ -120,7 +120,7 @@ Grid::~Grid()
 
 void Grid::render(const ViewerContext &context)
 {
-	m_grid_buffer->render(context, false);
-	m_xline_buffer->render(context, false);
-	m_zline_buffer->render(context, false);
+	m_grid_buffer->render(context);
+	m_xline_buffer->render(context);
+	m_zline_buffer->render(context);
 }

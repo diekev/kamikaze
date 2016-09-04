@@ -144,9 +144,9 @@ size_t PrimPoints::typeID() const
 	return PrimPoints::id;
 }
 
-void PrimPoints::render(const ViewerContext &context, const bool for_outline)
+void PrimPoints::render(const ViewerContext &context)
 {
-	m_renderbuffer->render(context, for_outline);
+	m_renderbuffer->render(context);
 }
 
 void PrimPoints::prepareRenderData()

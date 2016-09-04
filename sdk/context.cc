@@ -74,6 +74,16 @@ void ViewerContext::setMatrix(const glm::mat4 &matrix)
 	m_matrix = matrix;
 }
 
+bool ViewerContext::for_outline() const
+{
+	return m_for_outline;
+}
+
+void ViewerContext::for_outline(bool yesno)
+{
+	m_for_outline = yesno;
+}
+
 const glm::mat4 &ViewerContext::modelview() const
 {
 	return m_model_view;

@@ -214,7 +214,7 @@ void RenderBuffer::set_normal_buffer(const std::string &attribute,
 	m_require_normal = true;
 }
 
-void RenderBuffer::render(const ViewerContext &context, const bool for_outline)
+void RenderBuffer::render(const ViewerContext &context)
 {
 	if (!m_program.isValid()) {
 		std::cerr << "Invalid Program\n";
@@ -239,7 +239,7 @@ void RenderBuffer::render(const ViewerContext &context, const bool for_outline)
 	}
 
 	if (m_can_outline) {
-		glUniform1i(m_program("for_outline"), for_outline);
+		glUniform1i(m_program("for_outline"), context.for_outline());
 	}
 
 	if (m_index_drawing) {
