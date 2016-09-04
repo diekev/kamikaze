@@ -809,6 +809,76 @@ public:
 
 /* ************************************************************************** */
 
+#include <kamikaze/noise.h>
+
+class NoiseNode : public Node {
+public:
+	NoiseNode()
+	    : Node("Noise")
+	{
+		addInput("input");
+		addOutput("output");
+
+		add_prop("Octaves", property_type::prop_int);
+		set_prop_min_max(1, 10);
+		set_prop_default_value_int(1);
+
+		add_prop("Frequency", property_type::prop_float);
+		set_prop_min_max(0.0f, 1.0f);
+		set_prop_default_value_float(1.0f);
+
+		add_prop("Amplitude", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(1.0f);
+
+		add_prop("Persistence", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(1.0f);
+
+		add_prop("Lacunarity", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(2.0f);
+	}
+
+	void process() override
+	{
+		const auto octaves = eval_int("Octaves");
+		const auto lacunarity = eval_float("Lacunarity");
+		const auto persistence = eval_float("Persistence");
+		const auto ofrequency = eval_float("Frequency");
+		const auto oamplitude = eval_float("Amplitude");
+
+		for (auto prim : primitive_iterator(this->m_collection, Mesh::id)) {
+			auto mesh = static_cast<Mesh *>(prim);
+			auto points = mesh->points();
+
+			for (size_t i = 0, e = points->size(); i < e; ++i) {
+				auto &point = (*points)[i];
+				const auto x = point.x;
+				const auto y = point.x;
+				const auto z = point.x;
+				auto output = 0.0f;
+
+				for (size_t j = 0; j < octaves; ++j) {
+					auto frequency = ofrequency;
+					auto amplitude = oamplitude;
+
+					output += (amplitude * simplex_noise_3d(x * frequency, y * frequency, z * frequency));
+
+					frequency *= lacunarity;
+					amplitude *= persistence;
+				}
+
+				point.x += output;
+				point.y += output;
+				point.z += output;
+			}
+		}
+	}
+};
+
+/* ************************************************************************** */
+
 void register_builtin_nodes(NodeFactory *factory)
 {
 	REGISTER_NODE("Geometry", "Box", CreateBoxNode);
@@ -819,5 +889,6 @@ void register_builtin_nodes(NodeFactory *factory)
 	REGISTER_NODE("Geometry", "Tube", CreateTubeNode);
 	REGISTER_NODE("Geometry", "IcoSphere", CreateIcoSphereNode);
 	REGISTER_NODE("Geometry", "Cone", CreateConeNode);
+	REGISTER_NODE("Geometry", "Noise", NoiseNode);
 	REGISTER_NODE("Geometry", "Normal", NormalNode);
 }
