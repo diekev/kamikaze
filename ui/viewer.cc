@@ -330,19 +330,9 @@ void OpenGLScene::drawGrid(bool b)
 /* ************************************************************************** */
 
 #include <QGraphicsTextItem>
+#include <QGraphicsProxyWidget>
 #include <QLabel>
 #include <QVBoxLayout>
-
-QDialog *createDialog(const QString &windowTitle)
-{
-	QDialog *dialog = new QDialog(nullptr, Qt::CustomizeWindowHint | Qt::WindowTitleHint);
-
-	dialog->setWindowOpacity(0.8);
-	dialog->setWindowTitle(windowTitle);
-	dialog->setLayout(new QVBoxLayout);
-
-	return dialog;
-}
 
 GraphicsViewer::GraphicsViewer(QWidget *parent)
     : QGraphicsView(parent)
@@ -354,19 +344,13 @@ GraphicsViewer::GraphicsViewer(QWidget *parent)
 	setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers | QGL::DirectRendering)));
 	setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
 
-	QWidget *instructions = createDialog(tr("Instructions"));
-	instructions->layout()->addWidget(new QLabel(
-	                                      tr("Use mouse wheel to zoom model, and click and "
-	                                         "drag to rotate model")));
-	instructions->layout()->addWidget(new QLabel(
-	                                      tr("Move the sun around to change the light "
-	                                         "position")));
+	QLabel *item = new QLabel("Use mouse wheel to zoom model, and click and drag to rotate model", this);
+	item->show();
 
-	m_glscene->addWidget(instructions);
-
-	for (auto items : m_glscene->items()) {
-		std::cerr << "There is an item\n";
-		items->setPos(250, 250);
+	for (auto items : scene()->items()) {
+		items->show();
+		items->setPos(0, 0);
+		std::cerr << "There is an item at <" << items->pos().x() << ", " << items->pos().y() << ">\n";
 	}
 }
 
