@@ -130,13 +130,16 @@ void MainWindow::generateObjectMenu()
 void MainWindow::generateDebugMenu()
 {
 	m_add_object_menu = menuBar()->addMenu("Debug");
-	auto action = m_add_object_menu->addAction("Dump Object Graph");
-	action->setData(QVariant::fromValue(QString("dump_object_graph")));
 
-	connect(action, SIGNAL(triggered()), this, SLOT(dumpGraph()));
+	QAction *action;
 
 	action = m_add_object_menu->addAction("Dump Dependency Graph");
 	action->setData(QVariant::fromValue(QString("dump_dependency_graph")));
+
+	connect(action, SIGNAL(triggered()), this, SLOT(dumpGraph()));
+
+	action = m_add_object_menu->addAction("Dump Object Graph");
+	action->setData(QVariant::fromValue(QString("dump_object_graph")));
 
 	connect(action, SIGNAL(triggered()), this, SLOT(dumpGraph()));
 }
@@ -171,6 +174,10 @@ void MainWindow::generateWindowMenu()
 
 	QAction *action;
 
+	action = m_add_window_menu->addAction("3D View");
+	action->setToolTip("Add a 3D View");
+	connect(action, SIGNAL(triggered()), this, SLOT(addGLViewerWidget()));
+
 	action = m_add_window_menu->addAction("Graph Editor");
 	action->setToolTip("Add a Graph Editor");
 	connect(action, SIGNAL(triggered()), this, SLOT(addGraphEditorWidget()));
@@ -186,10 +193,6 @@ void MainWindow::generateWindowMenu()
 	action = m_add_window_menu->addAction("Time Line");
 	action->setToolTip("Add a Time Line");
 	connect(action, SIGNAL(triggered()), this, SLOT(addTimeLineWidget()));
-
-	action = m_add_window_menu->addAction("3D View");
-	action->setToolTip("Add a 3D View");
-	connect(action, SIGNAL(triggered()), this, SLOT(addGLViewerWidget()));
 }
 
 void MainWindow::generateEditMenu()
