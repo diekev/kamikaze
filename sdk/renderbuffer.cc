@@ -27,6 +27,8 @@
 #include <ego/utils.h>
 #include <GL/glew.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <mutex>
+#include <tbb/concurrent_vector.h>
 
 #include "context.h"
 
@@ -265,4 +267,27 @@ void RenderBuffer::render(const ViewerContext &context)
 ego::Program *RenderBuffer::program()
 {
 	return &m_program;
+}
+
+/* ************************************************************************** */
+
+tbb::concurrent_vector<RenderBuffer *> garbage_buffer;
+std::mutex garbage_mutex;
+
+void free_renderbuffer(RenderBuffer *buffer)
+{
+	garbage_buffer.push_back(buffer);
+}
+
+void purge_all_buffers()
+{
+	{
+		std::unique_lock<std::mutex> lock(garbage_mutex);
+
+		for (RenderBuffer *buffer : garbage_buffer) {
+			delete buffer;
+		}
+	}
+
+	garbage_buffer.clear();
 }

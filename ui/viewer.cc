@@ -27,6 +27,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 #include <iostream>
+#include <kamikaze/renderbuffer.h>
 
 #include <QApplication>
 #include <QCheckBox>
@@ -93,6 +94,9 @@ void Viewer::paintGL()
 	glStencilMask(0xff);
 
 	m_camera->update();
+
+	/* Make sure buffers are freed in the main thread. */
+	purge_all_buffers();
 
 	const auto &MV = m_camera->MV();
 	const auto &P = m_camera->P();

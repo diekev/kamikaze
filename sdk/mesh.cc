@@ -74,7 +74,7 @@ Mesh::~Mesh()
 		delete attr;
 	}
 
-	delete m_renderbuffer;
+	free_renderbuffer(m_renderbuffer);
 }
 
 PointList *Mesh::points()

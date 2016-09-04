@@ -97,7 +97,7 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 
 Cube::~Cube()
 {
-	delete m_buffer;
+	free_renderbuffer(m_buffer);
 }
 
 void Cube::render(const ViewerContext &context)

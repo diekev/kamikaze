@@ -123,3 +123,6 @@ public:
 private:
 	void init();
 };
+
+void free_renderbuffer(RenderBuffer *buffer);
+void purge_all_buffers();
