@@ -147,10 +147,16 @@ void MainWindow::generateNodeMenu()
 
 	m_add_nodes_menu = menuBar()->addMenu("Add Node");
 
-	for (const auto &category : m_main->node_factory()->categories()) {
+	auto categories = m_main->node_factory()->categories();
+	std::sort(categories.begin(), categories.end());
+
+	for (const auto &category : categories) {
 		auto sub_menu = m_add_nodes_menu->addMenu(category.c_str());
 
-		for (const auto &key : m_main->node_factory()->keys(category)) {
+		auto keys = m_main->node_factory()->keys(category);
+		std::sort(keys.begin(), keys.end());
+
+		for (const auto &key : keys) {
 			auto action = sub_menu->addAction(key.c_str());
 			action->setData(QVariant::fromValue(QString("add node")));
 
