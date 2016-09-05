@@ -145,9 +145,9 @@ void AddPresetObjectCmd::redo()
 
 /* ************************* add simulation command ************************* */
 
-void AddSimulationCmd::execute(EvaluationContext *context)
+void AddSimulationCmd::execute(const Context &context)
 {
-	auto scene = context->scene;
+	auto scene = context.scene;
 	auto solver = (*m_solver_factory)(m_name);
 	auto simulation = new Simulation(solver);
 

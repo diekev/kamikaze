@@ -79,7 +79,7 @@ public:
 	AddSimulationCmd() = default;
 	~AddSimulationCmd() = default;
 
-	void execute(EvaluationContext *context) override;
+	void execute(const Context &context) override;
 	void undo() override;
 	void redo() override;
 	void set_solver_factory(SolverFactory *solver_factory);

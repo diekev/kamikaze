@@ -142,7 +142,7 @@ public:
 
 	~SimulationDepsNode() = default;
 
-	void process(const EvaluationContext * const context, TaskNotifier *notifier) override;
+	void process(const Context &context, TaskNotifier *notifier) override;
 
 	const char *name() const override;
 };

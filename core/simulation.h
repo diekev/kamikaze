@@ -158,6 +158,8 @@ void register_builtin_solvers(SolverFactory *factory);
 
 /* ************************************************************************** */
 
+class Context;
+
 class Simulation : public SceneNode {
 	std::unordered_map<Object *, ObjectState> m_states;
 	int m_start_frame = INVALID_FRAME;
@@ -178,7 +180,7 @@ public:
 		return SCE_NODE_SIMULATION;
 	}
 
-	void step(const EvaluationContext * const context);
+	void step(const Context &context);
 
 	void sync_states();
 	bool update_properties() override;

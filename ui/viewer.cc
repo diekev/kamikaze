@@ -352,7 +352,7 @@ ViewerWidget::ViewerWidget(QWidget *parent)
 	m_main_layout->addLayout(vert_layout);
 }
 
-void ViewerWidget::update_state(event_type /*event*/)
+void ViewerWidget::update_state(event_type event)
 {
 	if (event == (event_type::node | event_type::added)) {
 		return;

@@ -145,9 +145,9 @@ float Simulation::eval_gravity()
 	return gravities[gravity_index].value;
 }
 
-void Simulation::step(const EvaluationContext * const context)
+void Simulation::step(const Context &context)
 {
-	auto scene = context->scene;
+	auto scene = context.scene;
 
 	if (m_start_frame != scene->startFrame()) {
 		m_start_frame = scene->startFrame();
@@ -170,7 +170,7 @@ void Simulation::step(const EvaluationContext * const context)
 
 	m_simcontext.gravity = glm::vec3(0.0f, -eval_gravity(), 0.0f);
 	const auto frame_time = 1.0f / scene->framesPerSecond();
-	m_simcontext.time_step = (context->time_direction == TIME_DIR_BACKWARD) ? -frame_time : frame_time;
+	m_simcontext.time_step = (context.eval_ctx->time_direction == TIME_DIR_BACKWARD) ? -frame_time : frame_time;
 
 	for (SceneInputSocket *input : m_inputs) {
 		if (!input->link) {
