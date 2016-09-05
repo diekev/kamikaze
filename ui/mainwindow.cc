@@ -141,13 +141,16 @@ void MainWindow::generateObjectMenu()
 void MainWindow::generateDebugMenu()
 {
 	m_add_object_menu = menuBar()->addMenu("Debug");
-	auto action = m_add_object_menu->addAction("Dump Object Graph");
-	action->setData(QVariant::fromValue(QString("dump_object_graph")));
 
-	connect(action, SIGNAL(triggered()), this, SLOT(dumpGraph()));
+	QAction *action;
 
 	action = m_add_object_menu->addAction("Dump Dependency Graph");
 	action->setData(QVariant::fromValue(QString("dump_dependency_graph")));
+
+	connect(action, SIGNAL(triggered()), this, SLOT(dumpGraph()));
+
+	action = m_add_object_menu->addAction("Dump Object Graph");
+	action->setData(QVariant::fromValue(QString("dump_object_graph")));
 
 	connect(action, SIGNAL(triggered()), this, SLOT(dumpGraph()));
 }
@@ -158,10 +161,16 @@ void MainWindow::generateNodeMenu()
 
 	m_add_nodes_menu = menuBar()->addMenu("Add Node");
 
-	for (const auto &category : m_main->node_factory()->categories()) {
+	auto categories = m_main->node_factory()->categories();
+	std::sort(categories.begin(), categories.end());
+
+	for (const auto &category : categories) {
 		auto sub_menu = m_add_nodes_menu->addMenu(category.c_str());
 
-		for (const auto &key : m_main->node_factory()->keys(category)) {
+		auto keys = m_main->node_factory()->keys(category);
+		std::sort(keys.begin(), keys.end());
+
+		for (const auto &key : keys) {
 			auto action = sub_menu->addAction(key.c_str());
 			action->setData(QVariant::fromValue(QString("add node")));
 
@@ -175,6 +184,10 @@ void MainWindow::generateWindowMenu()
 	m_add_window_menu = menuBar()->addMenu("View");
 
 	QAction *action;
+
+	action = m_add_window_menu->addAction("3D View");
+	action->setToolTip("Add a 3D View");
+	connect(action, SIGNAL(triggered()), this, SLOT(addGLViewerWidget()));
 
 	action = m_add_window_menu->addAction("Graph Editor");
 	action->setToolTip("Add a Graph Editor");
@@ -191,10 +204,6 @@ void MainWindow::generateWindowMenu()
 	action = m_add_window_menu->addAction("Time Line");
 	action->setToolTip("Add a Time Line");
 	connect(action, SIGNAL(triggered()), this, SLOT(addTimeLineWidget()));
-
-	action = m_add_window_menu->addAction("3D View");
-	action->setToolTip("Add a 3D View");
-	connect(action, SIGNAL(triggered()), this, SLOT(addGLViewerWidget()));
 }
 
 void MainWindow::generateEditMenu()

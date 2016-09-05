@@ -46,7 +46,7 @@ PropertiesWidget::PropertiesWidget(QWidget *parent)
     , m_widget(new QWidget())
     , m_scroll(new QScrollArea())
     , m_glayout(new QGridLayout(m_widget))
-    , m_callback(new ParamCallback(m_glayout))
+    , m_callback(m_glayout)
 {
 	m_widget->setSizePolicy(m_frame->sizePolicy());
 
@@ -58,12 +58,6 @@ PropertiesWidget::PropertiesWidget(QWidget *parent)
 	m_scroll->setFrameStyle(0);
 
 	m_main_layout->addWidget(m_scroll);
-}
-
-PropertiesWidget::~PropertiesWidget()
-{
-	m_callback->clear();
-	delete m_callback;
 }
 
 void PropertiesWidget::update_state(event_type event)
@@ -85,7 +79,7 @@ void PropertiesWidget::update_state(event_type event)
 			persona = scene_node;
 		}
 		else if (is_elem(event_action, event_type::removed)) {
-			m_callback->clear();
+			m_callback.clear();
 			return;
 		}
 	}
@@ -112,7 +106,7 @@ void PropertiesWidget::update_state(event_type event)
 			set_context = node->isLinked();
 		}
 		else if (is_elem(event_action, event_type::removed)) {
-			m_callback->clear();
+			m_callback.clear();
 			return;
 		}
 	}
@@ -124,7 +118,7 @@ void PropertiesWidget::update_state(event_type event)
 		return;
 	}
 
-	m_callback->clear();
+	m_callback.clear();
 
 	drawProperties(persona, set_context);
 }
@@ -171,7 +165,7 @@ void PropertiesWidget::updateProperties()
 
 	if (persona->update_properties()) {
 		for (Property &prop : persona->props()) {
-			m_callback->setVisible(prop.name.c_str(), prop.visible);
+			m_callback.setVisible(prop.name.c_str(), prop.visible);
 		}
 	}
 }
@@ -239,17 +233,17 @@ void PropertiesWidget::drawProperties(Persona *persona, bool set_context)
 			param_tooltip(m_callback, prop.tooltip.c_str());
 		}
 
-		m_callback->setVisible(prop.name.c_str(), prop.visible);
+		m_callback.setVisible(prop.name.c_str(), prop.visible);
 	}
 
 	if (set_context) {
 		if (m_context->eval_ctx->edit_mode) {
-			m_callback->setContext(this, SLOT(evalObjectGraph()));
+			m_callback.setContext(this, SLOT(evalObjectGraph()));
 		}
 		else {
-			m_callback->setContext(this, SLOT(tagObjectUpdate()));
+			m_callback.setContext(this, SLOT(tagObjectUpdate()));
 		}
 	}
 
-	m_callback->setContext(this, SLOT(updateProperties()));
+	m_callback.setContext(this, SLOT(updateProperties()));
 }

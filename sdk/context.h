@@ -54,6 +54,7 @@ class ViewerContext {
 	glm::vec3 m_view;
 	glm::mat3 m_normal;
 	glm::mat4 m_matrix;
+	bool m_for_outline = false;
 
 public:
 	const glm::mat4 &modelview() const;
@@ -73,4 +74,7 @@ public:
 
 	const glm::mat4 &matrix() const;
 	void setMatrix(const glm::mat4 &matrix);
+
+	bool for_outline() const;
+	void for_outline(bool yesno);
 };
