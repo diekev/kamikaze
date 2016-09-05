@@ -34,11 +34,13 @@ QStatusBar
 	border: 1px solid rgb(98, 98, 98);
 }
 
+/* Vertical scroll bar. */
+
 QScrollBar:vertical
 {
 	background: rgb(98, 98, 98);
 	width: 16px;
-	margin: 16px 0 16px 0;
+	margin: 16px 0px 16px 0px;
 }
 
 QScrollBar::handle:vertical
@@ -63,6 +65,44 @@ QScrollBar::sub-line:vertical
 }
 
 QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical
+{
+	border: 1px solid black;
+	width: 2px;
+	height: 2px;
+	background: white;
+}
+
+/* Horizontal scroll bar. */
+
+QScrollBar:horizontal
+{
+	background: rgb(98, 98, 98);
+	height: 16px;
+	margin: 0px 16px 0px 16px;
+}
+
+QScrollBar::handle:horizontal
+{
+	background: rgb(113, 113, 113);
+}
+
+QScrollBar::add-line:horizontal
+{
+	background: rgb(113, 113, 113);
+	width: 14px;
+	subcontrol-position: right;
+	subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:horizontal
+{
+	background: rgb(113, 113, 113);
+	width: 14px;
+	subcontrol-position: left;
+	subcontrol-origin: margin;
+}
+
+QScrollBar::right-arrow:horizontal, QScrollBar::left-arrow:horizontal
 {
 	border: 1px solid black;
 	width: 2px;
