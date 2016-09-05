@@ -52,7 +52,7 @@ public:
 
 	Primitive *copy() const override;
 
-	void render(const ViewerContext * const context, const bool for_outline) override;
+	void render(const ViewerContext &context) override;
 
 	void prepareRenderData() override;
 

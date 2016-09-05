@@ -27,6 +27,8 @@
 #include <ego/utils.h>
 #include <GL/glew.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <mutex>
+#include <tbb/concurrent_vector.h>
 
 #include "context.h"
 
@@ -214,7 +216,7 @@ void RenderBuffer::set_normal_buffer(const std::string &attribute,
 	m_require_normal = true;
 }
 
-void RenderBuffer::render(const ViewerContext * const context, const bool for_outline)
+void RenderBuffer::render(const ViewerContext &context)
 {
 	if (!m_program.isValid()) {
 		std::cerr << "Invalid Program\n";
@@ -231,15 +233,15 @@ void RenderBuffer::render(const ViewerContext * const context, const bool for_ou
 	m_program.enable();
 	m_buffer_data->bind();
 
-	glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(context->matrix()));
-	glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(context->MVP()));
+	glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(context.matrix()));
+	glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(context.MVP()));
 
 	if (m_require_normal) {
-		glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(context->normal()));
+		glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(context.normal()));
 	}
 
 	if (m_can_outline) {
-		glUniform1i(m_program("for_outline"), for_outline);
+		glUniform1i(m_program("for_outline"), context.for_outline());
 	}
 
 	if (m_index_drawing) {
@@ -265,4 +267,27 @@ void RenderBuffer::render(const ViewerContext * const context, const bool for_ou
 ego::Program *RenderBuffer::program()
 {
 	return &m_program;
+}
+
+/* ************************************************************************** */
+
+tbb::concurrent_vector<RenderBuffer *> garbage_buffer;
+std::mutex garbage_mutex;
+
+void free_renderbuffer(RenderBuffer *buffer)
+{
+	garbage_buffer.push_back(buffer);
+}
+
+void purge_all_buffers()
+{
+	{
+		std::unique_lock<std::mutex> lock(garbage_mutex);
+
+		for (RenderBuffer *buffer : garbage_buffer) {
+			delete buffer;
+		}
+	}
+
+	garbage_buffer.clear();
 }

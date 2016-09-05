@@ -27,8 +27,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 #include <iostream>
-
-#include <kamikaze/context.h>
+#include <kamikaze/renderbuffer.h>
 
 #include <QApplication>
 #include <QCheckBox>
@@ -48,7 +47,7 @@
 Viewer::Viewer(QWidget *parent)
     : QGLWidget(parent)
     , m_camera(new Camera(m_width, m_height))
-    , m_viewer_context(new ViewerContext)
+    , m_viewer_context()
 {
 	setFocusPolicy(Qt::FocusPolicy::StrongFocus);
 }
@@ -57,7 +56,6 @@ Viewer::~Viewer()
 {
 	delete m_camera;
 	delete m_grid;
-	delete m_viewer_context;
 }
 
 void Viewer::initializeGL()
@@ -97,16 +95,20 @@ void Viewer::paintGL()
 
 	m_camera->update();
 
+	/* Make sure buffers are freed in the main thread. */
+	purge_all_buffers();
+
 	const auto &MV = m_camera->MV();
 	const auto &P = m_camera->P();
 	const auto &MVP = P * MV;
 
-	m_viewer_context->setView(m_camera->dir());
-	m_viewer_context->setModelview(MV);
-	m_viewer_context->setProjection(P);
-	m_viewer_context->setMVP(MVP);
-	m_viewer_context->setNormal(glm::inverseTranspose(glm::mat3(MV)));
-	m_viewer_context->setMatrix(m_stack.top());
+	m_viewer_context.setView(m_camera->dir());
+	m_viewer_context.setModelview(MV);
+	m_viewer_context.setProjection(P);
+	m_viewer_context.setMVP(MVP);
+	m_viewer_context.setNormal(glm::inverseTranspose(glm::mat3(MV)));
+	m_viewer_context.setMatrix(m_stack.top());
+	m_viewer_context.for_outline(false);
 
 	if (m_draw_grid) {
 		m_grid->render(m_viewer_context);
@@ -142,16 +144,18 @@ void Viewer::paintGL()
 				prim->prepareRenderData();
 
 				if (prim->drawBBox()) {
-					prim->bbox()->render(m_viewer_context, false);
+					prim->bbox()->render(m_viewer_context);
 				}
 
 				m_stack.push(prim->matrix());
 
-				m_viewer_context->setMatrix(m_stack.top());
+				m_viewer_context.setMatrix(m_stack.top());
 
-				prim->render(m_viewer_context, false);
+				prim->render(m_viewer_context);
 
 				if (active_object) {
+					m_viewer_context.for_outline(true);
+
 					glStencilFunc(GL_NOTEQUAL, 1, 0xff);
 					glStencilMask(0x00);
 					glDisable(GL_DEPTH_TEST);
@@ -159,7 +163,7 @@ void Viewer::paintGL()
 					glLineWidth(5);
 					glPolygonMode(GL_FRONT, GL_LINE);
 
-					prim->render(m_viewer_context, true);
+					prim->render(m_viewer_context);
 
 					/* Restore state. */
 					glPolygonMode(GL_FRONT, GL_FILL);
@@ -168,6 +172,8 @@ void Viewer::paintGL()
 					glStencilFunc(GL_ALWAYS, 1, 0xff);
 					glStencilMask(0xff);
 					glEnable(GL_DEPTH_TEST);
+
+					m_viewer_context.for_outline(false);
 				}
 
 				m_stack.pop();

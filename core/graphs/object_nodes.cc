@@ -738,6 +738,147 @@ void CreateIcoSphereNode::process()
 
 /* ************************************************************************** */
 
+#include <kamikaze/util_parallel.h>
+
+static inline glm::vec3 get_normal(const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2)
+{
+	const auto n0 = v0 - v1;
+	const auto n1 = v2 - v1;
+
+	return glm::cross(n1, n0);
+}
+
+class NormalNode : public Node {
+public:
+	NormalNode()
+	    : Node("Normal")
+	{
+		addInput("input");
+		addOutput("output");
+
+		add_prop("Flip", property_type::prop_bool);
+	}
+
+	void process() override
+	{
+		const auto flip = eval_bool("Flip");
+
+		for (auto &prim : primitive_iterator(this->m_collection, Mesh::id)) {
+			auto mesh = static_cast<Mesh *>(prim);
+			auto normals = mesh->attribute("normal", ATTR_TYPE_VEC3);
+			auto points = mesh->points();
+
+			normals->resize(points->size());
+
+			auto polys = mesh->polys();
+
+			for (size_t i = 0, ie = points->size(); i < ie ; ++i) {
+				normals->vec3(i, glm::vec3(0.0f));
+			}
+
+			parallel_for(tbb::blocked_range<size_t>(0, polys->size()),
+			             [&](const tbb::blocked_range<size_t> &r)
+			{
+				for (auto i = r.begin(), ie = r.end(); i < ie ; ++i) {
+					const auto &quad = (*polys)[i];
+
+					const auto v0 = (*points)[quad[0]];
+					const auto v1 = (*points)[quad[1]];
+					const auto v2 = (*points)[quad[2]];
+
+					const auto normal = get_normal(v0, v1, v2);
+
+					normals->vec3(quad[0], normals->vec3(quad[0]) + normal);
+					normals->vec3(quad[1], normals->vec3(quad[1]) + normal);
+					normals->vec3(quad[2], normals->vec3(quad[2]) + normal);
+
+					if (quad[3] != INVALID_INDEX) {
+						normals->vec3(quad[3], normals->vec3(quad[3]) + normal);
+					}
+				}
+			});
+
+			if (flip) {
+				for (size_t i = 0, ie = points->size(); i < ie ; ++i) {
+					normals->vec3(i, -glm::normalize(normals->vec3(i)));
+				}
+			}
+		}
+	}
+};
+
+/* ************************************************************************** */
+
+#include <kamikaze/noise.h>
+
+class NoiseNode : public Node {
+public:
+	NoiseNode()
+	    : Node("Noise")
+	{
+		addInput("input");
+		addOutput("output");
+
+		add_prop("Octaves", property_type::prop_int);
+		set_prop_min_max(1, 10);
+		set_prop_default_value_int(1);
+
+		add_prop("Frequency", property_type::prop_float);
+		set_prop_min_max(0.0f, 1.0f);
+		set_prop_default_value_float(1.0f);
+
+		add_prop("Amplitude", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(1.0f);
+
+		add_prop("Persistence", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(1.0f);
+
+		add_prop("Lacunarity", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(2.0f);
+	}
+
+	void process() override
+	{
+		const auto octaves = eval_int("Octaves");
+		const auto lacunarity = eval_float("Lacunarity");
+		const auto persistence = eval_float("Persistence");
+		const auto ofrequency = eval_float("Frequency");
+		const auto oamplitude = eval_float("Amplitude");
+
+		for (auto prim : primitive_iterator(this->m_collection, Mesh::id)) {
+			auto mesh = static_cast<Mesh *>(prim);
+			auto points = mesh->points();
+
+			for (size_t i = 0, e = points->size(); i < e; ++i) {
+				auto &point = (*points)[i];
+				const auto x = point.x;
+				const auto y = point.x;
+				const auto z = point.x;
+				auto output = 0.0f;
+
+				for (size_t j = 0; j < octaves; ++j) {
+					auto frequency = ofrequency;
+					auto amplitude = oamplitude;
+
+					output += (amplitude * simplex_noise_3d(x * frequency, y * frequency, z * frequency));
+
+					frequency *= lacunarity;
+					amplitude *= persistence;
+				}
+
+				point.x += output;
+				point.y += output;
+				point.z += output;
+			}
+		}
+	}
+};
+
+/* ************************************************************************** */
+
 void register_builtin_nodes(NodeFactory *factory)
 {
 	REGISTER_NODE("Geometry", "Box", CreateBoxNode);
@@ -748,4 +889,6 @@ void register_builtin_nodes(NodeFactory *factory)
 	REGISTER_NODE("Geometry", "Tube", CreateTubeNode);
 	REGISTER_NODE("Geometry", "IcoSphere", CreateIcoSphereNode);
 	REGISTER_NODE("Geometry", "Cone", CreateConeNode);
+	REGISTER_NODE("Geometry", "Noise", NoiseNode);
+	REGISTER_NODE("Geometry", "Normal", NormalNode);
 }

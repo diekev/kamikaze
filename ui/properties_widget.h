@@ -25,6 +25,7 @@
 #pragma once
 
 #include "widgetbase.h"
+#include "paramcallback.h"
 
 class ParamCallback;
 class Persona;
@@ -39,11 +40,11 @@ class PropertiesWidget : public WidgetBase {
 	QWidget *m_widget;
 	QScrollArea *m_scroll;
 	QGridLayout *m_glayout;
-	ParamCallback *m_callback;
+	ParamCallback m_callback;
 
 public:
 	explicit PropertiesWidget(QWidget *parent = nullptr);
-	~PropertiesWidget();
+	~PropertiesWidget() = default;
 
 	void update_state(event_type event) override;
 

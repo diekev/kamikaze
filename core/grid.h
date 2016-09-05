@@ -37,5 +37,5 @@ public:
 	Grid(int x, int y);
 	~Grid();
 
-	void render(const ViewerContext * const context);
+	void render(const ViewerContext &context);
 };

@@ -771,7 +771,7 @@ void QtNodeEditor::removeConnection(QtConnection *connection)
 	const auto &target = pairs.second;
 
 	connectionRemoved(base.first, base.second->getPortName(),
-	                  target.first, target.second->getPortName());
+	                  target.first, target.second->getPortName(), true);
 }
 
 void QtNodeEditor::connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock, bool notify)
@@ -781,7 +781,7 @@ void QtNodeEditor::connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtP
 
 	from->m_active_connection = nullptr;
 
-	nodesConnected(from, from_sock->getPortName(), to, to_sock->getPortName(), true);
+	nodesConnected(from, from_sock->getPortName(), to, to_sock->getPortName(), notify);
 }
 
 void QtNodeEditor::splitConnectionWithNode(QtNode *node)
@@ -794,7 +794,7 @@ void QtNodeEditor::splitConnectionWithNode(QtNode *node)
 
 	/* remove connection */
 	connectionRemoved(base.first, base.second->getPortName(),
-	                  target.first, target.second->getPortName());
+	                  target.first, target.second->getPortName(), false);
 
 	/* connect from base port to first input port in node */
 	connectNodes(base.first, base.second, node, node->input(0), false);
@@ -1413,7 +1413,7 @@ void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNo
 	}
 }
 
-void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to)
+void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to, bool notify)
 {
 	auto scene = m_context->scene;
 
@@ -1431,7 +1431,9 @@ void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, Q
 
 		graph->disconnect(output_socket, input_socket);
 
-		scene->evalObjectDag(*m_context, object);
+		if (notify) {
+			scene->evalObjectDag(*m_context, object);
+		}
 	}
 	else {
 		auto node_from = static_cast<ObjectNodeItem *>(from)->scene_node();
