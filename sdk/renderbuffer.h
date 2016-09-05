@@ -116,10 +116,13 @@ public:
 	                       const void *normals,
 	                       const size_t normals_size);
 
-	void render(const ViewerContext * const context, const bool for_outline);
+	void render(const ViewerContext &context);
 
 	ego::Program *program();
 
 private:
 	void init();
 };
+
+void free_renderbuffer(RenderBuffer *buffer);
+void purge_all_buffers();

@@ -74,7 +74,7 @@ Mesh::~Mesh()
 		delete attr;
 	}
 
-	delete m_renderbuffer;
+	free_renderbuffer(m_renderbuffer);
 }
 
 PointList *Mesh::points()
@@ -181,9 +181,9 @@ size_t Mesh::typeID() const
 	return Mesh::id;
 }
 
-void Mesh::render(const ViewerContext * const context, const bool for_outline)
+void Mesh::render(const ViewerContext &context)
 {
-	m_renderbuffer->render(context, for_outline);
+	m_renderbuffer->render(context);
 }
 
 void Mesh::prepareRenderData()

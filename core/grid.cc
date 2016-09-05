@@ -113,14 +113,14 @@ Grid::Grid(int x, int y)
 
 Grid::~Grid()
 {
-	delete m_grid_buffer;
-	delete m_xline_buffer;
-	delete m_zline_buffer;
+	free_renderbuffer(m_grid_buffer);
+	free_renderbuffer(m_xline_buffer);
+	free_renderbuffer(m_zline_buffer);
 }
 
-void Grid::render(const ViewerContext * const context)
+void Grid::render(const ViewerContext &context)
 {
-	m_grid_buffer->render(context, false);
-	m_xline_buffer->render(context, false);
-	m_zline_buffer->render(context, false);
+	m_grid_buffer->render(context);
+	m_xline_buffer->render(context);
+	m_zline_buffer->render(context);
 }

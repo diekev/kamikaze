@@ -395,19 +395,6 @@ void Depsgraph::evaluate(const Context &context, SceneNode *scene_node)
 	m_need_update |= (m_state != DEG_STATE_OBJECT);
 	m_state = DEG_STATE_OBJECT;
 
-	/* XXX - see comment in evaluate_ex */
-	{
-		if (m_need_update) {
-			build(node);
-			m_need_update = false;
-		}
-
-		for (auto iter = m_stack.rbegin(); iter != m_stack.rend(); ++iter) {
-			DepsNode *node = *iter;
-			node->pre_process();
-		}
-	}
-
 	GraphEvalTask *t = new(tbb::task::allocate_root()) GraphEvalTask(this, context, node);
 	tbb::task::enqueue(*t);
 }
@@ -432,14 +419,9 @@ void Depsgraph::evaluate_ex(const Context &context, DepsNode *root, TaskNotifier
 	std::cerr << "Stack size: " << m_stack.size() << '\n';
 #endif
 
-	if (!notifier) {
-		/* XXX - TODO: this is mainly to clear objects' cache, which will free
-		 * opengl stuff which cacn only be freed from the thread they were
-		 * generated. Need a better way to handle caches updates. */
-		for (auto iter = m_stack.rbegin(); iter != m_stack.rend(); ++iter) {
-			DepsNode *node = *iter;
-			node->pre_process();
-		}
+	for (auto iter = m_stack.rbegin(); iter != m_stack.rend(); ++iter) {
+		DepsNode *node = *iter;
+		node->pre_process();
 	}
 
 	for (auto iter = m_stack.rbegin(); iter != m_stack.rend(); ++iter) {
