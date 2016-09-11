@@ -3,6 +3,11 @@
 
 Experimental node based 3D software used for R&D purposes, using a plugin architecture.
 
+<a href="https://scan.coverity.com/projects/diekev-kamikaze">
+  <img alt="Coverity Scan Build Status"
+       src="https://scan.coverity.com/projects/10082/badge.svg"/>
+</a>
+
 Dependencies
 ------------
 
