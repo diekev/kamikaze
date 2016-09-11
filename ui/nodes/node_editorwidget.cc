@@ -821,8 +821,8 @@ void QtNodeEditor::connectNodes()
 		return;
 	}
 
-	const auto &node_a = m_selected_nodes.back();
-	const auto &node_b = m_selected_nodes[m_selected_nodes.size() - 2];
+	const auto &node_a = m_selected_nodes[m_selected_nodes.size() - 2];
+	const auto &node_b = m_selected_nodes.back();
 
 	assert(node_a != node_b);
 
