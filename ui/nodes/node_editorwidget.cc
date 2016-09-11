@@ -833,7 +833,7 @@ void QtNodeEditor::connectNodes()
 	const auto &port_a = node_a->output(0);
 	const auto &port_b = node_b->input(0);
 
-	connectNodes(node_a, port_a, node_b, port_b);
+	connectNodes(node_a, port_a, node_b, port_b, true);
 }
 
 void QtNodeEditor::removeAllSelelected()
