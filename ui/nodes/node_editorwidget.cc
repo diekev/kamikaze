@@ -1227,27 +1227,48 @@ void QtNodeEditor::offsetNodes(QtNode *node)
 	std::vector<QtNode *> parents, children;
 
 	const auto &center_pos = node->pos();
-	auto closest_child_pos = node->pos() + QPointF(200.0f, 50.0f);
-	auto closest_parent_pos = node->pos() - QPointF(200.0f, 50.0f);
+	const auto &width = node->boundingRect().width();
+	const auto &offset = width * 0.75f;
+	auto closest_child_pos = node->pos() + QPointF(offset, 50.0f);
+	auto closest_parent_pos = node->pos() - QPointF(offset, 50.0f);
+
+	std::cerr << "Center (x): " << center_pos.x() << '\n';
+	std::cerr << "Offset: " << offset << '\n';
 
 	float min_dist = std::numeric_limits<float>::max();
 
 	gatherParents(node, parents, center_pos, closest_parent_pos, min_dist);
 
-	const auto &parent_offset = QPointF(250.0f - (center_pos.x() - min_dist), 0.0f); //QPointF(250.0f, 50.0f) - (center_pos - closest_parent_pos);
+	const auto &parent_offset = QPointF(offset - (center_pos.x() - min_dist), 0.0f);
+	std::cerr << "Parent min_dist: " << min_dist << '\n';
+	std::cerr << "Parent offset: " << parent_offset.x() << '\n';
 
 	min_dist = std::numeric_limits<float>::max();
 
 	gatherChildren(node, children, center_pos, closest_child_pos, min_dist);
 
-	const auto &child_offset = QPointF(250.0f - (center_pos.x() - min_dist), 0.0f); //QPointF(250.0f, 50.0f) - (center_pos - closest_child_pos);
+	const auto &child_offset = QPointF(offset - (center_pos.x() + min_dist), 0.0f);
+	std::cerr << "Child min_dist: " << min_dist << '\n';
+	std::cerr << "Child offset: " << child_offset.x() << '\n';
 
 	for (QtNode *parent : parents) {
+		if (std::abs(node->pos().x() - parent->pos().x()) > width) {
+			break;
+		}
+
 		parent->setPos(parent->pos() - parent_offset);
+		std::cerr << "Modifying parent (" << parent->getNode()->name()
+		          << ") node pos to: <" << parent->pos().x() << ", " << parent->pos().y() << ">\n";
 	}
 
 	for (QtNode *child : children) {
+		if (std::abs(node->pos().x() - child->pos().x()) > width) {
+			break;
+		}
+
 		child->setPos(child->pos() + child_offset);
+		std::cerr << "Modifying child (" << child->getNode()->name()
+		          << ") node pos to: <" << child->pos().x() << ", " << child->pos().y() << ">\n";
 	}
 }
 
