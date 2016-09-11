@@ -34,11 +34,13 @@ QStatusBar
 	border: 1px solid rgb(98, 98, 98);
 }
 
+/* Vertical scroll bar. */
+
 QScrollBar:vertical
 {
 	background: rgb(98, 98, 98);
 	width: 16px;
-	margin: 16px 0 16px 0;
+	margin: 16px 0px 16px 0px;
 }
 
 QScrollBar::handle:vertical
@@ -70,6 +72,44 @@ QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical
 	background: white;
 }
 
+/* Horizontal scroll bar. */
+
+QScrollBar:horizontal
+{
+	background: rgb(98, 98, 98);
+	height: 16px;
+	margin: 0px 16px 0px 16px;
+}
+
+QScrollBar::handle:horizontal
+{
+	background: rgb(113, 113, 113);
+}
+
+QScrollBar::add-line:horizontal
+{
+	background: rgb(113, 113, 113);
+	width: 14px;
+	subcontrol-position: right;
+	subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:horizontal
+{
+	background: rgb(113, 113, 113);
+	width: 14px;
+	subcontrol-position: left;
+	subcontrol-origin: margin;
+}
+
+QScrollBar::right-arrow:horizontal, QScrollBar::left-arrow:horizontal
+{
+	border: 1px solid black;
+	width: 2px;
+	height: 2px;
+	background: white;
+}
+
 QMainWindow::separator
 {
 	background: rgb(105, 105, 105);
@@ -77,9 +117,9 @@ QMainWindow::separator
 
 QDockWidget::close-button, QDockWidget::float-button
 {
-    border: 1px solid transparent;
-    background: darkgray;
-    padding: 0px;
+	border: 1px solid transparent;
+	background: darkgray;
+	padding: 0px;
 }
 
 QDockWidget::close-button:hover, QDockWidget::float-button:hover
@@ -89,7 +129,18 @@ QDockWidget::close-button:hover, QDockWidget::float-button:hover
 
 QDockWidget::title
 {
-    text-align: left;
+	text-align: left;
 	background: rgb(113, 113, 113);
-    padding-left: 5px;
+	padding-left: 5px;
+}
+
+QMenu::item:selected
+{
+	color: #52b1ee;
+}
+
+QMenuBar::item:selected
+{
+	background-color: rgb(127, 127, 127);
+	color: #52b1ee;
 }

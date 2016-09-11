@@ -28,6 +28,7 @@
 #include <GL/glew.h>  /* needs to be included before QGLWidget (includes gl.h) */
 #include <QGLWidget>
 #include <QGraphicsView>
+#include <kamikaze/context.h>
 #include <stack>
 
 #include "widgetbase.h"
@@ -79,14 +80,14 @@ class OpenGLScene : public QGraphicsScene {
 
 	Camera *m_camera = nullptr;
 	Grid *m_grid = nullptr;
-	ViewerContext *m_viewer_context = nullptr;
+	ViewerContext m_viewer_context;
 
 	bool m_initialized = false;
 
 	MatrixStack m_stack = {};
 
-	Context *m_context;
-	WidgetBase *m_base;
+	Context *m_context = nullptr;
+	WidgetBase *m_base = nullptr;
 
 	/* Get the world space position of the given point. */
 	glm::vec3 unproject(const glm::vec3 &pos) const;

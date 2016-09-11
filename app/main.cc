@@ -26,6 +26,8 @@
 #include <QFile>
 #include <QSplashScreen>
 
+#include <kamikaze/renderbuffer.h>
+
 #include "core/kamikaze_main.h"
 #include "ui/mainwindow.h"
 
@@ -49,20 +51,31 @@ int main(int argc, char *argv[])
 
 	qApp->processEvents(QEventLoop::AllEvents);
 
-	Main main;
+	int ret;
 
-	splash->showMessage("Initializing types...");
-	main.initialize();
+	{
+		Main main;
 
-	splash->showMessage("Loading plugins...");
-	main.loadPlugins();
+		splash->showMessage("Initializing types...");
+		main.initialize();
 
-	MainWindow w(&main);
-	w.setWindowTitle(QCoreApplication::applicationName());
-	w.showMaximized();
+		splash->showMessage("Loading plugins...");
+		main.loadPlugins();
 
-	splash->finish(&w);
-	delete splash;
+		MainWindow w(&main);
+		w.setWindowTitle(QCoreApplication::applicationName());
+		w.showMaximized();
 
-	return a.exec();
+		splash->finish(&w);
+		delete splash;
+
+		ret = a.exec();
+	}
+
+	/* The objects are freed after the viewer is freed, so make sure all buffers
+	 * are freed before quitting. Also make sure Main is deleted before calling
+	 * this. */
+	purge_all_buffers();
+
+	return ret;
 }

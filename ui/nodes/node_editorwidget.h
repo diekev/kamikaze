@@ -176,7 +176,7 @@ private:
 	void nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to, bool notify);
 
 	/* Called when nodes are disconnected. */
-	void connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to);
+	void connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to, bool notify);
 
 protected:
 	/* Event handling */

@@ -76,7 +76,7 @@ public:
 /* ************************************************************************** */
 
 class TreeWidget : public QTreeWidget {
-	WidgetBase *m_base;
+	WidgetBase *m_base = nullptr;
 
 public:
 	explicit TreeWidget(QWidget *parent = nullptr);
