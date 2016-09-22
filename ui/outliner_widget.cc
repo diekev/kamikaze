@@ -254,7 +254,7 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 		auto object = static_cast<Object *>(scene_node);
 
 		for (const auto &node : object->graph()->nodes()) {
-			auto node_item = new ObjectNodeTreeWidgetItem(node, object_item);
+			auto node_item = new ObjectNodeTreeWidgetItem(node.get(), object_item);
 			object_item->addChild(node_item);
 		}
 

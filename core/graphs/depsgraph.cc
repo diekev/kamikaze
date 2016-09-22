@@ -131,7 +131,7 @@ void ObjectGraphDepsNode::process(const Context &context, TaskNotifier *notifier
 	m_graph->build();
 
 	/* XXX */
-	for (Node *node : m_graph->nodes()) {
+	for (const auto &node : m_graph->nodes()) {
 		for (OutputSocket *output : node->outputs()) {
 			output->collection = nullptr;
 		}
