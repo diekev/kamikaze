@@ -30,38 +30,25 @@
 #include <kamikaze/primitive.h>
 #include <kamikaze/util_string.h>
 
-#include "object.h"
-
-#include "graphs/depsgraph.h"
-
-Scene::Scene()
-    : m_depsgraph(new Depsgraph)
-{}
-
-Scene::~Scene()
-{
-	for (auto &node : m_nodes) {
-		delete node;
-	}
-
-	delete m_depsgraph;
-}
-
 void Scene::removeObject(SceneNode *node)
 {
-	auto iter = std::find(m_nodes.begin(), m_nodes.end(), node);
+	auto iter = std::find_if(m_nodes.begin(), m_nodes.end(),
+	                         [node](const SceneNodePtr &node_ptr)
+	{
+		return node_ptr.get() == node;
+	});
 
 	assert(iter != m_nodes.end());
 
 	notify_listeners(event_type::object | event_type::removed);
 
-	m_nodes.erase(iter);
-	m_depsgraph->remove_node(node);
-	delete node;
+	m_depsgraph.remove_node(node);
 
 	if (node == m_active_node) {
 		m_active_node = nullptr;
 	}
+
+	m_nodes.erase(iter);
 }
 
 void Scene::addObject(SceneNode *node)
@@ -72,10 +59,10 @@ void Scene::addObject(SceneNode *node)
 		node->name(name);
 	}
 
-	m_nodes.push_back(node);
+	m_nodes.push_back(SceneNodePtr(node));
 	m_active_node = node;
 
-	m_depsgraph->create_node(node);
+	m_depsgraph.create_node(node);
 
 	notify_listeners(event_type::object | event_type::added);
 }
@@ -91,7 +78,7 @@ void Scene::selectObject(const glm::vec3 &pos)
 	int selected_object = -1, index = 0;
 
 	for (auto &node : m_nodes) {
-		auto object = static_cast<Object *>(node);
+		auto object = static_cast<Object *>(node.get());
 
 		if (!object || !object->collection()) {
 			continue;
@@ -109,15 +96,15 @@ void Scene::selectObject(const glm::vec3 &pos)
 		++index;
 	}
 
-	if (selected_object != -1 && m_active_node != m_nodes[selected_object]) {
-		m_active_node = m_nodes[selected_object];
+	if (selected_object != -1 && m_active_node != (m_nodes[selected_object]).get()) {
+		m_active_node = (m_nodes[selected_object]).get();
 		notify_listeners(event_type::object | event_type::selected);
 	}
 }
 
 Depsgraph *Scene::depsgraph()
 {
-	return m_depsgraph;
+	return &m_depsgraph;
 }
 
 SceneNode *Scene::active_node()
@@ -170,12 +157,12 @@ void Scene::set_active_node(SceneNode *node)
 
 void Scene::updateForNewFrame(const Context &context)
 {
-	m_depsgraph->evaluate_for_time_change(context);
+	m_depsgraph.evaluate_for_time_change(context);
 }
 
 void Scene::evalObjectDag(const Context &context, SceneNode *node)
 {
-	m_depsgraph->evaluate(context, node);
+	m_depsgraph.evaluate(context, node);
 }
 
 void Scene::connect(const Context &context, SceneNode *node_from, SceneNode *node_to)
@@ -185,11 +172,11 @@ void Scene::connect(const Context &context, SceneNode *node_from, SceneNode *nod
 
 	from_ob->addChild(to_ob);
 
-	node_to->inputs()[0]->link = node_from->outputs()[0];
-	node_from->outputs()[0]->links.push_back(node_to->inputs()[0]);
+	node_to->inputs()[0]->link = node_from->outputs()[0].get();
+	node_from->outputs()[0]->links.push_back(node_to->inputs()[0].get());
 
-	m_depsgraph->connect(node_from, node_to);
-	m_depsgraph->evaluate(context, node_from);
+	m_depsgraph.connect(node_from, node_to);
+	m_depsgraph.evaluate(context, node_from);
 }
 
 void Scene::disconnect(const Context &context, SceneNode *node_from, SceneNode *node_to)
@@ -201,8 +188,8 @@ void Scene::disconnect(const Context &context, SceneNode *node_from, SceneNode *
 
 	node_to->inputs()[0]->link = nullptr;
 
-	auto from = node_from->outputs()[0];
-	auto iter = std::find(from->links.begin(), from->links.end(), node_to->inputs()[0]);
+	auto from = node_from->outputs()[0].get();
+	auto iter = std::find(from->links.begin(), from->links.end(), node_to->inputs()[0].get());
 
 	if (iter == from->links.end()) {
 		std::cerr << "Scene::disconnect, cannot find output!\n";
@@ -211,8 +198,8 @@ void Scene::disconnect(const Context &context, SceneNode *node_from, SceneNode *
 
 	from->links.erase(iter);
 
-	m_depsgraph->disconnect(node_from, node_to);
-	m_depsgraph->evaluate(context, node_to);
+	m_depsgraph.disconnect(node_from, node_to);
+	m_depsgraph.evaluate(context, node_to);
 }
 
 int Scene::flags() const
@@ -279,7 +266,7 @@ void Scene::framesPerSecond(float value)
 	notify_listeners(event_type::time | event_type::modified);
 }
 
-const std::vector<SceneNode *> &Scene::nodes() const
+const std::vector<SceneNodePtr> &Scene::nodes() const
 {
 	return m_nodes;
 }

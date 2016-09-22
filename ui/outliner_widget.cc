@@ -230,14 +230,14 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 		scene->set_flags(SCENE_OL_EXPANDED);
 
 		for (const auto &node : scene->nodes()) {
-			auto object = static_cast<Object *>(node);
+			auto object = static_cast<Object *>(node.get());
 
 			if (object->parent() != nullptr) {
 				continue;
 			}
 
-			auto child = new ObjectTreeWidgetItem(node, scene_item);
-			child->setSelected(node == scene->active_node());
+			auto child = new ObjectTreeWidgetItem(node.get(), scene_item);
+			child->setSelected(node.get() == scene->active_node());
 			scene_item->addChild(child);
 			child->setExpanded(node->has_flags(SNODE_OL_EXPANDED));
 		}

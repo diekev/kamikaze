@@ -142,7 +142,7 @@ class Depsgraph {
 	std::vector<std::unique_ptr<DepsNode>> m_nodes;
 	std::vector<DepsNode *> m_stack;
 	std::unordered_map<SceneNode *, DepsNode *> m_scene_node_map;
-	std::unordered_map<Graph *, DepsNode *> m_object_graph_map;
+	std::unordered_map<const Graph *, DepsNode *> m_object_graph_map;
 
 	int m_state = DEG_STATE_NONE;
 	bool m_need_update = false;

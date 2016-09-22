@@ -351,7 +351,7 @@ void Depsgraph::remove_node(SceneNode *scene_node)
 		m_nodes.erase(node_iter);
 	}
 
-	/* Then, delete scene node. */
+	/* Then, remove scene node. */
 	{
 		auto iter = m_scene_node_map.find(scene_node);
 		assert(iter != m_scene_node_map.end());

@@ -25,6 +25,7 @@
 #pragma once
 
 #include <kamikaze/persona.h>
+#include <memory>
 
 struct SceneNode;
 struct SceneInputSocket;
@@ -40,6 +41,8 @@ struct SceneOutputSocket {
 	{}
 };
 
+using SceneOutputSocketPtr = std::unique_ptr<SceneOutputSocket>;
+
 struct SceneInputSocket {
 	SceneNode *parent = nullptr;
 	SceneOutputSocket *link = nullptr;
@@ -52,26 +55,28 @@ struct SceneInputSocket {
 	{}
 };
 
+using SceneInputSocketPtr = std::unique_ptr<SceneInputSocket>;
+
 enum {
 	SNODE_OL_EXPANDED = (1 << 0),  /* Is it expanded in the outliner? */
 };
 
 class SceneNode : public Persona {
 protected:
-	std::vector<SceneInputSocket *> m_inputs = {};
-	std::vector<SceneOutputSocket *> m_outputs = {};
+	std::vector<SceneInputSocketPtr> m_inputs = {};
+	std::vector<SceneOutputSocketPtr> m_outputs = {};
 
 	std::string m_name = "";
 	int m_flags = 0;
 
 public:
-	virtual ~SceneNode();
+	virtual ~SceneNode() = default;
 
 	void add_input(const std::string &name);
-	const std::vector<SceneInputSocket *> &inputs();
+	const std::vector<SceneInputSocketPtr> &inputs();
 
 	void add_output(const std::string &name);
-	const std::vector<SceneOutputSocket *> &outputs();
+	const std::vector<SceneOutputSocketPtr> &outputs();
 
 	void name(const std::string &name);
 	const std::string &name() const;
