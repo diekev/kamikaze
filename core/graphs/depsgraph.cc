@@ -231,7 +231,7 @@ void GraphEvalTask::start(const Context &context)
 Depsgraph::Depsgraph()
     : m_time_node(new TimeDepsNode)
 {
-	m_nodes.push_back(m_time_node);
+	m_nodes.emplace_back(m_time_node);
 }
 
 void Depsgraph::connect(SceneNode *from, SceneNode *to)
@@ -304,15 +304,15 @@ void Depsgraph::disconnect(DepsOutputSocket *from, DepsInputSocket *to)
 void Depsgraph::create_node(SceneNode *scene_node)
 {
 	auto object = static_cast<Object *>(scene_node);
-	auto node = std::shared_ptr<DepsNode>(new DepsObjectNode(object));
+	m_nodes.push_back(std::unique_ptr<DepsNode>(new DepsObjectNode(object)));
+	auto node = m_nodes.back().get();
 
-	m_nodes.push_back(node);
-	m_scene_node_map[scene_node] = node.get();
+	m_scene_node_map[scene_node] = node;
 
-	auto graph_node = std::shared_ptr<DepsNode>(new ObjectGraphDepsNode(object->graph()));
+	m_nodes.push_back(std::unique_ptr<DepsNode>(new ObjectGraphDepsNode(object->graph())));
+	auto graph_node = m_nodes.back().get();
 
-	m_nodes.push_back(graph_node);
-	m_object_graph_map[object->graph()] = graph_node.get();
+	m_object_graph_map[object->graph()] = graph_node;
 
 	/* Object depends on its graph. */
 	connect(graph_node->output(), node->input());
@@ -331,7 +331,7 @@ void Depsgraph::remove_node(SceneNode *scene_node)
 		DepsNode *node = iter->second;
 
 		auto node_iter = std::find_if(m_nodes.begin(), m_nodes.end(),
-		                              [&node](const std::shared_ptr<DepsNode> &node_ptr)
+		                              [&node](const std::unique_ptr<DepsNode> &node_ptr)
 		{
 			return node_ptr.get() == node;
 		});
@@ -359,7 +359,7 @@ void Depsgraph::remove_node(SceneNode *scene_node)
 		DepsNode *node = iter->second;
 
 		auto node_iter = std::find_if(m_nodes.begin(), m_nodes.end(),
-		                              [&node](const std::shared_ptr<DepsNode> &node_ptr)
+		                              [&node](const std::unique_ptr<DepsNode> &node_ptr)
 		{
 			return node_ptr.get() == node;
 		});
@@ -404,7 +404,7 @@ void Depsgraph::evaluate_for_time_change(const Context &context)
 	m_need_update |= (m_state != DEG_STATE_TIME);
 	m_state = DEG_STATE_TIME;
 
-	evaluate_ex(context, m_time_node.get(), nullptr);
+	evaluate_ex(context, m_time_node, nullptr);
 }
 
 void Depsgraph::evaluate_ex(const Context &context, DepsNode *root, TaskNotifier *notifier)
@@ -432,7 +432,7 @@ void Depsgraph::evaluate_ex(const Context &context, DepsNode *root, TaskNotifier
 	context.scene->notify_listeners(static_cast<event_type>(-1));
 }
 
-const std::vector<std::shared_ptr<DepsNode>> &Depsgraph::nodes() const
+const std::vector<std::unique_ptr<DepsNode>> &Depsgraph::nodes() const
 {
 	return m_nodes;
 }
@@ -498,7 +498,7 @@ void Depsgraph::build(DepsNode *root)
 		std::vector<DepsNode *> nodes(m_nodes.size());
 
 		std::transform(m_nodes.begin(), m_nodes.end(), nodes.begin(),
-		               [](const std::shared_ptr<DepsNode> &node) -> DepsNode*
+		               [](const std::unique_ptr<DepsNode> &node) -> DepsNode*
 		{
 			return node.get();
 		});
