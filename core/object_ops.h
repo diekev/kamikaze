@@ -68,3 +68,12 @@ public:
 	void undo() override;
 	void redo() override;
 };
+
+class DeleteObjectCommand : public Command {
+public:
+	DeleteObjectCommand() = default;
+
+	virtual void execute(const Context &context) override;
+	void undo() {}
+	void redo() {}
+};

@@ -27,10 +27,10 @@
 #include <kamikaze/factory.h>
 
 #include <stack>
-#include <unordered_map>
 
 class Context;
-class ParamCallback;
+
+/* ************************************************************************** */
 
 class Command {
 protected:
@@ -62,3 +62,31 @@ using CommandFactory = Factory<Command>;
 
 #define REGISTER_COMMAND(factory, name, type) \
 	REGISTER_TYPE(factory, name, Command, type)
+
+/* ************************************************************************** */
+
+struct KeyData {
+	int modifier = 0;
+	int key = 0;
+	const char *command = nullptr;
+
+	KeyData() = default;
+
+	KeyData(int mod, int k, const char *cmd)
+	    : modifier(mod)
+	    , key(k)
+	    , command(cmd)
+	{}
+};
+
+namespace KeyEventHandler {
+
+void init_key_mappings();
+
+void call_command(const Context &context, const KeyData &key_data, const std::string &name);
+
+void undo();
+
+void redo();
+
+}  /* namespace KeyEventHandler */

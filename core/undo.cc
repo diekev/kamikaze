@@ -24,7 +24,14 @@
 
 #include "undo.h"
 
+#include <cstring>
+
+#include "context.h"
+
+#include "util/util_input.h"
 #include "util/util_memory.h"
+
+/* ************************************************************************** */
 
 void Command::setName(const std::string &name)
 {
@@ -73,3 +80,59 @@ void CommandManager::redo()
 {
 	undo_redo_ex(m_redo_commands, m_undo_commands, true);
 }
+
+/* ************************************************************************** */
+
+namespace KeyEventHandler {
+
+static CommandManager command_manager;
+static std::vector<KeyData> keys;
+
+void init_key_mappings()
+{
+	keys.emplace_back(0, 0, "add node");
+	keys.emplace_back(0, 0, "add object");
+	keys.emplace_back(0, 0, "add preset");
+	keys.emplace_back(MOD_KEY_NONE, 0x01000007, "DeleteObjectCommand");
+}
+
+void call_command(const Context &context, const KeyData &key_data, const std::string &name)
+{
+	for (const KeyData &key : keys) {
+		if (key.key != key_data.key) {
+			continue;
+		}
+
+		if (key.modifier != key_data.modifier) {
+			continue;
+		}
+
+		if (std::strcmp(key.command, key_data.command) != 0) {
+			continue;
+		}
+
+		if (context.command_factory->registered(key.command)) {
+			Command *command = (*context.command_factory)(key.command);
+
+			/* TODO: find a way to pass custom datas. */
+			command->setName(name);
+
+			command_manager.execute(command, context);
+			break;
+		}
+	}
+}
+
+void undo()
+{
+	/* TODO: figure out how to update everything properly */
+	command_manager.undo();
+}
+
+void redo()
+{
+	/* TODO: figure out how to update everything properly */
+	command_manager.redo();
+}
+
+}  /* namespace KeyEventHandler */

@@ -41,58 +41,9 @@
 #include "camera.h"
 #include "object.h"
 #include "scene.h"
+#include "undo.h"
 
 #include "grid.h"
-
-struct KeyData {
-	int modifier;
-	int key;
-	const char *command;
-
-	KeyData(int mod, int k, const char *cmd)
-	    : modifier(mod)
-	    , key(k)
-	    , command(cmd)
-	{}
-};
-
-void DeleteObjectCommand::execute(const Context &context)
-{
-	std::cerr << __func__ << '\n';
-
-	auto scene = context.scene;
-	scene->removeObject(scene->active_node());
-}
-
-namespace KeyEventHandler {
-
-static std::vector<KeyData> keys;
-
-static void init_commands()
-{
-	keys.emplace_back(MOD_KEY_NONE, static_cast<int>(Qt::Key_Delete), "DeleteObjectCommand");
-}
-
-static void call_command(const Context &context, const KeyData &key_data)
-{
-	for (const KeyData &key : keys) {
-		if (key.key != key_data.key) {
-			continue;
-		}
-
-		if (key.modifier != key_data.modifier) {
-			continue;
-		}
-
-		if (context.command_factory->registered(key.command)) {
-			Command *command = (*context.command_factory)(key.command);
-			command->execute(context);
-			break;
-		}
-	}
-}
-
-}  /* namespace KeyEventHandler */
 
 Viewer::Viewer(QWidget *parent)
     : QGLWidget(parent)
@@ -100,7 +51,6 @@ Viewer::Viewer(QWidget *parent)
     , m_viewer_context()
 {
 	setFocusPolicy(Qt::FocusPolicy::StrongFocus);
-	KeyEventHandler::init_commands();
 }
 
 Viewer::~Viewer()
@@ -277,7 +227,7 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 	}
 
 	KeyData key_data(m_modifier, m_mouse_button, nullptr);
-	KeyEventHandler::call_command(*m_context, key_data);
+	KeyEventHandler::call_command(*m_context, key_data, "");
 
 	update();
 	m_base->set_active();
@@ -305,7 +255,7 @@ void Viewer::mouseReleaseEvent(QMouseEvent */*e*/)
 void Viewer::keyPressEvent(QKeyEvent *e)
 {
 	KeyData key_data(MOD_KEY_NONE, static_cast<int>(e->key()), nullptr);
-	KeyEventHandler::call_command(*m_context, key_data);
+	KeyEventHandler::call_command(*m_context, key_data, "");
 
 	m_base->set_active();
 }

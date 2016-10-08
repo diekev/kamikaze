@@ -45,10 +45,12 @@
 #include "utils_ui.h"
 #include "viewer.h"
 
+/* Declare KeyData as metatype so we can use it in QVariant. */
+Q_DECLARE_METATYPE(KeyData)
+
 MainWindow::MainWindow(Main *main, QWidget *parent)
     : QMainWindow(parent)
     , m_main(main)
-    , m_command_manager(new CommandManager)
     , m_command_factory(new CommandFactory)
 {
 	generateObjectMenu();
@@ -83,11 +85,12 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	setCentralWidget(nullptr);
 
 	REGISTER_COMMAND(m_command_factory, "DeleteObjectCommand", DeleteObjectCommand);
+
+	KeyEventHandler::init_key_mappings();
 }
 
 MainWindow::~MainWindow()
 {
-	delete m_command_manager;
 	delete m_command_factory;
 }
 
@@ -109,14 +112,12 @@ void MainWindow::taskEnded()
 
 void MainWindow::undo() const
 {
-	/* TODO: figure out how to update everything properly */
-	m_command_manager->undo();
+	KeyEventHandler::undo();
 }
 
 void MainWindow::redo() const
 {
-	/* TODO: figure out how to update everything properly */
-	m_command_manager->redo();
+	KeyEventHandler::redo();
 }
 
 void MainWindow::generateObjectMenu()
@@ -125,7 +126,7 @@ void MainWindow::generateObjectMenu()
 
 	m_add_object_menu = menuBar()->addMenu("Add Object");
 	auto action = m_add_object_menu->addAction("Empty Object");
-	action->setData(QVariant::fromValue(QString("add object")));
+	action->setData(QVariant::fromValue(KeyData(0, 0, "add object")));
 
 	connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
 }
@@ -164,7 +165,7 @@ void MainWindow::generateNodeMenu()
 
 		for (const auto &key : keys) {
 			auto action = sub_menu->addAction(key.c_str());
-			action->setData(QVariant::fromValue(QString("add node")));
+			action->setData(QVariant::fromValue(KeyData(0, 0, "add node")));
 
 			connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
 		}
@@ -230,7 +231,7 @@ void MainWindow::generatePresetMenu()
 
 	for (const auto &prop : props) {
 		auto action = m_tool_bar->addAction(QIcon(prop.icon_path), prop.name);
-		action->setData(QVariant::fromValue(QString("add preset")));
+		action->setData(QVariant::fromValue(KeyData(0, 0, "add preset")));
 
 		connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
 	}
@@ -245,17 +246,9 @@ void MainWindow::handleCommand()
 	}
 
 	const auto &name = action->text().toStdString();
-	const auto &data = action->data().toString().toStdString();
+	const auto &key_data = qvariant_cast<KeyData>(action->data());
 
-	/* Get command, and give it the name of the UI button which will be used to
-	 * look up keys in the various creation factories if need be. This could and
-	 * should be handled better. */
-	auto cmd = (*m_command_factory)(data);
-	cmd->setName(name);
-
-	/* Execute the command in the current context, the manager will push the
-	* command on the undo stack. */
-	m_command_manager->execute(cmd, m_context);
+	KeyEventHandler::call_command(m_context, key_data, name);
 }
 
 void MainWindow::addTimeLineWidget()

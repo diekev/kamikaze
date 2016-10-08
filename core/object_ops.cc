@@ -132,3 +132,9 @@ void AddPresetObjectCmd::redo()
 {
 	/* TODO */
 }
+
+void DeleteObjectCommand::execute(const Context &context)
+{
+	auto scene = context.scene;
+	scene->removeObject(scene->active_node());
+}

@@ -42,7 +42,6 @@ class MainWindow : public QMainWindow {
 	Main *m_main;
 
 	QTimer *m_timer;
-	CommandManager *m_command_manager;
 	CommandFactory *m_command_factory;
 
 	bool m_has_glwindow;
