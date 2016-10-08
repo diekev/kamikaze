@@ -38,6 +38,17 @@ class Grid;
 class Scene;
 class ViewerContext;
 
+#include "undo.h"
+
+class DeleteObjectCommand : public Command {
+public:
+	DeleteObjectCommand() = default;
+
+	virtual void execute(const Context &context) override;
+	void undo() {}
+	void redo() {}
+};
+
 class MatrixStack {
 	std::stack<glm::mat4, std::vector<glm::mat4>> m_stack;
 

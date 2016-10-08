@@ -71,6 +71,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	m_context.primitive_factory = m_main->primitive_factory();
 	m_context.main_window = this;
 	m_context.active_widget = nullptr;
+	m_context.command_factory = m_command_factory;
 
 	m_has_glwindow = false;
 
@@ -80,6 +81,8 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	addTimeLineWidget();
 
 	setCentralWidget(nullptr);
+
+	REGISTER_COMMAND(m_command_factory, "DeleteObjectCommand", DeleteObjectCommand);
 }
 
 MainWindow::~MainWindow()

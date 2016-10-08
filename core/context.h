@@ -27,6 +27,8 @@
 #include <kamikaze/nodes.h>
 #include <kamikaze/primitive.h>
 
+#include "undo.h"
+
 class EvaluationContext;
 class MainWindow;
 class Scene;
@@ -96,6 +98,7 @@ struct Context {
 	NodeFactory *node_factory;
 	MainWindow *main_window;
 	WidgetBase *active_widget;
+	CommandFactory *command_factory;
 };
 
 class ContextListener {

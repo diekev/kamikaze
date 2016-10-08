@@ -44,12 +44,63 @@
 
 #include "grid.h"
 
+struct KeyData {
+	int modifier;
+	int key;
+	const char *command;
+
+	KeyData(int mod, int k, const char *cmd)
+	    : modifier(mod)
+	    , key(k)
+	    , command(cmd)
+	{}
+};
+
+void DeleteObjectCommand::execute(const Context &context)
+{
+	std::cerr << __func__ << '\n';
+
+	auto scene = context.scene;
+	scene->removeObject(scene->active_node());
+}
+
+namespace KeyEventHandler {
+
+static std::vector<KeyData> keys;
+
+static void init_commands()
+{
+	keys.emplace_back(MOD_KEY_NONE, static_cast<int>(Qt::Key_Delete), "DeleteObjectCommand");
+}
+
+static void call_command(const Context &context, const KeyData &key_data)
+{
+	for (const KeyData &key : keys) {
+		if (key.key != key_data.key) {
+			continue;
+		}
+
+		if (key.modifier != key_data.modifier) {
+			continue;
+		}
+
+		if (context.command_factory->registered(key.command)) {
+			Command *command = (*context.command_factory)(key.command);
+			command->execute(context);
+			break;
+		}
+	}
+}
+
+}  /* namespace KeyEventHandler */
+
 Viewer::Viewer(QWidget *parent)
     : QGLWidget(parent)
     , m_camera(new Camera(m_width, m_height))
     , m_viewer_context()
 {
 	setFocusPolicy(Qt::FocusPolicy::StrongFocus);
+	KeyEventHandler::init_commands();
 }
 
 Viewer::~Viewer()
@@ -212,6 +263,7 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 
 	if (e->buttons() == Qt::MidButton) {
 		m_mouse_button = MOUSE_MIDDLE;
+		m_camera->mouseDownEvent(x, y);
 	}
 	else if (e->buttons() == Qt::LeftButton) {
 		m_mouse_button = MOUSE_LEFT;
@@ -224,7 +276,9 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 		m_mouse_button = MOUSE_NONE;
 	}
 
-	m_camera->mouseDownEvent(x, y);
+	KeyData key_data(m_modifier, m_mouse_button, nullptr);
+	KeyEventHandler::call_command(*m_context, key_data);
+
 	update();
 	m_base->set_active();
 }
@@ -250,13 +304,8 @@ void Viewer::mouseReleaseEvent(QMouseEvent */*e*/)
 
 void Viewer::keyPressEvent(QKeyEvent *e)
 {
-	switch (e->key()) {
-		case Qt::Key_Delete:
-			m_context->scene->removeObject(m_context->scene->active_node());
-			break;
-		default:
-			break;
-	}
+	KeyData key_data(MOD_KEY_NONE, static_cast<int>(e->key()), nullptr);
+	KeyEventHandler::call_command(*m_context, key_data);
 
 	m_base->set_active();
 }
