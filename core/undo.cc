@@ -85,9 +85,41 @@ void CommandManager::redo()
 
 namespace KeyEventHandler {
 
+#undef USE_DOCUMENT
+
 static CommandManager command_manager;
 static Command *modal_command = nullptr;
 static std::vector<KeyData> keys;
+
+#ifdef USE_DOCUMENT
+struct Document {
+	Scene *scene;
+};
+
+std::stack<Document> undo_stack;
+std::stack<Document> redo_stack;
+
+static void undo_redo(std::stack<Document> &pop_stack, std::stack<Document> &push_stack)
+{
+	if (pop_stack.empty()) {
+		return;
+	}
+
+	auto document = pop_stack.top();
+	pop_stack.pop();
+	push_stack.push(document);
+}
+
+void undo()
+{
+	undo_redo(undo_stack, redo_stack);
+}
+
+void redo()
+{
+	undo_redo(redo_stack, undo_stack);
+}
+#endif
 
 void init_key_mappings()
 {
@@ -135,8 +167,14 @@ void call_command(const Context &context, const KeyData &key_data, const std::st
 		modal_command->invoke(context);
 	}
 	else {
-		command_manager.execute(command, context);
+		command->execute(context);
 	}
+
+#ifdef USE_DOCUMENT
+		Document doc;
+		doc.scene = context.scene;
+		undo_stack.push(doc);
+#endif
 }
 
 void call_modal_command(const Context &context)
@@ -154,6 +192,7 @@ void end_modal_command()
 	modal_command = nullptr;
 }
 
+#ifndef USE_DOCUMENT
 void undo()
 {
 	/* TODO: figure out how to update everything properly */
@@ -165,5 +204,6 @@ void redo()
 	/* TODO: figure out how to update everything properly */
 	command_manager.redo();
 }
+#endif
 
 }  /* namespace KeyEventHandler */
