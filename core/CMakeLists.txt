@@ -58,7 +58,6 @@ add_library(kmk_core STATIC
 	grid.h
 	kamikaze_main.h
 	object.h
-	object_ops.h
 	scene.h
 	task.h
 	undo.h
@@ -77,7 +76,7 @@ add_library(kmk_core STATIC
 	grid.cc
 	kamikaze_main.cc
 	object.cc
-	object_ops.cc
+	object_commands.cc
 	task.cc
 	scene.cc
 	undo.cc

@@ -36,7 +36,6 @@
 #include "core/graphs/graph_dumper.h"
 #include "core/kamikaze_main.h"
 #include "core/object.h"
-#include "core/object_ops.h"
 
 #include "node_editorwidget.h"
 #include "outliner_widget.h"
@@ -84,7 +83,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 
 	setCentralWidget(nullptr);
 
-	REGISTER_COMMAND(m_command_factory, "DeleteObjectCommand", DeleteObjectCommand);
+	register_object_commands(m_command_factory);
 	register_view3d_commands(m_command_factory);
 
 	KeyEventHandler::init_key_mappings();
@@ -123,8 +122,6 @@ void MainWindow::redo() const
 
 void MainWindow::generateObjectMenu()
 {
-	REGISTER_COMMAND(m_command_factory, "add object", AddObjectCmd);
-
 	m_add_object_menu = menuBar()->addMenu("Add Object");
 	auto action = m_add_object_menu->addAction("Empty Object");
 	action->setData(QVariant::fromValue(KeyData(0, 0, "add object")));
@@ -151,8 +148,6 @@ void MainWindow::generateDebugMenu()
 
 void MainWindow::generateNodeMenu()
 {
-	REGISTER_COMMAND(m_command_factory, "add node", AddNodeCmd);
-
 	m_add_nodes_menu = menuBar()->addMenu("Add Node");
 
 	auto categories = m_main->node_factory()->categories();
@@ -215,8 +210,6 @@ void MainWindow::generateEditMenu()
 
 void MainWindow::generatePresetMenu()
 {
-	REGISTER_COMMAND(m_command_factory, "add preset", AddPresetObjectCmd);
-
 	m_tool_bar = new QToolBar();
 	addToolBar(Qt::TopToolBarArea, m_tool_bar);
 

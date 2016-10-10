@@ -83,6 +83,9 @@ struct KeyData {
 void register_view3d_key_mappings(std::vector<KeyData> &keys);
 void register_view3d_commands(CommandFactory *factory);
 
+void register_object_key_mappings(std::vector<KeyData> &keys);
+void register_object_commands(CommandFactory *factory);
+
 namespace KeyEventHandler {
 
 void init_key_mappings();
