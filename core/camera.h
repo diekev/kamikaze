@@ -39,11 +39,11 @@ class Camera {
 	float m_tumbling_speed = 0.5f;
 	float m_strafe_speed = 0.05f;
 
-	glm::mat4 m_model_view = glm::mat4{0.0f};
-	glm::mat4 m_projection = glm::mat4{0.0f};
+	glm::mat4 m_model_view = glm::mat4(0.0f);
+	glm::mat4 m_projection = glm::mat4(0.0f);
 	glm::vec3 m_eye = glm::vec3{0.0f, 0.0f, -1.0f};
 	glm::vec3 m_view = glm::vec3{0.0f, 0.0f, 1.0f};
-	glm::vec3 m_center = glm::vec3{0.0f};
+	glm::vec3 m_center = glm::vec3(0.0f);
 	glm::vec3 m_right = glm::vec3{1.0f, 0.0f, 0.0f};
 	glm::vec3 m_up = glm::vec3{0.0f, 1.0f, 0.0f};
 
