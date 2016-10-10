@@ -28,29 +28,12 @@
 #include "util/util_input.h"
 
 Camera::Camera(int w, int h)
-    : m_old_x(0)
-    , m_old_y(0)
-    , m_width(w)
+    : m_width(w)
     , m_height(h)
-    , m_aspect(float(w) / h)
-    , m_head(30.0f)
-    , m_pitch(45.0f)
-    , m_near(0.1f)
-    , m_far(1000.0f)
-    , m_distance(25.0f)
-    , m_fov(60.0f)
-    , m_zoom_speed(0.2f)
-    , m_tumbling_speed(0.5f)
-    , m_strafe_speed(0.05f)
-    , m_eye(glm::vec3(0.0f, 0.0f, -1.0f))
-    , m_view(glm::vec3(0.0f, 0.0f, 1.0f))
-    , m_center(glm::vec3(0.0f))
-    , m_right(glm::vec3(1.0f, 0.0f, 0.0f))
-    , m_up(glm::vec3(0.0f, 1.0f, 0.0f))
-    , m_need_update(true)
+    , m_aspect(static_cast<float>(w) / h)
 {}
 
-void Camera::setSpeed(const float zoom, const float strafe, const float tumbling)
+void Camera::set_speed(const float zoom, const float strafe, const float tumbling)
 {
 	m_zoom_speed = glm::max(0.0001f, m_distance * zoom);
     m_strafe_speed = glm::max(0.0001f, m_distance * strafe);
@@ -58,46 +41,99 @@ void Camera::setSpeed(const float zoom, const float strafe, const float tumbling
     m_tumbling_speed = glm::min(1.0f, m_distance * tumbling);
 }
 
-void Camera::mouseDownEvent(int x, int y)
+void Camera::tag_update()
 {
-	m_old_x = x;
-	m_old_y = y;
-}
-
-void Camera::mouseWheelEvent(int button)
-{
-	if (button == MOUSE_SCROLL_UP) {
-		m_distance += m_zoom_speed;
-	}
-	else if (button == MOUSE_SCROLL_DOWN) {
-		const float temp = m_distance - m_zoom_speed;
-		m_distance = glm::max(0.0f, temp);
-	}
-
-	setSpeed();
-
 	m_need_update = true;
 }
 
-void Camera::mouseMoveEvent(int button, int modifier, int x, int y)
+float Camera::head() const
 {
-	const float dx = (x - m_old_x);
-	const float dy = (y - m_old_y);
+	return m_head;
+}
 
-	if (button == MOUSE_MIDDLE) {
-		if (modifier == MOD_KEY_NONE) {
-			m_head += dy * m_tumbling_speed;
-	        m_pitch += dx * m_tumbling_speed;
-		}
-		else if (modifier == MOD_KEY_SHIFT) {
-			m_center += (dy * m_up - dx * m_right) * m_strafe_speed;
-		}
-	}
+void Camera::head(float h)
+{
+	m_head = h;
+}
 
-	m_old_x = x;
-	m_old_y = y;
+float Camera::distance() const
+{
+	return m_distance;
+}
 
-	m_need_update = true;
+void Camera::distance(float d)
+{
+	m_distance = d;
+}
+
+float Camera::zoom_speed() const
+{
+	return m_zoom_speed;
+}
+
+void Camera::zoom_speed(float s)
+{
+	m_zoom_speed = s;
+}
+
+float Camera::strafe_speed() const
+{
+	return m_strafe_speed;
+}
+
+void Camera::strafe_speed(float s)
+{
+	m_strafe_speed = s;
+}
+
+float Camera::tumbling_speed() const
+{
+	return m_tumbling_speed;
+}
+
+void Camera::tumbling_speed(float s)
+{
+	m_tumbling_speed = s;
+}
+
+float Camera::pitch() const
+{
+	return m_pitch;
+}
+
+void Camera::pitch(float p)
+{
+	m_pitch = p;
+}
+
+glm::vec3 Camera::up() const
+{
+	return m_up;
+}
+
+void Camera::up(const glm::vec3 &u)
+{
+	m_up = u;
+}
+
+glm::vec3 Camera::right() const
+{
+	return m_right;
+}
+
+void Camera::right(const glm::vec3 &r)
+{
+	m_right = r;
+}
+
+glm::vec3 Camera::center() const
+{
+	return m_center;
+}
+
+void Camera::center(const glm::vec3 &c)
+{
+	m_center = c;
 }
 
 void Camera::resize(int w, int h)

@@ -213,7 +213,6 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 
 	if (e->buttons() == Qt::MidButton) {
 		m_mouse_button = MOUSE_MIDDLE;
-		m_camera->mouseDownEvent(x, y);
 	}
 	else if (e->buttons() == Qt::LeftButton) {
 		m_mouse_button = MOUSE_LEFT;
@@ -225,6 +224,13 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 	else {
 		m_mouse_button = MOUSE_NONE;
 	}
+
+	View3DData data;
+	data.x = x;
+	data.y = y;
+	data.camera = m_camera;
+
+	m_context->view_3d = &data;
 
 	KeyData key_data(m_modifier, m_mouse_button, nullptr);
 	KeyEventHandler::call_command(*m_context, key_data, "");
@@ -239,16 +245,22 @@ void Viewer::mouseMoveEvent(QMouseEvent *e)
 		return;
 	}
 
-	const int x = e->pos().x();
-	const int y = e->pos().y();
+	View3DData data;
+	data.x = e->pos().x();
+	data.y = e->pos().y();
+	data.camera = m_camera;
 
-	m_camera->mouseMoveEvent(m_mouse_button, m_modifier, x, y);
+	m_context->view_3d = &data;
+
+	KeyEventHandler::call_modal_command(*m_context);
+
 	update();
 }
 
 void Viewer::mouseReleaseEvent(QMouseEvent */*e*/)
 {
 	m_mouse_button = MOUSE_NONE;
+	KeyEventHandler::end_modal_command();
 	update();
 }
 
@@ -269,7 +281,14 @@ void Viewer::wheelEvent(QWheelEvent *e)
 		m_mouse_button = MOUSE_SCROLL_UP;
 	}
 
-	m_camera->mouseWheelEvent(m_mouse_button);
+	View3DData data;
+	data.camera = m_camera;
+
+	m_context->view_3d = &data;
+
+	KeyData key_data(MOD_KEY_NONE, m_mouse_button, nullptr);
+	KeyEventHandler::call_command(*m_context, key_data, "");
+
 	update();
 	m_base->set_active();
 }

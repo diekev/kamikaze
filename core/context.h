@@ -32,6 +32,7 @@
 class EvaluationContext;
 class MainWindow;
 class Scene;
+class View3DData;
 class WidgetBase;
 
 /* - 0x000000ff Category.
@@ -99,6 +100,7 @@ struct Context {
 	MainWindow *main_window;
 	WidgetBase *active_widget;
 	CommandFactory *command_factory;
+	View3DData *view_3d;
 };
 
 class ContextListener {

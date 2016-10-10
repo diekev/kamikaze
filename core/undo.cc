@@ -83,9 +83,125 @@ void CommandManager::redo()
 
 /* ************************************************************************** */
 
+#include "camera.h"
+#include "util/utils_glm.h"
+
+class CameraPanCommand : public Command {
+	int m_old_x = 0;
+	int m_old_y = 0;
+
+public:
+	void undo() override {}
+	void redo() override {}
+
+	void invoke(const Context &context) override
+	{
+		const auto view_3d = context.view_3d;
+		m_old_x = view_3d->x;
+		m_old_y = view_3d->y;
+	}
+
+	void execute(const Context &context) override
+	{
+		const auto view_3d = context.view_3d;
+		const auto x = view_3d->x;
+		const auto y = view_3d->y;
+		const auto dx = static_cast<float>(x - m_old_x);
+		const auto dy = static_cast<float>(y - m_old_y);
+
+		const auto &camera = view_3d->camera;
+		const auto &up = camera->up();
+		const auto &right = camera->right();
+		const auto &strafe_speed = camera->strafe_speed();
+
+		auto center = camera->center();
+		center += ((dy * up - dx * right) * strafe_speed);
+
+		camera->center(center);
+
+		camera->tag_update();
+
+		m_old_x = x;
+		m_old_y = y;
+	}
+
+	bool modal() const override { return true; }
+};
+
+class CameraTumbleCommand : public Command {
+	int m_old_x = 0;
+	int m_old_y = 0;
+
+public:
+	void undo() override {}
+	void redo() override {}
+
+	void invoke(const Context &context) override
+	{
+		const auto view_3d = context.view_3d;
+		m_old_x = view_3d->x;
+		m_old_y = view_3d->y;
+	}
+
+	void execute(const Context &context) override
+	{
+		const auto view_3d = context.view_3d;
+		const auto x = view_3d->x;
+		const auto y = view_3d->y;
+		const auto dx = static_cast<float>(x - m_old_x);
+		const auto dy = static_cast<float>(y - m_old_y);
+
+		const auto &camera = view_3d->camera;
+		const auto &tumbling_speed = camera->tumbling_speed();
+
+		camera->head(camera->head() + dy * tumbling_speed);
+		camera->pitch(camera->pitch() + dx * tumbling_speed);
+
+		camera->tag_update();
+
+		m_old_x = x;
+		m_old_y = y;
+	}
+
+	bool modal() const override { return true; }
+};
+
+class CameraZoomInCommand : public Command {
+public:
+	void undo() override {}
+	void redo() override {}
+
+	void execute(const Context &context) override
+	{
+		const auto view_3d = context.view_3d;
+		const auto &camera = view_3d->camera;
+
+		camera->distance(camera->distance() + camera->zoom_speed());
+		camera->set_speed();
+		camera->tag_update();
+	}
+};
+
+class CameraZoomOutCommand : public Command {
+public:
+	void undo() override {}
+	void redo() override {}
+
+	void execute(const Context &context) override
+	{
+		const auto view_3d = context.view_3d;
+		const auto &camera = view_3d->camera;
+
+		camera->distance(glm::max(0.0f, camera->distance() - camera->zoom_speed()));
+		camera->set_speed();
+		camera->tag_update();
+	}
+};
+
 namespace KeyEventHandler {
 
 static CommandManager command_manager;
+static Command *modal_command = nullptr;
 static std::vector<KeyData> keys;
 
 void init_key_mappings()
@@ -93,11 +209,17 @@ void init_key_mappings()
 	keys.emplace_back(0, 0, "add node");
 	keys.emplace_back(0, 0, "add object");
 	keys.emplace_back(0, 0, "add preset");
+	keys.emplace_back(MOD_KEY_NONE, MOUSE_MIDDLE, "CameraTumbleCommand");
+	keys.emplace_back(MOD_KEY_SHIFT, MOUSE_MIDDLE, "CameraPanCommand");
+	keys.emplace_back(MOD_KEY_NONE, MOUSE_SCROLL_DOWN, "CameraZoomOutCommand");
+	keys.emplace_back(MOD_KEY_NONE, MOUSE_SCROLL_UP, "CameraZoomInCommand");
 	keys.emplace_back(MOD_KEY_NONE, 0x01000007, "DeleteObjectCommand");
 }
 
 void call_command(const Context &context, const KeyData &key_data, const std::string &name)
 {
+	Command *command = nullptr;
+
 	for (const KeyData &key : keys) {
 		if (key.key != key_data.key) {
 			continue;
@@ -107,20 +229,50 @@ void call_command(const Context &context, const KeyData &key_data, const std::st
 			continue;
 		}
 
-		if (std::strcmp(key.command, key_data.command) != 0) {
+		/* TODO */
+		if (key_data.command) {
+			if (std::strcmp(key.command, key_data.command) != 0) {
+				continue;
+			}
+		}
+
+		if (!context.command_factory->registered(key.command)) {
 			continue;
 		}
 
-		if (context.command_factory->registered(key.command)) {
-			Command *command = (*context.command_factory)(key.command);
-
-			/* TODO: find a way to pass custom datas. */
-			command->setName(name);
-
-			command_manager.execute(command, context);
-			break;
-		}
+		command = (*context.command_factory)(key.command);
+		break;
 	}
+
+	if (command == nullptr) {
+		return;
+	}
+
+	/* TODO: find a way to pass custom datas. */
+	command->setName(name);
+
+	if (command->modal()) {
+		modal_command = command;
+		modal_command->invoke(context);
+	}
+	else {
+		command_manager.execute(command, context);
+	}
+}
+
+void call_modal_command(const Context &context)
+{
+	if (modal_command == nullptr) {
+		return;
+	}
+
+	modal_command->execute(context);
+}
+
+void end_modal_command()
+{
+	delete modal_command;
+	modal_command = nullptr;
 }
 
 void undo()
@@ -136,3 +288,11 @@ void redo()
 }
 
 }  /* namespace KeyEventHandler */
+
+void register_commands(CommandFactory *factory)
+{
+	REGISTER_COMMAND(factory, "CameraTumbleCommand", CameraTumbleCommand);
+	REGISTER_COMMAND(factory, "CameraPanCommand", CameraPanCommand);
+	REGISTER_COMMAND(factory, "CameraZoomInCommand", CameraZoomInCommand);
+	REGISTER_COMMAND(factory, "CameraZoomOutCommand", CameraZoomOutCommand);
+}
