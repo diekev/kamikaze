@@ -80,7 +80,8 @@ struct KeyData {
 	{}
 };
 
-void register_commands(CommandFactory *factory);
+void register_view3d_key_mappings(std::vector<KeyData> &keys);
+void register_view3d_commands(CommandFactory *factory);
 
 namespace KeyEventHandler {
 
@@ -89,11 +90,9 @@ void init_key_mappings();
 void call_command(const Context &context, const KeyData &key_data, const std::string &name);
 
 void call_modal_command(const Context &context);
-
 void end_modal_command();
 
 void undo();
-
 void redo();
 
 }  /* namespace KeyEventHandler */

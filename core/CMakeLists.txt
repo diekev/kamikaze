@@ -81,6 +81,7 @@ add_library(kmk_core STATIC
 	task.cc
 	scene.cc
 	undo.cc
+	view3d_commands.cc
 
 	graphs/depsgraph.cc
 	graphs/graph_dumper.cc

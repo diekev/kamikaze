@@ -85,7 +85,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	setCentralWidget(nullptr);
 
 	REGISTER_COMMAND(m_command_factory, "DeleteObjectCommand", DeleteObjectCommand);
-	register_commands(m_command_factory);
+	register_view3d_commands(m_command_factory);
 
 	KeyEventHandler::init_key_mappings();
 }
