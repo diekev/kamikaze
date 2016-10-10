@@ -91,12 +91,8 @@ static std::vector<KeyData> keys;
 
 void init_key_mappings()
 {
+	register_object_key_mappings(keys);
 	register_view3d_key_mappings(keys);
-
-	keys.emplace_back(0, 0, "add node");
-	keys.emplace_back(0, 0, "add object");
-	keys.emplace_back(0, 0, "add preset");
-	keys.emplace_back(MOD_KEY_NONE, 0x01000007, "DeleteObjectCommand");
 }
 
 void call_command(const Context &context, const KeyData &key_data, const std::string &name)
