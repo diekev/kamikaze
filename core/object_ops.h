@@ -39,8 +39,6 @@ public:
 	~AddObjectCmd() = default;
 
 	void execute(const Context &context) override;
-	void undo() override;
-	void redo() override;
 };
 
 class AddNodeCmd : public Command {
@@ -52,8 +50,6 @@ public:
 	~AddNodeCmd() = default;
 
 	void execute(const Context &context) override;
-	void undo() override;
-	void redo() override;
 };
 
 class AddPresetObjectCmd : public Command {
@@ -65,8 +61,6 @@ public:
 	~AddPresetObjectCmd() = default;
 
 	void execute(const Context &context) override;
-	void undo() override;
-	void redo() override;
 };
 
 class DeleteObjectCommand : public Command {
@@ -74,6 +68,4 @@ public:
 	DeleteObjectCommand() = default;
 
 	virtual void execute(const Context &context) override;
-	void undo() {}
-	void redo() {}
 };

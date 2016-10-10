@@ -47,16 +47,6 @@ void AddObjectCmd::execute(const Context &context)
 	m_scene->addObject(m_object);
 }
 
-void AddObjectCmd::undo()
-{
-	/* TODO */
-}
-
-void AddObjectCmd::redo()
-{
-	/* TODO */
-}
-
 /* **************************** add node command **************************** */
 
 void AddNodeCmd::execute(const Context &context)
@@ -76,16 +66,6 @@ void AddNodeCmd::execute(const Context &context)
 	m_object->addNode(node);
 
 	m_scene->notify_listeners(event_type::node | event_type::added);
-}
-
-void AddNodeCmd::undo()
-{
-	/* TODO */
-}
-
-void AddNodeCmd::redo()
-{
-	/* TODO */
 }
 
 /* **************************** add torus command **************************** */
@@ -121,16 +101,6 @@ void AddPresetObjectCmd::execute(const Context &context)
 	else {
 		m_scene->notify_listeners(event_type::node | event_type::added);
 	}
-}
-
-void AddPresetObjectCmd::undo()
-{
-	/* TODO */
-}
-
-void AddPresetObjectCmd::redo()
-{
-	/* TODO */
 }
 
 void DeleteObjectCommand::execute(const Context &context)

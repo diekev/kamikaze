@@ -62,10 +62,10 @@ static void undo_redo_ex(std::stack<Command *> &pop_stack,
 	pop_stack.pop();
 
 	if (redo) {
-		command->redo();
+
 	}
 	else {
-		command->undo();
+
 	}
 
 	push_stack.push(command);
@@ -91,9 +91,6 @@ class CameraPanCommand : public Command {
 	int m_old_y = 0;
 
 public:
-	void undo() override {}
-	void redo() override {}
-
 	void invoke(const Context &context) override
 	{
 		const auto view_3d = context.view_3d;
@@ -133,9 +130,6 @@ class CameraTumbleCommand : public Command {
 	int m_old_y = 0;
 
 public:
-	void undo() override {}
-	void redo() override {}
-
 	void invoke(const Context &context) override
 	{
 		const auto view_3d = context.view_3d;
@@ -168,9 +162,6 @@ public:
 
 class CameraZoomInCommand : public Command {
 public:
-	void undo() override {}
-	void redo() override {}
-
 	void execute(const Context &context) override
 	{
 		const auto view_3d = context.view_3d;
@@ -184,9 +175,6 @@ public:
 
 class CameraZoomOutCommand : public Command {
 public:
-	void undo() override {}
-	void redo() override {}
-
 	void execute(const Context &context) override
 	{
 		const auto view_3d = context.view_3d;
