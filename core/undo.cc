@@ -110,8 +110,8 @@ static void undo_redo(std::stack<Document> &pop_stack, std::stack<Document> &pus
 
 	auto document = pop_stack.top();
 	*context.scene = document.scene;
-	push_stack.push(document);
 	pop_stack.pop();
+	push_stack.push(document);
 }
 
 void undo(Context &context)
