@@ -43,6 +43,7 @@ public:
 
 	void setName(const std::string &name);
 	virtual bool modal() const { return false; }
+	virtual bool support_undo() const { return true; }
 
 	virtual void invoke(const Context &) {}
 };
@@ -95,7 +96,7 @@ void call_command(const Context &context, const KeyData &key_data, const std::st
 void call_modal_command(const Context &context);
 void end_modal_command();
 
-void undo();
-void redo();
+void undo(Context &context);
+void redo(Context &context);
 
 }  /* namespace KeyEventHandler */

@@ -139,7 +139,7 @@ enum {
 };
 
 class Depsgraph {
-	std::vector<std::unique_ptr<DepsNode>> m_nodes;
+	std::vector<std::shared_ptr<DepsNode>> m_nodes;
 	std::vector<DepsNode *> m_stack;
 	std::unordered_map<SceneNode *, DepsNode *> m_scene_node_map;
 	std::unordered_map<const Graph *, DepsNode *> m_object_graph_map;
@@ -155,9 +155,9 @@ public:
 	Depsgraph();
 	~Depsgraph() = default;
 
-	/* Disallow copy. */
-	Depsgraph(const Depsgraph &other) = delete;
-	Depsgraph &operator=(const Depsgraph &other) = delete;
+	/* TODO: disallow copy? */
+	Depsgraph(const Depsgraph &other) = default;
+	Depsgraph &operator=(const Depsgraph &other) = default;
 
 	void connect(SceneNode *from, SceneNode *to);
 	void disconnect(SceneNode *from, SceneNode *to);
@@ -173,7 +173,7 @@ public:
 	void evaluate(const Context &context, SceneNode *scene_node);
 	void evaluate_for_time_change(const Context &context);
 
-	const std::vector<std::unique_ptr<DepsNode> > &nodes() const;
+	const std::vector<std::shared_ptr<DepsNode> > &nodes() const;
 
 private:
 	void build(DepsNode *root);

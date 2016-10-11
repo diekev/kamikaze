@@ -37,7 +37,7 @@ class EvaluationContext;
 class Node;
 class Simulation;
 
-using SceneNodePtr = std::unique_ptr<SceneNode>;
+using SceneNodePtr = std::shared_ptr<SceneNode>;
 
 enum {
 	SCENE_OL_EXPANDED = (1 << 0),  /* Is it expanded in the outliner? */
@@ -59,6 +59,7 @@ class Scene : public Listened {
 
 public:
 	Scene() = default;
+	Scene(const Scene &) = default;
 	~Scene() = default;
 
 	SceneNode *active_node();

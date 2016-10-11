@@ -331,7 +331,7 @@ void Depsgraph::remove_node(SceneNode *scene_node)
 		DepsNode *node = iter->second;
 
 		auto node_iter = std::find_if(m_nodes.begin(), m_nodes.end(),
-		                              [&node](const std::unique_ptr<DepsNode> &node_ptr)
+		                              [&node](const std::shared_ptr<DepsNode> &node_ptr)
 		{
 			return node_ptr.get() == node;
 		});
@@ -359,7 +359,7 @@ void Depsgraph::remove_node(SceneNode *scene_node)
 		DepsNode *node = iter->second;
 
 		auto node_iter = std::find_if(m_nodes.begin(), m_nodes.end(),
-		                              [&node](const std::unique_ptr<DepsNode> &node_ptr)
+		                              [&node](const std::shared_ptr<DepsNode> &node_ptr)
 		{
 			return node_ptr.get() == node;
 		});
@@ -432,7 +432,7 @@ void Depsgraph::evaluate_ex(const Context &context, DepsNode *root, TaskNotifier
 	context.scene->notify_listeners(static_cast<event_type>(-1));
 }
 
-const std::vector<std::unique_ptr<DepsNode>> &Depsgraph::nodes() const
+const std::vector<std::shared_ptr<DepsNode>> &Depsgraph::nodes() const
 {
 	return m_nodes;
 }
@@ -498,7 +498,7 @@ void Depsgraph::build(DepsNode *root)
 		std::vector<DepsNode *> nodes(m_nodes.size());
 
 		std::transform(m_nodes.begin(), m_nodes.end(), nodes.begin(),
-		               [](const std::unique_ptr<DepsNode> &node) -> DepsNode*
+		               [](const std::shared_ptr<DepsNode> &node) -> DepsNode*
 		{
 			return node.get();
 		});

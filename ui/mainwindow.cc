@@ -52,6 +52,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
     , m_main(main)
     , m_command_factory(new CommandFactory)
 {
+	generateEditMenu();
 	generateObjectMenu();
 	generateNodeMenu();
 	generateWindowMenu();
@@ -110,14 +111,14 @@ void MainWindow::taskEnded()
 	m_progress_bar->setVisible(false);
 }
 
-void MainWindow::undo() const
+void MainWindow::undo()
 {
-	KeyEventHandler::undo();
+	KeyEventHandler::undo(m_context);
 }
 
-void MainWindow::redo() const
+void MainWindow::redo()
 {
-	KeyEventHandler::redo();
+	KeyEventHandler::redo(m_context);
 }
 
 void MainWindow::generateObjectMenu()

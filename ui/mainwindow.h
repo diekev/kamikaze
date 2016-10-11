@@ -78,8 +78,8 @@ private:
 
 private Q_SLOTS:
 	/* Undo & commands */
-	void undo() const;
-	void redo() const;
+	void undo();
+	void redo();
 	void handleCommand();
 
 	void addTimeLineWidget();

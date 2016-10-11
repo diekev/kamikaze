@@ -83,9 +83,11 @@ void CommandManager::redo()
 
 /* ************************************************************************** */
 
+#include "scene.h"
+
 namespace KeyEventHandler {
 
-#undef USE_DOCUMENT
+#define USE_DOCUMENT
 
 static CommandManager command_manager;
 static Command *modal_command = nullptr;
@@ -93,31 +95,33 @@ static std::vector<KeyData> keys;
 
 #ifdef USE_DOCUMENT
 struct Document {
-	Scene *scene;
+	Scene scene;
 };
 
 std::stack<Document> undo_stack;
 std::stack<Document> redo_stack;
 
-static void undo_redo(std::stack<Document> &pop_stack, std::stack<Document> &push_stack)
+static void undo_redo(std::stack<Document> &pop_stack, std::stack<Document> &push_stack, Context &context)
 {
 	if (pop_stack.empty()) {
+		std::cerr << "pop_stack is empty\n";
 		return;
 	}
 
 	auto document = pop_stack.top();
-	pop_stack.pop();
+	*context.scene = document.scene;
 	push_stack.push(document);
+	pop_stack.pop();
 }
 
-void undo()
+void undo(Context &context)
 {
-	undo_redo(undo_stack, redo_stack);
+	undo_redo(undo_stack, redo_stack, context);
 }
 
-void redo()
+void redo(Context &context)
 {
-	undo_redo(redo_stack, undo_stack);
+	undo_redo(redo_stack, undo_stack, context);
 }
 #endif
 
@@ -162,6 +166,16 @@ void call_command(const Context &context, const KeyData &key_data, const std::st
 	/* TODO: find a way to pass custom datas. */
 	command->setName(name);
 
+#ifdef USE_DOCUMENT
+	if (command->support_undo()) {
+		Document doc;
+		doc.scene = *context.scene;
+
+		std::cerr << "Pushing scene to undo stack\n";
+		undo_stack.push(doc);
+	}
+#endif
+
 	if (command->modal()) {
 		modal_command = command;
 		modal_command->invoke(context);
@@ -169,12 +183,6 @@ void call_command(const Context &context, const KeyData &key_data, const std::st
 	else {
 		command->execute(context);
 	}
-
-#ifdef USE_DOCUMENT
-		Document doc;
-		doc.scene = context.scene;
-		undo_stack.push(doc);
-#endif
 }
 
 void call_modal_command(const Context &context)

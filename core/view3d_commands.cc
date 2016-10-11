@@ -69,6 +69,11 @@ public:
 	{
 		return true;
 	}
+
+	bool support_undo() const override
+	{
+		return false;
+	}
 };
 
 class CameraTumbleCommand : public Command {
@@ -107,6 +112,11 @@ public:
 	{
 		return true;
 	}
+
+	bool support_undo() const override
+	{
+		return false;
+	}
 };
 
 class CameraZoomInCommand : public Command {
@@ -120,6 +130,11 @@ public:
 		camera->set_speed();
 		camera->tag_update();
 	}
+
+	bool support_undo() const override
+	{
+		return false;
+	}
 };
 
 class CameraZoomOutCommand : public Command {
@@ -132,6 +147,11 @@ public:
 		camera->distance(glm::max(0.0f, camera->distance() - camera->zoom_speed()));
 		camera->set_speed();
 		camera->tag_update();
+	}
+
+	bool support_undo() const override
+	{
+		return false;
 	}
 };
 
