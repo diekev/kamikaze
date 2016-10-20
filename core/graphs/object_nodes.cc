@@ -27,6 +27,8 @@
 #include <kamikaze/mesh.h>
 #include <kamikaze/primitive.h>
 
+#include <random>
+
 #include "ui/paramfactory.h"
 #include "util/utils_glm.h"
 
@@ -879,6 +881,81 @@ public:
 
 /* ************************************************************************** */
 
+enum {
+	COLOR_NODE_UNIQUE = 0,
+	COLOR_NODE_RANDOM = 1,
+};
+
+class ColorNode : public Node {
+public:
+	ColorNode()
+	    : Node("Color")
+	{
+		addInput("input");
+		addOutput("output");
+
+		EnumProperty color_enum_prop;
+		color_enum_prop.insert("Unique", COLOR_NODE_UNIQUE);
+		color_enum_prop.insert("Random", COLOR_NODE_RANDOM);
+
+		add_prop("Fill Method", property_type::prop_enum);
+		set_prop_enum_values(color_enum_prop);
+
+		add_prop("Color", property_type::prop_vec3);
+		set_prop_min_max(0.0f, 1.0f);
+		set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
+
+		add_prop("Seed", property_type::prop_int);
+		set_prop_min_max(1, 100000);
+		set_prop_default_value_int(1);
+	}
+
+	bool update_properties() override
+	{
+		auto method = eval_int("Fill Method");
+
+		if (method == COLOR_NODE_UNIQUE) {
+			set_prop_visible("Color", true);
+			set_prop_visible("Seed", false);
+		}
+		else if (method == COLOR_NODE_RANDOM) {
+			set_prop_visible("Seed", true);
+			set_prop_visible("Color", false);
+		}
+
+		return true;
+	}
+
+	void process() override
+	{
+		const auto &method = eval_int("Fill Method");
+
+		for (auto prim : primitive_iterator(this->m_collection, Mesh::id)) {
+			auto mesh = static_cast<Mesh *>(prim);
+			auto colors = mesh->addAttribute("color", ATTR_TYPE_VEC3, mesh->points()->size());
+
+			if (method == COLOR_NODE_UNIQUE) {
+				const auto &color = eval_vec3("Color");
+
+				for (size_t i = 0, e = colors->size(); i < e; ++i) {
+					colors->vec3(i, color);
+				}
+			}
+			else if (method == COLOR_NODE_RANDOM) {
+				const auto &seed = eval_int("Seed");
+				std::mt19937 rng(19937 + seed);
+				std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+				for (size_t i = 0, e = colors->size(); i < e; ++i) {
+					colors->vec3(i, glm::vec3{dist(rng), dist(rng), dist(rng)});
+				}
+			}
+		}
+	}
+};
+
+/* ************************************************************************** */
+
 void register_builtin_nodes(NodeFactory *factory)
 {
 	REGISTER_NODE("Geometry", "Box", CreateBoxNode);
@@ -891,4 +968,5 @@ void register_builtin_nodes(NodeFactory *factory)
 	REGISTER_NODE("Geometry", "Cone", CreateConeNode);
 	REGISTER_NODE("Geometry", "Noise", NoiseNode);
 	REGISTER_NODE("Geometry", "Normal", NormalNode);
+	REGISTER_NODE("Geometry", "Color", ColorNode);
 }
