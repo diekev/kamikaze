@@ -241,8 +241,6 @@ void Mesh::prepareRenderData()
 	auto colors = this->attribute("color", ATTR_TYPE_VEC3);
 
 	if (colors != nullptr) {
-		std::cerr <<  "Setting up color buffer since we have a color attribute.\n";
-		std::cerr <<  "The color attribute has a size of: " << colors->size() << ".\n";
 		m_renderbuffer->set_color_buffer("vertex_color", colors->data(), colors->byte_size());
 	}
 

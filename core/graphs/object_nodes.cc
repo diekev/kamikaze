@@ -25,7 +25,9 @@
 #include "object_nodes.h"
 
 #include <kamikaze/mesh.h>
+#include <kamikaze/noise.h>
 #include <kamikaze/primitive.h>
+#include <kamikaze/util_parallel.h>
 
 #include <random>
 
@@ -740,8 +742,6 @@ void CreateIcoSphereNode::process()
 
 /* ************************************************************************** */
 
-#include <kamikaze/util_parallel.h>
-
 static inline glm::vec3 get_normal(const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2)
 {
 	const auto n0 = v0 - v1;
@@ -810,8 +810,6 @@ public:
 };
 
 /* ************************************************************************** */
-
-#include <kamikaze/noise.h>
 
 class NoiseNode : public Node {
 public:
