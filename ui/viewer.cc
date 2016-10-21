@@ -126,7 +126,7 @@ void Viewer::paintGL()
 				continue;
 			}
 
-			auto object = static_cast<Object *>(node);
+			auto object = static_cast<Object *>(node.get());
 
 			if (!object->collection()) {
 				continue;

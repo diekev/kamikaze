@@ -41,27 +41,27 @@ Graph::Graph()
 
 Graph::~Graph()
 {
-	for (auto &node : m_nodes) {
-		delete node;
-	}
-
 	clear_cache();
 }
 
-const std::vector<Node *> &Graph::nodes() const
+const std::vector<std::unique_ptr<Node>> &Graph::nodes() const
 {
 	return m_nodes;
 }
 
 void Graph::add(Node *node)
 {
-	m_nodes.push_back(node);
+	m_nodes.push_back(std::unique_ptr<Node>(node));
 	node->setPrimitiveCache(&m_cache);
 }
 
 void Graph::remove(Node *node)
 {
-	auto iter = std::find(m_nodes.begin(), m_nodes.end(), node);
+	auto iter = std::find_if(m_nodes.begin(), m_nodes.end(),
+	                         [node](const std::unique_ptr<Node> &node_ptr)
+	{
+		return node_ptr.get() == node;
+	});
 
 	if (iter == m_nodes.end()) {
 		std::cerr << "Unable to find node in graph!\n";
@@ -82,7 +82,6 @@ void Graph::remove(Node *node)
 		}
 	}
 
-	delete node;
 	m_nodes.erase(iter);
 
 	m_need_update = true;
@@ -135,7 +134,16 @@ void Graph::build()
 		return;
 	}
 
-	topology_sort(m_nodes, m_stack);
+	/* XXX - TODO, not nice. */
+	std::vector<Node *> nodes(m_nodes.size());
+
+	std::transform(m_nodes.begin(), m_nodes.end(), nodes.begin(),
+	               [](const std::unique_ptr<Node> &node) -> Node*
+	{
+		return node.get();
+	});
+
+	topology_sort(nodes, m_stack);
 
 #ifdef DEBUG_GRAPH
 	std::cerr << "Order of operation:\n";
@@ -156,7 +164,7 @@ const std::vector<Node *> &Graph::finished_stack() const
 
 OutputNode *Graph::output() const
 {
-	return static_cast<OutputNode *>(m_nodes.front());
+	return static_cast<OutputNode *>(m_nodes.front().get());
 }
 
 void Graph::connect(OutputSocket *from, InputSocket *to)

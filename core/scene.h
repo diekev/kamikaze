@@ -29,24 +29,26 @@
 #include <kamikaze/util_render.h>
 
 #include "context.h"
+#include "object.h"
+#include "graphs/depsgraph.h"
 
 class Depsgraph;
 class EvaluationContext;
 class Node;
-class SceneNode;
-class Object;
 class Simulation;
+
+using SceneNodePtr = std::unique_ptr<SceneNode>;
 
 enum {
 	SCENE_OL_EXPANDED = (1 << 0),  /* Is it expanded in the outliner? */
 };
 
 class Scene : public Listened {
-	std::vector<SceneNode *> m_nodes = {};
+	std::vector<SceneNodePtr> m_nodes = {};
 	SceneNode *m_active_node = nullptr;
 	int m_mode = 0;
 
-	Depsgraph *m_depsgraph = nullptr;
+	Depsgraph m_depsgraph{};
 
 	int m_start_frame = 0;
 	int m_end_frame = 250;
@@ -56,8 +58,8 @@ class Scene : public Listened {
 	int m_flags = 0;
 
 public:
-	Scene();
-	~Scene();
+	Scene() = default;
+	~Scene() = default;
 
 	SceneNode *active_node();
 	void set_active_node(SceneNode *node);
@@ -87,7 +89,7 @@ public:
 
 	void updateForNewFrame(const Context &context);
 
-	const std::vector<SceneNode *> &nodes() const;
+	const std::vector<SceneNodePtr> &nodes() const;
 
 	void tagObjectUpdate();
 

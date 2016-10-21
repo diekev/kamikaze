@@ -25,8 +25,12 @@
 #include "object_nodes.h"
 
 #include <kamikaze/mesh.h>
+#include <kamikaze/noise.h>
 #include <kamikaze/primitive.h>
 #include <kamikaze/prim_points.h>
+#include <kamikaze/util_parallel.h>
+
+#include <random>
 
 #include "ui/paramfactory.h"
 #include "util/utils_glm.h"
@@ -739,8 +743,6 @@ void CreateIcoSphereNode::process()
 
 /* ************************************************************************** */
 
-#include <kamikaze/util_parallel.h>
-
 static inline glm::vec3 get_normal(const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2)
 {
 	const auto n0 = v0 - v1;
@@ -810,8 +812,6 @@ public:
 
 /* ************************************************************************** */
 
-#include <kamikaze/noise.h>
-
 class NoiseNode : public Node {
 public:
 	NoiseNode()
@@ -874,6 +874,138 @@ public:
 				point.y += output;
 				point.z += output;
 			}
+		}
+	}
+};
+
+/* ************************************************************************** */
+
+enum {
+	COLOR_NODE_VERTEX    = 0,
+	COLOR_NODE_PRIMITIVE = 1,
+};
+
+enum {
+	COLOR_NODE_UNIQUE = 0,
+	COLOR_NODE_RANDOM = 1,
+};
+
+class ColorNode : public Node {
+public:
+	ColorNode()
+	    : Node("Color")
+	{
+		addInput("input");
+		addOutput("output");
+
+		EnumProperty scope_enum_prop;
+		scope_enum_prop.insert("Vertex", COLOR_NODE_VERTEX);
+		scope_enum_prop.insert("Primitive", COLOR_NODE_PRIMITIVE);
+
+		add_prop("Scope", property_type::prop_enum);
+		set_prop_enum_values(scope_enum_prop);
+
+		EnumProperty color_enum_prop;
+		color_enum_prop.insert("Unique", COLOR_NODE_UNIQUE);
+		color_enum_prop.insert("Random", COLOR_NODE_RANDOM);
+
+		add_prop("Fill Method", property_type::prop_enum);
+		set_prop_enum_values(color_enum_prop);
+
+		add_prop("Color", property_type::prop_vec3);
+		set_prop_min_max(0.0f, 1.0f);
+		set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
+
+		add_prop("Seed", property_type::prop_int);
+		set_prop_min_max(1, 100000);
+		set_prop_default_value_int(1);
+	}
+
+	bool update_properties() override
+	{
+		auto method = eval_int("Fill Method");
+
+		if (method == COLOR_NODE_UNIQUE) {
+			set_prop_visible("Color", true);
+			set_prop_visible("Seed", false);
+		}
+		else if (method == COLOR_NODE_RANDOM) {
+			set_prop_visible("Seed", true);
+			set_prop_visible("Color", false);
+		}
+
+		return true;
+	}
+
+	void process() override
+	{
+		const auto &method = eval_int("Fill Method");
+		const auto &scope = eval_int("Scope");
+		const auto &seed = eval_int("Seed");
+
+		std::mt19937 rng(19937 + seed);
+		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+		for (auto prim : primitive_iterator(this->m_collection, Mesh::id)) {
+			auto mesh = static_cast<Mesh *>(prim);
+			auto colors = mesh->addAttribute("color", ATTR_TYPE_VEC3, mesh->points()->size());
+
+			if (method == COLOR_NODE_UNIQUE) {
+				const auto &color = eval_vec3("Color");
+
+				for (size_t i = 0, e = colors->size(); i < e; ++i) {
+					colors->vec3(i, color);
+				}
+			}
+			else if (method == COLOR_NODE_RANDOM) {
+				if (scope == COLOR_NODE_VERTEX) {
+					for (size_t i = 0, e = colors->size(); i < e; ++i) {
+						colors->vec3(i, glm::vec3{dist(rng), dist(rng), dist(rng)});
+					}
+				}
+				else if (scope == COLOR_NODE_PRIMITIVE) {
+					const auto &color = glm::vec3{dist(rng), dist(rng), dist(rng)};
+
+					for (size_t i = 0, e = colors->size(); i < e; ++i) {
+						colors->vec3(i, color);
+					}
+				}
+			}
+		}
+	}
+};
+
+/* ************************************************************************** */
+
+class CollectionMergeNode : public Node {
+public:
+	CollectionMergeNode()
+	    : Node("Merge Collection")
+	{
+		addInput("input1");
+		addInput("input2");
+		addOutput("output");
+	}
+
+	void process() override
+	{
+		auto collection2 = this->getInputCollection("input2");
+
+		if (collection2 == nullptr) {
+			return;
+		}
+
+		/* XXX - not nice:
+		 *  -- should have iterators over the whole collection
+		 *  -- should not need to copy the primitive, but removing them from
+		 *     the original collection.
+		 */
+		for (auto prim : primitive_iterator(collection2, Mesh::id)) {
+			this->m_collection->add(prim->copy());
+		}
+
+		for (auto prim : primitive_iterator(collection2, PrimPoints::id)) {
+			this->m_collection->add(prim->copy());
 		}
 	}
 };
@@ -945,5 +1077,7 @@ void register_builtin_nodes(NodeFactory *factory)
 	REGISTER_NODE("Geometry", "Cone", CreateConeNode);
 	REGISTER_NODE("Geometry", "Noise", NoiseNode);
 	REGISTER_NODE("Geometry", "Normal", NormalNode);
+	REGISTER_NODE("Geometry", "Color", ColorNode);
+	REGISTER_NODE("Geometry", "Merge Collection", CollectionMergeNode);
 	REGISTER_NODE("Geometry", "Point Cloud", CreatePointCloudNode);
 }

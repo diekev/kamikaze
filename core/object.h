@@ -24,9 +24,9 @@
 
 #pragma once
 
+#include "graphs/object_graph.h"
 #include "graphs/scene_node.h"
 
-class Graph;
 class Node;
 class PrimitiveCollection;
 
@@ -36,14 +36,14 @@ class Object : public SceneNode {
 	glm::mat4 m_matrix = glm::mat4(0.0f);
 	glm::mat4 m_inv_matrix = glm::mat4(0.0f);
 
-	Graph *m_graph;
+	Graph m_graph{};
 
 	Object *m_parent = nullptr;
 	std::vector<Object *> m_children;
 
 public:
 	Object();
-	~Object();
+	~Object() = default;
 
 	int type() const override
 	{
@@ -60,7 +60,8 @@ public:
 	/* Nodes */
 	void addNode(Node *node);
 
-	Graph *graph() const;
+	Graph *graph();
+	const Graph *graph() const;
 
 	void updateMatrix();
 

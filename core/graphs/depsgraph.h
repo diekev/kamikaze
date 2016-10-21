@@ -156,15 +156,15 @@ enum {
 };
 
 class Depsgraph {
-	std::vector<std::shared_ptr<DepsNode>> m_nodes;
+	std::vector<std::unique_ptr<DepsNode>> m_nodes;
 	std::vector<DepsNode *> m_stack;
 	std::unordered_map<SceneNode *, DepsNode *> m_scene_node_map;
-	std::unordered_map<Graph *, DepsNode *> m_object_graph_map;
+	std::unordered_map<const Graph *, DepsNode *> m_object_graph_map;
 
 	int m_state = DEG_STATE_NONE;
 	bool m_need_update = false;
 
-	std::shared_ptr<DepsNode> m_time_node = nullptr;
+	DepsNode *m_time_node = nullptr;
 
 	friend class GraphEvalTask;
 
@@ -190,7 +190,7 @@ public:
 	void evaluate(const Context &context, SceneNode *scene_node);
 	void evaluate_for_time_change(const Context &context);
 
-	const std::vector<std::shared_ptr<DepsNode> > &nodes() const;
+	const std::vector<std::unique_ptr<DepsNode> > &nodes() const;
 
 private:
 	void build(DepsNode *root);

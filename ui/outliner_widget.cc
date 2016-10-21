@@ -231,15 +231,15 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 
 		for (const auto &node : scene->nodes()) {
 			if (node->type() == SCE_NODE_OBJECT) {
-				auto object = static_cast<Object *>(node);
+				auto object = static_cast<Object *>(node.get());
 
 				if (object->parent() != nullptr) {
 					continue;
 				}
 			}
 
-			auto child = new ObjectTreeWidgetItem(node, scene_item);
-			child->setSelected(node == scene->active_node());
+			auto child = new ObjectTreeWidgetItem(node.get(), scene_item);
+			child->setSelected(node.get() == scene->active_node());
 			scene_item->addChild(child);
 			child->setExpanded(node->has_flags(SNODE_OL_EXPANDED));
 		}
@@ -258,7 +258,7 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 			auto object = static_cast<Object *>(scene_node);
 
 			for (const auto &node : object->graph()->nodes()) {
-				auto node_item = new ObjectNodeTreeWidgetItem(node, object_item);
+				auto node_item = new ObjectNodeTreeWidgetItem(node.get(), object_item);
 				object_item->addChild(node_item);
 			}
 

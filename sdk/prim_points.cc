@@ -135,6 +135,13 @@ Primitive *PrimPoints::copy() const
 		(*points)[i] = m_points[i];
 	}
 
+	/* XXX - TODO */
+	prim->pos() = this->pos();
+	prim->scale() = this->scale();
+	prim->rotation() = this->rotation();
+	prim->drawBBox(this->drawBBox());
+	prim->matrix(this->matrix());
+
 	prim->tagUpdate();
 	return prim;
 }
