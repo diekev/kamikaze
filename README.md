@@ -13,7 +13,7 @@ Dependencies
 
 | Name | Version |
 | ---- | ------- |
-| C++ 14 Compiler                                                      | GCC 5.3 |
+| C++ 17 Compiler                                                      | GCC 6.1 |
 | [Ego](https://github.com/diekev/utils/tree/master/ego)               | 1.1.0 |
 | [Filesystem](https://github.com/diekev/utils/tree/master/filesystem) |  |
 | [GLM](http://glm.g-truc.net/0.9.7/index.html)                        | 0.9.5 |

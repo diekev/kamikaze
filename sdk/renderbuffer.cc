@@ -216,6 +216,26 @@ void RenderBuffer::set_normal_buffer(const std::string &attribute,
 	m_require_normal = true;
 }
 
+void RenderBuffer::set_color_buffer(const std::string &attribute,
+                                    const void *colors,
+                                    const size_t colors_size)
+{
+	init();
+
+	m_buffer_data->bind();
+	m_buffer_data->generateExtraBuffer(colors, colors_size);
+	m_buffer_data->attribPointer(m_program[attribute], 3);
+	m_buffer_data->unbind();
+
+	m_require_color = true;
+}
+
+void RenderBuffer::set_color_buffer(const std::string &attribute,
+                                    const std::vector<glm::vec3> &colors)
+{
+	set_color_buffer(attribute, &colors[0][0], colors.size() * sizeof(glm::vec3));
+}
+
 void RenderBuffer::render(const ViewerContext &context)
 {
 	if (!m_program.isValid()) {
@@ -238,6 +258,10 @@ void RenderBuffer::render(const ViewerContext &context)
 
 	if (m_require_normal) {
 		glUniformMatrix3fv(m_program("N"), 1, GL_FALSE, glm::value_ptr(context.normal()));
+	}
+
+	if (m_require_color) {
+		glUniform1i(m_program("has_vcolors"), m_require_color);
 	}
 
 	if (m_can_outline) {

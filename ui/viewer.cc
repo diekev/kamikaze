@@ -136,7 +136,7 @@ void OpenGLScene::drawBackground(QPainter *painter, const QRectF &/*rect*/)
 
 	if (m_context->scene != nullptr) {
 		for (auto &node : m_context->scene->nodes()) {
-			auto object = static_cast<Object *>(node);
+			auto object = static_cast<Object *>(node.get());
 
 			if (!object->collection()) {
 				continue;

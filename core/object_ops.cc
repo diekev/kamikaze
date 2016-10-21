@@ -36,13 +36,6 @@
 
 /* *************************** add object command *************************** */
 
-AddObjectCmd::~AddObjectCmd()
-{
-	if (m_was_undone) {
-		delete m_object;
-	}
-}
-
 void AddObjectCmd::execute(const Context &context)
 {
 	m_scene = context.scene;
@@ -56,14 +49,12 @@ void AddObjectCmd::execute(const Context &context)
 
 void AddObjectCmd::undo()
 {
-	m_scene->removeObject(m_object);
-	m_was_undone = true;
+	/* TODO */
 }
 
 void AddObjectCmd::redo()
 {
-	m_scene->addObject(m_object);
-	m_was_undone = false;
+	/* TODO */
 }
 
 /* **************************** add node command **************************** */
