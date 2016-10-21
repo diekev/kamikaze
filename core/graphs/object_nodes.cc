@@ -27,6 +27,7 @@
 #include <kamikaze/mesh.h>
 #include <kamikaze/noise.h>
 #include <kamikaze/primitive.h>
+#include <kamikaze/prim_points.h>
 #include <kamikaze/util_parallel.h>
 
 #include <random>
@@ -954,6 +955,41 @@ public:
 
 /* ************************************************************************** */
 
+class CollectionMergeNode : public Node {
+public:
+	CollectionMergeNode()
+	    : Node("Merge Collection")
+	{
+		addInput("input1");
+		addInput("input2");
+		addOutput("output");
+	}
+
+	void process() override
+	{
+		auto collection2 = this->getInputCollection("input2");
+
+		if (collection2 == nullptr) {
+			return;
+		}
+
+		/* XXX - not nice:
+		 *  -- should have iterators over the whole collection
+		 *  -- should not need to copy the primitive, but removing them from
+		 *     the original collection.
+		 */
+		for (auto prim : primitive_iterator(collection2, Mesh::id)) {
+			this->m_collection->add(prim->copy());
+		}
+
+		for (auto prim : primitive_iterator(collection2, PrimPoints::id)) {
+			this->m_collection->add(prim->copy());
+		}
+	}
+};
+
+/* ************************************************************************** */
+
 void register_builtin_nodes(NodeFactory *factory)
 {
 	REGISTER_NODE("Geometry", "Box", CreateBoxNode);
@@ -967,4 +1003,5 @@ void register_builtin_nodes(NodeFactory *factory)
 	REGISTER_NODE("Geometry", "Noise", NoiseNode);
 	REGISTER_NODE("Geometry", "Normal", NormalNode);
 	REGISTER_NODE("Geometry", "Color", ColorNode);
+	REGISTER_NODE("Geometry", "Merge Collection", CollectionMergeNode);
 }
