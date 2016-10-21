@@ -1039,9 +1039,11 @@ public:
 		set_prop_default_value_int(1000);
 
 		add_prop("BBox Min", property_type::prop_vec3);
+		set_prop_min_max(-10.0f, 10.0f);
 		set_prop_default_value_vec3(glm::vec3{-1.0f, -1.0f, -1.0f});
 
 		add_prop("BBox Max", property_type::prop_vec3);
+		set_prop_min_max(-10.0f, 10.0f);
 		set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
 	}
 
