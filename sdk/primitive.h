@@ -208,9 +208,15 @@ public:
 	void add(Primitive *prim);
 
 	/**
-	 * @brief clear Remove and delete all the primitives inside this collection.
+	 * @brief clear Remove all the primitives inside this collection, but does
+	 * not delete them.
 	 */
 	void clear();
+
+	/**
+	 * @brief free_all Remove and delete all the primitives inside this collection.
+	 */
+	void free_all();
 
 	/**
 	 * @brief copy Copy this collection and the primitive that it holds.
@@ -273,6 +279,12 @@ public:
 	 * @brief primitive_iterator Construct the end iterator.
 	 */
 	primitive_iterator();
+
+	/**
+	 * @brief primitive_iterator Construct the begin iterator.
+	 * @param collection The PrimitiveCollection to traverse.
+	 */
+	primitive_iterator(const PrimitiveCollection *collection);
 
 	/**
 	 * @brief primitive_iterator Construct the begin iterator.
