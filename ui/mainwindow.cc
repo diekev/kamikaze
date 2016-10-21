@@ -223,6 +223,7 @@ void MainWindow::generatePresetMenu()
 	    { 0, "Tube", "icons/icon_tube.png" },
 	    { 0, "Cone", "icons/icon_cone.png" },
 	    { 0, "Torus", "icons/icon_torus.png" },
+	    { 0, "Point Cloud", "icons/icon_point_cloud_cube.png" },
 	};
 
 	for (const auto &prop : props) {

@@ -946,9 +946,20 @@ public:
 		std::mt19937 rng(19937 + seed);
 		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
-		for (auto prim : primitive_iterator(this->m_collection, Mesh::id)) {
-			auto mesh = static_cast<Mesh *>(prim);
-			auto colors = mesh->addAttribute("color", ATTR_TYPE_VEC3, mesh->points()->size());
+		for (auto prim : primitive_iterator(this->m_collection)) {
+			Attribute *colors;
+
+			if (prim->typeID() == Mesh::id) {
+				auto mesh = static_cast<Mesh *>(prim);
+				colors = mesh->addAttribute("color", ATTR_TYPE_VEC3, mesh->points()->size());
+			}
+			else if (prim->typeID() == PrimPoints::id) {
+				auto prim_points = static_cast<PrimPoints *>(prim);
+				colors = prim_points->addAttribute("color", ATTR_TYPE_VEC3, prim_points->points()->size());
+			}
+			else {
+				continue;
+			}
 
 			if (method == COLOR_NODE_UNIQUE) {
 				const auto &color = eval_vec3("Color");
@@ -1005,6 +1016,55 @@ public:
 
 /* ************************************************************************** */
 
+class CreatePointCloudNode : public Node {
+public:
+	CreatePointCloudNode()
+	    : Node("Point Cloud")
+	{
+		addOutput("Primitive");
+
+		add_prop("Points Count", property_type::prop_int);
+		set_prop_min_max(1, 100000);
+		set_prop_default_value_int(1000);
+
+		add_prop("BBox Min", property_type::prop_vec3);
+		set_prop_default_value_vec3(glm::vec3{-1.0f, -1.0f, -1.0f});
+
+		add_prop("BBox Max", property_type::prop_vec3);
+		set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
+	}
+
+	void process() override
+	{
+		auto prim = m_collection->build("PrimPoints");
+		auto points = static_cast<PrimPoints *>(prim);
+
+		const auto &point_count = eval_int("Points Count");
+
+		auto point_list = points->points();
+		point_list->resize(point_count);
+
+		const auto &bbox_min = eval_vec3("BBox Min");
+		const auto &bbox_max = eval_vec3("BBox Max");
+
+		std::uniform_real_distribution<float> dist_x(bbox_min[0], bbox_max[0]);
+		std::uniform_real_distribution<float> dist_y(bbox_min[1], bbox_max[1]);
+		std::uniform_real_distribution<float> dist_z(bbox_min[2], bbox_max[2]);
+		std::mt19937 rng_x(19937);
+		std::mt19937 rng_y(19937 + 1);
+		std::mt19937 rng_z(19937 + 2);
+
+		for (size_t i = 0; i < point_count; ++i) {
+			const auto &point = glm::vec3(dist_x(rng_x), dist_y(rng_y), dist_z(rng_z));
+			(*point_list)[i] = point;
+		}
+
+		points->tagUpdate();
+	}
+};
+
+/* ************************************************************************** */
+
 void register_builtin_nodes(NodeFactory *factory)
 {
 	REGISTER_NODE("Geometry", "Box", CreateBoxNode);
@@ -1019,4 +1079,5 @@ void register_builtin_nodes(NodeFactory *factory)
 	REGISTER_NODE("Geometry", "Normal", NormalNode);
 	REGISTER_NODE("Geometry", "Color", ColorNode);
 	REGISTER_NODE("Geometry", "Merge Collection", CollectionMergeNode);
+	REGISTER_NODE("Geometry", "Point Cloud", CreatePointCloudNode);
 }
