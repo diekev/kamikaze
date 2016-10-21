@@ -77,6 +77,7 @@ class RenderBuffer {
 	DrawParams m_params;
 
 	bool m_require_normal = false;
+	bool m_require_color = false;
 	bool m_can_outline = false;
 	bool m_index_drawing = false;
 
@@ -115,6 +116,13 @@ public:
 	void set_normal_buffer(const std::string &attribute,
 	                       const void *normals,
 	                       const size_t normals_size);
+
+	void set_color_buffer(const std::string &attribute,
+	                      const std::vector<glm::vec3> &normals);
+
+	void set_color_buffer(const std::string &attribute,
+	                      const void *normals,
+	                      const size_t normals_size);
 
 	void render(const ViewerContext &context);
 

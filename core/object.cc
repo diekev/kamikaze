@@ -28,7 +28,6 @@
 #include <kamikaze/context.h>
 #include <kamikaze/primitive.h>
 
-#include "graphs/object_graph.h"
 #include "graphs/object_nodes.h"
 
 #include "scene.h"
@@ -38,7 +37,6 @@
 
 Object::Object()
     : Transformable()
-    , m_graph(new Graph)
 {
 	add_input("Parent");
 	add_output("Child");
@@ -58,11 +56,6 @@ Object::Object()
 	recompute_matrix();
 }
 
-Object::~Object()
-{
-	delete m_graph;
-}
-
 PrimitiveCollection *Object::collection() const
 {
 	return m_collection;
@@ -75,13 +68,18 @@ void Object::collection(PrimitiveCollection *coll)
 
 void Object::addNode(Node *node)
 {
-	m_graph->add(node);
-	m_graph->active_node(node);
+	m_graph.add(node);
+	m_graph.active_node(node);
 }
 
-Graph *Object::graph() const
+Graph *Object::graph()
 {
-	return m_graph;
+	return &m_graph;
+}
+
+const Graph *Object::graph() const
+{
+	return &m_graph;
 }
 
 #if 0

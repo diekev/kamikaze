@@ -26,6 +26,7 @@
 
 #include <kamikaze/nodes.h>
 #include <kamikaze/primitive.h>
+#include <memory>
 #include <vector>
 
 class InputSocket;
@@ -33,7 +34,7 @@ class OutputNode;
 class OutputSocket;
 
 class Graph {
-	std::vector<Node *> m_nodes;
+	std::vector<std::unique_ptr<Node>> m_nodes;
 	std::vector<Node *> m_stack;
 
 	Node *m_active_node = nullptr;
@@ -56,7 +57,7 @@ public:
 
 	OutputNode *output() const;
 
-	const std::vector<Node *> &nodes() const;
+	const std::vector<std::unique_ptr<Node> > &nodes() const;
 	const std::vector<Node *> &finished_stack() const;
 
 	void active_node(Node *node);

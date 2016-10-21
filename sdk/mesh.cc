@@ -46,10 +46,12 @@ static RenderBuffer *create_surface_buffer()
 	ProgramParams params;
 	params.add_attribute("vertex");
 	params.add_attribute("normal");
+	params.add_attribute("vertex_color");
 	params.add_uniform("matrix");
 	params.add_uniform("MVP");
 	params.add_uniform("N");
 	params.add_uniform("for_outline");
+	params.add_uniform("has_vcolors");
 
 	renderbuffer->set_shader_params(params);
 
@@ -171,6 +173,13 @@ Primitive *Mesh::copy() const
 		mesh->addAttribute(new Attribute(*attr));
 	}
 
+	/* XXX - TODO */
+	mesh->pos() = this->pos();
+	mesh->scale() = this->scale();
+	mesh->rotation() = this->rotation();
+	mesh->drawBBox(this->drawBBox());
+	mesh->matrix(this->matrix());
+
 	mesh->tagUpdate();
 
 	return mesh;
@@ -235,6 +244,12 @@ void Mesh::prepareRenderData()
 	                                  indices.size());
 
 	m_renderbuffer->set_normal_buffer("normal", normals->data(), normals->byte_size());
+
+	auto colors = this->attribute("color", ATTR_TYPE_VEC3);
+
+	if (colors != nullptr) {
+		m_renderbuffer->set_color_buffer("vertex_color", colors->data(), colors->byte_size());
+	}
 
 	m_need_data_update = false;
 }

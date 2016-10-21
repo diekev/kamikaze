@@ -38,6 +38,7 @@ set(CMAKE_BUILD_TYPE_INIT "Release")
 # ------------------------------------------------------------------------------
 
 add_compile_options(-std=c++14)
+add_compile_options(-fuse-ld=gold)
 
 add_definitions(-DQT_NO_KEYWORDS)
 add_definitions(-DGLM_FORCE_RADIANS)

@@ -24,26 +24,26 @@
 
 #pragma once
 
+#include "graphs/object_graph.h"
 #include "graphs/scene_node.h"
 
 #include "transformable.h"
 
 class EvaluationContext;
-class Graph;
 class Node;
 class PrimitiveCollection;
 
 class Object : public SceneNode, public Transformable {
 	PrimitiveCollection *m_collection = nullptr;
 
-	Graph *m_graph;
+	Graph m_graph{};
 
 	Object *m_parent = nullptr;
 	std::vector<Object *> m_children;
 
 public:
 	Object();
-	~Object();
+	~Object() = default;
 
 	PrimitiveCollection *collection() const;
 	void collection(PrimitiveCollection *coll);
@@ -51,7 +51,8 @@ public:
 	/* Nodes */
 	void addNode(Node *node);
 
-	Graph *graph() const;
+	Graph *graph();
+	const Graph *graph() const;
 
 	void updateMatrix();
 
