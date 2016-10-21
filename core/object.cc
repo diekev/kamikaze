@@ -28,7 +28,6 @@
 #include <kamikaze/context.h>
 #include <kamikaze/primitive.h>
 
-#include "graphs/object_graph.h"
 #include "graphs/object_nodes.h"
 
 #include "scene.h"
@@ -37,7 +36,6 @@
 #include "ui/paramfactory.h"
 
 Object::Object()
-    : m_graph(new Graph)
 {
 	add_input("Parent");
 	add_output("Child");
@@ -55,11 +53,6 @@ Object::Object()
 	set_prop_default_value_vec3(glm::vec3(1.0f, 1.0f, 1.0f));
 
 	updateMatrix();
-}
-
-Object::~Object()
-{
-	delete m_graph;
 }
 
 PrimitiveCollection *Object::collection() const
@@ -84,13 +77,18 @@ const glm::mat4 &Object::matrix() const
 
 void Object::addNode(Node *node)
 {
-	m_graph->add(node);
-	m_graph->active_node(node);
+	m_graph.add(node);
+	m_graph.active_node(node);
 }
 
-Graph *Object::graph() const
+Graph *Object::graph()
 {
-	return m_graph;
+	return &m_graph;
+}
+
+const Graph *Object::graph() const
+{
+	return &m_graph;
 }
 
 void Object::updateMatrix()

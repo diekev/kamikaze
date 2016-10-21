@@ -236,11 +236,11 @@ void GraphDumper::operator()(const filesystem::path &path)
 	file.print("]\n");
 
 	for (const auto &node : m_graph->nodes()) {
-		dump_node(file, node);
+		dump_node(file, node.get());
 	}
 
 	for (const auto &node : m_graph->nodes()) {
-		dump_node_links(file, node);
+		dump_node_links(file, node.get());
 	}
 
 	file.print("}\n");

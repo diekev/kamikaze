@@ -1309,7 +1309,7 @@ void QtNodeEditor::update_state(event_type event)
 
 			/* TODO: this is just when adding an object from a preset. */
 			if (graph->nodes().size() > 1) {
-				Node *node = graph->nodes().back();
+				Node *node = graph->nodes().back().get();
 
 				auto node_item = new QtNode(node->name().c_str());
 				node_item->setTitleColor(Qt::white);

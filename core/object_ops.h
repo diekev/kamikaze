@@ -34,12 +34,9 @@ class AddObjectCmd : public Command {
 	Object *m_object = nullptr;
 	Scene *m_scene = nullptr;
 
-	/* TODO */
-	bool m_was_undone = false;
-
 public:
 	AddObjectCmd() = default;
-	~AddObjectCmd();
+	~AddObjectCmd() = default;
 
 	void execute(const Context &context) override;
 	void undo() override;

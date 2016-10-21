@@ -41,6 +41,19 @@ std::ostream &operator<<(std::ostream &os, const glm::detail::tvec3<T, P> &vec)
 }
 
 /**
+ * Matrix output.
+ */
+
+template <typename T, glm::precision P>
+std::ostream &operator<<(std::ostream &os, const glm::detail::tmat4x4<T, P> &mat)
+{
+	for (int i = 0; i < 4; ++i) {
+		os << '[' << mat[i][0] << ',' << mat[i][1] << ',' << mat[i][2] << ',' << mat[i][3] << ']' << '\n';
+	}
+	return os;
+}
+
+/**
  * Matrix pre transformation.
  */
 

@@ -122,7 +122,7 @@ void Viewer::paintGL()
 
 	if (m_context->scene != nullptr) {
 		for (auto &node : m_context->scene->nodes()) {
-			auto object = static_cast<Object *>(node);
+			auto object = static_cast<Object *>(node.get());
 
 			if (!object->collection()) {
 				continue;

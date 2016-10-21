@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 	auto pixmap = QPixmap(600, 600);
 	pixmap.fill(Qt::gray);
 
-	auto splash = new QSplashScreen(pixmap);
+	auto splash = std::make_unique<QSplashScreen>(pixmap);
 	splash->show();
 
 	qApp->processEvents(QEventLoop::AllEvents);
@@ -67,7 +67,6 @@ int main(int argc, char *argv[])
 		w.showMaximized();
 
 		splash->finish(&w);
-		delete splash;
 
 		ret = a.exec();
 	}

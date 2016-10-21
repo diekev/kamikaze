@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <ego/utils.h>
 #include <GL/glew.h>
+#include <numeric>
 
 #include <kamikaze/renderbuffer.h>
 

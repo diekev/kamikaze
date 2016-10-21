@@ -24,39 +24,24 @@
 
 #include "scene_node.h"
 
-SceneNode::~SceneNode()
-{
-	for (auto &input : m_inputs) {
-		delete input;
-	}
-
-	for (auto &output : m_outputs) {
-		delete output;
-	}
-}
-
 void SceneNode::add_input(const std::string &name)
 {
-	auto socket = new SceneInputSocket(name);
-	socket->parent = this;
-
-	this->m_inputs.push_back(socket);
+	this->m_inputs.push_back(SceneInputSocketPtr(new SceneInputSocket(name)));
+	this->m_inputs.back()->parent = this;
 }
 
 void SceneNode::add_output(const std::string &name)
 {
-	auto socket = new SceneOutputSocket(name);
-	socket->parent = this;
-
-	this->m_outputs.push_back(socket);
+	this->m_outputs.push_back(SceneOutputSocketPtr(new SceneOutputSocket(name)));
+	this->m_outputs.back()->parent = this;
 }
 
-const std::vector<SceneInputSocket *> &SceneNode::inputs()
+const std::vector<SceneInputSocketPtr> &SceneNode::inputs()
 {
 	return m_inputs;
 }
 
-const std::vector<SceneOutputSocket *> &SceneNode::outputs()
+const std::vector<SceneOutputSocketPtr> &SceneNode::outputs()
 {
 	return m_outputs;
 }
