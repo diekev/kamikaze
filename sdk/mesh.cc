@@ -173,6 +173,13 @@ Primitive *Mesh::copy() const
 		mesh->addAttribute(new Attribute(*attr));
 	}
 
+	/* XXX - TODO */
+	mesh->pos() = this->pos();
+	mesh->scale() = this->scale();
+	mesh->rotation() = this->rotation();
+	mesh->drawBBox(this->drawBBox());
+	mesh->matrix(this->matrix());
+
 	mesh->tagUpdate();
 
 	return mesh;
