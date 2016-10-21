@@ -946,8 +946,6 @@ public:
 		std::mt19937 rng(19937 + seed);
 		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
-		std::cerr << "----------------------------\n";
-
 		for (auto prim : primitive_iterator(this->m_collection, Mesh::id)) {
 			auto mesh = static_cast<Mesh *>(prim);
 			auto colors = mesh->addAttribute("color", ATTR_TYPE_VEC3, mesh->points()->size());
@@ -967,8 +965,6 @@ public:
 				}
 				else if (scope == COLOR_NODE_PRIMITIVE) {
 					const auto &color = glm::vec3{dist(rng), dist(rng), dist(rng)};
-
-					std::cerr << "Setting color of primitive " << mesh->name() << " to <" << color[0] << ", " << color[1] << ", " << color[2] << ">\n";
 
 					for (size_t i = 0, e = colors->size(); i < e; ++i) {
 						colors->vec3(i, color);
