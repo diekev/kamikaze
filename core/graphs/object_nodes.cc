@@ -995,18 +995,11 @@ public:
 			return;
 		}
 
-		/* XXX - not nice:
-		 *  -- should have iterators over the whole collection
-		 *  -- should not need to copy the primitive, but removing them from
-		 *     the original collection.
-		 */
-		for (auto prim : primitive_iterator(collection2, Mesh::id)) {
-			this->m_collection->add(prim->copy());
+		for (auto prim : primitive_iterator(collection2)) {
+			this->m_collection->add(prim);
 		}
 
-		for (auto prim : primitive_iterator(collection2, PrimPoints::id)) {
-			this->m_collection->add(prim->copy());
-		}
+		collection2->clear();
 	}
 };
 

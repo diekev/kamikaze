@@ -167,7 +167,7 @@ PrimitiveCollection::PrimitiveCollection(PrimitiveFactory *factory)
 
 PrimitiveCollection::~PrimitiveCollection()
 {
-	clear();
+	free_all();
 }
 
 Primitive *PrimitiveCollection::build(const std::string &key)
@@ -208,11 +208,16 @@ void PrimitiveCollection::add(Primitive *prim)
 
 void PrimitiveCollection::clear()
 {
+	m_collection.clear();
+}
+
+void PrimitiveCollection::free_all()
+{
 	for (auto &prim : m_collection) {
 		delete prim;
 	}
 
-	m_collection.clear();
+	clear();
 }
 
 PrimitiveCollection *PrimitiveCollection::copy() const
@@ -255,11 +260,20 @@ primitive_iterator::primitive_iterator()
 	m_end = collection.primitives().end();
 }
 
+primitive_iterator::primitive_iterator(const PrimitiveCollection *collection)
+    : primitive_iterator(collection, -1)
+{}
+
 primitive_iterator::primitive_iterator(const PrimitiveCollection *collection, int type)
     : m_type(type)
 {
 	m_iter = collection->primitives().begin();
 	m_end = collection->primitives().end();
+
+	/* Return if there is no type. */
+	if (type == -1) {
+		return;
+	}
 
 	/* Make sure the first primitive is of the right type. */
 	for (const auto &primitive : collection->primitives()) {
@@ -279,6 +293,11 @@ primitive_iterator::primitive_iterator(const primitive_iterator &rhs)
 
 primitive_iterator &primitive_iterator::operator++()
 {
+	if (m_type == -1) {
+		++m_iter;
+		return *this;
+	}
+
 	do {
 		++m_iter;
 	}
