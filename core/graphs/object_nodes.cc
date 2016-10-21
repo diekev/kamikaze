@@ -881,6 +881,11 @@ public:
 /* ************************************************************************** */
 
 enum {
+	COLOR_NODE_VERTEX    = 0,
+	COLOR_NODE_PRIMITIVE = 1,
+};
+
+enum {
 	COLOR_NODE_UNIQUE = 0,
 	COLOR_NODE_RANDOM = 1,
 };
@@ -892,6 +897,13 @@ public:
 	{
 		addInput("input");
 		addOutput("output");
+
+		EnumProperty scope_enum_prop;
+		scope_enum_prop.insert("Vertex", COLOR_NODE_VERTEX);
+		scope_enum_prop.insert("Primitive", COLOR_NODE_PRIMITIVE);
+
+		add_prop("Scope", property_type::prop_enum);
+		set_prop_enum_values(scope_enum_prop);
 
 		EnumProperty color_enum_prop;
 		color_enum_prop.insert("Unique", COLOR_NODE_UNIQUE);
@@ -928,6 +940,13 @@ public:
 	void process() override
 	{
 		const auto &method = eval_int("Fill Method");
+		const auto &scope = eval_int("Scope");
+		const auto &seed = eval_int("Seed");
+
+		std::mt19937 rng(19937 + seed);
+		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+		std::cerr << "----------------------------\n";
 
 		for (auto prim : primitive_iterator(this->m_collection, Mesh::id)) {
 			auto mesh = static_cast<Mesh *>(prim);
@@ -941,12 +960,19 @@ public:
 				}
 			}
 			else if (method == COLOR_NODE_RANDOM) {
-				const auto &seed = eval_int("Seed");
-				std::mt19937 rng(19937 + seed);
-				std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+				if (scope == COLOR_NODE_VERTEX) {
+					for (size_t i = 0, e = colors->size(); i < e; ++i) {
+						colors->vec3(i, glm::vec3{dist(rng), dist(rng), dist(rng)});
+					}
+				}
+				else if (scope == COLOR_NODE_PRIMITIVE) {
+					const auto &color = glm::vec3{dist(rng), dist(rng), dist(rng)};
 
-				for (size_t i = 0, e = colors->size(); i < e; ++i) {
-					colors->vec3(i, glm::vec3{dist(rng), dist(rng), dist(rng)});
+					std::cerr << "Setting color of primitive " << mesh->name() << " to <" << color[0] << ", " << color[1] << ", " << color[2] << ">\n";
+
+					for (size_t i = 0, e = colors->size(); i < e; ++i) {
+						colors->vec3(i, color);
+					}
 				}
 			}
 		}
