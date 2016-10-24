@@ -29,11 +29,11 @@
 #include <kamikaze/primitive.h>
 #include <kamikaze/prim_points.h>
 #include <kamikaze/util_parallel.h>
+#include <kamikaze/utils_glm.h>
 
 #include <random>
 
 #include "ui/paramfactory.h"
-#include "util/utils_glm.h"
 
 /* ************************************************************************** */
 
