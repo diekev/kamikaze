@@ -92,6 +92,7 @@ protected:
 	std::string m_icon_path = "";
 	PrimitiveCache *m_cache = nullptr;
 	PrimitiveCollection *m_collection = nullptr;
+	std::vector<std::string> m_warnings;
 
 public:
 	explicit Node(const std::string &name);
@@ -208,6 +209,26 @@ public:
 	 * Get this node's icon path.
 	 */
 	std::string icon_path() const;
+
+	/**
+	 * Add a warning to the node's warning list.
+	 */
+	void add_warning(const std::string &warning);
+
+	/**
+	 * Return this node's warning list.
+	 */
+	const std::vector<std::string> &warnings() const;
+
+	/**
+	 * Return whether this node has warnings or not.
+	 */
+	bool has_warning() const;
+
+	/**
+	 * Clear this node's warning list.
+	 */
+	void clear_warnings();
 
 private:
 	/**

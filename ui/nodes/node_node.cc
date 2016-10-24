@@ -356,6 +356,14 @@ void QtNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
 	Q_UNUSED(option)
 	Q_UNUSED(widget)
 
+	/* Set header color. */
+	if (m_data && m_data->has_warning()) {
+		m_header_brush.setColor(QColor("#ffd42a"));
+	}
+	else {
+		m_header_brush.setColor(QColor("#1f1f1f"));
+	}
+
 	/* Paint header */
 	painter->setBackgroundMode(Qt::OpaqueMode);
 	painter->setBrush(m_header_brush);

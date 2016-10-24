@@ -104,6 +104,11 @@ void MainWindow::taskEnded()
 	m_progress_bar->setVisible(false);
 }
 
+void MainWindow::nodeProcessed()
+{
+	m_context.scene->notify_listeners(event_type::node | event_type::processed);
+}
+
 void MainWindow::undo() const
 {
 	/* TODO: figure out how to update everything properly */

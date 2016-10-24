@@ -246,6 +246,13 @@ public:
 	 */
 	void destroy(const std::vector<Primitive *> &prims);
 
+	/**
+	 * @brief factory
+	 * @return Return a pointer to the factory used in this collection.
+	 * @todo Not nice, need a way to create valid temporary collections.
+	 */
+	PrimitiveFactory *factory() const;
+
 	/* Reference counting, NOT to be used from plugins. They are used to
 	 * indicate that primitives are ready to be deleted.
 	 *
