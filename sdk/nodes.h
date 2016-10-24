@@ -89,6 +89,7 @@ protected:
 	std::vector<InputSocket *> m_inputs = {};
 	std::vector<OutputSocket *> m_outputs = {};
 	std::string m_name = "";
+	std::string m_icon_path = "";
 	PrimitiveCache *m_cache = nullptr;
 	PrimitiveCollection *m_collection = nullptr;
 
@@ -197,6 +198,16 @@ public:
 	 * Set the primitive cache.
 	 */
 	void setPrimitiveCache(PrimitiveCache *cache);
+
+	/**
+	 * Set this node's icon path.
+	 */
+	void icon_path(const std::string &path);
+
+	/**
+	 * Get this node's icon path.
+	 */
+	std::string icon_path() const;
 
 private:
 	/**

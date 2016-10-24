@@ -177,6 +177,16 @@ void Node::setPrimitiveCache(PrimitiveCache *cache)
 	m_cache = cache;
 }
 
+void Node::icon_path(const std::string &path)
+{
+	m_icon_path = path;
+}
+
+std::string Node::icon_path() const
+{
+	return m_icon_path;
+}
+
 PrimitiveCollection *Node::getInputCollection(InputSocket *socket)
 {
 	if (!socket || !socket->link) {
