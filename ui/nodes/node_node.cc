@@ -56,8 +56,8 @@ QtNode::QtNode(const QString &title, QGraphicsItem *parent)
     , m_title_label(new QGraphicsTextItem(this))
     , m_title_alignment(ALIGNED_CENTER)
     , m_port_name_color(Qt::white)
-    , m_active_connection(nullptr)
     , m_header_title_icon(new QGraphicsPixmapItem(this))
+    , m_active_connection(nullptr)
 {
 	setFlag(QGraphicsItem::ItemIsMovable);
 	setFlag(QGraphicsItem::ItemIsSelectable);
