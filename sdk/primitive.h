@@ -208,9 +208,15 @@ public:
 	void add(Primitive *prim);
 
 	/**
-	 * @brief clear Remove and delete all the primitives inside this collection.
+	 * @brief clear Remove all the primitives inside this collection, but does
+	 * not delete them.
 	 */
 	void clear();
+
+	/**
+	 * @brief free_all Remove and delete all the primitives inside this collection.
+	 */
+	void free_all();
 
 	/**
 	 * @brief copy Copy this collection and the primitive that it holds.
@@ -224,6 +230,28 @@ public:
 	 * @return A vector containing the primitive contained in this collection.
 	 */
 	const std::vector<Primitive *> &primitives() const;
+
+	/**
+	 * @brief destroy Destroy the given primitive from the collection. No-op if
+	 *                the primitive is not found in the collection.
+	 * @param prim The primitive to destroy.
+	 */
+	void destroy(Primitive *prim);
+
+	/**
+	 * @brief destroy Destroy all the primitives in the given vector from the
+	 *                collection. No-op if (some of) the primitives are not
+	 *                found in the collection.
+	 * @param prims The list of primitives to destroy.
+	 */
+	void destroy(const std::vector<Primitive *> &prims);
+
+	/**
+	 * @brief factory
+	 * @return Return a pointer to the factory used in this collection.
+	 * @todo Not nice, need a way to create valid temporary collections.
+	 */
+	PrimitiveFactory *factory() const;
 
 	/* Reference counting, NOT to be used from plugins. They are used to
 	 * indicate that primitives are ready to be deleted.
@@ -273,6 +301,12 @@ public:
 	 * @brief primitive_iterator Construct the end iterator.
 	 */
 	primitive_iterator();
+
+	/**
+	 * @brief primitive_iterator Construct the begin iterator.
+	 * @param collection The PrimitiveCollection to traverse.
+	 */
+	primitive_iterator(const PrimitiveCollection *collection);
 
 	/**
 	 * @brief primitive_iterator Construct the begin iterator.

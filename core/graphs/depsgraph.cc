@@ -159,6 +159,9 @@ void ObjectGraphDepsNode::process(const Context &context, TaskNotifier *notifier
 
 		node->collection(collection);
 
+		/* Make sure warnings are cleared before processing. */
+		node->clear_warnings();
+
 		if (node->collection()) {
 			node->process();
 		}
@@ -170,6 +173,11 @@ void ObjectGraphDepsNode::process(const Context &context, TaskNotifier *notifier
 		if (notifier) {
 			const float progress = (++index / size) * 100.0f;
 			notifier->signalProgressUpdate(progress);
+
+			/* To refresh the UI in case new warnings appear. */
+			if (context.eval_ctx->edit_mode && node == m_graph->active_node()) {
+				notifier->signalNodeProcessed();
+			}
 		}
 	}
 }
