@@ -56,6 +56,7 @@ QtNode::QtNode(const QString &title, QGraphicsItem *parent)
     , m_title_label(new QGraphicsTextItem(this))
     , m_title_alignment(ALIGNED_CENTER)
     , m_port_name_color(Qt::white)
+    , m_header_title_icon(new QGraphicsPixmapItem(this))
     , m_active_connection(nullptr)
 {
 	setFlag(QGraphicsItem::ItemIsMovable);
@@ -63,6 +64,11 @@ QtNode::QtNode(const QString &title, QGraphicsItem *parent)
 
 	/* Header */
 	m_header_brush = QBrush(QColor("#1f1f1f"));
+
+	/* Icon */
+	m_header_title_icon->setScale(0.0f);
+	m_header_title_icon->setVisible(false);
+	m_header_title_icon->setData(NODE_KEY_GRAPHIC_ITEM_TYPE, QVariant(NODE_VALUE_TYPE_HEADER_ICON));
 
 	/* Body */
 	m_body->setBrush(QColor("#3e3e3e"));
@@ -92,7 +98,13 @@ void QtNode::adjustWidthForTitle()
 {
 	m_font_header.setPointSize(NODE_HEADER_TITLE_FONT_SIZE);
 	m_title_label->setFont(m_font_header);
-	const auto spaceLeft = m_normalized_width;
+	auto offset = 0.5f * (NODE_HEADER_HEIGHT - NODE_HEADER_ICON_SIZE);
+	auto spaceLeft = m_normalized_width;
+
+	if (m_header_title_icon->isVisible()) {
+        spaceLeft -= NODE_HEADER_ICON_SIZE;
+        spaceLeft -= offset;
+    }
 
 	if (m_title_label->boundingRect().width() > spaceLeft) {
 		m_normalized_width += m_title_label->boundingRect().width() - spaceLeft;
@@ -110,6 +122,7 @@ void QtNode::redraw()
 {
 	/* Redraw the node */
 	const auto halfWidth = 0.5f * m_width;
+	const auto offset = 0.5f * (NODE_HEADER_HEIGHT - NODE_HEADER_ICON_SIZE);
 
 	auto p = QPainterPath{};
 	p.addRoundedRect(-halfWidth, 0, m_width, m_header_height, 4, 5);
@@ -121,6 +134,12 @@ void QtNode::redraw()
 
 	m_font_header.setPointSize(NODE_HEADER_TITLE_FONT_SIZE);
 	m_title_label->setFont(m_font_header);
+
+	if (m_header_title_icon->isVisible()) {
+		m_header_title_icon->setScale(m_icon_size / m_header_title_icon->pixmap().width()); // Scale may only be set if visible
+	}
+
+	m_header_title_icon->setPos(-halfWidth + offset, offset);
 
 	setTitlePosition();
 
@@ -165,9 +184,16 @@ void QtNode::setTitlePosition()
 	switch (m_title_alignment) {
 		case ALIGNED_LEFT:
 		{
-			/* Position it where the icon should be */
-			m_title_label->setPos(-halfWidth + offset,
-			                      0.5 * (m_header_height - m_title_label->boundingRect().height()));
+			if (m_header_title_icon->isVisible()) {
+                // Position it right to the icon
+                m_title_label->setPos(-halfWidth + m_icon_size + offset,
+                                    0.5 * (m_header_height - m_title_label->boundingRect().height()));
+            }
+			else {
+				/* Position it where the icon should be */
+				m_title_label->setPos(-halfWidth + offset,
+				                      0.5 * (m_header_height - m_title_label->boundingRect().height()));
+			}
 
 			break;
 		}
@@ -330,6 +356,14 @@ void QtNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
 	Q_UNUSED(option)
 	Q_UNUSED(widget)
 
+	/* Set header color. */
+	if (m_data && m_data->has_warning()) {
+		m_header_brush.setColor(QColor("#ffd42a"));
+	}
+	else {
+		m_header_brush.setColor(QColor("#1f1f1f"));
+	}
+
 	/* Paint header */
 	painter->setBackgroundMode(Qt::OpaqueMode);
 	painter->setBrush(m_header_brush);
@@ -376,6 +410,23 @@ void QtNode::setNode(Node *node)
 		           ALIGNED_RIGHT,
 		           QColor(95, 95, 95));
 	}
+
+	/* Set the icon. */
+	const auto &path = node->icon_path();
+
+	if (path.empty()) {
+		return;
+	}
+
+	QPixmap pixmap(path.c_str());
+
+	/* Sanity check. */
+    if (pixmap.width() != 0) {
+		m_header_title_icon->setPixmap(pixmap);
+        m_header_title_icon->setScale(m_icon_size / pixmap.width());
+        m_header_title_icon->setVisible(true);
+		adjustWidthForTitle();
+    }
 }
 
 Node *QtNode::getNode() const

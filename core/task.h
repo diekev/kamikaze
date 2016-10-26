@@ -44,11 +44,13 @@ public:
 	void signalStart();
 	void signalProgressUpdate(float progress);
 	void signalEnd();
+	void signalNodeProcessed();
 
 Q_SIGNALS:
 	void startTask();
 	void updateProgress(float progress);
 	void endTask();
+	void nodeProcessed();
 };
 
 class Task : public tbb::task {

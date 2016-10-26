@@ -44,10 +44,12 @@ static RenderBuffer *create_point_buffer()
 
 	ProgramParams params;
 	params.add_attribute("vertex");
+	params.add_attribute("vertex_color");
 	params.add_uniform("matrix");
 	params.add_uniform("MVP");
 	params.add_uniform("for_outline");
 	params.add_uniform("color");
+	params.add_uniform("has_vcolors");
 
 	renderbuffer->set_shader_params(params);
 
@@ -178,6 +180,12 @@ void PrimPoints::prepareRenderData()
 	                                  nullptr,
 	                                  0,
 	                                  m_points.size());
+
+	auto colors = this->attribute("color", ATTR_TYPE_VEC3);
+
+	if (colors != nullptr) {
+		m_renderbuffer->set_color_buffer("vertex_color", colors->data(), colors->byte_size());
+	}
 
 	m_need_data_update = false;
 }

@@ -68,6 +68,7 @@ set(HEADERS
 	prim_points.h
 	primitive.h
 	renderbuffer.h
+	utils_glm.h
 	util_parallel.h
 	util_render.h
 	util_string.h

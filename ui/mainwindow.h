@@ -67,6 +67,7 @@ public Q_SLOTS:
 	void taskStarted();
 	void updateProgress(float progress);
 	void taskEnded();
+	void nodeProcessed();
 
 private:
 	void generateWindowMenu();

@@ -177,6 +177,36 @@ void Node::setPrimitiveCache(PrimitiveCache *cache)
 	m_cache = cache;
 }
 
+void Node::icon_path(const std::string &path)
+{
+	m_icon_path = path;
+}
+
+std::string Node::icon_path() const
+{
+	return m_icon_path;
+}
+
+void Node::add_warning(const std::string &warning)
+{
+	m_warnings.push_back(warning);
+}
+
+const std::vector<std::string> &Node::warnings() const
+{
+	return m_warnings;
+}
+
+bool Node::has_warning() const
+{
+	return (m_warnings.empty() == false);
+}
+
+void Node::clear_warnings()
+{
+	m_warnings.clear();
+}
+
 PrimitiveCollection *Node::getInputCollection(InputSocket *socket)
 {
 	if (!socket || !socket->link) {

@@ -37,6 +37,7 @@ TaskNotifier::TaskNotifier(MainWindow *window)
 	connect(this, SIGNAL(startTask()), window, SLOT(taskStarted()));
 	connect(this, SIGNAL(updateProgress(float)), window, SLOT(updateProgress(float)));
 	connect(this, SIGNAL(endTask()), window, SLOT(taskEnded()));
+	connect(this, SIGNAL(nodeProcessed()), window, SLOT(nodeProcessed()));
 }
 
 void TaskNotifier::signalStart()
@@ -52,6 +53,11 @@ void TaskNotifier::signalProgressUpdate(float progress)
 void TaskNotifier::signalEnd()
 {
 	Q_EMIT(endTask());
+}
+
+void TaskNotifier::signalNodeProcessed()
+{
+	Q_EMIT(nodeProcessed());
 }
 
 /* ************************ */

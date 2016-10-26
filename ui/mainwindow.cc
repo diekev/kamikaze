@@ -111,6 +111,11 @@ void MainWindow::taskEnded()
 	m_progress_bar->setVisible(false);
 }
 
+void MainWindow::nodeProcessed()
+{
+	m_context.scene->notify_listeners(event_type::node | event_type::processed);
+}
+
 void MainWindow::undo()
 {
 	KeyEventHandler::undo(m_context);
@@ -222,6 +227,7 @@ void MainWindow::generatePresetMenu()
 	    { 0, "Tube", "icons/icon_tube.png" },
 	    { 0, "Cone", "icons/icon_cone.png" },
 	    { 0, "Torus", "icons/icon_torus.png" },
+	    { 0, "Point Cloud", "icons/icon_point_cloud_cube.png" },
 	};
 
 	for (const auto &prop : props) {

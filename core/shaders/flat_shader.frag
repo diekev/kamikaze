@@ -2,9 +2,9 @@
 
 layout(location = 0) out vec4 fragment_color;
 
-uniform vec4 color;
+smooth in vec4 col;
 
 void main()
 {
-	fragment_color = color;
+	fragment_color = col;
 }
