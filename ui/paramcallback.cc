@@ -80,3 +80,14 @@ void ParamCallback::setVisible(const QString &name, bool yesno)
 	widgets.first->setVisible(yesno);
 	widgets.second->setVisible(yesno);
 }
+
+void ParamCallback::addWarning(const QString &warning)
+{
+	auto label = new QLabel("Warning");
+	label->setPixmap(QPixmap("icons/warning.png"));
+
+	m_layout->addWidget(label, m_item_count, 0, Qt::AlignRight);
+	m_layout->addWidget(new QLabel(warning), m_item_count, 1);
+
+	++m_item_count;
+}

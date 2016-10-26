@@ -64,6 +64,8 @@ class QtNode : public QGraphicsPathItem {
 	QColor m_port_name_color;
 	QGraphicsItem *m_original_parent;
 
+	QGraphicsPixmapItem *m_header_title_icon = nullptr;
+
 public:
 	QtConnection *m_active_connection;
 
