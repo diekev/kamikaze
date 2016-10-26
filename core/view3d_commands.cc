@@ -27,7 +27,8 @@
 #include "undo.h"
 
 #include "util/util_input.h"
-#include "util/utils_glm.h"
+
+#include <kamikaze/utils_glm.h>
 
 class CameraPanCommand : public Command {
 	int m_old_x = 0;
