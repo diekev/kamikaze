@@ -34,6 +34,21 @@ class QtPort;
 class QtConnection;
 class QtNodeEditor;
 
+/* ************************************************************************** */
+
+class TextItem : public QGraphicsTextItem {
+public:
+	explicit TextItem(QGraphicsItem *parent = nullptr);
+
+    explicit TextItem(const QString &text, QGraphicsItem *parent = nullptr);
+
+	void setTextInteraction(bool on, bool select_all = false);
+
+	void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
+
+	QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value) override;
+};
+
 /****************************************************************************
 	QtNode represents a Node-class which is visualised in a QGraphicsScene.
 	***************************************************************************/
@@ -52,8 +67,7 @@ class QtNode : public QGraphicsPathItem {
 	QPen m_pen;
 	QtNodeEditor *m_editor;
 	QGraphicsScene *m_scene;
-	QString m_title;
-	QGraphicsTextItem *m_title_label;
+	TextItem *m_title_label;
 	QFont m_font_header;
 	Alignment m_title_alignment;
 
@@ -154,6 +168,9 @@ public:
 
 	QtPort *input(int index) const;
 	QtPort *output(int index) const;
+
+	/* Propagate a notification from a child of this node (e.g. edited text). */
+	void notifyEditor() const;
 
 protected:
 	void setTitlePosition();

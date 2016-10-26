@@ -103,6 +103,11 @@ public:
 	/**
 	 * Return the name of this node.
 	 */
+	void name(const std::string &new_name);
+
+	/**
+	 * Return the name of this node.
+	 */
 	const std::string &name() const noexcept;
 
 	/**

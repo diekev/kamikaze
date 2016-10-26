@@ -155,6 +155,8 @@ public:
 
 	void update_state(event_type event) override;
 
+	void sendNotification() const;
+
 public Q_SLOTS:
 	/* Activated when a contextmenu item is selected */
 	void contextMenuItemSelected(QAction *action);
@@ -177,6 +179,8 @@ private:
 
 	/* Called when nodes are disconnected. */
 	void connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to, bool notify);
+
+	void enterObjectNode(ObjectNodeItem *node, QAction *action);
 
 protected:
 	/* Event handling */

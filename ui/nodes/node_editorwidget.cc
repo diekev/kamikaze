@@ -59,36 +59,6 @@ static constexpr auto NODE_ACTION_EXPAND_ALL = "Expand all nodes";
 static constexpr auto NODE_ENTER_OBJECT = "Enter object";
 static constexpr auto NODE_EXIT_OBJECT = "Exit object";
 
-static inline bool is_object_node(QGraphicsItem *item)
-{
-	if (item->data(NODE_KEY_GRAPHIC_ITEM_SUBTYPE).isValid()) {
-		int type = item->data(NODE_KEY_GRAPHIC_ITEM_SUBTYPE).toInt();
-		return type == NODE_VALUE_SUBTYPE_OBJECT;
-	}
-
-	return false;
-}
-
-static inline bool is_node(QGraphicsItem *item)
-{
-	if (item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).isValid()) {
-		int type = item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).toInt();
-		return NODE_VALUE_TYPE_NODE == type;
-	}
-
-	return false;
-}
-
-static inline bool is_connection(QGraphicsItem *item)
-{
-	if (item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).isValid()) {
-		int type = item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).toInt();
-		return NODE_VALUE_TYPE_CONNECTION == type;
-	}
-
-	return false;
-}
-
 /* ************************************************************************** */
 
 QtNodeEditor::QtNodeEditor(QWidget *parent)
@@ -347,62 +317,79 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 
 			m_rubberband_selection = false;
 
-			/* Delegate to the node; either the node itself is clicked, one of its children or a connection */
-			if (item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).isValid()) {
-				auto type = item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).toInt();
-				QtNode *node;
+			/* Did not click on a node. */
+			if (!item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).isValid()) {
+				/* TODO: shouldn't we return false? */
+				return true;
+			}
 
-				if (NODE_VALUE_TYPE_CONNECTION == type) {
-					/* ======================= Handle selected connection ======================= */
-					auto connection = static_cast<QtConnection *>(item);
-					selectConnection(connection);
+			/* Delegate to the node; either the node itself is clicked, one of
+			 * its children or a connection.
+			 */
+
+			const auto type = item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).toInt();
+
+			switch (type) {
+				case NODE_VALUE_TYPE_CONNECTION:
+				{
+					selectConnection(static_cast<QtConnection *>(item));
+					break;
 				}
-				else if (NODE_VALUE_TYPE_NODE == type) {
-					/* ======================= The node itself is clicked ======================= */
-					node = static_cast<QtNode *>(item);
-					selectNode(node, mouseEvent);
+				case NODE_VALUE_TYPE_NODE:
+				{
+					selectNode(static_cast<QtNode *>(item), mouseEvent);
+					break;
 				}
-				else if (NODE_VALUE_TYPE_HEADER_ICON == type || NODE_VALUE_TYPE_HEADER_TITLE == type) {
-					/* ======================= The header title or header icon is clicked ======================= */
-					node = static_cast<QtNode *>(item->parentItem());
-					selectNode(node, mouseEvent);
+				case NODE_VALUE_TYPE_HEADER_ICON:
+				case NODE_VALUE_TYPE_HEADER_TITLE:
+				case NODE_VALUE_TYPE_NODE_BODY:
+				{
+					selectNode(static_cast<QtNode *>(item->parentItem()), mouseEvent);
+					break;
 				}
-				else {
-					/* A child item of the node is clicked */
+				case NODE_VALUE_TYPE_PORT:
+				{
 					deselectNodes();
 					deselectConnections();
-					node = static_cast<QtNode *>(item->parentItem());
 
-					if (NODE_VALUE_TYPE_PORT == type) {
-						/* ======================= Port is clicked ======================= */
-						/* Either make a connection to another port, or create a new connection */
-						auto baseNode = nodeWithActiveConnection();
-						if (m_active_connection == nullptr) {
-							/* There is no active connection, so start one */
-							node->mouseLeftClickHandler(mouseEvent, item, NODE_ACTION_BASE);
-							m_active_connection = node->m_active_connection;
-						}
-						else if (baseNode != node) {
-							/* There is an active connection and the selected
-							 * port is not part of the baseNode, so try to
-							 * establish a connection with the other node */
-							if (node->mouseLeftClickHandler(mouseEvent, item,
-							                                NODE_ACTION_TARGET,
-							                                baseNode->m_active_connection))
-							{
-								/* The connection was established, so the active
+					auto node = static_cast<QtNode *>(item->parentItem());
+
+					/* Either make a connection to another port, or create a new
+					 * connection */
+					auto baseNode = nodeWithActiveConnection();
+
+					if (m_active_connection == nullptr) {
+						/* There is no active connection, so start one */
+						node->mouseLeftClickHandler(mouseEvent, item, NODE_ACTION_BASE);
+						m_active_connection = node->m_active_connection;
+					}
+					else if (baseNode != node) {
+						/* There is an active connection and the selected
+						 * port is not part of the baseNode, so try to
+						 * establish a connection with the other node */
+						if (node->mouseLeftClickHandler(mouseEvent, item,
+						                                NODE_ACTION_TARGET,
+						                                baseNode->m_active_connection))
+						{
+							/* The connection was established, so the active
 								 * connection on the basenode can be null'd */
-								baseNode->m_active_connection = nullptr;
-								m_active_connection = nullptr;
-							}
+							baseNode->m_active_connection = nullptr;
+							m_active_connection = nullptr;
 						}
 					}
-					else {
-						/* Don't do anything with the node after this; it may be deleted */
-						node->mouseLeftClickHandler(mouseEvent, item);
-					}
+
+					break;
 				}
-				return true;
+				default:
+				{
+					deselectNodes();
+					deselectConnections();
+
+					auto node = static_cast<QtNode *>(item->parentItem());
+					node->mouseLeftClickHandler(mouseEvent, item);
+
+					break;
+				}
 			}
 
 			break;
@@ -415,12 +402,12 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 				pos.setY(mouseEvent->lastScreenPos().y());
 				showContextMenu(pos);
 			}
-			else
+			else {
 				deselectAll();
+			}
 
 			return true;
 		}
-			break;
 	}
 
 	return true;
@@ -428,9 +415,82 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 
 bool QtNodeEditor::mouseDoubleClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 {
-	Q_UNUSED(mouseEvent);
-	/* todo */
+	switch (static_cast<int>(mouseEvent->button())) {
+		case Qt::LeftButton:
+		{
+			const auto &item = itemAtExceptActiveConnection(mouseEvent->scenePos());
+
+			if (!item) {
+				/* Double-click on the canvas. */
+				return true;
+			}
+
+			/* Did not click on a node. */
+			if (!item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).isValid()) {
+				/* TODO: shouldn't we return false? */
+				return true;
+			}
+
+			/* Delegate to the node; either the node itself is clicked, one of
+			 * its children or a connection.
+			 */
+
+			const auto type = item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).toInt();
+
+			switch (type) {
+				case NODE_VALUE_TYPE_NODE:
+				{
+					if (is_object_node(item)) {
+						auto node = static_cast<ObjectNodeItem *>(item);
+						enterObjectNode(node, nullptr);
+					}
+
+					break;
+				}
+				case NODE_VALUE_TYPE_NODE_BODY:
+				{
+					if (is_object_node(item->parentItem())) {
+						auto node = static_cast<ObjectNodeItem *>(item->parentItem());
+						enterObjectNode(node, nullptr);
+					}
+
+					break;
+				}
+				case NODE_VALUE_TYPE_HEADER_TITLE:
+				{
+					/* This is handled in TextItem::mouseDoubleClickEvent. */
+					break;
+				}
+				default:
+				{
+					break;
+				}
+			}
+		}
+	}
+
 	return true;
+}
+
+void QtNodeEditor::enterObjectNode(ObjectNodeItem *node, QAction *action)
+{
+	m_current_scene = node->nodeScene();
+	m_current_scene->installEventFilter(this);
+	m_editor_mode = EDITOR_MODE_OBJECT;
+	m_view->setScene(m_current_scene);
+	m_context->eval_ctx->edit_mode = true;
+
+	if (action) {
+		action->setText(NODE_EXIT_OBJECT);
+	}
+	else {
+		for (auto action : m_context_menu->actions()) {
+			if (action->text() == NODE_ENTER_OBJECT) {
+				action->setText(NODE_EXIT_OBJECT);
+				break;
+			}
+		}
+	}
 }
 
 bool QtNodeEditor::mouseMoveHandler(QGraphicsSceneMouseEvent *mouseEvent)
@@ -1094,14 +1154,7 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 	/* ---------------- Enter object action ---------------- */
 	if (action->text() == NODE_ENTER_OBJECT) {
 		const auto &node = static_cast<ObjectNodeItem *>(getLastSelectedNode());
-		m_current_scene = node->nodeScene();
-		m_current_scene->installEventFilter(this);
-		m_editor_mode = EDITOR_MODE_OBJECT;
-		m_view->setScene(m_current_scene);
-		m_context->eval_ctx->edit_mode = true;
-
-		action->setText(NODE_EXIT_OBJECT);
-
+		enterObjectNode(node, action);
 		return;
 	}
 
@@ -1309,6 +1362,12 @@ void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, Q
 		scene->disconnect(*m_context, node_from, node_to);
 		scene->notify_listeners(event_type::object | event_type::parented);
 	}
+}
+
+void QtNodeEditor::sendNotification() const
+{
+	auto scene = m_context->scene;
+	scene->notify_listeners(event_type::node | event_type::modified);
 }
 
 /* ************************************************************************** */

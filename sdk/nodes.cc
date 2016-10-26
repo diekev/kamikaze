@@ -44,6 +44,11 @@ Node::~Node()
 	}
 }
 
+void Node::name(const std::string &new_name)
+{
+	m_name = new_name;
+}
+
 const std::string &Node::name() const noexcept
 {
 	return m_name;
