@@ -29,11 +29,11 @@
 #include <kamikaze/primitive.h>
 #include <kamikaze/prim_points.h>
 #include <kamikaze/util_parallel.h>
+#include <kamikaze/utils_glm.h>
 
 #include <random>
 
 #include "ui/paramfactory.h"
-#include "util/utils_glm.h"
 
 /* ************************************************************************** */
 
@@ -132,7 +132,7 @@ void TransformNode::process()
 	const auto Y = rot_ord[rot_order][1];
 	const auto Z = rot_ord[rot_order][2];
 
-	for (auto &prim : primitive_iterator(this->m_collection, Mesh::id)) {
+	for (auto &prim : primitive_iterator(this->m_collection)) {
 		auto matrix = glm::mat4(1.0f);
 
 		switch (transform_type) {
@@ -849,9 +849,20 @@ public:
 		const auto ofrequency = eval_float("Frequency");
 		const auto oamplitude = eval_float("Amplitude");
 
-		for (auto prim : primitive_iterator(this->m_collection, Mesh::id)) {
-			auto mesh = static_cast<Mesh *>(prim);
-			auto points = mesh->points();
+		for (auto prim : primitive_iterator(this->m_collection)) {
+			PointList *points;
+
+			if (prim->typeID() == Mesh::id) {
+				auto mesh = static_cast<Mesh *>(prim);
+				points = mesh->points();
+			}
+			else if (prim->typeID() == PrimPoints::id) {
+				auto prim_points = static_cast<PrimPoints *>(prim);
+				points = prim_points->points();
+			}
+			else {
+				continue;
+			}
 
 			for (size_t i = 0, e = points->size(); i < e; ++i) {
 				auto &point = (*points)[i];
@@ -1028,9 +1039,11 @@ public:
 		set_prop_default_value_int(1000);
 
 		add_prop("BBox Min", property_type::prop_vec3);
+		set_prop_min_max(-10.0f, 10.0f);
 		set_prop_default_value_vec3(glm::vec3{-1.0f, -1.0f, -1.0f});
 
 		add_prop("BBox Max", property_type::prop_vec3);
+		set_prop_min_max(-10.0f, 10.0f);
 		set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
 	}
 

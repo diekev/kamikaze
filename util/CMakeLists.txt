@@ -23,7 +23,6 @@ add_library(kmk_util STATIC
 	util_input.h
 	util_memory.h
 	utils.h
-	utils_glm.h
 
 	utils.cc
 )

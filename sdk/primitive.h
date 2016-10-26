@@ -231,6 +231,28 @@ public:
 	 */
 	const std::vector<Primitive *> &primitives() const;
 
+	/**
+	 * @brief destroy Destroy the given primitive from the collection. No-op if
+	 *                the primitive is not found in the collection.
+	 * @param prim The primitive to destroy.
+	 */
+	void destroy(Primitive *prim);
+
+	/**
+	 * @brief destroy Destroy all the primitives in the given vector from the
+	 *                collection. No-op if (some of) the primitives are not
+	 *                found in the collection.
+	 * @param prims The list of primitives to destroy.
+	 */
+	void destroy(const std::vector<Primitive *> &prims);
+
+	/**
+	 * @brief factory
+	 * @return Return a pointer to the factory used in this collection.
+	 * @todo Not nice, need a way to create valid temporary collections.
+	 */
+	PrimitiveFactory *factory() const;
+
 	/* Reference counting, NOT to be used from plugins. They are used to
 	 * indicate that primitives are ready to be deleted.
 	 *

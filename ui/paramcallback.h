@@ -43,6 +43,7 @@ public:
 	explicit ParamCallback(QGridLayout *layout);
 	~ParamCallback();
 
+	void addWarning(const QString &warning);
 	void addWidget(QWidget *widget, const QString &name);
 	void setTooltip(const QString &tooltip);
 

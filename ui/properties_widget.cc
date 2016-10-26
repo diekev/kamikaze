@@ -73,6 +73,8 @@ void PropertiesWidget::update_state(event_type event)
 	const auto &event_category = get_category(event);
 	const auto &event_action = get_action(event);
 
+	std::vector<std::string> warnings;
+
 	if (event_category == event_type::object) {
 		if (is_elem(event_action, event_type::added, event_type::selected)) {
 			auto scene_node = scene->active_node();
@@ -84,7 +86,7 @@ void PropertiesWidget::update_state(event_type event)
 		}
 	}
 	else if (event_category == (event_type::node)) {
-		if (is_elem(event_action, event_type::selected)) {
+		if (is_elem(event_action, event_type::selected, event_type::processed)) {
 			auto scene_node = scene->active_node();
 
 			if (scene_node->type() != SCE_NODE_OBJECT) {
@@ -101,6 +103,7 @@ void PropertiesWidget::update_state(event_type event)
 			}
 
 			persona = node;
+			warnings = node->warnings();
 
 			/* Only update/evaluate the graph if the node is connected. */
 			set_context = node->isLinked();
@@ -119,6 +122,11 @@ void PropertiesWidget::update_state(event_type event)
 	}
 
 	m_callback.clear();
+
+	/* Add warnings first. */
+	for (const auto &warning : warnings) {
+		m_callback.addWarning(warning.c_str());
+	}
 
 	drawProperties(persona, set_context);
 }

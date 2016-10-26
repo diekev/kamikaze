@@ -124,6 +124,7 @@ set(ICONS
 	icons/icon_torus.png
 	icons/icon_tube.png
 	icons/icon_uvsphere.png
+	icons/warning.png
 )
 
 install(

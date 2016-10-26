@@ -23,6 +23,7 @@
 
 #include "primitive.h"
 
+#include <algorithm>
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -236,6 +237,29 @@ const std::vector<Primitive *> &PrimitiveCollection::primitives() const
 	return m_collection;
 }
 
+void PrimitiveCollection::destroy(Primitive *prim)
+{
+	auto iter = std::find(m_collection.begin(), m_collection.end(), prim);
+
+	if (iter != m_collection.end()) {
+		delete *iter;
+	}
+
+	m_collection.erase(iter);
+}
+
+void PrimitiveCollection::destroy(const std::vector<Primitive *> &prims)
+{
+	for (auto prim : prims) {
+		destroy(prim);
+	}
+}
+
+PrimitiveFactory *PrimitiveCollection::factory() const
+{
+	return m_factory;
+}
+
 int PrimitiveCollection::refcount() const
 {
 	return m_ref;
@@ -267,6 +291,13 @@ primitive_iterator::primitive_iterator(const PrimitiveCollection *collection)
 primitive_iterator::primitive_iterator(const PrimitiveCollection *collection, int type)
     : m_type(type)
 {
+	if (!collection) {
+		this->collection.add(nullptr);
+		m_iter = this->collection.primitives().begin();
+		m_end = this->collection.primitives().end();
+		return;
+	}
+
 	m_iter = collection->primitives().begin();
 	m_end = collection->primitives().end();
 
