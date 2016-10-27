@@ -94,6 +94,11 @@ protected:
 	PrimitiveCollection *m_collection = nullptr;
 	std::vector<std::string> m_warnings;
 
+	/* UI stuff. */
+	float m_xpos = 0.0f;
+	float m_ypos = 0.0f;
+	int m_flags = 0;
+
 public:
 	explicit Node(const std::string &name);
 	Node(const Node &other) = default;
@@ -103,7 +108,64 @@ public:
 	/**
 	 * Return the name of this node.
 	 */
+	void name(const std::string &new_name);
+
+	/**
+	 * Return the name of this node.
+	 */
 	const std::string &name() const noexcept;
+
+	/**
+	 * Return the X position of this node in the node editor.
+	 */
+	float xpos() const;
+
+	/**
+	 * Set the X position of this node in the node editor.
+	 */
+	void xpos(float x);
+
+	/**
+	 * Return the Y position of this node in the node editor.
+	 */
+	float ypos() const;
+
+	/**
+	 * Set the Y position of this node in the node editor.
+	 */
+	void ypos(float y);
+
+	/**
+	 * Return this node's flags.
+	 */
+	inline int flags() const
+	{
+		return m_flags;
+	}
+
+	/**
+	 * Set a flag from this node's flags.
+	 */
+	inline void set_flags(int flag)
+	{
+		m_flags |= flag;
+	}
+
+	/**
+	 * Unset a flag from this node's flags.
+	 */
+	inline void unset_flags(int flag)
+	{
+		m_flags &= ~flag;
+	}
+
+	/**
+	 * Check whether this node has a given flag.
+	 */
+	inline bool has_flags(int flag) const
+	{
+		return (m_flags & flag) != 0;
+	}
 
 	/**
 	 * Add an input to the node.

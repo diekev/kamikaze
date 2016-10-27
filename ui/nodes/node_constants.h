@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <QGraphicsItem>
+
 /* Enums */
 enum Alignment {
 	ALIGNED_LEFT,
@@ -39,3 +41,27 @@ static constexpr auto NODE_VALUE_TYPE_PORT = 7;
 static constexpr auto NODE_VALUE_TYPE_HEADER_TITLE = 8;
 static constexpr auto NODE_VALUE_TYPE_CONNECTION = 9;
 static constexpr auto NODE_VALUE_SUBTYPE_OBJECT = 10;
+
+static inline bool check_type(QGraphicsItem *item, int key_type, int node_type)
+{
+	if (item->data(key_type).isValid()) {
+		return item->data(key_type).toInt() == node_type;
+	}
+
+	return false;
+}
+
+static inline bool is_object_node(QGraphicsItem *item)
+{
+	return check_type(item, NODE_KEY_GRAPHIC_ITEM_SUBTYPE, NODE_VALUE_SUBTYPE_OBJECT);
+}
+
+static inline bool is_node(QGraphicsItem *item)
+{
+	return check_type(item, NODE_KEY_GRAPHIC_ITEM_TYPE, NODE_VALUE_TYPE_NODE);
+}
+
+static inline bool is_connection(QGraphicsItem *item)
+{
+	return check_type(item, NODE_KEY_GRAPHIC_ITEM_TYPE, NODE_VALUE_TYPE_CONNECTION);
+}
