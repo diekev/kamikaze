@@ -33,9 +33,14 @@ class InputSocket;
 class OutputNode;
 class OutputSocket;
 
+enum {
+	NODE_SELECTED = (1 << 0),
+};
+
 class Graph {
 	std::vector<std::unique_ptr<Node>> m_nodes;
 	std::vector<Node *> m_stack;
+	std::vector<Node *> m_selected_nodes;
 
 	Node *m_active_node = nullptr;
 
@@ -64,4 +69,8 @@ public:
 	Node *active_node() const;
 
 	void clear_cache();
+
+	void add_to_selection(Node *node);
+
+	void remove_from_selection(Node *node);
 };
