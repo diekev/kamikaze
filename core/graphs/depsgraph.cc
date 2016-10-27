@@ -166,7 +166,14 @@ void ObjectGraphDepsNode::process(const Context &context, TaskNotifier *notifier
 
 		if (node->collection()) {
 			auto t0 = tbb::tick_count::now();
-			node->process();
+
+			try {
+				node->process();
+			}
+			catch (const std::exception &e) {
+				node->add_warning(e.what());
+			}
+
 			auto t1 = tbb::tick_count::now();
 
 			node->process_time((t1 - t0).seconds());
