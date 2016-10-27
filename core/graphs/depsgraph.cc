@@ -31,6 +31,8 @@
 #include <kamikaze/context.h>
 #include <kamikaze/nodes.h>
 
+#include <tbb/tick_count.h>
+
 #include "graph_dumper.h"
 #include "graph_tools.h"
 
@@ -163,7 +165,11 @@ void ObjectGraphDepsNode::process(const Context &context, TaskNotifier *notifier
 		node->clear_warnings();
 
 		if (node->collection()) {
+			auto t0 = tbb::tick_count::now();
 			node->process();
+			auto t1 = tbb::tick_count::now();
+
+			node->process_time((t1 - t0).seconds());
 		}
 
 		if (!node->outputs().empty()) {

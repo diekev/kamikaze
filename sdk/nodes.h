@@ -99,6 +99,8 @@ protected:
 	float m_ypos = 0.0f;
 	int m_flags = 0;
 
+	float m_process_time = 0.0f;
+
 public:
 	explicit Node(const std::string &name);
 	Node(const Node &other) = default;
@@ -134,6 +136,16 @@ public:
 	 * Set the Y position of this node in the node editor.
 	 */
 	void ypos(float y);
+
+	/**
+	 * Return the time it took this node to be processed.
+	 */
+	float process_time() const;
+
+	/**
+	 * Set the time it took this node to be processed.
+	 */
+	void process_time(float time);
 
 	/**
 	 * Return this node's flags.

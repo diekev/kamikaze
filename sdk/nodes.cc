@@ -74,6 +74,16 @@ void Node::ypos(float y)
 	m_ypos = y;
 }
 
+float Node::process_time() const
+{
+	return m_process_time;
+}
+
+void Node::process_time(float time)
+{
+	m_process_time = time;
+}
+
 void Node::addInput(const std::string &sname)
 {
 	auto in = new InputSocket(sname);
