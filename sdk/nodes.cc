@@ -44,9 +44,34 @@ Node::~Node()
 	}
 }
 
+void Node::name(const std::string &new_name)
+{
+	m_name = new_name;
+}
+
 const std::string &Node::name() const noexcept
 {
 	return m_name;
+}
+
+float Node::xpos() const
+{
+	return m_xpos;
+}
+
+void Node::xpos(float x)
+{
+	m_xpos = x;
+}
+
+float Node::ypos() const
+{
+	return m_ypos;
+}
+
+void Node::ypos(float y)
+{
+	m_ypos = y;
 }
 
 void Node::addInput(const std::string &sname)
@@ -175,6 +200,36 @@ void Node::collection(PrimitiveCollection *coll)
 void Node::setPrimitiveCache(PrimitiveCache *cache)
 {
 	m_cache = cache;
+}
+
+void Node::icon_path(const std::string &path)
+{
+	m_icon_path = path;
+}
+
+std::string Node::icon_path() const
+{
+	return m_icon_path;
+}
+
+void Node::add_warning(const std::string &warning)
+{
+	m_warnings.push_back(warning);
+}
+
+const std::vector<std::string> &Node::warnings() const
+{
+	return m_warnings;
+}
+
+bool Node::has_warning() const
+{
+	return (m_warnings.empty() == false);
+}
+
+void Node::clear_warnings()
+{
+	m_warnings.clear();
 }
 
 PrimitiveCollection *Node::getInputCollection(InputSocket *socket)

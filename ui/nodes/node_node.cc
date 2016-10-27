@@ -21,11 +21,16 @@
 #include "node_node.h"
 
 #include <kamikaze/nodes.h>
+
+#include <memory>
+
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
+#include <QTextCursor>
 
 #include "node_constants.h"
+#include "node_compound.h"
 #include "node_port.h"
 #include "node_editorwidget.h"
 
@@ -41,6 +46,106 @@ static constexpr auto NODE_PEN_WIDTH_SELECTED = 1;
 static constexpr auto SELECTED_COLOR = "#52b1ee";  /* Light blue. */
 //static constexpr auto SELECTED_COLOR = "#cc7800";  /* Orange. */
 
+/* ************************************************************************** */
+
+TextItem::TextItem(QGraphicsItem *parent)
+    : TextItem("", parent)
+{}
+
+TextItem::TextItem(const QString &text, QGraphicsItem *parent)
+    : QGraphicsTextItem(text, parent)
+{
+	this->setFlags(ItemIsSelectable | ItemIsFocusable);
+
+	/* Switch off editor mode. */
+	this->setTextInteractionFlags(Qt::NoTextInteraction);
+}
+
+void TextItem::setTextInteraction(bool on, bool select_all)
+{
+	if (on && textInteractionFlags() == Qt::NoTextInteraction) {
+		/* Switch on editor mode. */
+		this->setTextInteractionFlags(Qt::TextEditorInteraction);
+
+		/* Manually do what a mouse click would do otherwise. */
+
+		/* Give the item keyboard focus. */
+		this->setFocus(Qt::MouseFocusReason);
+
+		/* Ensure that itemChange() is called when we click out of the item. */
+		this->setSelected(true);
+
+		/* Select the whole text (e.g. after creation of the TextItem). */
+		if (select_all) {
+			QTextCursor c = textCursor();
+			c.select(QTextCursor::Document);
+			this->setTextCursor(c);
+		}
+	}
+	else if (!on && textInteractionFlags() == Qt::TextEditorInteraction) {
+		/* Switch off editor mode. */
+		this->setTextInteractionFlags(Qt::NoTextInteraction);
+
+		/* Deselect text (else it keeps gray shade). */
+		QTextCursor c = this->textCursor();
+		c.clearSelection();
+		this->setTextCursor(c);
+		this->clearFocus();
+
+		/* Update underlying node. */
+
+		/* TODO: find a better way to handle notification. */
+
+		if (is_object_node(this->parentItem())) {
+			auto node_item = static_cast<ObjectNodeItem *>(this->parentItem());
+			node_item->scene_node()->name(this->toPlainText().toStdString());
+			node_item->notifyEditor();
+		}
+		else {
+			auto node_item = static_cast<QtNode *>(this->parentItem());
+			node_item->getNode()->name(this->toPlainText().toStdString());
+			node_item->notifyEditor();
+		}
+	}
+}
+
+void TextItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+{
+	if (textInteractionFlags() == Qt::TextEditorInteraction) {
+		/* If editor mode is already on, pass events onto the editor. */
+		QGraphicsTextItem::mouseDoubleClickEvent(event);
+		return;
+	}
+
+	/* If editor mode is off:
+	 * 1. turn editor mode on and set selected and focused. */
+	this->setTextInteraction(true);
+
+	/* 2. send a single click to this QGraphicsTextItem (this will set the
+	 * cursor to the mouse position): create a new mouse event with the same
+	 * parameters as event. */
+	auto click = std::make_unique<QGraphicsSceneMouseEvent>(QEvent::GraphicsSceneMousePress);
+	click->setButton(event->button());
+	click->setPos(event->pos());
+
+	QGraphicsTextItem::mousePressEvent(click.get());
+}
+
+QVariant TextItem::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value)
+{
+	if (   (change == QGraphicsItem::ItemSelectedChange)
+	       && (textInteractionFlags() != Qt::NoTextInteraction)
+	       && (!value.toBool()))
+	{
+		// item received SelectedChange event AND is in editor mode AND is about to be deselected:
+		setTextInteraction(false); // leave editor mode
+	}
+
+	return QGraphicsTextItem::itemChange(change, value);
+}
+
+/* ************************************************************************** */
+
 QtNode::QtNode(const QString &title, QGraphicsItem *parent)
     : QGraphicsPathItem(parent)
     , m_data(nullptr)
@@ -52,10 +157,10 @@ QtNode::QtNode(const QString &title, QGraphicsItem *parent)
     , m_header_height(NODE_HEADER_HEIGHT)
     , m_body_height(m_normalized_body_height)
     , m_body(new QGraphicsPathItem(this))  /* MUST be a child of QtNode */
-    , m_title(title)
-    , m_title_label(new QGraphicsTextItem(this))
+    , m_title_label(new TextItem(title, this))
     , m_title_alignment(ALIGNED_CENTER)
     , m_port_name_color(Qt::white)
+    , m_header_title_icon(new QGraphicsPixmapItem(this))
     , m_active_connection(nullptr)
 {
 	setFlag(QGraphicsItem::ItemIsMovable);
@@ -63,6 +168,11 @@ QtNode::QtNode(const QString &title, QGraphicsItem *parent)
 
 	/* Header */
 	m_header_brush = QBrush(QColor("#1f1f1f"));
+
+	/* Icon */
+	m_header_title_icon->setScale(0.0f);
+	m_header_title_icon->setVisible(false);
+	m_header_title_icon->setData(NODE_KEY_GRAPHIC_ITEM_TYPE, QVariant(NODE_VALUE_TYPE_HEADER_ICON));
 
 	/* Body */
 	m_body->setBrush(QColor("#3e3e3e"));
@@ -74,7 +184,6 @@ QtNode::QtNode(const QString &title, QGraphicsItem *parent)
 
 	/* Set title */
 	m_title_label->setData(NODE_KEY_GRAPHIC_ITEM_TYPE, QVariant(NODE_VALUE_TYPE_HEADER_TITLE));
-	m_title_label->setPlainText(m_title);
 	m_font_header.setPointSize(NODE_HEADER_TITLE_FONT_SIZE);
 	m_title_label->setFont(m_font_header);
 
@@ -92,7 +201,13 @@ void QtNode::adjustWidthForTitle()
 {
 	m_font_header.setPointSize(NODE_HEADER_TITLE_FONT_SIZE);
 	m_title_label->setFont(m_font_header);
-	const auto spaceLeft = m_normalized_width;
+	auto offset = 0.5f * (NODE_HEADER_HEIGHT - NODE_HEADER_ICON_SIZE);
+	auto spaceLeft = m_normalized_width;
+
+	if (m_header_title_icon->isVisible()) {
+        spaceLeft -= NODE_HEADER_ICON_SIZE;
+        spaceLeft -= offset;
+    }
 
 	if (m_title_label->boundingRect().width() > spaceLeft) {
 		m_normalized_width += m_title_label->boundingRect().width() - spaceLeft;
@@ -110,6 +225,7 @@ void QtNode::redraw()
 {
 	/* Redraw the node */
 	const auto halfWidth = 0.5f * m_width;
+	const auto offset = 0.5f * (NODE_HEADER_HEIGHT - NODE_HEADER_ICON_SIZE);
 
 	auto p = QPainterPath{};
 	p.addRoundedRect(-halfWidth, 0, m_width, m_header_height, 4, 5);
@@ -121,6 +237,12 @@ void QtNode::redraw()
 
 	m_font_header.setPointSize(NODE_HEADER_TITLE_FONT_SIZE);
 	m_title_label->setFont(m_font_header);
+
+	if (m_header_title_icon->isVisible()) {
+		m_header_title_icon->setScale(m_icon_size / m_header_title_icon->pixmap().width()); // Scale may only be set if visible
+	}
+
+	m_header_title_icon->setPos(-halfWidth + offset, offset);
 
 	setTitlePosition();
 
@@ -165,9 +287,16 @@ void QtNode::setTitlePosition()
 	switch (m_title_alignment) {
 		case ALIGNED_LEFT:
 		{
-			/* Position it where the icon should be */
-			m_title_label->setPos(-halfWidth + offset,
-			                      0.5 * (m_header_height - m_title_label->boundingRect().height()));
+			if (m_header_title_icon->isVisible()) {
+                // Position it right to the icon
+                m_title_label->setPos(-halfWidth + m_icon_size + offset,
+                                    0.5 * (m_header_height - m_title_label->boundingRect().height()));
+            }
+			else {
+				/* Position it where the icon should be */
+				m_title_label->setPos(-halfWidth + offset,
+				                      0.5 * (m_header_height - m_title_label->boundingRect().height()));
+			}
 
 			break;
 		}
@@ -251,6 +380,13 @@ bool QtNode::mouseLeftClickHandler(QGraphicsSceneMouseEvent *mouseEvent,
 	return true;
 }
 
+void QtNode::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+	this->getNode()->xpos(event->scenePos().x());
+	this->getNode()->ypos(event->scenePos().y());
+	return QGraphicsPathItem::mouseMoveEvent(event);
+}
+
 void QtNode::collapse()
 {
 	/* Set visibility of the body */
@@ -292,9 +428,31 @@ QtPort *QtNode::input(int index) const
 	return m_input_ports[index];
 }
 
+QtPort *QtNode::input(const QString &name) const
+{
+	for (QtPort *port : m_input_ports) {
+		if (port->getPortName() == name) {
+			return port;
+		}
+	}
+
+	return nullptr;
+}
+
 QtPort *QtNode::output(int index) const
 {
 	return m_output_ports[index];
+}
+
+QtPort *QtNode::output(const QString &name) const
+{
+	for (QtPort *port : m_output_ports) {
+		if (port->getPortName() == name) {
+			return port;
+		}
+	}
+
+	return nullptr;
 }
 
 void QtNode::createActiveConnection(QtPort *port, QPointF pos)
@@ -329,6 +487,14 @@ void QtNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
 {
 	Q_UNUSED(option)
 	Q_UNUSED(widget)
+
+	/* Set header color. */
+	if (m_data && m_data->has_warning()) {
+		m_header_brush.setColor(QColor("#ffd42a"));
+	}
+	else {
+		m_header_brush.setColor(QColor("#1f1f1f"));
+	}
 
 	/* Paint header */
 	painter->setBackgroundMode(Qt::OpaqueMode);
@@ -376,6 +542,23 @@ void QtNode::setNode(Node *node)
 		           ALIGNED_RIGHT,
 		           QColor(95, 95, 95));
 	}
+
+	/* Set the icon. */
+	const auto &path = node->icon_path();
+
+	if (path.empty()) {
+		return;
+	}
+
+	QPixmap pixmap(path.c_str());
+
+	/* Sanity check. */
+    if (pixmap.width() != 0) {
+		m_header_title_icon->setPixmap(pixmap);
+        m_header_title_icon->setScale(m_icon_size / pixmap.width());
+        m_header_title_icon->setVisible(true);
+		adjustWidthForTitle();
+    }
 }
 
 Node *QtNode::getNode() const
@@ -482,4 +665,9 @@ bool QtNode::isConnectionConnectedToThisNode(QtConnection *connection)
 
 	return false;
 #endif
+}
+
+void QtNode::notifyEditor() const
+{
+	m_editor->sendNotification();
 }

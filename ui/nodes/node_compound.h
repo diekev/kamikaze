@@ -26,38 +26,14 @@ class SceneNode;
 class QtNodeGraphicsScene;
 
 class ObjectNodeItem : public QtNode {
-	QVector<QtNode *> m_node_list;
-	QtNodeGraphicsScene *m_node_scene;
 	SceneNode *m_scene_node;
 
 public:
 	ObjectNodeItem(SceneNode *scene_node, const QString &title, QGraphicsItem *parent = nullptr);
 
-	~ObjectNodeItem();
-
-	/* Add a node to the compound; it becomes invisible.
-	 * Nodes that are connected to the added node, remain connected, but via the
-	 * compound. The connected port is displayed in the compound. */
-	void addNode(QtNode *node);
-
-	/* Remove a node from the compound; it becomes visible again (the node is
-	 * not deleted). A removed node that still has a connection with a node in
-	 * the compound remains connected (but with the compound). The port of the
-	 * connected node is part of and displayed in the compound. */
-	void removeNode(QtNode *node);
-
-	/* Returns true in case the given node is included in this compound. */
-	bool isNodeOfThisCompound(QtNode *node) const;
-
-	/* Returns the vector with nodes added to this compound.
-	 * Note, that the connections of the returned nodes are not correct as long
-	 * as the nodes are part of the compound. The connections are rewired, so
-	 * the internal relations of the nodes are changed. Only if the compound is
-	 * removed (deleted), its added nodes are released and their original
-	 * relationships are restored. */
-	const QVector<QtNode *> &getNodes() const;
-
-	QtNodeGraphicsScene *nodeScene() const;
+	~ObjectNodeItem() = default;
 
 	SceneNode *scene_node() const;
+
+	void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
 };

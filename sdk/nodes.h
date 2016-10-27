@@ -89,8 +89,15 @@ protected:
 	std::vector<InputSocket *> m_inputs = {};
 	std::vector<OutputSocket *> m_outputs = {};
 	std::string m_name = "";
+	std::string m_icon_path = "";
 	PrimitiveCache *m_cache = nullptr;
 	PrimitiveCollection *m_collection = nullptr;
+	std::vector<std::string> m_warnings;
+
+	/* UI stuff. */
+	float m_xpos = 0.0f;
+	float m_ypos = 0.0f;
+	int m_flags = 0;
 
 public:
 	explicit Node(const std::string &name);
@@ -101,7 +108,64 @@ public:
 	/**
 	 * Return the name of this node.
 	 */
+	void name(const std::string &new_name);
+
+	/**
+	 * Return the name of this node.
+	 */
 	const std::string &name() const noexcept;
+
+	/**
+	 * Return the X position of this node in the node editor.
+	 */
+	float xpos() const;
+
+	/**
+	 * Set the X position of this node in the node editor.
+	 */
+	void xpos(float x);
+
+	/**
+	 * Return the Y position of this node in the node editor.
+	 */
+	float ypos() const;
+
+	/**
+	 * Set the Y position of this node in the node editor.
+	 */
+	void ypos(float y);
+
+	/**
+	 * Return this node's flags.
+	 */
+	inline int flags() const
+	{
+		return m_flags;
+	}
+
+	/**
+	 * Set a flag from this node's flags.
+	 */
+	inline void set_flags(int flag)
+	{
+		m_flags |= flag;
+	}
+
+	/**
+	 * Unset a flag from this node's flags.
+	 */
+	inline void unset_flags(int flag)
+	{
+		m_flags &= ~flag;
+	}
+
+	/**
+	 * Check whether this node has a given flag.
+	 */
+	inline bool has_flags(int flag) const
+	{
+		return (m_flags & flag) != 0;
+	}
 
 	/**
 	 * Add an input to the node.
@@ -197,6 +261,36 @@ public:
 	 * Set the primitive cache.
 	 */
 	void setPrimitiveCache(PrimitiveCache *cache);
+
+	/**
+	 * Set this node's icon path.
+	 */
+	void icon_path(const std::string &path);
+
+	/**
+	 * Get this node's icon path.
+	 */
+	std::string icon_path() const;
+
+	/**
+	 * Add a warning to the node's warning list.
+	 */
+	void add_warning(const std::string &warning);
+
+	/**
+	 * Return this node's warning list.
+	 */
+	const std::vector<std::string> &warnings() const;
+
+	/**
+	 * Return whether this node has warnings or not.
+	 */
+	bool has_warning() const;
+
+	/**
+	 * Clear this node's warning list.
+	 */
+	void clear_warnings();
 
 private:
 	/**

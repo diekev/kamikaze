@@ -54,6 +54,25 @@ std::ostream &operator<<(std::ostream &os, const glm::detail::tmat4x4<T, P> &mat
 }
 
 /**
+ * Multiply a 3 column vector by a 4x4 matrix.
+ */
+template <typename T, glm::precision P>
+inline glm::detail::tvec3<T, P> operator*(const glm::detail::tmat4x4<T, P> &mat,
+                                          const glm::detail::tvec3<T, P> &vec)
+{
+	const float x = vec[0];
+	const float y = vec[1];
+
+	auto ret = glm::detail::tvec3<T, P>();
+
+	ret[0] = x * mat[0][0] + y * mat[1][0] + mat[2][0] * vec[2] + mat[3][0];
+	ret[1] = x * mat[0][1] + y * mat[1][1] + mat[2][1] * vec[2] + mat[3][1];
+	ret[2] = x * mat[0][2] + y * mat[1][2] + mat[2][2] * vec[2] + mat[3][2];
+
+	return ret;
+}
+
+/**
  * Matrix pre transformation.
  */
 
