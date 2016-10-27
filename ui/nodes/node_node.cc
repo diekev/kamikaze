@@ -382,8 +382,8 @@ bool QtNode::mouseLeftClickHandler(QGraphicsSceneMouseEvent *mouseEvent,
 
 void QtNode::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-	this->getNode()->xpos(event->scenePos().x());
-	this->getNode()->ypos(event->scenePos().y());
+	this->getNode()->xpos(this->scenePos().x());
+	this->getNode()->ypos(this->scenePos().y());
 	return QGraphicsPathItem::mouseMoveEvent(event);
 }
 
