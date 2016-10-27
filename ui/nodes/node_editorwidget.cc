@@ -26,10 +26,12 @@
 #include <QGuiApplication>
 #include <QKeyEvent>
 #include <QMenu>
+#include <QToolTip>
 #include <QVBoxLayout>
 
 #include <iostream>
 #include <kamikaze/context.h>
+#include <sstream>
 
 #include "node_compound.h"
 #include "node_connection.h"
@@ -402,6 +404,46 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 			}
 			else {
 				deselectAll();
+			}
+
+			return true;
+		}
+		case Qt::MiddleButton:
+		{
+			const auto &item = itemAtExceptActiveConnection(mouseEvent->scenePos());
+
+			if (!item) {
+				return true;
+			}
+
+			if (!item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).isValid()) {
+				/* TODO: shouldn't we return false? */
+				return true;
+			}
+
+			const auto type = item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).toInt();
+
+			switch (type) {
+				case NODE_VALUE_TYPE_NODE:
+				{
+					auto node = static_cast<QtNode *>(item)->getNode();
+
+					std::stringstream ss;
+					ss << "Node: " << node->name() << '\n';
+					ss << "Processing time: " << node->process_time() << " seconds.";
+
+					QToolTip::showText(mouseEvent->screenPos(), ss.str().c_str());
+					break;
+				}
+				case NODE_VALUE_TYPE_CONNECTION:
+				case NODE_VALUE_TYPE_HEADER_ICON:
+				case NODE_VALUE_TYPE_HEADER_TITLE:
+				case NODE_VALUE_TYPE_NODE_BODY:
+				case NODE_VALUE_TYPE_PORT:
+				default:
+				{
+					break;
+				}
 			}
 
 			return true;
