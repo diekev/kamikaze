@@ -202,10 +202,28 @@ void Graph::active_node(Node *node)
 
 Node *Graph::active_node() const
 {
-	return m_active_node;
+	if (m_selected_nodes.empty()) {
+		return nullptr;
+	}
+
+	return m_selected_nodes.back();
 }
 
 void Graph::clear_cache()
 {
 	m_cache.clear();
+}
+
+void Graph::add_to_selection(Node *node)
+{
+	node->set_flags(NODE_SELECTED);
+	m_selected_nodes.push_back(node);
+}
+
+void Graph::remove_from_selection(Node *node)
+{
+	node->unset_flags(NODE_SELECTED);
+	m_selected_nodes.erase(std::find(m_selected_nodes.begin(),
+	                                 m_selected_nodes.end(),
+	                                 node));
 }

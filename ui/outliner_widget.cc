@@ -201,11 +201,11 @@ void OutlinerTreeWidget::update_state(event_type event)
 		return;
 	}
 
-	if (get_category(event) != event_type::object) {
+	if (!is_elem(get_category(event), event_type::object, event_type::node)) {
 		return;
 	}
 
-	if (!is_elem(get_action(event), event_type::added, event_type::parented)) {
+	if (!is_elem(get_action(event), event_type::added, event_type::modified, event_type::parented)) {
 		return;
 	}
 

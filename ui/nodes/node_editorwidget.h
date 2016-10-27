@@ -56,8 +56,7 @@ class QtNodeEditor : public WidgetBase {
 	Q_OBJECT
 
 	NodeView *m_view;
-	QtNodeGraphicsScene *m_current_scene;
-	QtNodeGraphicsScene *m_scene_scene;
+	QtNodeGraphicsScene *m_graphics_scene;
 
 	QMenu *m_context_menu;
 	QMenu *m_zoom_sub_menu;
@@ -152,7 +151,7 @@ public:
 	void gatherChildren(QtNode *node, std::vector<QtNode *> &children, const QPointF &center_pos, QPointF &min_pos, float &min_dist);
 
 	/* Called for creating new connections, e.g. during node dropping. */
-	void connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock, bool notify);
+	void connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock, bool notify, bool connect_graph = true);
 
 	int editor_mode() const
 	{
@@ -160,6 +159,8 @@ public:
 	}
 
 	void update_state(event_type event) override;
+
+	void sendNotification() const;
 
 public Q_SLOTS:
 	/* Activated when a contextmenu item is selected */
@@ -183,6 +184,8 @@ private:
 
 	/* Called when nodes are disconnected. */
 	void connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to, bool notify);
+
+	void enterObjectNode(QAction *action);
 
 protected:
 	/* Event handling */
