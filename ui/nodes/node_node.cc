@@ -380,6 +380,13 @@ bool QtNode::mouseLeftClickHandler(QGraphicsSceneMouseEvent *mouseEvent,
 	return true;
 }
 
+void QtNode::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+	this->getNode()->xpos(event->scenePos().x());
+	this->getNode()->ypos(event->scenePos().y());
+	return QGraphicsPathItem::mouseMoveEvent(event);
+}
+
 void QtNode::collapse()
 {
 	/* Set visibility of the body */
@@ -421,9 +428,31 @@ QtPort *QtNode::input(int index) const
 	return m_input_ports[index];
 }
 
+QtPort *QtNode::input(const QString &name) const
+{
+	for (QtPort *port : m_input_ports) {
+		if (port->getPortName() == name) {
+			return port;
+		}
+	}
+
+	return nullptr;
+}
+
 QtPort *QtNode::output(int index) const
 {
 	return m_output_ports[index];
+}
+
+QtPort *QtNode::output(const QString &name) const
+{
+	for (QtPort *port : m_output_ports) {
+		if (port->getPortName() == name) {
+			return port;
+		}
+	}
+
+	return nullptr;
 }
 
 void QtNode::createActiveConnection(QtPort *port, QPointF pos)

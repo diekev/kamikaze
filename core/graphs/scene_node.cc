@@ -55,3 +55,23 @@ const std::string &SceneNode::name() const
 {
 	return m_name;
 }
+
+float SceneNode::xpos() const
+{
+	return m_xpos;
+}
+
+void SceneNode::xpos(float x)
+{
+	m_xpos = x;
+}
+
+float SceneNode::ypos() const
+{
+	return m_ypos;
+}
+
+void SceneNode::ypos(float y)
+{
+	m_ypos = y;
+}

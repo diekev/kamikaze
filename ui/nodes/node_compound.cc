@@ -28,7 +28,6 @@
 
 ObjectNodeItem::ObjectNodeItem(SceneNode *scene_node, const QString &title, QGraphicsItem *parent)
     : QtNode(title, parent)
-    , m_node_scene(new QtNodeGraphicsScene)
     , m_scene_node(scene_node)
 {
 	setData(NODE_KEY_GRAPHIC_ITEM_SUBTYPE, QVariant(NODE_VALUE_SUBTYPE_OBJECT));
@@ -50,45 +49,11 @@ ObjectNodeItem::ObjectNodeItem(SceneNode *scene_node, const QString &title, QGra
 	}
 }
 
-ObjectNodeItem::~ObjectNodeItem()
+void ObjectNodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-	/* First release the nodes */
-	for (QtNode *node : m_node_list) {
-		removeNode(node);
-	}
-
-	m_node_list.clear();
-
-	delete m_node_scene;
-}
-
-void ObjectNodeItem::addNode(QtNode *node)
-{
-	m_node_list.push_back(node);
-	node->setParentItem(this);
-	m_node_scene->addItem(node);
-}
-
-void ObjectNodeItem::removeNode(QtNode *node)
-{
-	auto iter = std::find(m_node_list.begin(), m_node_list.end(), node);
-	m_node_list.erase(iter);
-}
-
-bool ObjectNodeItem::isNodeOfThisCompound(QtNode *node) const
-{
-	auto iter = std::find(m_node_list.begin(), m_node_list.end(), node);
-	return iter != m_node_list.end();
-}
-
-const QVector<QtNode *> &ObjectNodeItem::getNodes() const
-{
-	return m_node_list;
-}
-
-QtNodeGraphicsScene *ObjectNodeItem::nodeScene() const
-{
-	return m_node_scene;
+	this->scene_node()->xpos(event->scenePos().x());
+	this->scene_node()->ypos(event->scenePos().y());
+	return QGraphicsPathItem::mouseMoveEvent(event);
 }
 
 SceneNode *ObjectNodeItem::scene_node() const

@@ -69,6 +69,9 @@ protected:
 	std::string m_name = "";
 	int m_flags = 0;
 
+	float m_xpos = 0.0f;
+	float m_ypos = 0.0f;
+
 public:
 	virtual ~SceneNode() = default;
 
@@ -80,6 +83,12 @@ public:
 
 	void name(const std::string &name);
 	const std::string &name() const;
+
+	float xpos() const;
+	void xpos(float x);
+
+	float ypos() const;
+	void ypos(float y);
 
 	inline int flags() const
 	{

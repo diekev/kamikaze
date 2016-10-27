@@ -167,10 +167,15 @@ public:
 	bool hasOutputs() const;
 
 	QtPort *input(int index) const;
+	QtPort *input(const QString &name) const;
+
 	QtPort *output(int index) const;
+	QtPort *output(const QString &name) const;
 
 	/* Propagate a notification from a child of this node (e.g. edited text). */
 	void notifyEditor() const;
+
+	void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
 
 protected:
 	void setTitlePosition();

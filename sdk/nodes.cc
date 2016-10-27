@@ -54,6 +54,26 @@ const std::string &Node::name() const noexcept
 	return m_name;
 }
 
+float Node::xpos() const
+{
+	return m_xpos;
+}
+
+void Node::xpos(float x)
+{
+	m_xpos = x;
+}
+
+float Node::ypos() const
+{
+	return m_ypos;
+}
+
+void Node::ypos(float y)
+{
+	m_ypos = y;
+}
+
 void Node::addInput(const std::string &sname)
 {
 	auto in = new InputSocket(sname);
