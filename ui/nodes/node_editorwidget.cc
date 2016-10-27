@@ -423,27 +423,35 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 
 			const auto type = item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).toInt();
 
+			Node *node = nullptr;
+
 			switch (type) {
+				case NODE_VALUE_TYPE_NODE_BODY:
+				case NODE_VALUE_TYPE_HEADER_TITLE:
+				case NODE_VALUE_TYPE_HEADER_ICON:
+				{
+					node = static_cast<QtNode *>(item->parentItem())->getNode();
+					break;
+				}
 				case NODE_VALUE_TYPE_NODE:
 				{
-					auto node = static_cast<QtNode *>(item)->getNode();
-
-					std::stringstream ss;
-					ss << "Node: " << node->name() << '\n';
-					ss << "Processing time: " << node->process_time() << " seconds.";
-
-					QToolTip::showText(mouseEvent->screenPos(), ss.str().c_str());
+					node = static_cast<QtNode *>(item)->getNode();
 					break;
 				}
 				case NODE_VALUE_TYPE_CONNECTION:
-				case NODE_VALUE_TYPE_HEADER_ICON:
-				case NODE_VALUE_TYPE_HEADER_TITLE:
-				case NODE_VALUE_TYPE_NODE_BODY:
 				case NODE_VALUE_TYPE_PORT:
 				default:
 				{
 					break;
 				}
+			}
+
+			if (node != nullptr) {
+				std::stringstream ss;
+				ss << "Node: " << node->name() << '\n';
+				ss << "Processing time: " << node->process_time() << " seconds.";
+
+				QToolTip::showText(mouseEvent->screenPos(), ss.str().c_str());
 			}
 
 			return true;
