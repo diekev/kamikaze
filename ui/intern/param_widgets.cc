@@ -116,7 +116,7 @@ StringParam::StringParam(QWidget *parent)
     : QLineEdit(parent)
     , m_value_ptr(nullptr)
 {
-	connect(this, SIGNAL(textChanged(const QString &)), this, SLOT(updateValuePtr(const QString &)));
+	connect(this, SIGNAL(returnPressed()), this, SLOT(updateValuePtr()));
 }
 
 void StringParam::valuePtr(std::string *ptr)
@@ -124,9 +124,9 @@ void StringParam::valuePtr(std::string *ptr)
 	m_value_ptr = ptr;
 }
 
-void StringParam::updateValuePtr(const QString &value)
+void StringParam::updateValuePtr()
 {
-	*m_value_ptr = value.toStdString();
+	*m_value_ptr = this->text().toStdString();
 	Q_EMIT(paramChanged());
 }
 

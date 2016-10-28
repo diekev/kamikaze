@@ -131,7 +131,7 @@ public:
 	void valuePtr(std::string *ptr);
 
 private Q_SLOTS:
-	void updateValuePtr(const QString &value);
+	void updateValuePtr();
 
 Q_SIGNALS:
 	void paramChanged();
