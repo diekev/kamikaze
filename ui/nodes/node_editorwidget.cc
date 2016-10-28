@@ -303,6 +303,8 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 	switch (static_cast<int>(mouseEvent->button())) {
 		case Qt::LeftButton:
 		{
+			m_mouse_down = true;
+
 			const auto &item = itemAtExceptActiveConnection(mouseEvent->scenePos());
 
 			if (!item) {
@@ -539,6 +541,10 @@ void QtNodeEditor::enterObjectNode(QAction *action)
 
 bool QtNodeEditor::mouseMoveHandler(QGraphicsSceneMouseEvent *mouseEvent)
 {
+	if (!m_mouse_down) {
+		return true;
+	}
+
 	/* If there was a rubberband selection started, update its rectangle */
 	if (m_rubberband_selection && (mouseEvent->buttons() & Qt::LeftButton)) {
 		rubberbandSelection(mouseEvent);
@@ -568,6 +574,8 @@ bool QtNodeEditor::mouseMoveHandler(QGraphicsSceneMouseEvent *mouseEvent)
 
 bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 {
+	m_mouse_down = false;
+
 	/* Determine whether a node has been dropped on a connection. */
 	if (m_hover_connection) {
 		splitConnectionWithNode(getLastSelectedNode());

@@ -71,6 +71,7 @@ class QtNodeEditor : public WidgetBase {
 	bool m_context_menu_enabled;
 	bool m_menu_zoom_enabled;
 	bool m_menu_collapse_expand_enabled;
+	bool m_mouse_down = false;
 
 	/* Cached informations */
 	QtConnection *m_hover_connection;
