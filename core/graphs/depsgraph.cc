@@ -148,6 +148,8 @@ void ObjectGraphDepsNode::process(const Context &context, TaskNotifier *notifier
 		notifier->signalProgressUpdate(0.0f);
 	}
 
+	auto total_process_time = 0.0f;
+
 	for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter) {
 		Node *node = *iter;
 		PrimitiveCollection *collection = nullptr;
@@ -176,7 +178,10 @@ void ObjectGraphDepsNode::process(const Context &context, TaskNotifier *notifier
 
 			auto t1 = tbb::tick_count::now();
 
-			node->process_time((t1 - t0).seconds());
+			auto delta = (t1 - t0).seconds();
+			total_process_time += delta;
+
+			node->process_time(delta);
 		}
 
 		if (!node->outputs().empty()) {
@@ -193,6 +198,8 @@ void ObjectGraphDepsNode::process(const Context &context, TaskNotifier *notifier
 			}
 		}
 	}
+
+	output_node->process_time(total_process_time);
 }
 
 Graph *ObjectGraphDepsNode::graph()
