@@ -34,12 +34,11 @@ class Mesh : public Primitive {
 	PointList m_point_list = {};
 	PolygonList m_poly_list = {};
 
-	std::vector<Attribute *> m_attributes = {};
-
 	RenderBuffer *m_renderbuffer = nullptr;
 
 public:
 	Mesh();
+	Mesh(const Mesh &other);
 	~Mesh();
 
 	/**
@@ -65,33 +64,6 @@ public:
 	 * @return A pointer to the const list of polys contained in this mesh.
 	 */
 	const PolygonList *polys() const;
-
-	/**
-	 * @brief attribute Return an attribute from this primitive's attibute list.
-	 * @param name The name of the attribute to look up.
-	 * @param type The type of the attribute to look up.
-	 *
-	 * @return The attribute corresponding to the given name and type, nullptr
-	 *         if no such attribute exists.
-	 */
-	Attribute *attribute(const std::string &name, AttributeType type);
-
-	/**
-	 * @brief attribute Add an attribute to this primitive's attibute list.
-	 * @param attr The attribute to add.
-	 */
-	void addAttribute(Attribute *attr);
-
-	/**
-	 * @brief attribute Add an attribute to this primitive's attibute list.
-	 * @param name The name of the attribute to add.
-	 * @param type The type of the attribute to add.
-	 *
-	 * @return The newly added attribute. If there is already an attribute with
-	 *         the given name and type in this primitive's attibute list,  it is
-	 *         returned, and no new attribute is created.
-	 */
-	Attribute *addAttribute(const std::string &name, AttributeType type, size_t size = 0);
 
 	void update() override;
 

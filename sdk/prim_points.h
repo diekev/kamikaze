@@ -32,23 +32,17 @@ class RenderBuffer;
 
 class PrimPoints : public Primitive {
 	PointList m_points;
-	std::vector<Attribute *> m_attributes;
 
 	RenderBuffer *m_renderbuffer;
 
 public:
 	PrimPoints();
+	PrimPoints(const PrimPoints &other);
 	~PrimPoints();
 
 	PointList *points();
 
 	const PointList *points() const;
-
-	Attribute *attribute(const std::string &name, AttributeType type);
-
-	void addAttribute(Attribute *attr);
-
-	Attribute *addAttribute(const std::string &name, AttributeType type, size_t size);
 
 	Primitive *copy() const override;
 

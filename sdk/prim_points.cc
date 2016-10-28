@@ -73,12 +73,20 @@ PrimPoints::PrimPoints()
     : m_renderbuffer(nullptr)
 {}
 
+PrimPoints::PrimPoints(const PrimPoints &other)
+    : Primitive(other)
+{
+	/* Copy points. */
+	auto points = other.points();
+	m_points.resize(points->size());
+
+	for (auto i = 0ul; i < points->size(); ++i) {
+		m_points[i] = (*points)[i];
+	}
+}
+
 PrimPoints::~PrimPoints()
 {
-	for (auto &attr : m_attributes) {
-		delete attr;
-	}
-
 	free_renderbuffer(m_renderbuffer);
 }
 
@@ -92,59 +100,11 @@ const PointList *PrimPoints::points() const
 	return &m_points;
 }
 
-Attribute *PrimPoints::attribute(const std::string &name, AttributeType type)
-{
-	auto iter = std::find_if(m_attributes.begin(), m_attributes.end(),
-	                         [&](Attribute *attr)
-	{
-		return (attr->type() == type) && (attr->name() == name);
-	});
-
-	if (iter == m_attributes.end()) {
-		return nullptr;
-	}
-
-	return *iter;
-}
-
-void PrimPoints::addAttribute(Attribute *attr)
-{
-	if (attribute(attr->name(), attr->type()) == nullptr) {
-		m_attributes.push_back(attr);
-	}
-}
-
-Attribute *PrimPoints::addAttribute(const std::string &name, AttributeType type, size_t size)
-{
-	auto attr = attribute(name, type);
-
-	if (attr == nullptr) {
-		attr = new Attribute(name, type, size);
-		m_attributes.push_back(attr);
-	}
-
-	return attr;
-}
-
 Primitive *PrimPoints::copy() const
 {
-	auto prim = new PrimPoints;
-
-	auto points = prim->points();
-	points->resize(this->points()->size());
-
-	for (size_t i = 0, e = points->size(); i < e; ++i) {
-		(*points)[i] = m_points[i];
-	}
-
-	/* XXX - TODO */
-	prim->pos() = this->pos();
-	prim->scale() = this->scale();
-	prim->rotation() = this->rotation();
-	prim->drawBBox(this->drawBBox());
-	prim->matrix(this->matrix());
-
+	auto prim = new PrimPoints(*this);
 	prim->tagUpdate();
+
 	return prim;
 }
 
