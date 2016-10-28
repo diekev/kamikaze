@@ -44,7 +44,7 @@ static constexpr auto NODE_PEN_WIDTH_UNSELECTED = 1;
 static constexpr auto NODE_PEN_WIDTH_SELECTED = 1;
 
 static constexpr auto SELECTED_COLOR = "#52b1ee";  /* Light blue. */
-//static constexpr auto SELECTED_COLOR = "#cc7800";  /* Orange. */
+static constexpr auto HIGHLIT_COLOR = "#cc7800";  /* Orange. */
 
 /* ************************************************************************** */
 
@@ -223,6 +223,8 @@ void QtNode::adjustWidthForTitle()
 
 void QtNode::redraw()
 {
+	prepareGeometryChange();
+
 	/* Redraw the node */
 	const auto halfWidth = 0.5f * m_width;
 	const auto offset = 0.5f * (NODE_HEADER_HEIGHT - NODE_HEADER_ICON_SIZE);
@@ -387,6 +389,11 @@ void QtNode::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 	return QGraphicsPathItem::mouseMoveEvent(event);
 }
 
+QRectF QtNode::boundingRect() const
+{
+	return m_body->boundingRect();
+}
+
 void QtNode::collapse()
 {
 	/* Set visibility of the body */
@@ -504,6 +511,10 @@ void QtNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
 		m_pen.setColor(SELECTED_COLOR);
 		m_pen.setWidth(NODE_PEN_WIDTH_SELECTED);
 	}
+	else if (m_highlit) {
+		m_pen.setColor(HIGHLIT_COLOR);
+		m_pen.setWidth(NODE_PEN_WIDTH_SELECTED);
+	}
 	else {
 		m_pen.setColor(Qt::black);
 		m_pen.setWidth(NODE_PEN_WIDTH_UNSELECTED);
@@ -559,6 +570,8 @@ void QtNode::setNode(Node *node)
         m_header_title_icon->setVisible(true);
 		adjustWidthForTitle();
     }
+
+	prepareGeometryChange();
 }
 
 Node *QtNode::getNode() const
@@ -670,4 +683,9 @@ bool QtNode::isConnectionConnectedToThisNode(QtConnection *connection)
 void QtNode::notifyEditor() const
 {
 	m_editor->sendNotification();
+}
+
+void QtNode::highlight(bool yesno)
+{
+	m_highlit = yesno;
 }

@@ -275,6 +275,31 @@ QtConnection *QtNodeEditor::nodeOverConnection(QtNode *node)
 	return nullptr;
 }
 
+QtNode *QtNodeEditor::nodeOverNode(QtNode *selected_node)
+{
+	auto bounding_rect = selected_node->boundingRect();
+
+	/* Transform bounding rect based on the selected node's position. */
+	bounding_rect.adjust(selected_node->pos().x(), selected_node->pos().y(),
+	                     selected_node->pos().x(), selected_node->pos().y());
+
+	auto items = m_graphics_scene->items(bounding_rect, Qt::IntersectsItemShape);
+
+	for (const auto &item : items) {
+		if (item == selected_node || !is_object_node(item)) {
+			continue;
+		}
+
+		return static_cast<QtNode *>(item);
+	}
+
+	if (m_hover_node) {
+		m_hover_node->highlight(false);
+	}
+
+	return nullptr;
+}
+
 bool QtNodeEditor::eventFilter(QObject *object, QEvent *event)
 {
 	auto mouseEvent = static_cast<QGraphicsSceneMouseEvent *>(event);
@@ -554,6 +579,19 @@ bool QtNodeEditor::mouseMoveHandler(QGraphicsSceneMouseEvent *mouseEvent)
 			m_hover_connection->setSelected(true);
 			return true;
 		}
+
+		if (m_hover_node) {
+			m_hover_node->highlight(false);
+		}
+
+		m_hover_node = nodeOverNode(node);
+
+		if (m_hover_node) {
+			/* TODO: this is to highlight the conection, consider having a
+			 * separate flag/colour for this. */
+			m_hover_node->highlight(true);
+			return true;
+		}
 	}
 
 	if (m_active_connection) {
@@ -573,6 +611,11 @@ bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 		splitConnectionWithNode(getLastSelectedNode());
 		m_hover_connection = nullptr;
 		return true;
+	}
+
+	if (m_hover_node) {
+		m_hover_node->highlight(false);
+		m_hover_node = nullptr;
 	}
 
 	/* Handle the rubberband selection, if applicable */

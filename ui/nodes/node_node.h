@@ -56,6 +56,7 @@ class QtNode : public QGraphicsPathItem {
 	Node *m_data;
 
 	bool m_auto_size = true;
+	bool m_highlit = true;
 	qreal m_icon_size;
 	qreal m_normalized_width;
 	qreal m_width;
@@ -175,7 +176,11 @@ public:
 	/* Propagate a notification from a child of this node (e.g. edited text). */
 	void notifyEditor() const;
 
+	void highlight(bool yesno);
+
 	void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+
+	QRectF boundingRect() const override;
 
 protected:
 	void setTitlePosition();

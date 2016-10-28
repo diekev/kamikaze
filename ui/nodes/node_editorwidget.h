@@ -77,6 +77,7 @@ class QtNodeEditor : public WidgetBase {
 	QtConnection *m_active_connection;
 	QVector<QtNode *> m_selected_nodes;
 	QVector<QtConnection *> m_selected_connections;
+	QtNode *m_hover_node = nullptr;
 
 public:
 	explicit QtNodeEditor(QWidget *parent = nullptr);
@@ -180,6 +181,8 @@ private:
 	void connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to, bool notify);
 
 	void enterObjectNode(QAction *action);
+
+	QtNode *nodeOverNode(QtNode *selected_node);
 
 protected:
 	/* Event handling */
