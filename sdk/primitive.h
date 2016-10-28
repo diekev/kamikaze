@@ -297,6 +297,20 @@ public:
 	void destroy(const std::vector<Primitive *> &prims);
 
 	/**
+	 * @brief copy_collection Copy the primitives from one collection to this.
+	 * @param coll The collection to copy the primitives from.
+	 */
+	void copy_collection(const PrimitiveCollection &coll);
+
+	/**
+	 * @brief merge_collection Merge the primitives from one collection into this
+	 *                         collection. The merged collection will be cleared.
+	 * @param coll The collection to merge the primitives from. It will be empty
+	 *             after the merge.
+	 */
+	void merge_collection(PrimitiveCollection &coll);
+
+	/**
 	 * @brief factory
 	 * @return Return a pointer to the factory used in this collection.
 	 * @todo Not nice, need a way to create valid temporary collections.

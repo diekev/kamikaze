@@ -342,6 +342,19 @@ void PrimitiveCollection::destroy(const std::vector<Primitive *> &prims)
 	}
 }
 
+void PrimitiveCollection::copy_collection(const PrimitiveCollection &coll)
+{
+	for (auto prim : primitive_iterator(&coll)) {
+		this->add(prim);
+	}
+}
+
+void PrimitiveCollection::merge_collection(PrimitiveCollection &coll)
+{
+	copy_collection(coll);
+	coll.clear();
+}
+
 PrimitiveFactory *PrimitiveCollection::factory() const
 {
 	return m_factory;

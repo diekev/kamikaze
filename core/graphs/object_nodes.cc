@@ -1018,11 +1018,7 @@ public:
 			return;
 		}
 
-		for (auto prim : primitive_iterator(collection2)) {
-			this->m_collection->add(prim);
-		}
-
-		collection2->clear();
+		m_collection->merge_collection(*collection2);
 	}
 };
 
