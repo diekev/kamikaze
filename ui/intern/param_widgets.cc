@@ -104,9 +104,9 @@ void EnumParam::valuePtr(int *ptr)
 	m_value_ptr = ptr;
 }
 
-void EnumParam::updateValuePtr(int value)
+void EnumParam::updateValuePtr(int /*value*/)
 {
-	*m_value_ptr = value;
+	*m_value_ptr = this->currentData().toInt();
 	Q_EMIT(paramChanged());
 }
 

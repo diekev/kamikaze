@@ -57,8 +57,8 @@ void enum_param(ParamCallback &cb, const char *name, int *ptr, const EnumPropert
 	auto param = new EnumParam;
 	param->valuePtr(ptr);
 
-	for (const auto &item : prop.m_props) {
-		param->addItem(item.name.c_str());
+	for (const EnumPair &item : prop.m_props) {
+		param->addItem(item.name.c_str(), QVariant(item.value));
 	}
 
 	param->setCurrentIndex(default_value);
