@@ -32,6 +32,7 @@
 #include <kamikaze/utils_glm.h>
 
 #include <random>
+#include <sstream>
 
 #include "ui/paramfactory.h"
 
@@ -962,11 +963,11 @@ public:
 
 			if (prim->typeID() == Mesh::id) {
 				auto mesh = static_cast<Mesh *>(prim);
-				colors = mesh->addAttribute("color", ATTR_TYPE_VEC3, mesh->points()->size());
+				colors = mesh->add_attribute("color", ATTR_TYPE_VEC3, mesh->points()->size());
 			}
 			else if (prim->typeID() == PrimPoints::id) {
 				auto prim_points = static_cast<PrimPoints *>(prim);
-				colors = prim_points->addAttribute("color", ATTR_TYPE_VEC3, prim_points->points()->size());
+				colors = prim_points->add_attribute("color", ATTR_TYPE_VEC3, prim_points->points()->size());
 			}
 			else {
 				continue;
@@ -1078,6 +1079,262 @@ public:
 
 /* ************************************************************************** */
 
+class CreateAttributeNode : public Node {
+public:
+	CreateAttributeNode()
+	    : Node("Attribute Create")
+	{
+		addInput("input");
+		addOutput("output");
+
+		add_prop("Name", property_type::prop_string);
+		set_prop_tooltip("Name of the attribute to create.");
+
+		EnumProperty type_enum;
+		type_enum.insert("Byte", ATTR_TYPE_BYTE);
+		type_enum.insert("Integer", ATTR_TYPE_INT);
+		type_enum.insert("Float", ATTR_TYPE_FLOAT);
+		type_enum.insert("String", ATTR_TYPE_STRING);
+		type_enum.insert("2D Vector", ATTR_TYPE_VEC2);
+		type_enum.insert("3D Vector", ATTR_TYPE_VEC3);
+		type_enum.insert("4D Vector", ATTR_TYPE_VEC4);
+		type_enum.insert("3x3 Matrix", ATTR_TYPE_MAT3);
+		type_enum.insert("4x4 Matrix", ATTR_TYPE_MAT4);
+
+		add_prop("Attribute Type", property_type::prop_enum);
+		set_prop_enum_values(type_enum);
+	}
+
+	void process() override
+	{
+		auto name = eval_string("Name");
+		auto attribute_type = static_cast<AttributeType>(eval_enum("Attribute Type"));
+
+		for (Primitive *prim : primitive_iterator(m_collection)) {
+			if (prim->has_attribute(name, attribute_type)) {
+				std::stringstream ss;
+				ss << prim->name() << " already has an attribute named " << name;
+
+				this->add_warning(ss.str());
+				continue;
+			}
+
+			size_t attrib_size = 1;
+
+			if (prim->typeID() == Mesh::id) {
+				auto mesh = static_cast<Mesh *>(prim);
+
+				if (attribute_type == ATTR_TYPE_VEC3) {
+					attrib_size = mesh->points()->size();
+				}
+			}
+			else if (prim->typeID() == PrimPoints::id) {
+				auto point_cloud = static_cast<PrimPoints *>(prim);
+
+				if (attribute_type == ATTR_TYPE_VEC3) {
+					attrib_size = point_cloud->points()->size();
+				}
+			}
+
+			prim->add_attribute(name, attribute_type, attrib_size);
+		}
+	}
+};
+
+/* ************************************************************************** */
+
+class DeleteAttributeNode : public Node {
+public:
+	DeleteAttributeNode()
+	    : Node("Attribute Delete")
+	{
+		addInput("input");
+		addOutput("output");
+
+		add_prop("Name", property_type::prop_string);
+		set_prop_tooltip("Name of the attribute to delete.");
+
+		EnumProperty type_enum;
+		type_enum.insert("Byte", ATTR_TYPE_BYTE);
+		type_enum.insert("Integer", ATTR_TYPE_INT);
+		type_enum.insert("Float", ATTR_TYPE_FLOAT);
+		type_enum.insert("String", ATTR_TYPE_STRING);
+		type_enum.insert("2D Vector", ATTR_TYPE_VEC2);
+		type_enum.insert("3D Vector", ATTR_TYPE_VEC3);
+		type_enum.insert("4D Vector", ATTR_TYPE_VEC4);
+		type_enum.insert("3x3 Matrix", ATTR_TYPE_MAT3);
+		type_enum.insert("4x4 Matrix", ATTR_TYPE_MAT4);
+
+		add_prop("Attribute Type", property_type::prop_enum);
+		set_prop_enum_values(type_enum);
+	}
+
+	void process() override
+	{
+		auto name = eval_string("Name");
+		auto attribute_type = static_cast<AttributeType>(eval_enum("Attribute Type"));
+
+		for (Primitive *prim : primitive_iterator(m_collection)) {
+			if (!prim->has_attribute(name, attribute_type)) {
+				continue;
+			}
+
+			prim->remove_attribute(name, attribute_type);
+		}
+	}
+};
+
+/* ************************************************************************** */
+
+enum {
+	DIST_CONSTANT = 0,
+	DIST_UNIFORM,
+	DIST_GAUSSIAN,
+	DIST_EXPONENTIAL,
+	DIST_LOGNORMAL,
+	DIST_CAUCHY,
+	DIST_DISCRETE,
+};
+
+class RandomiseAttributeNode : public Node {
+public:
+	RandomiseAttributeNode()
+	    : Node("Attribute Randomise")
+	{
+		addInput("input");
+		addOutput("output");
+
+		add_prop("Name", property_type::prop_string);
+		set_prop_tooltip("Name of the attribute to randomise.");
+
+		EnumProperty type_enum;
+		type_enum.insert("Byte", ATTR_TYPE_BYTE);
+		type_enum.insert("Integer", ATTR_TYPE_INT);
+		type_enum.insert("Float", ATTR_TYPE_FLOAT);
+		type_enum.insert("String", ATTR_TYPE_STRING);
+		type_enum.insert("2D Vector", ATTR_TYPE_VEC2);
+		type_enum.insert("3D Vector", ATTR_TYPE_VEC3);
+		type_enum.insert("4D Vector", ATTR_TYPE_VEC4);
+		type_enum.insert("3x3 Matrix", ATTR_TYPE_MAT3);
+		type_enum.insert("4x4 Matrix", ATTR_TYPE_MAT4);
+
+		add_prop("Attribute Type", property_type::prop_enum);
+		set_prop_enum_values(type_enum);
+
+		EnumProperty dist_enum;
+		dist_enum.insert("Constant", DIST_CONSTANT);
+		dist_enum.insert("Uniform", DIST_UNIFORM);
+		dist_enum.insert("Gaussian", DIST_GAUSSIAN);
+
+		add_prop("Distribution", property_type::prop_enum);
+		set_prop_enum_values(dist_enum);
+
+		/* Constant Value */
+		add_prop("Value", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(1.0f);
+
+		/* Min/Max Value */
+		add_prop("Min Value", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(0.0f);
+
+		add_prop("Max Value", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(1.0f);
+
+		/* Gaussian Distribution */
+		add_prop("Mean", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(0.0f);
+
+		add_prop("Standard Deviation", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(1.0f);
+	}
+
+	bool update_properties() override
+	{
+		const auto distribution = eval_enum("Distribution");
+
+		set_prop_visible("Value", distribution == DIST_CONSTANT);
+		set_prop_visible("Min Value", distribution == DIST_UNIFORM);
+		set_prop_visible("Max Value", distribution == DIST_UNIFORM);
+		set_prop_visible("Mean", distribution == DIST_GAUSSIAN);
+		set_prop_visible("Standard Deviation", distribution == DIST_GAUSSIAN);
+
+		return true;
+	}
+
+	void process() override
+	{
+		auto name = eval_string("Name");
+		auto attribute_type = static_cast<AttributeType>(eval_enum("Attribute Type"));
+		auto distribution = eval_enum("Distribution");
+		auto value = eval_float("Value");
+		auto min_value = eval_float("Min Value");
+		auto max_value = eval_float("Max Value");
+		auto mean = eval_float("Mean");
+		auto stddev = eval_float("Standard Deviation");
+
+		std::mt19937 rng(19993754);
+
+		if (attribute_type != ATTR_TYPE_VEC3) {
+			std::stringstream ss;
+			ss << "Only 3D Vector attributes are supported for now!";
+
+			this->add_warning(ss.str());
+			return;
+		}
+
+		for (Primitive *prim : primitive_iterator(m_collection)) {
+			auto attribute = prim->attribute(name, attribute_type);
+
+			if (!attribute) {
+				std::stringstream ss;
+				ss << prim->name() << " does not have an attribute named \"" << name
+				   << "\" of type " << static_cast<int>(attribute_type);
+
+				this->add_warning(ss.str());
+				continue;
+			}
+
+			switch (distribution) {
+				case DIST_CONSTANT:
+				{
+					for (size_t i = 0; i < attribute->size(); ++i) {
+						attribute->vec3(i, glm::vec3{value, value, value});
+					}
+
+					break;
+				}
+				case DIST_UNIFORM:
+				{
+					std::uniform_real_distribution<float> dist(min_value, max_value);
+
+					for (size_t i = 0; i < attribute->size(); ++i) {
+						attribute->vec3(i, glm::vec3{dist(rng), dist(rng), dist(rng)});
+					}
+
+					break;
+				}
+				case DIST_GAUSSIAN:
+				{
+					std::normal_distribution<float> dist(mean, stddev);
+
+					for (size_t i = 0; i < attribute->size(); ++i) {
+						attribute->vec3(i, glm::vec3{dist(rng), dist(rng), dist(rng)});
+					}
+
+					break;
+				}
+			}
+		}
+	}
+};
+
+/* ************************************************************************** */
+
 void register_builtin_nodes(NodeFactory *factory)
 {
 	REGISTER_NODE("Geometry", "Box", CreateBoxNode);
@@ -1093,4 +1350,8 @@ void register_builtin_nodes(NodeFactory *factory)
 	REGISTER_NODE("Geometry", "Color", ColorNode);
 	REGISTER_NODE("Geometry", "Merge Collection", CollectionMergeNode);
 	REGISTER_NODE("Geometry", "Point Cloud", CreatePointCloudNode);
+
+	REGISTER_NODE("Attribute", "Attribute Create", CreateAttributeNode);
+	REGISTER_NODE("Attribute", "Attribute Delete", DeleteAttributeNode);
+	REGISTER_NODE("Attribute", "Attribute Randomise", RandomiseAttributeNode);
 }
