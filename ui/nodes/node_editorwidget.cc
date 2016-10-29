@@ -86,6 +86,7 @@ QtNodeEditor::QtNodeEditor(QWidget *parent)
 	m_rubberband_selection = false;
 	m_context_menu_enabled = true;
 	m_context_menu = new QMenu(this);
+	m_context_menu->addAction(new QAction(NODE_ENTER_OBJECT, this));
 	m_context_menu->addAction(new QAction(NODE_ACTION_DELETE, this));
 	m_context_menu->addAction(new QAction(NODE_ACTION_CENTER, this));
 	m_zoom_sub_menu = m_context_menu->addMenu(NODE_ACTION_ZOOM);
@@ -127,8 +128,6 @@ QtNodeEditor::QtNodeEditor(QWidget *parent)
 
 	m_context_menu->addAction(new QAction(NODE_ACTION_COLLAPSE_ALL, this));
 	m_context_menu->addAction(new QAction(NODE_ACTION_EXPAND_ALL, this));
-	m_context_menu->addAction(new QAction(NODE_ACTION_CENTER, this));
-	m_context_menu->addAction(new QAction(NODE_ENTER_OBJECT, this));
 
 	setMenuZoomEnabled(true);
 	setMenuCollapseExpandEnabled(true);
@@ -398,14 +397,23 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 		}
 		case Qt::RightButton:
 		{
-			if (m_context_menu_enabled) {
+			if (!m_context_menu_enabled) {
+				return true;
+			}
+
+			const auto &item = itemAtExceptActiveConnection(mouseEvent->scenePos());
+
+			if (item == nullptr) {
+				deselectAll();
+			}
+
+			const auto num_nodes_selected = m_selected_nodes.size();
+
+			if (num_nodes_selected == 0) {
 				QPoint pos;
 				pos.setX(mouseEvent->lastScreenPos().x());
 				pos.setY(mouseEvent->lastScreenPos().y());
 				showContextMenu(pos);
-			}
-			else {
-				deselectAll();
 			}
 
 			return true;
@@ -1050,19 +1058,15 @@ void QtNodeEditor::showContextMenu(const QPoint &pos)
 	const auto &nodesSelected = !m_selected_nodes.isEmpty();
 	const auto &itemsSelected = nodesSelected || !m_selected_connections.isEmpty();
 
-	QFont font;
-	/* Italic when no selected items available */
-	font.setItalic(!itemsSelected);
-
 	for (auto &action : actions) {
-		if (action->text() == NODE_ACTION_DELETE) {
-			action->setFont(font);
-			action->setEnabled(itemsSelected);
+		if (action->text() == NODE_ENTER_OBJECT) {
+			action->setVisible(nodesSelected);
+			continue;
 		}
 
-		if (action->text() == NODE_ENTER_OBJECT) {
-			action->setFont(font);
-			action->setEnabled(nodesSelected);
+		if (action->text() == NODE_ACTION_DELETE) {
+			action->setVisible(itemsSelected);
+			continue;
 		}
 	}
 
