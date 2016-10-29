@@ -1331,6 +1331,98 @@ public:
 
 /* ************************************************************************** */
 
+#include <kamikaze/segmentprim.h>
+
+class FurNode : public Node {
+public:
+	FurNode()
+	    : Node("Fur")
+	{
+		addInput("input");
+		addOutput("output");
+
+		add_prop("Segment", property_type::prop_int);
+		set_prop_default_value_int(1);
+		set_prop_min_max(1, 10);
+		set_prop_tooltip("Number of segments in each generated curve.");
+
+		add_prop("Size", property_type::prop_float);
+		set_prop_default_value_float(1);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_tooltip("Size of each segment.");
+
+		add_prop("Normal", property_type::prop_vec3);
+		set_prop_default_value_vec3(glm::vec3{0.0f, 1.0f, 0.0f});
+		set_prop_min_max(-1.0f, 1.0f);
+		set_prop_tooltip("Direction of the generated curves.");
+	}
+
+	void process() override
+	{
+		if (!getInputCollection("input")) {
+			return;
+		}
+
+		auto iter = primitive_iterator(m_collection, Mesh::id);
+
+		if (iter.get() == nullptr) {
+			this->add_warning("No input mesh found!");
+			return;
+		}
+
+		auto input_mesh = static_cast<Mesh *>(iter.get());
+		auto input_points = input_mesh->points();
+
+		const auto segment_number = eval_int("Segment");
+		const auto segment_normal = eval_vec3("Normal");
+		const auto segment_size = eval_float("Size");
+
+		auto segment_prim = static_cast<SegmentPrim *>(m_collection->build("SegmentPrim"));
+		auto output_edges = segment_prim->edges();
+		output_edges->reserve(input_points->size() * segment_number);
+
+		auto output_points = segment_prim->points();
+		auto total_points = input_points->size() * (segment_number + 1);
+		output_points->reserve(total_points);
+
+		auto num_points = 0;
+		auto head = 0;
+
+		for (size_t i = 0; i < input_points->size(); ++i) {
+			auto point = (*input_points)[i];
+
+			output_points->push_back(point);
+			++num_points;
+
+			for (int j = 0; j < segment_number; ++j, ++num_points) {
+				point += (segment_size * segment_normal);
+				output_points->push_back(point);
+
+				output_edges->push_back(glm::uvec2{head, ++head});
+			}
+
+			++head;
+		}
+
+		if (num_points != total_points) {
+			std::stringstream ss;
+
+			if (num_points < total_points) {
+				ss << "Overallocation of points, allocated: " << total_points
+				   << ", final total: " << num_points;
+			}
+			else if (num_points > total_points) {
+				ss << "Underallocation of points, allocated: " << total_points
+				   << ", final total: " << num_points;
+			}
+
+			this->add_warning(ss.str());
+		}
+	}
+};
+
+/* ************************************************************************** */
+
 void register_builtin_nodes(NodeFactory *factory)
 {
 	REGISTER_NODE("Geometry", "Box", CreateBoxNode);
@@ -1346,6 +1438,7 @@ void register_builtin_nodes(NodeFactory *factory)
 	REGISTER_NODE("Geometry", "Color", ColorNode);
 	REGISTER_NODE("Geometry", "Merge Collection", CollectionMergeNode);
 	REGISTER_NODE("Geometry", "Point Cloud", CreatePointCloudNode);
+	REGISTER_NODE("Geometry", "Fur", FurNode);
 
 	REGISTER_NODE("Attribute", "Attribute Create", CreateAttributeNode);
 	REGISTER_NODE("Attribute", "Attribute Delete", DeleteAttributeNode);

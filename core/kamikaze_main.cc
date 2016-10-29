@@ -28,6 +28,7 @@
 #include <kamikaze/mesh.h>
 #include <kamikaze/primitive.h>
 #include <kamikaze/prim_points.h>
+#include <kamikaze/segmentprim.h>
 
 #include <utils/filesystem.h>
 
@@ -106,6 +107,7 @@ void Main::initialize()
 
 		Mesh::id = REGISTER_PRIMITIVE("Mesh", Mesh);
 		PrimPoints::id = REGISTER_PRIMITIVE("PrimPoints", PrimPoints);
+		SegmentPrim::id = REGISTER_PRIMITIVE("SegmentPrim", SegmentPrim);
 	}
 }
 

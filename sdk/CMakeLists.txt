@@ -68,6 +68,7 @@ set(HEADERS
 	prim_points.h
 	primitive.h
 	renderbuffer.h
+	segmentprim.h
 	utils_glm.h
 	util_parallel.h
 	util_render.h
@@ -87,6 +88,7 @@ add_library(kamikaze SHARED
 	prim_points.cc
 	primitive.cc
 	renderbuffer.cc
+	segmentprim.cc
 
 	${HEADERS}
 )
