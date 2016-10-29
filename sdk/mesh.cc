@@ -72,6 +72,7 @@ Mesh::Mesh()
 
 Mesh::Mesh(const Mesh &other)
     : Primitive(other)
+    , m_renderbuffer(nullptr)
 {
 	/* Copy points. */
 	auto points = other.points();

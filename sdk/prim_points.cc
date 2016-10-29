@@ -75,6 +75,7 @@ PrimPoints::PrimPoints()
 
 PrimPoints::PrimPoints(const PrimPoints &other)
     : Primitive(other)
+    , m_renderbuffer(nullptr)
 {
 	/* Copy points. */
 	auto points = other.points();
