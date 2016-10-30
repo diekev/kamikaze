@@ -24,10 +24,11 @@
 
 #include "persona.h"
 
-void Persona::add_prop(std::string name, property_type type)
+void Persona::add_prop(std::string name, std::string ui_name, property_type type)
 {
 	Property prop;
 	prop.name = std::move(name);
+	prop.ui_name = std::move(ui_name);
 	prop.type = type;
 	prop.visible = true;
 

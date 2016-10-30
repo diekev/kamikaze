@@ -63,6 +63,7 @@ struct EnumProperty {
 
 struct Property {
 	std::string name;
+	std::string ui_name;
 	std::string tooltip;
 	property_type type;
 
@@ -85,7 +86,7 @@ class Persona {
 public:
 	virtual ~Persona() = default;
 
-	void add_prop(std::string name, property_type type);
+	void add_prop(std::string name, std::string ui_name, property_type type);
 
 	void set_prop_visible(const std::string &prop_name, bool visible);
 
