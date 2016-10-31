@@ -281,18 +281,27 @@ bool QtNodeEditor::eventFilter(QObject *object, QEvent *event)
 
 	switch (static_cast<int>(event->type())) {
 		case QEvent::GraphicsSceneMousePress:
-			mouseClickHandler(mouseEvent);
+		{
 			this->set_active();
+			mouseClickHandler(mouseEvent);
 			break;
+		}
 		case QEvent::GraphicsSceneMouseDoubleClick:
+		{
+			this->set_active();
 			mouseDoubleClickHandler(mouseEvent);
 			break;
+		}
 		case QEvent::GraphicsSceneMouseMove:
+		{
 			mouseMoveHandler(mouseEvent);
 			break;
+		}
 		case QEvent::GraphicsSceneMouseRelease:
+		{
 			mouseReleaseHandler(mouseEvent);
 			break;
+		}
 	}
 
 	return QObject::eventFilter(object, event);
