@@ -92,3 +92,70 @@ static void topology_sort(const std::vector<NodeType *> &nodes, std::vector<Node
 		}
 	}
 }
+
+template <typename NodeType>
+static void topology_sort_layout(const std::vector<NodeType *> &nodes, std::vector<NodeType *> &r_stack)
+{
+	r_stack.clear();
+	r_stack.reserve(nodes.size());
+
+	/* 1. Store each node degree in an array. */
+	std::vector<NodeType *> stack;
+	std::unordered_map<NodeType *, std::pair<int, bool>> node_degrees;
+
+	int degree;
+
+	for (auto node : nodes) {
+		if (!is_linked(node)) {
+			continue;
+		}
+
+		/* 2. initialize a stack with all out-degree zero nodes */
+
+		if (is_zero_out_degree(node)) {
+			stack.push_back(node);
+			node_degrees[node] = std::make_pair(-1, true);
+		}
+		else {
+			degree = get_degree(node);
+			node_degrees[node] = std::make_pair(degree, false);
+		}
+	}
+
+	/* 3. While there are vertices remaining in the stack... */
+	while (!stack.empty()) {
+		/* 3a. ...dequeue and output a node... */
+		auto node = stack.back();
+		r_stack.push_back(node);
+		stack.pop_back();
+
+		/* Get vertices adjacent to this vertex. */
+		for (size_t i = 0, e = num_inputs(node); i < e; ++i) {
+			auto socket = get_input(node, i);
+
+			/* This input is not linked, skip. */
+			if (!is_linked(socket)) {
+				continue;
+			}
+
+			/* Get vertex from which this link comes. */
+			auto parent = get_link_parent(socket);
+			auto &degree_pair = node_degrees[parent];
+
+			/* If already enqueued, skip. */
+			if (degree_pair.second) {
+				continue;
+			}
+
+			/* 3b. ...reduce out-degree of adjacent vertex by 1... */
+			degree_pair.first -= 1;
+			increment_level(parent);
+
+			/* 3c. ...enqueue vertex if out-degree became zero. */
+			if (degree_pair.first == 0) {
+				stack.push_back(parent);
+				degree_pair.second = true;
+			}
+		}
+	}
+}

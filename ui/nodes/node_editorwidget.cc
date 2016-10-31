@@ -667,6 +667,9 @@ void QtNodeEditor::keyPressEvent(QKeyEvent *event)
 			m_add_node_menu->popup(QCursor::pos());
 		}
 	}
+	else if (event->key() == Qt::Key_L) {
+		this->auto_layout();
+	}
 }
 
 void QtNodeEditor::rubberbandSelection(QGraphicsSceneMouseEvent *mouseEvent)
@@ -1429,6 +1432,109 @@ void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, Q
 void QtNodeEditor::sendNotification() const
 {
 	auto scene = m_context->scene;
+	scene->notify_listeners(event_type::node | event_type::modified);
+}
+
+struct NodeData {
+	Node *node = nullptr;
+	int level = 0;
+};
+
+static inline auto is_linked(const NodeData *data)
+{
+	auto node = data->node;
+	return node->isLinked();
+}
+
+static inline auto is_linked(InputSocket *socket)
+{
+	return socket->link != nullptr;
+}
+
+static inline auto get_input(const NodeData *data, size_t index)
+{
+	auto node = data->node;
+	return node->input(index);
+}
+
+static inline auto get_link_parent(InputSocket *socket)
+{
+	return socket->link->parent;
+}
+
+static inline auto num_inputs(const NodeData *data)
+{
+	auto node = data->node;
+	return node->inputs().size();
+}
+
+static inline auto is_zero_out_degree(const NodeData *data)
+{
+	auto node = data->node;
+	return node->outputs().size() == 0;
+}
+
+static inline auto get_degree(const NodeData *data)
+{
+	auto node = data->node;
+	auto degree = 0;
+
+	for (OutputSocket *socket : node->outputs()) {
+		degree += socket->links.size();
+	}
+
+	return degree;
+}
+
+static inline auto increment_level(NodeData *data)
+{
+	data->level += 1;
+}
+
+#include "graphs/graph_tools.h"
+
+void QtNodeEditor::auto_layout() const
+{
+	auto scene = m_context->scene;
+
+	if (m_context->eval_ctx->edit_mode) {
+		auto object = static_cast<Object *>(scene->active_node());
+		auto graph = object->graph();
+
+		const auto &m_nodes = graph->nodes();
+
+		/* Init data. */
+		std::vector<NodeData *> nodes(m_nodes.size());
+
+		std::transform(m_nodes.begin(), m_nodes.end(), nodes.begin(),
+		               [](const std::unique_ptr<Node> &node) -> NodeData*
+		{
+			auto data = new NodeData;
+			data->node = node.get();
+			data->level = 0;
+			return data;
+		});
+
+		/* Sort the whole graph. */
+		std::vector<NodeData *> stack;
+		topology_sort_layout(nodes, stack);
+
+		/* Assign level to each node. */
+
+		auto xpos = 0;
+		auto ypos = 0;
+		auto offset = 250;
+
+		for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter) {
+			NodeData *data = *iter;
+			auto node = data->node;
+
+			node->xpos(xpos);
+			node->ypos(ypos);
+			xpos += offset;
+		}
+	}
+
 	scene->notify_listeners(event_type::node | event_type::modified);
 }
 

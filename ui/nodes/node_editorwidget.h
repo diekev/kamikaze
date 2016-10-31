@@ -182,6 +182,7 @@ private:
 
 	void enterObjectNode(QAction *action);
 
+	void auto_layout() const;
 protected:
 	/* Event handling */
 	bool eventFilter(QObject *object, QEvent *event) override;
