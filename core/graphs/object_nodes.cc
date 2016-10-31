@@ -935,7 +935,7 @@ public:
 
 	bool update_properties() override
 	{
-		auto method = eval_int("Fill Method");
+		auto method = eval_int("fill_method");
 
 		if (method == COLOR_NODE_UNIQUE) {
 			set_prop_visible("color", true);
@@ -974,7 +974,7 @@ public:
 			}
 
 			if (method == COLOR_NODE_UNIQUE) {
-				const auto &color = eval_vec3("Color");
+				const auto &color = eval_vec3("color");
 
 				for (size_t i = 0, e = colors->size(); i < e; ++i) {
 					colors->vec3(i, color);
