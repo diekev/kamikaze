@@ -135,3 +135,35 @@ private Q_SLOTS:
 Q_SIGNALS:
 	void textChanged(const QString &text);
 };
+
+/* ********************************** */
+
+class QMenu;
+
+class ListSelector : public QWidget {
+	Q_OBJECT
+
+	QHBoxLayout *m_layout;
+	QLineEdit *m_line_edit;
+	QPushButton *m_push_button;
+	QMenu *m_list_widget;
+
+	bool m_input;
+
+public:
+	explicit ListSelector(QWidget *parent = nullptr);
+
+	~ListSelector();
+
+	void setValue(const QString &text);
+
+	void addField(const QString &text);
+
+private Q_SLOTS:
+	void showList();
+	void handleClick();
+	void updateText();
+
+Q_SIGNALS:
+	void textChanged(const QString &text);
+};

@@ -229,6 +229,12 @@ void PropertiesWidget::drawProperties(Persona *persona, bool set_context)
 				             any_cast<std::string>(&prop.data),
 				             any_cast<std::string>(prop.data).c_str());
 				break;
+			case property_type::prop_list:
+				list_selection_param(m_callback,
+				                     prop.ui_name.c_str(),
+				                     prop.enum_items,
+				                     any_cast<std::string>(&prop.data));
+				break;
 		}
 
 		if (!prop.tooltip.empty()) {

@@ -170,3 +170,22 @@ void FileParam::updateValuePtr(const QString &value)
 	*m_value_ptr = value.toStdString();
 	Q_EMIT(paramChanged());
 }
+
+/* ********************************** */
+
+ListParam::ListParam(QWidget *parent)
+    : ListSelector(parent)
+{
+	connect(this, SIGNAL(textChanged(const QString &)), this, SLOT(updateValuePtr(const QString &)));
+}
+
+void ListParam::valuePtr(std::string *ptr)
+{
+	m_value_ptr = ptr;
+}
+
+void ListParam::updateValuePtr(const QString &value)
+{
+	*m_value_ptr = value.toStdString();
+	Q_EMIT(paramChanged());
+}

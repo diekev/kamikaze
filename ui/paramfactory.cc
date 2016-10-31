@@ -121,3 +121,16 @@ void output_file_param(ParamCallback &cb, const char *name, std::string *ptr)
 
 	cb.addWidget(param, name);
 }
+
+void list_selection_param(ParamCallback &cb, const char *name, const EnumProperty &prop, std::string *ptr)
+{
+	auto param = new ListParam();
+	param->valuePtr(ptr);
+	param->setValue(ptr->c_str());
+
+	for (const EnumPair &item : prop.m_props) {
+		param->addField(item.name.c_str());
+	}
+
+	cb.addWidget(param, name);
+}

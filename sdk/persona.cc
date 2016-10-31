@@ -49,6 +49,7 @@ void Persona::add_prop(std::string name, std::string ui_name, property_type type
 		case property_type::prop_input_file:
 		case property_type::prop_output_file:
 		case property_type::prop_string:
+		case property_type::prop_list:
 			prop.data = any(std::string(""));
 			break;
 	}
@@ -143,9 +144,22 @@ void Persona::set_prop_enum_values(const EnumProperty &enum_prop)
 {
 	Property &prop = this->m_props.back();
 
-	assert(prop.type == property_type::prop_enum);
+	assert(prop.type == property_type::prop_enum || prop.type == property_type::prop_list);
 
 	prop.enum_items = enum_prop;
+}
+
+void Persona::set_prop_enum_values(const std::string &prop_name, const EnumProperty &enum_prop)
+{
+	Property *prop = find_property(prop_name);
+
+	if (!prop) {
+		return;
+	}
+
+	assert(prop->type == property_type::prop_enum || prop->type == property_type::prop_list);
+
+	prop->enum_items = enum_prop;
 }
 
 void Persona::set_prop_default_value_int(int value)
@@ -181,7 +195,8 @@ void Persona::set_prop_default_value_string(const std::string &value)
 
 	assert(prop.type == property_type::prop_string ||
 	       prop.type == property_type::prop_input_file ||
-	       prop.type == property_type::prop_output_file);
+	       prop.type == property_type::prop_output_file ||
+	       prop.type == property_type::prop_list);
 
 	*(prop.data.as_ptr<std::string>()) = value;
 }

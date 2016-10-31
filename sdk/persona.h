@@ -41,6 +41,7 @@ enum class property_type {
 	prop_string,
 	prop_input_file,
 	prop_output_file,
+	prop_list,
 };
 
 struct EnumPair {
@@ -107,6 +108,7 @@ public:
 	void set_prop_min_max(const float min, const float max);
 
 	void set_prop_enum_values(const EnumProperty &enum_prop);
+	void set_prop_enum_values(const std::string &prop_name, const EnumProperty &enum_prop);
 
 	void set_prop_default_value_int(int value);
 
