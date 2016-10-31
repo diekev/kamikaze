@@ -289,7 +289,11 @@ bool QtNodeEditor::eventFilter(QObject *object, QEvent *event)
 		case QEvent::GraphicsSceneMouseDoubleClick:
 		{
 			this->set_active();
-			mouseDoubleClickHandler(mouseEvent);
+
+			if (mouseDoubleClickHandler(mouseEvent)) {
+				return true;
+			}
+
 			break;
 		}
 		case QEvent::GraphicsSceneMouseMove:
@@ -516,11 +520,11 @@ bool QtNodeEditor::mouseDoubleClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 				case NODE_VALUE_TYPE_HEADER_TITLE:
 				{
 					/* This is handled in TextItem::mouseDoubleClickEvent. */
-					break;
+					return false;
 				}
 				default:
 				{
-					break;
+					return false;
 				}
 			}
 		}
