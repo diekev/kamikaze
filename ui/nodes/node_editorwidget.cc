@@ -826,18 +826,21 @@ void QtNodeEditor::removeNode(QtNode *node)
 
 	if (is_object_node(node)) {
 		auto object = static_cast<ObjectNodeItem *>(node)->scene_node();
-
-		/* TODO: first we delete the node then the object, so we avoid issues
-		 * when the scene sends the notifier that the object was deleted. */
-		m_graphics_scene->removeItem(node);
-		delete node;
-
 		m_context->scene->removeObject(object);
 	}
 	else {
-		removeNodeEx(node);
-		m_graphics_scene->removeItem(node);
-		delete node;
+		auto scene = m_context->scene;
+		auto object = static_cast<Object *>(scene->active_node());
+		auto graph = object->graph();
+
+		const auto was_connected = node->getNode()->isLinked();
+
+		graph->remove(node->getNode());
+
+		if (was_connected) {
+			scene->evalObjectDag(*m_context, object);
+		}
+
 		m_context->scene->notify_listeners(event_type::node | event_type::removed);
 	}
 }
@@ -877,18 +880,6 @@ void QtNodeEditor::removeConnection(QtConnection *connection)
 	                  target.first, target.second->getPortName(), true);
 }
 
-void QtNodeEditor::connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock, bool notify, bool connect_graph)
-{
-	from->createActiveConnection(from_sock, from_sock->pos());
-	to_sock->createConnection(from->m_active_connection);
-
-	from->m_active_connection = nullptr;
-
-	if (connect_graph) {
-		nodesConnected(from, from_sock->getPortName(), to, to_sock->getPortName(), notify);
-	}
-}
-
 void QtNodeEditor::splitConnectionWithNode(QtNode *node)
 {
 	const auto &connection = m_hover_connection;
@@ -897,15 +888,32 @@ void QtNodeEditor::splitConnectionWithNode(QtNode *node)
 	const auto &base = pairs.first;
 	const auto &target = pairs.second;
 
+	auto scene = m_context->scene;
+	auto object = static_cast<Object *>(scene->active_node());
+	auto graph = object->graph();
+
+	auto node_from = base.first->getNode();
+	auto node_to = target.first->getNode();
+
 	/* remove connection */
-	connectionRemoved(base.first, base.second->getPortName(),
-	                  target.first, target.second->getPortName(), false);
+	auto output_socket = node_from->output(base.second->getPortName().toStdString());
+	auto input_socket = node_to->input(target.second->getPortName().toStdString());
+
+	assert((output_socket != nullptr) && (input_socket != nullptr));
+
+	graph->disconnect(output_socket, input_socket);
+
+	auto middle_node = node->getNode();
 
 	/* connect from base port to first input port in node */
-	connectNodes(base.first, base.second, node, node->input(0), false);
+	graph->connect(output_socket, middle_node->input(0));
 
 	/* connect from first output port in node to target port */
-	connectNodes(node, node->output(0), target.first, target.second, true);
+	graph->connect(middle_node->output(0), input_socket);
+
+	/* notify */
+	scene->evalObjectDag(*m_context, object);
+	scene->notify_listeners(event_type::node | event_type::modified);
 }
 
 void QtNodeEditor::connectionEstablished(QtConnection *connection)
@@ -1296,7 +1304,10 @@ void QtNodeEditor::update_state(event_type event)
 
 					assert(from_port != nullptr && to_port != nullptr);
 
-					connectNodes(from_node_item, from_port, to_node_item, to_port, false, false);
+					from_node_item->createActiveConnection(from_port, from_port->pos());
+					to_port->createConnection(from_node_item->m_active_connection);
+
+					from_node_item->m_active_connection = nullptr;
 				}
 			}
 		}
@@ -1343,21 +1354,6 @@ void QtNodeEditor::update_state(event_type event)
 void QtNodeEditor::setActiveObject(ObjectNodeItem *node)
 {
 	m_context->scene->set_active_node(node->scene_node());
-}
-
-void QtNodeEditor::removeNodeEx(QtNode *node)
-{
-	auto scene = m_context->scene;
-	auto object = static_cast<Object *>(scene->active_node());
-	auto graph = object->graph();
-
-	const auto was_connected = node->getNode()->isLinked();
-
-	graph->remove(node->getNode());
-
-	if (was_connected) {
-		scene->evalObjectDag(*m_context, object);
-	}
 }
 
 void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to, bool notify)
