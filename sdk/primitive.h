@@ -231,6 +231,46 @@ void new_kamikaze_prims(PrimitiveFactory *factory);
 
 /* ********************************************** */
 
+class SubCollection {
+	std::vector<Primitive *> m_collection = {};
+	std::string m_name = "";
+
+public:
+	SubCollection(const std::string &name);
+
+	/**
+	 * @brief add  Add a primitive to this subcollection.
+	 * @param primitive The primitive to add.
+	 */
+	void add(Primitive *primitive);
+
+	/**
+	 * @brief remove Remove a primitive from this subcollection.
+	 * @param primitive The primitive to remove.
+	 */
+	void remove(Primitive *primitive);
+
+	/**
+	 * @brief name The name of this subcollection.
+	 * @return The name of this subcollection.
+	 */
+	const std::string &name() const;
+
+	/**
+	 * @brief empty Check whether this subcollection is true or false.
+	 * @return True if this subcollection is empty, false otherwise.
+	 */
+	const bool empty() const;
+
+	/**
+	 * @brief primitives The primitives contained in this subcollection.
+	 * @return A vector containing the primitive contained in this subcollection.
+	 */
+	const std::vector<Primitive *> &primitives() const;
+};
+
+/* ********************************************** */
+
 class PrimitiveCollection {
 	std::vector<Primitive *> m_collection = {};
 	PrimitiveFactory *m_factory = nullptr;
@@ -238,6 +278,8 @@ class PrimitiveCollection {
 
 	friend class primitive_iterator;
 	PrimitiveCollection() = default;
+
+	std::unordered_map<std::string, SubCollection *> m_subcollection;
 
 public:
 	explicit PrimitiveCollection(PrimitiveFactory *factory);
@@ -252,7 +294,7 @@ public:
 	Primitive *build(const std::string &key);
 
 	/**
-	 * @brief add  Add a primitve to this collection.
+	 * @brief add  Add a primitive to this collection.
 	 * @param prim The primitive to add.
 	 */
 	void add(Primitive *prim);
@@ -316,6 +358,21 @@ public:
 	 * @todo Not nice, need a way to create valid temporary collections.
 	 */
 	PrimitiveFactory *factory() const;
+
+	/* --------------------------- subcollection ---------------------------- */
+
+	/**
+	 * @brief create_subcollection Create a subcollection in this collection.
+	 * @return Return a pointer to a newly created subcollection.
+	 */
+	SubCollection *create_subcollection(const std::string &name);
+
+	/**
+	 * @brief destroy_subcollection Destroy a subcollection from this collection.
+	 */
+	void destroy_subcollection(SubCollection *sub_collection);
+
+	/* ------------------------- reference counting ------------------------- */
 
 	/* Reference counting, NOT to be used from plugins. They are used to
 	 * indicate that primitives are ready to be deleted.

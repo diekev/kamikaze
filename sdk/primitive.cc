@@ -247,6 +247,38 @@ void PrimitiveCache::clear()
 
 /* ********************************************** */
 
+SubCollection::SubCollection(const std::string &name)
+    : m_name(name)
+{}
+
+void SubCollection::add(Primitive *primitive)
+{
+	m_collection.push_back(primitive);
+}
+
+void SubCollection::remove(Primitive *primitive)
+{
+	auto iter = std::find(m_collection.begin(), m_collection.end(), primitive);
+	m_collection.erase(iter);
+}
+
+const std::string &SubCollection::name() const
+{
+	return m_name;
+}
+
+const bool SubCollection::empty() const
+{
+	return m_collection.empty();
+}
+
+const std::vector<Primitive *> &SubCollection::primitives() const
+{
+	return m_collection;
+}
+
+/* ********************************************** */
+
 PrimitiveCollection::PrimitiveCollection(PrimitiveFactory *factory)
     : PrimitiveCollection()
 {
@@ -358,6 +390,19 @@ void PrimitiveCollection::merge_collection(PrimitiveCollection &coll)
 PrimitiveFactory *PrimitiveCollection::factory() const
 {
 	return m_factory;
+}
+
+SubCollection *PrimitiveCollection::create_subcollection(const std::string &name)
+{
+	auto sub_collection = new SubCollection(name);
+	m_subcollection[name] = sub_collection;
+	return sub_collection;
+}
+
+void PrimitiveCollection::destroy_subcollection(SubCollection *sub_collection)
+{
+	m_subcollection.erase(sub_collection->name());
+	delete sub_collection;
 }
 
 int PrimitiveCollection::refcount() const
