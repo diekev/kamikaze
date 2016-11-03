@@ -869,7 +869,7 @@ void QtNodeEditor::removeNode(QtNode *node)
 
 	if (is_object_node(node)) {
 		auto object = static_cast<ObjectNodeItem *>(node)->scene_node();
-		m_context->scene->removeObject(object);
+		m_context->scene->remove_node(object);
 	}
 	else {
 		auto scene = m_context->scene;

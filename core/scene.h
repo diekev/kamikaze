@@ -48,6 +48,12 @@ class Scene : public Listened {
 	SceneNode *m_active_node = nullptr;
 	int m_mode = 0;
 
+	/* The root of the hierarchy, "/", it only has children node. */
+	SceneNode *m_root;
+
+	/* The node that is currently viewed/edited. */
+	SceneNode *m_current_node;
+
 	Depsgraph m_depsgraph{};
 
 	int m_start_frame = 0;
@@ -58,14 +64,14 @@ class Scene : public Listened {
 	int m_flags = 0;
 
 public:
-	Scene() = default;
+	Scene();
 	~Scene() = default;
 
 	SceneNode *active_node();
 	void set_active_node(SceneNode *node);
 
-	void addObject(SceneNode *node);
-	void removeObject(SceneNode *node);
+	void add_node(SceneNode *node);
+	void remove_node(SceneNode *node);
 
 	void intersect(const Ray &ray);
 

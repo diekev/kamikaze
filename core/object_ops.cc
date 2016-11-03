@@ -44,7 +44,7 @@ void AddObjectCmd::execute(const Context &context)
 	m_object->name(m_name.c_str());
 
 	assert(m_scene != nullptr);
-	m_scene->addObject(m_object);
+	m_scene->add_node(m_object);
 }
 
 void AddObjectCmd::undo()
@@ -122,7 +122,7 @@ void AddPresetObjectCmd::execute(const Context &context)
 	graph->connect(node->output(0), graph->output()->input(0));
 
 	if (!context.eval_ctx->edit_mode) {
-		m_scene->addObject(m_object);
+		m_scene->add_node(m_object);
 		m_scene->evalObjectDag(context, m_object);
 	}
 	else {

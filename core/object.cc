@@ -135,3 +135,18 @@ void Object::parent(Object *parent)
 {
 	m_parent = parent;
 }
+
+std::string Object::get_dag_path() const
+{
+	std::string root = "/";
+
+	auto my_parent = parent();
+
+	while (my_parent != nullptr) {
+		root += my_parent->name();
+		root += "/";
+		my_parent = my_parent->parent();
+	}
+
+	return root;
+}

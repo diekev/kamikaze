@@ -66,4 +66,6 @@ public:
 
 	Object *parent() const;
 	void parent(Object *parent);
+
+	std::string get_dag_path() const;
 };

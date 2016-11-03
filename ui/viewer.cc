@@ -252,7 +252,7 @@ void Viewer::keyPressEvent(QKeyEvent *e)
 {
 	switch (e->key()) {
 		case Qt::Key_Delete:
-			m_context->scene->removeObject(m_context->scene->active_node());
+			m_context->scene->remove_node(m_context->scene->active_node());
 			break;
 		default:
 			break;

@@ -30,41 +30,52 @@
 #include <kamikaze/primitive.h>
 #include <kamikaze/util_string.h>
 
-void Scene::removeObject(SceneNode *node)
+Scene::Scene()
+    : m_root(new Object)
+    , m_current_node(m_root)
+{}
+
+void Scene::add_node(SceneNode *node)
 {
-	auto iter = std::find_if(m_nodes.begin(), m_nodes.end(),
-	                         [node](const SceneNodePtr &node_ptr)
-	{
-		return node_ptr.get() == node;
-	});
+	assert(node != nullptr);
 
-	assert(iter != m_nodes.end());
+	/* Make sure node has a unique name. */
+	auto name = node->name;
 
-	notify_listeners(event_type::object | event_type::removed);
+	if (ensureUniqueName(name)) {
+		node->name(name);
+	}
 
+	/* Set node as active. */
+	m_active_node = node;
+
+	/* Add node as the child of the current node. */
+	m_current_node->add_child(node);
+
+	/* Add node to the dependency graph. */
+	m_depsgraph.create_node(node);
+
+	notify_listeners(event_type::object | event_type::added);
+}
+
+void Scene::remove_node(SceneNode *node)
+{
+	assert(node != nullptr);
+
+	/* Add node as the child of the current node. */
+	m_current_node->remove_child(node);
+
+	/* Remove node from the dependency graph. */
 	m_depsgraph.remove_node(node);
 
 	if (node == m_active_node) {
 		m_active_node = nullptr;
 	}
 
-	m_nodes.erase(iter);
-}
+	/* Release memory. */
+	delete node;
 
-void Scene::addObject(SceneNode *node)
-{
-	auto name = node->name();
-
-	if (ensureUniqueName(name)) {
-		node->name(name);
-	}
-
-	m_nodes.push_back(SceneNodePtr(node));
-	m_active_node = node;
-
-	m_depsgraph.create_node(node);
-
-	notify_listeners(event_type::object | event_type::added);
+	notify_listeners(event_type::object | event_type::removed);
 }
 
 void Scene::intersect(const Ray &/*ray*/)
