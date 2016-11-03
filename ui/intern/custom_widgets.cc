@@ -27,6 +27,7 @@
 #include <QDoubleSpinBox>
 #include <QFileDialog>
 #include <QLineEdit>
+#include <QMenu>
 #include <QPushButton>
 #include <QSlider>
 #include <QVBoxLayout>
@@ -239,4 +240,71 @@ void FileSelector::setChoosenFile()
 		m_line_edit->setText(filename);
 		Q_EMIT(textChanged(filename));
 	}
+}
+
+/* ********************************** */
+
+ListSelector::ListSelector(QWidget *parent)
+    : QWidget(parent)
+    , m_layout(new QHBoxLayout(this))
+    , m_line_edit(new QLineEdit(this))
+    , m_push_button(new QPushButton("list", this))
+    , m_list_widget(new QMenu())
+{
+	m_layout->addWidget(m_line_edit);
+	m_layout->addWidget(m_push_button);
+
+	connect(m_push_button, SIGNAL(clicked()), this, SLOT(showList()));
+
+	connect(m_line_edit, SIGNAL(returnPressed()), this, SLOT(updateText()));
+}
+
+ListSelector::~ListSelector()
+{
+	delete m_list_widget;
+}
+
+void ListSelector::addField(const QString &text)
+{
+	auto action = m_list_widget->addAction(text);
+	connect(action, SIGNAL(triggered()), this, SLOT(handleClick()));
+}
+
+void ListSelector::setValue(const QString &text)
+{
+	m_line_edit->setText(text);
+}
+
+void ListSelector::showList()
+{
+	/* Figure out where the bottom left corner of the push is located. */
+	QRect widgetRect = m_push_button->geometry();
+	auto bottom_left = m_push_button->parentWidget()->mapToGlobal(widgetRect.bottomLeft());
+
+	m_list_widget->popup(bottom_left);
+}
+
+void ListSelector::updateText()
+{
+	Q_EMIT(textChanged(m_line_edit->text()));
+}
+
+void ListSelector::handleClick()
+{
+	auto action = qobject_cast<QAction *>(sender());
+
+	if (!action) {
+		return;
+	}
+
+	auto text = m_line_edit->text();
+
+	if (!text.isEmpty()) {
+		text += ",";
+	}
+
+	text += action->text();
+
+	this->setValue(text);
+	Q_EMIT(textChanged(text));
 }

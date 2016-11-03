@@ -71,6 +71,7 @@ class QtNodeEditor : public WidgetBase {
 	bool m_context_menu_enabled;
 	bool m_menu_zoom_enabled;
 	bool m_menu_collapse_expand_enabled;
+	bool m_mouse_down = false;
 
 	/* Cached informations */
 	QtConnection *m_hover_connection;
@@ -145,9 +146,6 @@ public:
 		m_add_node_menu = menu;
 	}
 
-	/* Called for creating new connections, e.g. during node dropping. */
-	void connectNodes(QtNode *from, QtPort *from_sock, QtNode *to, QtPort *to_sock, bool notify, bool connect_graph = true);
-
 	int editor_mode() const
 	{
 		return m_editor_mode;
@@ -170,9 +168,6 @@ private:
 
 	/* Called when an object node is selected. */
 	void setActiveObject(ObjectNodeItem *node);
-
-	/* Called when a node is removed. */
-	void removeNodeEx(QtNode *node);
 
 	/* Called when nodes are connected. */
 	void nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to, bool notify);

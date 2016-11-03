@@ -22,7 +22,7 @@
  *
  */
 
-#include "prim_points.h"
+#include "segmentprim.h"
 
 #include <algorithm>
 #include <ego/utils.h>
@@ -54,11 +54,10 @@ static RenderBuffer *create_point_buffer()
 	renderbuffer->set_shader_params(params);
 
 	ego::Program *program = renderbuffer->program();
-	program->uniform("color", 0.0f, 0.0f, 0.0f, 1.0f);
+	program->uniform("color", 0.0f, 0.0f, 0.0f);
 
 	DrawParams draw_params;
-	draw_params.set_draw_type(GL_POINTS);
-	draw_params.set_point_size(2.0f);
+	draw_params.set_draw_type(GL_LINES);
 
 	renderbuffer->set_draw_params(draw_params);
 
@@ -67,13 +66,13 @@ static RenderBuffer *create_point_buffer()
 
 /* ************************************************************************** */
 
-size_t PrimPoints::id = -1;
+size_t SegmentPrim::id = -1;
 
-PrimPoints::PrimPoints()
+SegmentPrim::SegmentPrim()
     : m_renderbuffer(nullptr)
 {}
 
-PrimPoints::PrimPoints(const PrimPoints &other)
+SegmentPrim::SegmentPrim(const SegmentPrim &other)
     : Primitive(other)
     , m_renderbuffer(nullptr)
 {
@@ -84,42 +83,77 @@ PrimPoints::PrimPoints(const PrimPoints &other)
 	for (auto i = 0ul; i < points->size(); ++i) {
 		m_points[i] = (*points)[i];
 	}
+
+	/* Copy edges. */
+	auto edges = other.edges();
+	m_edges.resize(edges->size());
+
+	for (auto i = 0ul; i < edges->size(); ++i) {
+		m_edges[i] = (*edges)[i];
+	}
 }
 
-PrimPoints::~PrimPoints()
+SegmentPrim::~SegmentPrim()
 {
 	free_renderbuffer(m_renderbuffer);
 }
 
-PointList *PrimPoints::points()
+PointList *SegmentPrim::points()
 {
 	return &m_points;
 }
 
-const PointList *PrimPoints::points() const
+const PointList *SegmentPrim::points() const
 {
 	return &m_points;
 }
 
-Primitive *PrimPoints::copy() const
+EdgeList *SegmentPrim::edges()
 {
-	auto prim = new PrimPoints(*this);
+	return &m_edges;
+}
+
+const EdgeList *SegmentPrim::edges() const
+{
+	return &m_edges;
+}
+
+Primitive *SegmentPrim::copy() const
+{
+	auto prim = new SegmentPrim(*this);
 	prim->tagUpdate();
 
 	return prim;
 }
 
-size_t PrimPoints::typeID() const
+size_t SegmentPrim::typeID() const
 {
-	return PrimPoints::id;
+	return SegmentPrim::id;
 }
 
-void PrimPoints::render(const ViewerContext &context)
+void SegmentPrim::render(const ViewerContext &context)
 {
-	m_renderbuffer->render(context);
+	/* Render vertices. */
+	{
+		DrawParams draw_params;
+		draw_params.set_draw_type(GL_POINTS);
+		draw_params.set_point_size(2.0f);
+
+		m_renderbuffer->set_draw_params(draw_params);
+		m_renderbuffer->render(context);
+	}
+
+	/* Render surface. */
+	{
+		DrawParams draw_params;
+		draw_params.set_draw_type(GL_LINES);
+
+		m_renderbuffer->set_draw_params(draw_params);
+		m_renderbuffer->render(context);
+	}
 }
 
-void PrimPoints::prepareRenderData()
+void SegmentPrim::prepareRenderData()
 {
 	if (!m_need_data_update) {
 		return;
@@ -135,12 +169,22 @@ void PrimPoints::prepareRenderData()
 		m_points[i] = m_points[i] * glm::mat3(m_inv_matrix);
 	}
 
+	auto edgelist = this->edges();
+	auto indices = std::vector<unsigned int>{};
+	indices.reserve(edgelist->size());
+
+	for (auto i = 0ul, ie = edgelist->size(); i < ie; ++i) {
+		const auto &edge = (*edgelist)[i];
+		indices.push_back(edge[0]);
+		indices.push_back(edge[1]);
+	}
+
 	m_renderbuffer->set_vertex_buffer("vertex",
 	                                  m_points.data(),
 	                                  m_points.byte_size(),
-	                                  nullptr,
-	                                  0,
-	                                  m_points.size());
+	                                  &indices[0],
+	                                  indices.size() * sizeof(GLuint),
+	                                  indices.size());
 
 	auto colors = this->attribute("color", ATTR_TYPE_VEC3);
 
@@ -151,7 +195,7 @@ void PrimPoints::prepareRenderData()
 	m_need_data_update = false;
 }
 
-void PrimPoints::computeBBox(glm::vec3 &min, glm::vec3 &max)
+void SegmentPrim::computeBBox(glm::vec3 &min, glm::vec3 &max)
 {
 	for (size_t i = 0, ie = this->points()->size(); i < ie; ++i) {
 		auto vert = m_points[i];

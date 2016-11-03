@@ -30,6 +30,39 @@
 #include "util_render.h"
 #include "util_string.h"
 
+Primitive::Primitive(const Primitive &other)
+    : m_dimensions(other.m_dimensions)
+    , m_scale(other.m_scale)
+    , m_inv_size(other.m_inv_size)
+    , m_rotation(other.m_rotation)
+    , m_min(other.m_min)
+    , m_max(other.m_max)
+    , m_pos(other.m_pos)
+    , m_matrix(other.m_matrix)
+    , m_inv_matrix(other.m_inv_matrix)
+    , m_name(other.m_name)
+    , m_draw_bbox(other.m_draw_bbox)
+    , m_need_update(other.m_need_update)
+    , m_need_data_update(other.m_need_data_update)
+{
+	for (auto attr : m_attributes) {
+		delete attr;
+	}
+
+	m_attributes.clear();
+
+	for (auto attr : other.m_attributes) {
+		this->add_attribute(new Attribute(*attr));
+	}
+}
+
+Primitive::~Primitive()
+{
+	for (auto &attr : m_attributes) {
+		delete attr;
+	}
+}
+
 bool Primitive::intersect(const Ray &ray, float &min) const
 {
 	const auto inv_dir = 1.0f / ray.dir;
@@ -134,6 +167,60 @@ std::string Primitive::name() const
 void Primitive::name(const std::string &name)
 {
 	m_name = name;
+}
+
+void Primitive::add_attribute(Attribute *attr)
+{
+	if (!has_attribute(attr->name(), attr->type())) {
+		m_attributes.push_back(attr);
+	}
+}
+
+Attribute *Primitive::add_attribute(const std::string &name, const AttributeType type, size_t size)
+{
+	auto attr = attribute(name, type);
+
+	if (attr == nullptr) {
+		attr = new Attribute(name, type, size);
+		m_attributes.push_back(attr);
+	}
+
+	return attr;
+}
+
+Attribute *Primitive::attribute(const std::string &name, const AttributeType type)
+{
+	auto iter = std::find_if(m_attributes.begin(), m_attributes.end(),
+	                         [&](Attribute *attr)
+	{
+		return (attr->type() == type) && (attr->name() == name);
+	});
+
+	if (iter == m_attributes.end()) {
+		return nullptr;
+	}
+
+	return *iter;
+}
+
+void Primitive::remove_attribute(const std::string &name, const AttributeType type)
+{
+	auto iter = std::find_if(m_attributes.begin(), m_attributes.end(),
+	                         [&](Attribute *attr)
+	{
+		return (attr->type() == type) && (attr->name() == name);
+	});
+
+	if (iter != m_attributes.end()) {
+		delete *iter;
+	}
+
+	m_attributes.erase(iter);
+}
+
+bool Primitive::has_attribute(const std::string &name, const AttributeType type)
+{
+	return (attribute(name, type) != nullptr);
 }
 
 /* ********************************************** */
@@ -253,6 +340,19 @@ void PrimitiveCollection::destroy(const std::vector<Primitive *> &prims)
 	for (auto prim : prims) {
 		destroy(prim);
 	}
+}
+
+void PrimitiveCollection::copy_collection(const PrimitiveCollection &coll)
+{
+	for (auto prim : primitive_iterator(&coll)) {
+		this->add(prim);
+	}
+}
+
+void PrimitiveCollection::merge_collection(PrimitiveCollection &coll)
+{
+	copy_collection(coll);
+	coll.clear();
 }
 
 PrimitiveFactory *PrimitiveCollection::factory() const

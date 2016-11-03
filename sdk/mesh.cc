@@ -51,7 +51,11 @@ static RenderBuffer *create_surface_buffer()
 	params.add_uniform("MVP");
 	params.add_uniform("N");
 	params.add_uniform("for_outline");
+	params.add_uniform("color");
 	params.add_uniform("has_vcolors");
+
+	ego::Program *program = renderbuffer->program();
+	program->uniform("color", 0.0f, 0.0f, 0.0f);
 
 	renderbuffer->set_shader_params(params);
 
@@ -66,16 +70,33 @@ Mesh::Mesh()
     : Primitive()
     , m_renderbuffer(nullptr)
 {
-	addAttribute("normal", ATTR_TYPE_VEC3);
+	add_attribute("normal", ATTR_TYPE_VEC3, 0);
 	m_need_update = true;
+}
+
+Mesh::Mesh(const Mesh &other)
+    : Primitive(other)
+    , m_renderbuffer(nullptr)
+{
+	/* Copy points. */
+	auto points = other.points();
+	m_point_list.resize(points->size());
+
+	for (auto i = 0ul; i < points->size(); ++i) {
+		m_point_list[i] = (*points)[i];
+	}
+
+	/* Copy points. */
+	auto polys = other.polys();
+	m_poly_list.resize(polys->size());
+
+	for (auto i = 0ul; i < polys->size(); ++i) {
+		m_poly_list[i] = (*polys)[i];
+	}
 }
 
 Mesh::~Mesh()
 {
-	for (auto &attr : m_attributes) {
-		delete attr;
-	}
-
 	free_renderbuffer(m_renderbuffer);
 }
 
@@ -99,40 +120,6 @@ const PolygonList *Mesh::polys() const
 	return &m_poly_list;
 }
 
-Attribute *Mesh::attribute(const std::string &name, AttributeType type)
-{
-	auto iter = std::find_if(m_attributes.begin(), m_attributes.end(),
-	                         [&](Attribute *attr)
-	{
-		return (attr->type() == type) && (attr->name() == name);
-	});
-
-	if (iter == m_attributes.end()) {
-		return nullptr;
-	}
-
-	return *iter;
-}
-
-void Mesh::addAttribute(Attribute *attr)
-{
-	if (attribute(attr->name(), attr->type()) == nullptr) {
-		m_attributes.push_back(attr);
-	}
-}
-
-Attribute *Mesh::addAttribute(const std::string &name, AttributeType type, size_t size)
-{
-	auto attr = attribute(name, type);
-
-	if (attr == nullptr) {
-		attr = new Attribute(name, type, size);
-		m_attributes.push_back(attr);
-	}
-
-	return attr;
-}
-
 void Mesh::update()
 {
 	if (m_need_update) {
@@ -145,41 +132,7 @@ void Mesh::update()
 
 Primitive *Mesh::copy() const
 {
-	auto mesh = new Mesh;
-
-	auto points = mesh->points();
-	points->resize(this->points()->size());
-
-	for (auto i = 0ul; i < points->size(); ++i) {
-		(*points)[i] = m_point_list[i];
-	}
-
-	auto polys = mesh->polys();
-	polys->resize(this->polys()->size());
-
-	for (auto i = 0ul; i < polys->size(); ++i) {
-		(*polys)[i] = m_poly_list[i];
-	}
-
-	/* XXX TODO: we need a better way to copy/update default attributes
-	 * (e.g. normals) */
-	for (auto &attr : mesh->m_attributes) {
-		delete attr;
-	}
-
-	mesh->m_attributes.clear();
-
-	for (const auto &attr : m_attributes) {
-		mesh->addAttribute(new Attribute(*attr));
-	}
-
-	/* XXX - TODO */
-	mesh->pos() = this->pos();
-	mesh->scale() = this->scale();
-	mesh->rotation() = this->rotation();
-	mesh->drawBBox(this->drawBBox());
-	mesh->matrix(this->matrix());
-
+	auto mesh = new Mesh(*this);
 	mesh->tagUpdate();
 
 	return mesh;
@@ -192,7 +145,36 @@ size_t Mesh::typeID() const
 
 void Mesh::render(const ViewerContext &context)
 {
-	m_renderbuffer->render(context);
+	/* Render vertices. */
+	{
+		DrawParams draw_params;
+		draw_params.set_draw_type(GL_POINTS);
+		draw_params.set_point_size(2.0f);
+
+		m_renderbuffer->set_draw_params(draw_params);
+
+		ego::Program *program = m_renderbuffer->program();
+		program->enable();
+		program->uniform("color", 0.0f, 0.0f, 0.0f);
+		program->disable();
+
+		m_renderbuffer->render(context);
+	}
+
+	/* Render surface. */
+	{
+		DrawParams draw_params;
+		draw_params.set_draw_type(GL_TRIANGLES);
+
+		m_renderbuffer->set_draw_params(draw_params);
+
+		ego::Program *program = m_renderbuffer->program();
+		program->enable();
+		program->uniform("color", 1.0f, 1.0f, 1.0f);
+		program->disable();
+
+		m_renderbuffer->render(context);
+	}
 }
 
 void Mesh::prepareRenderData()
@@ -203,12 +185,6 @@ void Mesh::prepareRenderData()
 
 	if (!m_renderbuffer) {
 		m_renderbuffer = create_surface_buffer();
-	}
-
-	auto normals = this->attribute("normal", ATTR_TYPE_VEC3);
-
-	if (normals->size() != this->points()->size()) {
-		computeNormals();
 	}
 
 	for (size_t i = 0, ie = this->points()->size(); i < ie; ++i) {
@@ -243,7 +219,15 @@ void Mesh::prepareRenderData()
 	                                  indices.size() * sizeof(GLuint),
 	                                  indices.size());
 
-	m_renderbuffer->set_normal_buffer("normal", normals->data(), normals->byte_size());
+	auto normals = this->attribute("normal", ATTR_TYPE_VEC3);
+
+	if (normals != nullptr) {
+		if (normals->size() != this->points()->size()) {
+			computeNormals();
+		}
+
+		m_renderbuffer->set_normal_buffer("normal", normals->data(), normals->byte_size());
+	}
 
 	auto colors = this->attribute("color", ATTR_TYPE_VEC3);
 

@@ -129,3 +129,12 @@ void output_file_param(ParamCallback &cb, const char *name, std::string *ptr);
  * @param tooltip The parameters tooltip.
  */
 void param_tooltip(ParamCallback &cb, const char *tooltip);
+
+/**
+ * @brief list_selection_param Add a UI parameter for displaying a list selector.
+ *
+ * @param cb   The callback used to create the parameter.
+ * @param name The UI name of the parameter.
+ * @param ptr  The pointer to the file name property.
+ */
+void list_selection_param(ParamCallback &cb, const char *name, const EnumProperty &prop, std::string *ptr);

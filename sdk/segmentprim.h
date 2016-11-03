@@ -30,19 +30,24 @@
 
 class RenderBuffer;
 
-class PrimPoints : public Primitive {
+class SegmentPrim : public Primitive {
 	PointList m_points;
+	EdgeList m_edges;
 
 	RenderBuffer *m_renderbuffer;
 
 public:
-	PrimPoints();
-	PrimPoints(const PrimPoints &other);
-	~PrimPoints();
+	SegmentPrim();
+	SegmentPrim(const SegmentPrim &other);
+	~SegmentPrim();
 
 	PointList *points();
 
 	const PointList *points() const;
+
+	EdgeList *edges();
+
+	const EdgeList *edges() const;
 
 	Primitive *copy() const override;
 

@@ -32,6 +32,7 @@
 #include <kamikaze/utils_glm.h>
 
 #include <random>
+#include <sstream>
 
 #include "ui/paramfactory.h"
 
@@ -65,7 +66,7 @@ TransformNode::TransformNode()
 	xform_enum_prop.insert("Pre Transform", 0);
 	xform_enum_prop.insert("Post Transform", 1);
 
-	add_prop("Transform Order", property_type::prop_enum);
+	add_prop("xform_order", "Transform Order", property_type::prop_enum);
 	set_prop_enum_values(xform_enum_prop);
 
 	EnumProperty rot_enum_prop;
@@ -76,41 +77,41 @@ TransformNode::TransformNode()
 	rot_enum_prop.insert("Z X Y", 4);
 	rot_enum_prop.insert("Z Y X", 5);
 
-	add_prop("Rotation Order", property_type::prop_enum);
+	add_prop("rot_order", "Rotation Order", property_type::prop_enum);
 	set_prop_enum_values(rot_enum_prop);
 
-	add_prop("Translate", property_type::prop_vec3);
+	add_prop("translate", "Translate", property_type::prop_vec3);
 	set_prop_min_max(-10.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
 
-	add_prop("Rotate", property_type::prop_vec3);
+	add_prop("rotate", "Rotate", property_type::prop_vec3);
 	set_prop_min_max(0.0f, 360.0f);
 	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
 
-	add_prop("Scale", property_type::prop_vec3);
+	add_prop("scale", "Scale", property_type::prop_vec3);
 	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
 
-	add_prop("Pivot", property_type::prop_vec3);
+	add_prop("pivot", "Pivot", property_type::prop_vec3);
 	set_prop_min_max(-10.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
 
-	add_prop("Uniform Scale", property_type::prop_float);
+	add_prop("uniform_scale", "Uniform Scale", property_type::prop_float);
 	set_prop_min_max(0.0f, 1000.0f);
 	set_prop_default_value_float(1.0f);
 
-	add_prop("Invert Transformation", property_type::prop_bool);
+	add_prop("invert_xform", "Invert Transformation", property_type::prop_bool);
 }
 
 void TransformNode::process()
 {
-	const auto translate = eval_vec3("Translate");
-	const auto rotate = eval_vec3("Rotate");
-	const auto scale = eval_vec3("Scale");
-	const auto pivot = eval_vec3("Pivot");
-	const auto uniform_scale = eval_float("Uniform Scale");
-	const auto transform_type = eval_int("Transform Order");
-	const auto rot_order = eval_int("Rotation Order");
+	const auto translate = eval_vec3("translate");
+	const auto rotate = eval_vec3("rotate");
+	const auto scale = eval_vec3("scale");
+	const auto pivot = eval_vec3("pivot");
+	const auto uniform_scale = eval_float("uniform_scale");
+	const auto transform_type = eval_int("xform_order");
+	const auto rot_order = eval_int("rot_order");
 
 	/* determine the rotatation order */
 	int rot_ord[6][3] = {
@@ -169,15 +170,15 @@ CreateBoxNode::CreateBoxNode()
 {
 	addOutput("Prim");
 
-	add_prop("Size", property_type::prop_vec3);
+	add_prop("size", "Size", property_type::prop_vec3);
 	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
 
-	add_prop("Center", property_type::prop_vec3);
+	add_prop("center", "Center", property_type::prop_vec3);
 	set_prop_min_max(-10.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
 
-	add_prop("Uniform Scale", property_type::prop_float);
+	add_prop("uniform_scale", "Uniform Scale", property_type::prop_float);
 	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_float(1.0f);
 }
@@ -190,9 +191,9 @@ void CreateBoxNode::process()
 	PointList *points = mesh->points();
 	points->reserve(8);
 
-	const auto dimension = eval_vec3("Size");
-	const auto center = eval_vec3("Center");
-	const auto uniform_scale = eval_float("Uniform Scale");
+	const auto dimension = eval_vec3("size");
+	const auto center = eval_vec3("center");
+	const auto uniform_scale = eval_float("uniform_scale");
 
 	/* todo: expose this to the UI */
 	const auto &x_div = 2;
@@ -244,27 +245,27 @@ CreateTorusNode::CreateTorusNode()
 {
 	addOutput("Prim");
 
-	add_prop("Center", property_type::prop_vec3);
+	add_prop("center", "Center", property_type::prop_vec3);
 	set_prop_min_max(-10.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
 
-	add_prop("Major Radius", property_type::prop_float);
+	add_prop("major_radius", "Major Radius", property_type::prop_float);
 	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_float(1.0f);
 
-	add_prop("Minor Radius", property_type::prop_float);
+	add_prop("minor_radius", "Minor Radius", property_type::prop_float);
 	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_float(0.25f);
 
-	add_prop("Major Segment", property_type::prop_int);
+	add_prop("major_segment", "Major Segment", property_type::prop_int);
 	set_prop_min_max(4, 100);
 	set_prop_default_value_int(48);
 
-	add_prop("Minor Segment", property_type::prop_int);
+	add_prop("minor_segment", "Minor Segment", property_type::prop_int);
 	set_prop_min_max(4, 100);
 	set_prop_default_value_int(24);
 
-	add_prop("Uniform Scale", property_type::prop_float);
+	add_prop("uniform_scale", "Uniform Scale", property_type::prop_float);
 	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_float(1.0f);
 }
@@ -274,13 +275,13 @@ void CreateTorusNode::process()
 	auto prim = m_collection->build("Mesh");
 	auto mesh = static_cast<Mesh *>(prim);
 
-	const auto center = eval_vec3("Center");
-	const auto uniform_scale = eval_float("Uniform Scale");
+	const auto center = eval_vec3("center");
+	const auto uniform_scale = eval_float("uniform_scale");
 
-	const auto major_radius = eval_float("Major Radius") * uniform_scale;
-	const auto minor_radius = eval_float("Minor Radius") * uniform_scale;
-	const auto major_segment = eval_int("Major Segment");
-	const auto minor_segment = eval_int("Minor Segment");
+	const auto major_radius = eval_float("major_radius") * uniform_scale;
+	const auto minor_radius = eval_float("minor_radius") * uniform_scale;
+	const auto major_segment = eval_int("major_segment");
+	const auto minor_segment = eval_int("minor_segment");
 
 	PointList *points = mesh->points();
 	PolygonList *polys = mesh->polys();
@@ -349,19 +350,19 @@ CreateGridNode::CreateGridNode()
 {
 	addOutput("Prim");
 
-	add_prop("Center", property_type::prop_vec3);
+	add_prop("center", "Center", property_type::prop_vec3);
 	set_prop_min_max(-10.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
 
-	add_prop("Size", property_type::prop_vec3);
+	add_prop("size", "Size", property_type::prop_vec3);
 	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
 
-	add_prop("Rows", property_type::prop_int);
+	add_prop("rows", "Rows", property_type::prop_int);
 	set_prop_min_max(2, 100);
 	set_prop_default_value_int(2);
 
-	add_prop("Columns", property_type::prop_int);
+	add_prop("columns", "Columns", property_type::prop_int);
 	set_prop_min_max(2, 100);
 	set_prop_default_value_int(2);
 }
@@ -371,11 +372,11 @@ void CreateGridNode::process()
 	auto prim = m_collection->build("Mesh");
 	auto mesh = static_cast<Mesh *>(prim);
 
-	const auto size = eval_vec3("Size");
-	const auto center = eval_vec3("Center");
+	const auto size = eval_vec3("size");
+	const auto center = eval_vec3("center");
 
-	const auto rows = eval_int("Rows");
-	const auto columns = eval_int("Columns");
+	const auto rows = eval_int("rows");
+	const auto columns = eval_int("columns");
 
 	const auto totpoints = rows * columns;
 
@@ -439,11 +440,11 @@ CreateCircleNode::CreateCircleNode()
 {
 	addOutput("Primitive");
 
-	add_prop("Vertices", property_type::prop_int);
+	add_prop("vertices", "Vertices", property_type::prop_int);
 	set_prop_min_max(3, 500);
 	set_prop_default_value_int(32);
 
-	add_prop("Radius", property_type::prop_float);
+	add_prop("radius", "Radius", property_type::prop_float);
 	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_float(1.0f);
 }
@@ -453,8 +454,8 @@ void CreateCircleNode::process()
 	auto prim = m_collection->build("Mesh");
 	auto mesh = static_cast<Mesh *>(prim);
 
-	const auto segs = eval_int("Vertices");
-	const auto dia = eval_float("Radius");
+	const auto segs = eval_int("vertices");
+	const auto dia = eval_float("radius");
 
 	const auto phid = 2.0f * static_cast<float>(M_PI) / segs;
 	auto phi = 0.0f;
@@ -574,15 +575,15 @@ CreateTubeNode::CreateTubeNode()
 {
 	addOutput("Primitive");
 
-	add_prop("Vertices", property_type::prop_int);
+	add_prop("vertices", "Vertices", property_type::prop_int);
 	set_prop_min_max(3, 500);
 	set_prop_default_value_int(32);
 
-	add_prop("Radius", property_type::prop_float);
+	add_prop("radius", "Radius", property_type::prop_float);
 	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_float(1.0f);
 
-	add_prop("Depth", property_type::prop_float);
+	add_prop("depth", "Depth", property_type::prop_float);
 	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_float(1.0f);
 }
@@ -592,9 +593,9 @@ void CreateTubeNode::process()
 	auto prim = m_collection->build("Mesh");
 	auto mesh = static_cast<Mesh *>(prim);
 
-	const auto segs = eval_int("Vertices");
-	const auto dia = eval_float("Radius");
-	const auto depth = eval_float("Depth");
+	const auto segs = eval_int("vertices");
+	const auto dia = eval_float("radius");
+	const auto depth = eval_float("depth");
 
 	create_cylinder(mesh->points(), mesh->polys(), segs, dia, dia, depth);
 
@@ -615,19 +616,19 @@ CreateConeNode::CreateConeNode()
 {
 	addOutput("Primitive");
 
-	add_prop("Vertices", property_type::prop_int);
+	add_prop("vertices", "Vertices", property_type::prop_int);
 	set_prop_min_max(3, 500);
 	set_prop_default_value_int(32);
 
-	add_prop("Minor Radius", property_type::prop_float);
+	add_prop("minor_radius", "Minor Radius", property_type::prop_float);
 	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_float(0.0f);
 
-	add_prop("Major Radius", property_type::prop_float);
+	add_prop("major_radius", "Major Radius", property_type::prop_float);
 	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_float(1.0f);
 
-	add_prop("Depth", property_type::prop_float);
+	add_prop("depth", "Depth", property_type::prop_float);
 	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_float(1.0f);
 }
@@ -637,10 +638,10 @@ void CreateConeNode::process()
 	auto prim = m_collection->build("Mesh");
 	auto mesh = static_cast<Mesh *>(prim);
 
-	const auto segs = eval_int("Vertices");
-	const auto dia1 = eval_float("Major Radius");
-	const auto dia2 = eval_float("Minor Radius");
-	const auto depth = eval_float("Depth");
+	const auto segs = eval_int("vertices");
+	const auto dia1 = eval_float("major_radius");
+	const auto dia2 = eval_float("minor_radius");
+	const auto depth = eval_float("depth");
 
 	create_cylinder(mesh->points(), mesh->polys(), segs, dia1, dia2, depth);
 
@@ -699,7 +700,7 @@ CreateIcoSphereNode::CreateIcoSphereNode()
 {
 	addOutput("Primitive");
 
-	add_prop("Radius", property_type::prop_float);
+	add_prop("radius", "Radius", property_type::prop_float);
 	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_float(1.0f);
 }
@@ -709,7 +710,7 @@ void CreateIcoSphereNode::process()
 	auto prim = m_collection->build("Mesh");
 	auto mesh = static_cast<Mesh *>(prim);
 
-	const auto dia = eval_float("Radius");
+	const auto dia = eval_float("radius");
 	const auto dia_div = dia / 200.0f;
 
 	PointList *points = mesh->points();
@@ -759,12 +760,12 @@ public:
 		addInput("input");
 		addOutput("output");
 
-		add_prop("Flip", property_type::prop_bool);
+		add_prop("flip", "Flip", property_type::prop_bool);
 	}
 
 	void process() override
 	{
-		const auto flip = eval_bool("Flip");
+		const auto flip = eval_bool("flip");
 
 		for (auto &prim : primitive_iterator(this->m_collection, Mesh::id)) {
 			auto mesh = static_cast<Mesh *>(prim);
@@ -820,34 +821,34 @@ public:
 		addInput("input");
 		addOutput("output");
 
-		add_prop("Octaves", property_type::prop_int);
+		add_prop("octaves", "Octaves", property_type::prop_int);
 		set_prop_min_max(1, 10);
 		set_prop_default_value_int(1);
 
-		add_prop("Frequency", property_type::prop_float);
+		add_prop("frequency", "Frequency", property_type::prop_float);
 		set_prop_min_max(0.0f, 1.0f);
 		set_prop_default_value_float(1.0f);
 
-		add_prop("Amplitude", property_type::prop_float);
+		add_prop("amplitude", "Amplitude", property_type::prop_float);
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_default_value_float(1.0f);
 
-		add_prop("Persistence", property_type::prop_float);
+		add_prop("persistence", "Persistence", property_type::prop_float);
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_default_value_float(1.0f);
 
-		add_prop("Lacunarity", property_type::prop_float);
+		add_prop("lacunarity", "Lacunarity", property_type::prop_float);
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_default_value_float(2.0f);
 	}
 
 	void process() override
 	{
-		const auto octaves = eval_int("Octaves");
-		const auto lacunarity = eval_float("Lacunarity");
-		const auto persistence = eval_float("Persistence");
-		const auto ofrequency = eval_float("Frequency");
-		const auto oamplitude = eval_float("Amplitude");
+		const auto octaves = eval_int("octaves");
+		const auto lacunarity = eval_float("lacunarity");
+		const auto persistence = eval_float("persistence");
+		const auto ofrequency = eval_float("frequency");
+		const auto oamplitude = eval_float("amplitude");
 
 		for (auto prim : primitive_iterator(this->m_collection)) {
 			PointList *points;
@@ -913,36 +914,36 @@ public:
 		scope_enum_prop.insert("Vertex", COLOR_NODE_VERTEX);
 		scope_enum_prop.insert("Primitive", COLOR_NODE_PRIMITIVE);
 
-		add_prop("Scope", property_type::prop_enum);
+		add_prop("scope", "Scope", property_type::prop_enum);
 		set_prop_enum_values(scope_enum_prop);
 
 		EnumProperty color_enum_prop;
 		color_enum_prop.insert("Unique", COLOR_NODE_UNIQUE);
 		color_enum_prop.insert("Random", COLOR_NODE_RANDOM);
 
-		add_prop("Fill Method", property_type::prop_enum);
+		add_prop("fill_method", "Fill Method", property_type::prop_enum);
 		set_prop_enum_values(color_enum_prop);
 
-		add_prop("Color", property_type::prop_vec3);
+		add_prop("color", "Color", property_type::prop_vec3);
 		set_prop_min_max(0.0f, 1.0f);
 		set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
 
-		add_prop("Seed", property_type::prop_int);
+		add_prop("seed", "Seed", property_type::prop_int);
 		set_prop_min_max(1, 100000);
 		set_prop_default_value_int(1);
 	}
 
 	bool update_properties() override
 	{
-		auto method = eval_int("Fill Method");
+		auto method = eval_int("fill_method");
 
 		if (method == COLOR_NODE_UNIQUE) {
-			set_prop_visible("Color", true);
-			set_prop_visible("Seed", false);
+			set_prop_visible("color", true);
+			set_prop_visible("seed", false);
 		}
 		else if (method == COLOR_NODE_RANDOM) {
-			set_prop_visible("Seed", true);
-			set_prop_visible("Color", false);
+			set_prop_visible("seed", true);
+			set_prop_visible("color", false);
 		}
 
 		return true;
@@ -950,9 +951,9 @@ public:
 
 	void process() override
 	{
-		const auto &method = eval_int("Fill Method");
-		const auto &scope = eval_int("Scope");
-		const auto &seed = eval_int("Seed");
+		const auto &method = eval_int("fill_method");
+		const auto &scope = eval_int("scope");
+		const auto &seed = eval_int("seed");
 
 		std::mt19937 rng(19937 + seed);
 		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
@@ -962,18 +963,18 @@ public:
 
 			if (prim->typeID() == Mesh::id) {
 				auto mesh = static_cast<Mesh *>(prim);
-				colors = mesh->addAttribute("color", ATTR_TYPE_VEC3, mesh->points()->size());
+				colors = mesh->add_attribute("color", ATTR_TYPE_VEC3, mesh->points()->size());
 			}
 			else if (prim->typeID() == PrimPoints::id) {
 				auto prim_points = static_cast<PrimPoints *>(prim);
-				colors = prim_points->addAttribute("color", ATTR_TYPE_VEC3, prim_points->points()->size());
+				colors = prim_points->add_attribute("color", ATTR_TYPE_VEC3, prim_points->points()->size());
 			}
 			else {
 				continue;
 			}
 
 			if (method == COLOR_NODE_UNIQUE) {
-				const auto &color = eval_vec3("Color");
+				const auto &color = eval_vec3("color");
 
 				for (size_t i = 0, e = colors->size(); i < e; ++i) {
 					colors->vec3(i, color);
@@ -1017,11 +1018,7 @@ public:
 			return;
 		}
 
-		for (auto prim : primitive_iterator(collection2)) {
-			this->m_collection->add(prim);
-		}
-
-		collection2->clear();
+		m_collection->merge_collection(*collection2);
 	}
 };
 
@@ -1034,15 +1031,15 @@ public:
 	{
 		addOutput("Primitive");
 
-		add_prop("Points Count", property_type::prop_int);
+		add_prop("points_count", "Points Count", property_type::prop_int);
 		set_prop_min_max(1, 100000);
 		set_prop_default_value_int(1000);
 
-		add_prop("BBox Min", property_type::prop_vec3);
+		add_prop("bbox_min", "BBox Min", property_type::prop_vec3);
 		set_prop_min_max(-10.0f, 10.0f);
 		set_prop_default_value_vec3(glm::vec3{-1.0f, -1.0f, -1.0f});
 
-		add_prop("BBox Max", property_type::prop_vec3);
+		add_prop("bbox_max", "BBox Max", property_type::prop_vec3);
 		set_prop_min_max(-10.0f, 10.0f);
 		set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
 	}
@@ -1052,13 +1049,13 @@ public:
 		auto prim = m_collection->build("PrimPoints");
 		auto points = static_cast<PrimPoints *>(prim);
 
-		const auto &point_count = eval_int("Points Count");
+		const auto &point_count = eval_int("points_count");
 
 		auto point_list = points->points();
 		point_list->resize(point_count);
 
-		const auto &bbox_min = eval_vec3("BBox Min");
-		const auto &bbox_max = eval_vec3("BBox Max");
+		const auto &bbox_min = eval_vec3("bbox_min");
+		const auto &bbox_max = eval_vec3("bbox_max");
 
 		std::uniform_real_distribution<float> dist_x(bbox_min[0], bbox_max[0]);
 		std::uniform_real_distribution<float> dist_y(bbox_min[1], bbox_max[1]);
@@ -1073,6 +1070,354 @@ public:
 		}
 
 		points->tagUpdate();
+	}
+};
+
+/* ************************************************************************** */
+
+class CreateAttributeNode : public Node {
+public:
+	CreateAttributeNode()
+	    : Node("Attribute Create")
+	{
+		addInput("input");
+		addOutput("output");
+
+		add_prop("attribute_name", "Name", property_type::prop_string);
+		set_prop_tooltip("Name of the attribute to create.");
+
+		EnumProperty type_enum;
+		type_enum.insert("Byte", ATTR_TYPE_BYTE);
+		type_enum.insert("Integer", ATTR_TYPE_INT);
+		type_enum.insert("Float", ATTR_TYPE_FLOAT);
+		type_enum.insert("String", ATTR_TYPE_STRING);
+		type_enum.insert("2D Vector", ATTR_TYPE_VEC2);
+		type_enum.insert("3D Vector", ATTR_TYPE_VEC3);
+		type_enum.insert("4D Vector", ATTR_TYPE_VEC4);
+		type_enum.insert("3x3 Matrix", ATTR_TYPE_MAT3);
+		type_enum.insert("4x4 Matrix", ATTR_TYPE_MAT4);
+
+		add_prop("attribute_type", "Attribute Type", property_type::prop_enum);
+		set_prop_enum_values(type_enum);
+	}
+
+	void process() override
+	{
+		auto name = eval_string("attribute_name");
+		auto attribute_type = static_cast<AttributeType>(eval_enum("attribute_type"));
+
+		for (Primitive *prim : primitive_iterator(m_collection)) {
+			if (prim->has_attribute(name, attribute_type)) {
+				std::stringstream ss;
+				ss << prim->name() << " already has an attribute named " << name;
+
+				this->add_warning(ss.str());
+				continue;
+			}
+
+			size_t attrib_size = 1;
+
+			if (prim->typeID() == Mesh::id) {
+				auto mesh = static_cast<Mesh *>(prim);
+
+				if (attribute_type == ATTR_TYPE_VEC3) {
+					attrib_size = mesh->points()->size();
+				}
+			}
+			else if (prim->typeID() == PrimPoints::id) {
+				auto point_cloud = static_cast<PrimPoints *>(prim);
+
+				if (attribute_type == ATTR_TYPE_VEC3) {
+					attrib_size = point_cloud->points()->size();
+				}
+			}
+
+			prim->add_attribute(name, attribute_type, attrib_size);
+		}
+	}
+};
+
+/* ************************************************************************** */
+
+class DeleteAttributeNode : public Node {
+public:
+	DeleteAttributeNode()
+	    : Node("Attribute Delete")
+	{
+		addInput("input");
+		addOutput("output");
+
+		add_prop("attribute_name", "Name", property_type::prop_string);
+		set_prop_tooltip("Name of the attribute to delete.");
+
+		EnumProperty type_enum;
+		type_enum.insert("Byte", ATTR_TYPE_BYTE);
+		type_enum.insert("Integer", ATTR_TYPE_INT);
+		type_enum.insert("Float", ATTR_TYPE_FLOAT);
+		type_enum.insert("String", ATTR_TYPE_STRING);
+		type_enum.insert("2D Vector", ATTR_TYPE_VEC2);
+		type_enum.insert("3D Vector", ATTR_TYPE_VEC3);
+		type_enum.insert("4D Vector", ATTR_TYPE_VEC4);
+		type_enum.insert("3x3 Matrix", ATTR_TYPE_MAT3);
+		type_enum.insert("4x4 Matrix", ATTR_TYPE_MAT4);
+
+		add_prop("attribute_type", "Attribute Type", property_type::prop_enum);
+		set_prop_enum_values(type_enum);
+	}
+
+	void process() override
+	{
+		auto name = eval_string("attribute_name");
+		auto attribute_type = static_cast<AttributeType>(eval_enum("attribute_type"));
+
+		for (Primitive *prim : primitive_iterator(m_collection)) {
+			if (!prim->has_attribute(name, attribute_type)) {
+				continue;
+			}
+
+			prim->remove_attribute(name, attribute_type);
+		}
+	}
+};
+
+/* ************************************************************************** */
+
+enum {
+	DIST_CONSTANT = 0,
+	DIST_UNIFORM,
+	DIST_GAUSSIAN,
+	DIST_EXPONENTIAL,
+	DIST_LOGNORMAL,
+	DIST_CAUCHY,
+	DIST_DISCRETE,
+};
+
+class RandomiseAttributeNode : public Node {
+public:
+	RandomiseAttributeNode()
+	    : Node("Attribute Randomise")
+	{
+		addInput("input");
+		addOutput("output");
+
+		add_prop("attribute_name", "Name", property_type::prop_string);
+		set_prop_tooltip("Name of the attribute to randomise.");
+
+		EnumProperty type_enum;
+		type_enum.insert("Byte", ATTR_TYPE_BYTE);
+		type_enum.insert("Integer", ATTR_TYPE_INT);
+		type_enum.insert("Float", ATTR_TYPE_FLOAT);
+		type_enum.insert("String", ATTR_TYPE_STRING);
+		type_enum.insert("2D Vector", ATTR_TYPE_VEC2);
+		type_enum.insert("3D Vector", ATTR_TYPE_VEC3);
+		type_enum.insert("4D Vector", ATTR_TYPE_VEC4);
+		type_enum.insert("3x3 Matrix", ATTR_TYPE_MAT3);
+		type_enum.insert("4x4 Matrix", ATTR_TYPE_MAT4);
+
+		add_prop("attribute_type", "Attribute Type", property_type::prop_enum);
+		set_prop_enum_values(type_enum);
+
+		EnumProperty dist_enum;
+		dist_enum.insert("Constant", DIST_CONSTANT);
+		dist_enum.insert("Uniform", DIST_UNIFORM);
+		dist_enum.insert("Gaussian", DIST_GAUSSIAN);
+
+		add_prop("distribution", "Distribution", property_type::prop_enum);
+		set_prop_enum_values(dist_enum);
+
+		/* Constant Value */
+		add_prop("value", "Value", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(1.0f);
+
+		/* Min/Max Value */
+		add_prop("min_value", "Min Value", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(0.0f);
+
+		add_prop("max_value", "Max Value", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(1.0f);
+
+		/* Gaussian Distribution */
+		add_prop("mean", "Mean", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(0.0f);
+
+		add_prop("stddev", "Standard Deviation", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(1.0f);
+	}
+
+	bool update_properties() override
+	{
+		const auto distribution = eval_enum("distribution");
+
+		set_prop_visible("value", distribution == DIST_CONSTANT);
+		set_prop_visible("min_value", distribution == DIST_UNIFORM);
+		set_prop_visible("max_value", distribution == DIST_UNIFORM);
+		set_prop_visible("mean", distribution == DIST_GAUSSIAN);
+		set_prop_visible("stddev", distribution == DIST_GAUSSIAN);
+
+		return true;
+	}
+
+	void process() override
+	{
+		auto name = eval_string("attribute_name");
+		auto attribute_type = static_cast<AttributeType>(eval_enum("attribute_type"));
+		auto distribution = eval_enum("distribution");
+		auto value = eval_float("value");
+		auto min_value = eval_float("min_value");
+		auto max_value = eval_float("max_value");
+		auto mean = eval_float("mean");
+		auto stddev = eval_float("stddev");
+
+		std::mt19937 rng(19993754);
+
+		if (attribute_type != ATTR_TYPE_VEC3) {
+			std::stringstream ss;
+			ss << "Only 3D Vector attributes are supported for now!";
+
+			this->add_warning(ss.str());
+			return;
+		}
+
+		for (Primitive *prim : primitive_iterator(m_collection)) {
+			auto attribute = prim->attribute(name, attribute_type);
+
+			if (!attribute) {
+				std::stringstream ss;
+				ss << prim->name() << " does not have an attribute named \"" << name
+				   << "\" of type " << static_cast<int>(attribute_type);
+
+				this->add_warning(ss.str());
+				continue;
+			}
+
+			switch (distribution) {
+				case DIST_CONSTANT:
+				{
+					for (size_t i = 0; i < attribute->size(); ++i) {
+						attribute->vec3(i, glm::vec3{value, value, value});
+					}
+
+					break;
+				}
+				case DIST_UNIFORM:
+				{
+					std::uniform_real_distribution<float> dist(min_value, max_value);
+
+					for (size_t i = 0; i < attribute->size(); ++i) {
+						attribute->vec3(i, glm::vec3{dist(rng), dist(rng), dist(rng)});
+					}
+
+					break;
+				}
+				case DIST_GAUSSIAN:
+				{
+					std::normal_distribution<float> dist(mean, stddev);
+
+					for (size_t i = 0; i < attribute->size(); ++i) {
+						attribute->vec3(i, glm::vec3{dist(rng), dist(rng), dist(rng)});
+					}
+
+					break;
+				}
+			}
+		}
+	}
+};
+
+/* ************************************************************************** */
+
+#include <kamikaze/segmentprim.h>
+
+class FurNode : public Node {
+public:
+	FurNode()
+	    : Node("Fur")
+	{
+		addInput("input");
+		addOutput("output");
+
+		add_prop("segment", "Segment", property_type::prop_int);
+		set_prop_default_value_int(1);
+		set_prop_min_max(1, 10);
+		set_prop_tooltip("Number of segments in each generated curve.");
+
+		add_prop("size", "Size", property_type::prop_float);
+		set_prop_default_value_float(1);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_tooltip("Size of each segment.");
+
+		add_prop("normal", "Normal", property_type::prop_vec3);
+		set_prop_default_value_vec3(glm::vec3{0.0f, 1.0f, 0.0f});
+		set_prop_min_max(-1.0f, 1.0f);
+		set_prop_tooltip("Direction of the generated curves.");
+	}
+
+	void process() override
+	{
+		if (!getInputCollection("input")) {
+			return;
+		}
+
+		auto iter = primitive_iterator(m_collection, Mesh::id);
+
+		if (iter.get() == nullptr) {
+			this->add_warning("No input mesh found!");
+			return;
+		}
+
+		auto input_mesh = static_cast<Mesh *>(iter.get());
+		auto input_points = input_mesh->points();
+
+		const auto segment_number = eval_int("segment");
+		const auto segment_normal = eval_vec3("normal");
+		const auto segment_size = eval_float("size");
+
+		auto segment_prim = static_cast<SegmentPrim *>(m_collection->build("SegmentPrim"));
+		auto output_edges = segment_prim->edges();
+		output_edges->reserve(input_points->size() * segment_number);
+
+		auto output_points = segment_prim->points();
+		auto total_points = input_points->size() * (segment_number + 1);
+		output_points->reserve(total_points);
+
+		auto num_points = 0;
+		auto head = 0;
+
+		for (size_t i = 0; i < input_points->size(); ++i) {
+			auto point = (*input_points)[i];
+
+			output_points->push_back(point);
+			++num_points;
+
+			for (int j = 0; j < segment_number; ++j, ++num_points) {
+				point += (segment_size * segment_normal);
+				output_points->push_back(point);
+
+				output_edges->push_back(glm::uvec2{head, ++head});
+			}
+
+			++head;
+		}
+
+		if (num_points != total_points) {
+			std::stringstream ss;
+
+			if (num_points < total_points) {
+				ss << "Overallocation of points, allocated: " << total_points
+				   << ", final total: " << num_points;
+			}
+			else if (num_points > total_points) {
+				ss << "Underallocation of points, allocated: " << total_points
+				   << ", final total: " << num_points;
+			}
+
+			this->add_warning(ss.str());
+		}
 	}
 };
 
@@ -1093,4 +1438,9 @@ void register_builtin_nodes(NodeFactory *factory)
 	REGISTER_NODE("Geometry", "Color", ColorNode);
 	REGISTER_NODE("Geometry", "Merge Collection", CollectionMergeNode);
 	REGISTER_NODE("Geometry", "Point Cloud", CreatePointCloudNode);
+	REGISTER_NODE("Geometry", "Fur", FurNode);
+
+	REGISTER_NODE("Attribute", "Attribute Create", CreateAttributeNode);
+	REGISTER_NODE("Attribute", "Attribute Delete", DeleteAttributeNode);
+	REGISTER_NODE("Attribute", "Attribute Randomise", RandomiseAttributeNode);
 }
