@@ -1424,13 +1424,6 @@ void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNo
 			scene->notify_listeners(event_type::node | event_type::modified);
 		}
 	}
-	else {
-		auto node_from = static_cast<ObjectNodeItem *>(from)->scene_node();
-		auto node_to = static_cast<ObjectNodeItem *>(to)->scene_node();
-
-		scene->connect(*m_context, node_from, node_to);
-		scene->notify_listeners(event_type::object | event_type::parented);
-	}
 }
 
 void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to, bool notify)
@@ -1455,13 +1448,6 @@ void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, Q
 			scene->evalObjectDag(*m_context, object);
 			scene->notify_listeners(event_type::node | event_type::modified);
 		}
-	}
-	else {
-		auto node_from = static_cast<ObjectNodeItem *>(from)->scene_node();
-		auto node_to = static_cast<ObjectNodeItem *>(to)->scene_node();
-
-		scene->disconnect(*m_context, node_from, node_to);
-		scene->notify_listeners(event_type::object | event_type::parented);
 	}
 }
 

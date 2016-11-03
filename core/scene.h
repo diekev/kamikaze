@@ -95,9 +95,6 @@ public:
 
 	void evalObjectDag(const Context &context, SceneNode *node);
 
-	void connect(const Context &context, SceneNode *node_from, SceneNode *node_to);
-	void disconnect(const Context &context, SceneNode *node_from, SceneNode *node_to);
-
 	int flags() const;
 	void set_flags(int flag);
 	void unset_flags(int flag);
