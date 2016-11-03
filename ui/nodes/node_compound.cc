@@ -31,22 +31,6 @@ ObjectNodeItem::ObjectNodeItem(SceneNode *scene_node, const QString &title, QGra
     , m_scene_node(scene_node)
 {
 	setData(NODE_KEY_GRAPHIC_ITEM_SUBTYPE, QVariant(NODE_VALUE_SUBTYPE_OBJECT));
-
-	for (const auto &input : scene_node->inputs()) {
-		createPort(input->name.c_str(),
-		           NODE_PORT_TYPE_INPUT,
-		           QColor(95, 95, 95),
-		           ALIGNED_LEFT,
-		           QColor(95, 95, 95));
-	}
-
-	for (const auto &output : scene_node->outputs()) {
-		createPort(output->name.c_str(),
-		           NODE_PORT_TYPE_OUTPUT,
-		           QColor(95, 95, 95),
-		           ALIGNED_RIGHT,
-		           QColor(95, 95, 95));
-	}
 }
 
 void ObjectNodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)

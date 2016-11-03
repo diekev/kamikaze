@@ -31,7 +31,7 @@
 #include <kamikaze/util_string.h>
 
 Scene::Scene()
-    : m_root(new Object)
+    : m_root(new SceneNode)
     , m_current_node(m_root)
 {}
 
@@ -40,7 +40,7 @@ void Scene::add_node(SceneNode *node)
 	assert(node != nullptr);
 
 	/* Make sure node has a unique name. */
-	auto name = node->name;
+	auto name = node->name();
 
 	if (ensureUniqueName(name)) {
 		node->name(name);
@@ -89,7 +89,7 @@ void Scene::selectObject(const glm::vec3 &pos)
 	int selected_object = -1, index = 0;
 
 	for (auto &node : m_nodes) {
-		auto object = static_cast<Object *>(node.get());
+		auto object = node.get();
 
 		if (!object || !object->collection()) {
 			continue;
@@ -120,11 +120,12 @@ Depsgraph *Scene::depsgraph()
 
 SceneNode *Scene::active_node()
 {
-	if (!m_nodes.empty()) {
-		return m_active_node;
-	}
+	return m_active_node;
+}
 
-	return nullptr;
+SceneNode *Scene::current_node()
+{
+	return m_current_node;
 }
 
 void Scene::tagObjectUpdate()
@@ -133,12 +134,10 @@ void Scene::tagObjectUpdate()
 		return;
 	}
 
-	auto object = static_cast<Object *>(m_active_node);
+	m_active_node->updateMatrix();
 
-	object->updateMatrix();
-
-	if (object->collection()) {
-		for (auto &prim : object->collection()->primitives()) {
+	if (m_active_node->collection()) {
+		for (auto &prim : m_active_node->collection()->primitives()) {
 			prim->tagUpdate();
 		}
 	}

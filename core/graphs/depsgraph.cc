@@ -74,37 +74,37 @@ bool DepsNode::is_linked() const
 
 /* ************************************************************************** */
 
-DepsObjectNode::DepsObjectNode(Object *object)
-    : m_object(object)
+DepsObjectNode::DepsObjectNode(SceneNode *object)
+    : m_scene_node(object)
 {}
 
 void DepsObjectNode::pre_process()
 {
 	/* TODO: what's the purpose of this again? */
-	m_object->collection(nullptr);
+	m_scene_node->collection(nullptr);
 }
 
 void DepsObjectNode::process(const Context & /*context*/, TaskNotifier */*notifier*/)
 {
 	/* The graph should already have been updated. */
-	auto graph = m_object->graph();
+	auto graph = m_scene_node->graph();
 	auto output_node = graph->output();
-	m_object->collection(output_node->collection());
+	m_scene_node->collection(output_node->collection());
 }
 
-Object *DepsObjectNode::object()
+SceneNode *DepsObjectNode::object()
 {
-	return m_object;
+	return m_scene_node;
 }
 
-const Object *DepsObjectNode::object() const
+const SceneNode *DepsObjectNode::object() const
 {
-	return m_object;
+	return m_scene_node;
 }
 
 const char *DepsObjectNode::name() const
 {
-	return m_object->name().c_str();
+	return m_scene_node->name().c_str();
 }
 
 /* ************************************************************************** */
@@ -283,8 +283,7 @@ DepsNode *Depsgraph::find_node(SceneNode *scene_node, bool graph)
 	DepsNode *node = nullptr;
 
 	/* TODO: find a better way for this. */
-	auto object = static_cast<Object *>(scene_node);
-	auto iter = m_object_graph_map.find(object->graph());
+	auto iter = m_object_graph_map.find(scene_node->graph());
 	assert(iter != m_object_graph_map.end());
 
 	node = iter->second;
@@ -331,16 +330,15 @@ void Depsgraph::disconnect(DepsOutputSocket *from, DepsInputSocket *to)
 
 void Depsgraph::create_node(SceneNode *scene_node)
 {
-	auto object = static_cast<Object *>(scene_node);
-	m_nodes.push_back(std::unique_ptr<DepsNode>(new DepsObjectNode(object)));
+	m_nodes.push_back(std::unique_ptr<DepsNode>(new DepsObjectNode(scene_node)));
 	auto node = m_nodes.back().get();
 
 	m_scene_node_map[scene_node] = node;
 
-	m_nodes.push_back(std::unique_ptr<DepsNode>(new ObjectGraphDepsNode(object->graph())));
+	m_nodes.push_back(std::unique_ptr<DepsNode>(new ObjectGraphDepsNode(scene_node->graph())));
 	auto graph_node = m_nodes.back().get();
 
-	m_object_graph_map[object->graph()] = graph_node;
+	m_object_graph_map[scene_node->graph()] = graph_node;
 
 	/* Object depends on its graph. */
 	connect(graph_node->output(), node->input());
@@ -352,8 +350,7 @@ void Depsgraph::remove_node(SceneNode *scene_node)
 {
 	/* First, remove graph node. */
 	{
-		auto object = static_cast<Object *>(scene_node);
-		auto iter = m_object_graph_map.find(object->graph());
+		auto iter = m_object_graph_map.find(scene_node->graph());
 		assert(iter != m_object_graph_map.end());
 
 		DepsNode *node = iter->second;

@@ -106,6 +106,8 @@ public:
 	void unset_flags(int flag);
 	bool has_flags(int flag);
 
+	SceneNode *current_node();
+
 private:
 	bool ensureUniqueName(std::string &name) const;
 };

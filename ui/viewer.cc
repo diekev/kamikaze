@@ -121,22 +121,22 @@ void Viewer::paintGL()
 	}
 
 	if (m_context->scene != nullptr) {
-		for (auto &node : m_context->scene->nodes()) {
-			auto object = static_cast<Object *>(node.get());
+		for (auto &scene_node : m_context->scene->nodes()) {
+			auto node_ptr = scene_node.get();
 
-			if (!object->collection()) {
+			if (!node_ptr->collection()) {
 				continue;
 			}
 
-			const bool active_object = (object == m_context->scene->active_node());
+			const bool active_object = (node_ptr == m_context->scene->active_node());
 
-			const auto collection = object->collection();
+			const auto collection = node_ptr->collection();
 
-			if (object->parent()) {
-				m_stack.push(object->parent()->matrix());
+			if (node_ptr->parent()) {
+				m_stack.push(node_ptr->parent()->matrix());
 			}
 
-			m_stack.push(object->matrix());
+			m_stack.push(node_ptr->matrix());
 
 			for (auto &prim : collection->primitives()) {
 				/* update prim before drawing */
@@ -181,7 +181,7 @@ void Viewer::paintGL()
 
 			m_stack.pop();
 
-			if (object->parent()) {
+			if (node_ptr->parent()) {
 				m_stack.pop();
 			}
 		}

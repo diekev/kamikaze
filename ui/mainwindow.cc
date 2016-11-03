@@ -392,9 +392,7 @@ void MainWindow::dumpGraph()
 			return;
 		}
 
-		auto object = static_cast<Object *>(scene_node);
-
-		GraphDumper gd(object->graph());
+		GraphDumper gd(scene_node->graph());
 		gd("/tmp/object_graph.gv");
 
 		if (system("dot /tmp/object_graph.gv -Tpng -o object_graph.png") == -1) {

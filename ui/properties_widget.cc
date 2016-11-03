@@ -88,8 +88,7 @@ void PropertiesWidget::update_state(event_type event)
 	else if (event_category == (event_type::node)) {
 		if (is_elem(event_action, event_type::selected, event_type::processed)) {
 			auto scene_node = scene->active_node();
-			auto object = static_cast<Object *>(scene_node);
-			auto graph = object->graph();
+			auto graph = scene_node->graph();
 			auto node = graph->active_node();
 
 			if (!node) {
@@ -152,7 +151,7 @@ void PropertiesWidget::updateProperties()
 	Persona *persona = nullptr;
 
 	if (m_context->eval_ctx->edit_mode) {
-		auto graph = static_cast<Object *>(scene_node)->graph();
+		auto graph = scene_node->graph();
 		auto node = graph->active_node();
 
 		if (node == nullptr) {

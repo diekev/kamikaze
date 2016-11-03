@@ -24,13 +24,18 @@
 
 #pragma once
 
+#include <kamikaze/persona.h>
+
 #include "graphs/object_graph.h"
-#include "graphs/scene_node.h"
 
-class Node;
 class PrimitiveCollection;
+class Node;
 
-class Object : public SceneNode {
+enum {
+	SNODE_OL_EXPANDED = (1 << 0),  /* Is it expanded in the outliner? */
+};
+
+class SceneNode : public Persona {
 	PrimitiveCollection *m_collection = nullptr;
 
 	glm::mat4 m_matrix = glm::mat4(0.0f);
@@ -38,12 +43,18 @@ class Object : public SceneNode {
 
 	Graph m_graph{};
 
-	Object *m_parent = nullptr;
-	std::vector<Object *> m_children;
+	SceneNode *m_parent = nullptr;
+	std::vector<SceneNode *> m_children;
+
+	std::string m_name = "";
+	int m_flags = 0;
+
+	float m_xpos = 0.0f;
+	float m_ypos = 0.0f;
 
 public:
-	Object();
-	~Object() = default;
+	SceneNode();
+	~SceneNode();
 
 	PrimitiveCollection *collection() const;
 	void collection(PrimitiveCollection *coll);
@@ -60,12 +71,41 @@ public:
 
 	void updateMatrix();
 
-	void addChild(Object *child);
-	void removeChild(Object *child);
-	const std::vector<Object *> &children() const;
+	void add_child(SceneNode *child);
+	void remove_child(SceneNode *child);
+	const std::vector<SceneNode *> &children() const;
 
-	Object *parent() const;
-	void parent(Object *parent);
+	SceneNode *parent() const;
+	void parent(SceneNode *parent);
 
 	std::string get_dag_path() const;
+
+	void name(const std::string &name);
+	const std::string &name() const;
+
+	float xpos() const;
+	void xpos(float x);
+
+	float ypos() const;
+	void ypos(float y);
+
+	inline int flags() const
+	{
+		return m_flags;
+	}
+
+	inline void set_flags(int flag)
+	{
+		m_flags |= flag;
+	}
+
+	inline void unset_flags(int flag)
+	{
+		m_flags &= ~flag;
+	}
+
+	inline bool has_flags(int flag) const
+	{
+		return (m_flags & flag) != 0;
+	}
 };

@@ -26,12 +26,12 @@
 
 #include "undo.h"
 
-class Object;
+class SceneNode;
 class Scene;
 class SolverFactory;
 
 class AddObjectCmd : public Command {
-	Object *m_object = nullptr;
+	SceneNode *m_object = nullptr;
 	Scene *m_scene = nullptr;
 
 public:
@@ -44,7 +44,7 @@ public:
 };
 
 class AddNodeCmd : public Command {
-	Object *m_object = nullptr;
+	SceneNode *m_object = nullptr;
 	Scene *m_scene = nullptr;
 
 public:
@@ -57,7 +57,7 @@ public:
 };
 
 class AddPresetObjectCmd : public Command {
-	Object *m_object = nullptr;
+	SceneNode *m_object = nullptr;
 	Scene *m_scene = nullptr;
 
 public:

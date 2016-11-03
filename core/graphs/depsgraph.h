@@ -32,7 +32,6 @@ class DepsNode;
 class Context;
 class EvaluationContext;
 class Graph;
-class Object;
 class SceneNode;
 class TaskNotifier;
 
@@ -81,19 +80,19 @@ public:
 /* ************************************************************************** */
 
 class DepsObjectNode : public DepsNode {
-	Object *m_object;
+	SceneNode *m_scene_node;
 
 public:
 	DepsObjectNode() = delete;
-	explicit DepsObjectNode(Object *object);
+	explicit DepsObjectNode(SceneNode *object);
 
 	~DepsObjectNode() = default;
 
 	void pre_process() override;
 	void process(const Context &context, TaskNotifier *notifier) override;
 
-	Object *object();
-	const Object *object() const;
+	SceneNode *object();
+	const SceneNode *object() const;
 
 	const char *name() const override;
 };

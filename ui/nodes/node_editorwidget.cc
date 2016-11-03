@@ -747,7 +747,7 @@ void QtNodeEditor::selectNode(QtNode *node, QGraphicsSceneMouseEvent *mouseEvent
 		setActiveObject(static_cast<ObjectNodeItem *>(node));
 	}
 	else {
-		auto object = static_cast<Object *>(m_context->scene->active_node());
+		auto object = m_context->scene->active_node();
 
 		auto graph = object->graph();
 		graph->add_to_selection(node->getNode());
@@ -805,7 +805,7 @@ void QtNodeEditor::deselectConnections()
 void QtNodeEditor::deselectNodes()
 {
 	if (m_context->eval_ctx->edit_mode) {
-		auto object = static_cast<Object *>(m_context->scene->active_node());
+		auto object = m_context->scene->active_node();
 		auto graph = object->graph();
 
 		for (const auto &node : m_selected_nodes) {
@@ -873,7 +873,7 @@ void QtNodeEditor::removeNode(QtNode *node)
 	}
 	else {
 		auto scene = m_context->scene;
-		auto object = static_cast<Object *>(scene->active_node());
+		auto object = scene->active_node();
 		auto graph = object->graph();
 
 		const auto was_connected = node->getNode()->isLinked();
@@ -932,7 +932,7 @@ void QtNodeEditor::splitConnectionWithNode(QtNode *node)
 	const auto &target = pairs.second;
 
 	auto scene = m_context->scene;
-	auto object = static_cast<Object *>(scene->active_node());
+	auto object = scene->active_node();
 	auto graph = object->graph();
 
 	auto node_from = base.first->getNode();
@@ -1305,7 +1305,7 @@ void QtNodeEditor::update_state(event_type event)
 
 		std::unordered_map<Node *, QtNode *> node_items_map;
 
-		auto object = static_cast<Object *>(scene_node);
+		auto object = scene_node;
 		auto graph = object->graph();
 
 		/* Add the nodes. */
@@ -1359,27 +1359,22 @@ void QtNodeEditor::update_state(event_type event)
 	}
 	/* Add the object nodes to the scene. */
 	else {
-		for (const auto &node : m_context->scene->nodes()) {
-			auto object = static_cast<Object *>(node.get());
+		auto current_node = m_context->scene->current_node();
 
-			if (!object) {
+		for (const auto &node_ptr : current_node->children()) {
+			if (!node_ptr) {
 				continue;
 			}
 
-			/* If it is has a parent, skip. */
-			if (object->parent()) {
-				continue;
-			}
-
-			auto node_item = new ObjectNodeItem(node.get(), node->name().c_str());
+			auto node_item = new ObjectNodeItem(node_ptr, node_ptr->name().c_str());
 			node_item->setTitleColor(Qt::white);
 			node_item->alignTitle(ALIGNED_CENTER);
 
 			node_item->setEditor(this);
 			node_item->setScene(m_graphics_scene);
-			node_item->setPos(node->xpos(), node->ypos());
+			node_item->setPos(node_ptr->xpos(), node_ptr->ypos());
 
-			if (node.get() == m_context->scene->active_node()) {
+			if (node_ptr == m_context->scene->active_node()) {
 				m_selected_nodes.append(node_item);
 			}
 
@@ -1404,7 +1399,7 @@ void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNo
 	auto scene = m_context->scene;
 
 	if (m_context->eval_ctx->edit_mode) {
-		auto object = static_cast<Object *>(scene->active_node());
+		auto object = scene->active_node();
 		auto graph = object->graph();
 
 		auto node_from = from->getNode();
@@ -1431,7 +1426,7 @@ void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, Q
 	auto scene = m_context->scene;
 
 	if (m_context->eval_ctx->edit_mode) {
-		auto object = static_cast<Object *>(scene->active_node());
+		auto object = scene->active_node();
 		auto graph = object->graph();
 
 		auto node_from = from->getNode();

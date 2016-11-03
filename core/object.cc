@@ -35,11 +35,8 @@
 
 #include "ui/paramfactory.h"
 
-Object::Object()
+SceneNode::SceneNode()
 {
-	add_input("Parent");
-	add_output("Child");
-
 	add_prop("position", "Position", property_type::prop_vec3);
 	set_prop_min_max(-10.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -55,43 +52,50 @@ Object::Object()
 	updateMatrix();
 }
 
-PrimitiveCollection *Object::collection() const
+SceneNode::~SceneNode()
+{
+	for (auto &scene_node : children()) {
+		delete scene_node;
+	}
+}
+
+PrimitiveCollection *SceneNode::collection() const
 {
 	return m_collection;
 }
 
-void Object::collection(PrimitiveCollection *coll)
+void SceneNode::collection(PrimitiveCollection *coll)
 {
 	m_collection = coll;
 }
 
-void Object::matrix(const glm::mat4 &m)
+void SceneNode::matrix(const glm::mat4 &m)
 {
 	m_matrix = m;
 }
 
-const glm::mat4 &Object::matrix() const
+const glm::mat4 &SceneNode::matrix() const
 {
 	return m_matrix;
 }
 
-void Object::addNode(Node *node)
+void SceneNode::addNode(Node *node)
 {
 	m_graph.add(node);
 	m_graph.active_node(node);
 }
 
-Graph *Object::graph()
+Graph *SceneNode::graph()
 {
 	return &m_graph;
 }
 
-const Graph *Object::graph() const
+const Graph *SceneNode::graph() const
 {
 	return &m_graph;
 }
 
-void Object::updateMatrix()
+void SceneNode::updateMatrix()
 {
 	const auto m_pos = eval_vec3("position");
 	const auto m_rotation = eval_vec3("rotation");
@@ -107,13 +111,13 @@ void Object::updateMatrix()
 	m_inv_matrix = glm::inverse(m_matrix);
 }
 
-void Object::addChild(Object *child)
+void SceneNode::add_child(SceneNode *child)
 {
 	m_children.push_back(child);
 	child->parent(this);
 }
 
-void Object::removeChild(Object *child)
+void SceneNode::remove_child(SceneNode *child)
 {
 	auto iter = std::find(m_children.begin(), m_children.end(), child);
 	assert(iter != m_children.end());
@@ -121,22 +125,22 @@ void Object::removeChild(Object *child)
 	child->parent(nullptr);
 }
 
-const std::vector<Object *> &Object::children() const
+const std::vector<SceneNode *> &SceneNode::children() const
 {
 	return m_children;
 }
 
-Object *Object::parent() const
+SceneNode *SceneNode::parent() const
 {
 	return m_parent;
 }
 
-void Object::parent(Object *parent)
+void SceneNode::parent(SceneNode *parent)
 {
 	m_parent = parent;
 }
 
-std::string Object::get_dag_path() const
+std::string SceneNode::get_dag_path() const
 {
 	std::string root = "/";
 
@@ -149,4 +153,34 @@ std::string Object::get_dag_path() const
 	}
 
 	return root;
+}
+
+void SceneNode::name(const std::string &name)
+{
+	m_name = name;
+}
+
+const std::string &SceneNode::name() const
+{
+	return m_name;
+}
+
+float SceneNode::xpos() const
+{
+	return m_xpos;
+}
+
+void SceneNode::xpos(float x)
+{
+	m_xpos = x;
+}
+
+float SceneNode::ypos() const
+{
+	return m_ypos;
+}
+
+void SceneNode::ypos(float y)
+{
+	m_ypos = y;
 }

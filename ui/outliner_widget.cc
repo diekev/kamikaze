@@ -230,13 +230,13 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 		scene->set_flags(SCENE_OL_EXPANDED);
 
 		for (const auto &node : scene->nodes()) {
-			auto object = static_cast<Object *>(node.get());
+			auto node_ptr = node.get();
 
-			if (object->parent() != nullptr) {
+			if (node_ptr->parent() != nullptr) {
 				continue;
 			}
 
-			auto child = new ObjectTreeWidgetItem(node.get(), scene_item);
+			auto child = new ObjectTreeWidgetItem(node_ptr, scene_item);
 			child->setSelected(node.get() == scene->active_node());
 			scene_item->addChild(child);
 			child->setExpanded(node->has_flags(SNODE_OL_EXPANDED));
@@ -251,14 +251,13 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 	if (object_item && !object_item->visited()) {
 		auto scene_node = object_item->getNode();
 		scene_node->set_flags(SNODE_OL_EXPANDED);
-		auto object = static_cast<Object *>(scene_node);
 
-		for (const auto &node : object->graph()->nodes()) {
+		for (const auto &node : scene_node->graph()->nodes()) {
 			auto node_item = new ObjectNodeTreeWidgetItem(node.get(), object_item);
 			object_item->addChild(node_item);
 		}
 
-		for (const auto &child : object->children()) {
+		for (const auto &child : scene_node->children()) {
 			auto child_item = new ObjectTreeWidgetItem(child, object_item);
 			child_item->setSelected(child == m_context->scene->active_node());
 			object_item->addChild(child_item);

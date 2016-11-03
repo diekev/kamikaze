@@ -40,7 +40,7 @@ void AddObjectCmd::execute(const Context &context)
 {
 	m_scene = context.scene;
 
-	m_object = new Object;
+	m_object = new SceneNode;
 	m_object->name(m_name.c_str());
 
 	assert(m_scene != nullptr);
@@ -68,7 +68,7 @@ void AddNodeCmd::execute(const Context &context)
 		return;
 	}
 
-	m_object = static_cast<Object *>(scene_node);
+	m_object = scene_node;
 
 	assert(m_object != nullptr);
 
@@ -102,10 +102,10 @@ void AddPresetObjectCmd::execute(const Context &context)
 			return;
 		}
 
-		m_object = static_cast<Object *>(scene_node);
+		m_object = scene_node;
 	}
 	else {
-		m_object = new Object;
+		m_object = new SceneNode;
 		m_object->name(m_name);
 	}
 
