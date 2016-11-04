@@ -223,7 +223,12 @@ void Graph::add_to_selection(Node *node)
 void Graph::remove_from_selection(Node *node)
 {
 	node->unset_flags(NODE_SELECTED);
-	m_selected_nodes.erase(std::find(m_selected_nodes.begin(),
-	                                 m_selected_nodes.end(),
-	                                 node));
+
+	auto iter = std::find(m_selected_nodes.begin(),
+	                      m_selected_nodes.end(),
+                          node);
+
+	if (iter != m_selected_nodes.end()) {
+		m_selected_nodes.erase(iter);
+	}
 }

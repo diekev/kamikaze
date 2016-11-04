@@ -810,9 +810,11 @@ void QtNodeEditor::deselectNodes()
 
 	for (const auto &node : m_selected_nodes) {
 		if (is_object_node(node)) {
+			std::cerr << "Got scene node\n";
 			//m_context->scene->set_active_node(nullptr);
 		}
 		else {
+			std::cerr << "Got object node\n";
 			graph->remove_from_selection(node->getNode());
 		}
 	}
@@ -1297,14 +1299,14 @@ void QtNodeEditor::update_state(event_type event)
 
 	/* Add nodes to the scene. */
 
-	/* Add the object's graph's nodes to the scene. */
-	if (m_context->eval_ctx->edit_mode) {
-		auto scene_node = m_context->scene->active_node();
+	auto scene_node = m_context->scene->current_node();
 
-		if (scene_node == nullptr) {
-			return;
-		}
+	if (scene_node == nullptr) {
+		return;
+	}
 
+	/* Only draw graph for non root nodes. */
+	if (scene_node != m_context->scene->root_node()) {
 		std::unordered_map<Node *, QtNode *> node_items_map;
 
 		auto graph = scene_node->graph();
@@ -1355,53 +1357,28 @@ void QtNodeEditor::update_state(event_type event)
 				}
 			}
 		}
-
-		/* Add the children of this object. */
-		auto current_node = m_context->scene->current_node();
-
-		for (const auto &node_ptr : current_node->children()) {
-			if (!node_ptr) {
-				continue;
-			}
-
-			auto node_item = new ObjectNodeItem(node_ptr, node_ptr->name().c_str());
-			node_item->setTitleColor(Qt::white);
-			node_item->alignTitle(ALIGNED_CENTER);
-
-			node_item->setEditor(this);
-			node_item->setScene(m_graphics_scene);
-			node_item->setPos(node_ptr->xpos(), node_ptr->ypos());
-
-			if (node_ptr == m_context->scene->active_node()) {
-				m_selected_nodes.append(node_item);
-			}
-
-			m_graphics_scene->addItem(node_item);
-		}
 	}
-	/* Add the object nodes to the scene. */
-	else {
-		auto current_node = m_context->scene->current_node();
 
-		for (const auto &node_ptr : current_node->children()) {
-			if (!node_ptr) {
-				continue;
-			}
+	/* Add the children of this object. */
 
-			auto node_item = new ObjectNodeItem(node_ptr, node_ptr->name().c_str());
-			node_item->setTitleColor(Qt::white);
-			node_item->alignTitle(ALIGNED_CENTER);
-
-			node_item->setEditor(this);
-			node_item->setScene(m_graphics_scene);
-			node_item->setPos(node_ptr->xpos(), node_ptr->ypos());
-
-			if (node_ptr == m_context->scene->active_node()) {
-				m_selected_nodes.append(node_item);
-			}
-
-			m_graphics_scene->addItem(node_item);
+	for (const auto &node_ptr : scene_node->children()) {
+		if (!node_ptr) {
+			continue;
 		}
+
+		auto node_item = new ObjectNodeItem(node_ptr, node_ptr->name().c_str());
+		node_item->setTitleColor(Qt::white);
+		node_item->alignTitle(ALIGNED_CENTER);
+
+		node_item->setEditor(this);
+		node_item->setScene(m_graphics_scene);
+		node_item->setPos(node_ptr->xpos(), node_ptr->ypos());
+
+		if (node_ptr == m_context->scene->active_node()) {
+			m_selected_nodes.append(node_item);
+		}
+
+		m_graphics_scene->addItem(node_item);
 	}
 
 	/* Make sure selected items are highlighted and in front of others. */
