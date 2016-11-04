@@ -121,7 +121,7 @@ void Viewer::paintGL()
 	}
 
 	if (m_context->scene != nullptr) {
-		render_node(m_context->scene->current_node());
+		render_node(m_context->scene->root_node());
 	}
 }
 
