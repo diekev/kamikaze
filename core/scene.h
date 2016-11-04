@@ -108,6 +108,7 @@ public:
 
 	SceneNode *current_node();
 
+	void current_node(SceneNode *node);
 private:
 	bool ensureUniqueName(std::string &name) const;
 };

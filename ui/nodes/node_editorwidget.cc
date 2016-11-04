@@ -562,6 +562,7 @@ void QtNodeEditor::enterObjectNode(QAction *action)
 {
 	m_editor_mode = EDITOR_MODE_OBJECT;
 	m_context->eval_ctx->edit_mode = true;
+	m_context->scene->current_node(m_context->scene->active_node());
 	m_context->scene->notify_listeners(event_type::node | event_type::selected);
 
 	if (action) {
@@ -1272,6 +1273,7 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 	if (action->text() == NODE_EXIT_OBJECT) {
 		m_editor_mode = EDITOR_MODE_SCENE;
 		m_context->eval_ctx->edit_mode = false;
+		m_context->scene->current_node(m_context->scene->current_node()->parent());
 		m_context->scene->notify_listeners(event_type::object | event_type::selected);
 
 		action->setText(NODE_ENTER_OBJECT);
@@ -1305,8 +1307,7 @@ void QtNodeEditor::update_state(event_type event)
 
 		std::unordered_map<Node *, QtNode *> node_items_map;
 
-		auto object = scene_node;
-		auto graph = object->graph();
+		auto graph = scene_node->graph();
 
 		/* Add the nodes. */
 		for (const auto &node : graph->nodes()) {
@@ -1356,6 +1357,27 @@ void QtNodeEditor::update_state(event_type event)
 		}
 
 		/* Add the children of this object. */
+		auto current_node = m_context->scene->current_node();
+
+		for (const auto &node_ptr : current_node->children()) {
+			if (!node_ptr) {
+				continue;
+			}
+
+			auto node_item = new ObjectNodeItem(node_ptr, node_ptr->name().c_str());
+			node_item->setTitleColor(Qt::white);
+			node_item->alignTitle(ALIGNED_CENTER);
+
+			node_item->setEditor(this);
+			node_item->setScene(m_graphics_scene);
+			node_item->setPos(node_ptr->xpos(), node_ptr->ypos());
+
+			if (node_ptr == m_context->scene->active_node()) {
+				m_selected_nodes.append(node_item);
+			}
+
+			m_graphics_scene->addItem(node_item);
+		}
 	}
 	/* Add the object nodes to the scene. */
 	else {

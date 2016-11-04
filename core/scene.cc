@@ -128,6 +128,13 @@ SceneNode *Scene::current_node()
 	return m_current_node;
 }
 
+void Scene::current_node(SceneNode *node)
+{
+	m_current_node = node;
+
+	std::cerr << "Setting current node to \"" << node->get_dag_path() << "\"\n";
+}
+
 void Scene::tagObjectUpdate()
 {
 	if (!m_active_node) {
