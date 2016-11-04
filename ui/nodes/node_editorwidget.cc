@@ -805,16 +805,16 @@ void QtNodeEditor::deselectConnections()
 
 void QtNodeEditor::deselectNodes()
 {
-	if (m_context->eval_ctx->edit_mode) {
-		auto object = m_context->scene->active_node();
-		auto graph = object->graph();
+	auto object = m_context->scene->current_node();
+	auto graph = object->graph();
 
-		for (const auto &node : m_selected_nodes) {
+	for (const auto &node : m_selected_nodes) {
+		if (is_object_node(node)) {
+			//m_context->scene->set_active_node(nullptr);
+		}
+		else {
 			graph->remove_from_selection(node->getNode());
 		}
-	}
-	else {
-		/* TODO */
 	}
 
 	m_selected_nodes.clear();
