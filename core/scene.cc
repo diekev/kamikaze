@@ -250,8 +250,3 @@ void Scene::framesPerSecond(float value)
 	m_fps = value;
 	notify_listeners(event_type::time | event_type::modified);
 }
-
-const std::vector<SceneNodePtr> &Scene::nodes() const
-{
-	return m_nodes;
-}

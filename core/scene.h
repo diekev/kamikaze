@@ -95,8 +95,6 @@ public:
 
 	void updateForNewFrame(const Context &context);
 
-	const std::vector<SceneNodePtr> &nodes() const;
-
 	void tagObjectUpdate();
 
 	void evalObjectDag(const Context &context, SceneNode *node);
