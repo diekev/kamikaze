@@ -121,70 +121,86 @@ void Viewer::paintGL()
 	}
 
 	if (m_context->scene != nullptr) {
-		for (auto &scene_node : m_context->scene->nodes()) {
-			auto node_ptr = scene_node.get();
+		render_node(m_context->scene->current_node());
+	}
+}
 
-			if (!node_ptr->collection()) {
-				continue;
-			}
+void Viewer::render_node(SceneNode *root)
+{
+	if (root == nullptr) {
+		return;
+	}
 
-			const bool active_object = (node_ptr == m_context->scene->active_node());
+	for (auto &child : root->children()) {
+		/* Push parent matrix. */
+		m_stack.push(root->matrix());
 
-			const auto collection = node_ptr->collection();
+		/* Push current node matrix. */
+		m_stack.push(child->matrix());
 
-			if (node_ptr->parent()) {
-				m_stack.push(node_ptr->parent()->matrix());
-			}
+		/* Render collection. */
+		const bool active_node = (child == m_context->scene->active_node());
+		const auto collection = child->collection();
 
-			m_stack.push(node_ptr->matrix());
+		render_collection(collection, active_node);
 
-			for (auto &prim : collection->primitives()) {
-				/* update prim before drawing */
-				prim->update();
-				prim->prepareRenderData();
+		/* Pop current node matrix. */
+		m_stack.pop();
 
-				if (prim->drawBBox()) {
-					prim->bbox()->render(m_viewer_context);
-				}
+		/* Render children of the current node after pop-ing its matrix from the
+		 * stack, become we push it again right after it. */
+		render_node(child);
 
-				m_stack.push(prim->matrix());
+		/* Pop parent matrix. */
+		m_stack.pop();
+	}
+}
 
-				m_viewer_context.setMatrix(m_stack.top());
+void Viewer::render_collection(PrimitiveCollection *collection, bool active_node)
+{
+	if (collection == nullptr) {
+		return;
+	}
 
-				prim->render(m_viewer_context);
+	for (auto &prim : collection->primitives()) {
+		/* update prim before drawing */
+		prim->update();
+		prim->prepareRenderData();
 
-				if (active_object) {
-					m_viewer_context.for_outline(true);
-
-					glStencilFunc(GL_NOTEQUAL, 1, 0xff);
-					glStencilMask(0x00);
-					glDisable(GL_DEPTH_TEST);
-
-					glLineWidth(5);
-					glPolygonMode(GL_FRONT, GL_LINE);
-
-					prim->render(m_viewer_context);
-
-					/* Restore state. */
-					glPolygonMode(GL_FRONT, GL_FILL);
-					glLineWidth(1);
-
-					glStencilFunc(GL_ALWAYS, 1, 0xff);
-					glStencilMask(0xff);
-					glEnable(GL_DEPTH_TEST);
-
-					m_viewer_context.for_outline(false);
-				}
-
-				m_stack.pop();
-			}
-
-			m_stack.pop();
-
-			if (node_ptr->parent()) {
-				m_stack.pop();
-			}
+		if (prim->drawBBox()) {
+			prim->bbox()->render(m_viewer_context);
 		}
+
+		m_stack.push(prim->matrix());
+
+		m_viewer_context.setMatrix(m_stack.top());
+
+		prim->render(m_viewer_context);
+
+		if (active_node) {
+			m_viewer_context.for_outline(true);
+
+			glStencilFunc(GL_NOTEQUAL, 1, 0xff);
+			glStencilMask(0x00);
+			glDisable(GL_DEPTH_TEST);
+
+			glLineWidth(5);
+			glPolygonMode(GL_FRONT, GL_LINE);
+
+			prim->render(m_viewer_context);
+
+			/* Restore state. */
+			glPolygonMode(GL_FRONT, GL_FILL);
+			glLineWidth(1);
+
+			glStencilFunc(GL_ALWAYS, 1, 0xff);
+			glStencilMask(0xff);
+			glEnable(GL_DEPTH_TEST);
+
+			m_viewer_context.for_outline(false);
+		}
+
+		m_stack.pop();
 	}
 }
 

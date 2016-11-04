@@ -36,6 +36,7 @@
 class Camera;
 class Grid;
 class Scene;
+class SceneNode;
 class ViewerContext;
 
 class MatrixStack {
@@ -84,6 +85,9 @@ class Viewer : public QGLWidget {
 
 	/* Get the world space position of the given point. */
 	glm::vec3 unproject(const glm::vec3 &pos) const;
+
+	void render_node(SceneNode *root);
+	void render_collection(PrimitiveCollection *collection, bool active_node);
 
 public Q_SLOTS:
 	void changeBackground();
