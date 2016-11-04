@@ -142,13 +142,12 @@ void SceneNode::parent(SceneNode *parent)
 
 std::string SceneNode::get_dag_path() const
 {
-	std::string root = "/";
+	std::string root;
 
-	auto my_parent = parent();
+	auto my_parent = this;
 
 	while (my_parent != nullptr) {
-		root += my_parent->name();
-		root += "/";
+		root = my_parent->name() + "/" + root;
 		my_parent = my_parent->parent();
 	}
 
