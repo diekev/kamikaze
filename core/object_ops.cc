@@ -92,42 +92,26 @@ void AddNodeCmd::redo()
 
 void AddPresetObjectCmd::execute(const Context &context)
 {
-	m_scene = context.scene;
+	/* TODO: context of creation. */
+	auto scene = context.scene;
 
-	if (context.eval_ctx->edit_mode) {
-		auto scene_node = m_scene->active_node();
-
-		/* Sanity check. */
-		if (scene_node == nullptr) {
-			return;
-		}
-
-		m_object = scene_node;
-	}
-	else {
-		m_object = new SceneNode;
-		m_object->name(m_name);
-	}
-
-	assert(m_object != nullptr);
+	auto scene_node = new SceneNode;
+	scene_node->name(m_name);
 
 	auto node = (*context.node_factory)(m_name);
 	node->xpos(-300);
 	node->ypos(-100);
 
-	m_object->addNode(node);
+	scene_node->addNode(node);
 
-	auto graph = m_object->graph();
+	auto graph = scene_node->graph();
 	graph->add_to_selection(node);
 	graph->connect(node->output(0), graph->output()->input(0));
 
-	if (!context.eval_ctx->edit_mode) {
-		m_scene->add_node(m_object);
-		m_scene->evalObjectDag(context, m_object);
-	}
-	else {
-		m_scene->notify_listeners(event_type::node | event_type::added);
-	}
+	scene->add_node(scene_node);
+	scene->evalObjectDag(context, scene_node);
+
+	scene->notify_listeners(event_type::object | event_type::added);
 }
 
 void AddPresetObjectCmd::undo()
