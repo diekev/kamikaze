@@ -32,7 +32,7 @@
 
 Scene::Scene()
     : m_root(new SceneNode)
-    , m_current_node(m_root)
+    , m_current_node(m_root.get())
 {}
 
 void Scene::add_node(SceneNode *node)
@@ -137,7 +137,7 @@ void Scene::current_node(SceneNode *node)
 
 SceneNode *Scene::root_node()
 {
-	return m_root;
+	return m_root.get();
 }
 
 void Scene::tagObjectUpdate()

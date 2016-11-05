@@ -49,7 +49,7 @@ class Scene : public Listened {
 	int m_mode = 0;
 
 	/* The root of the hierarchy, "/", it only has children node. */
-	SceneNode *m_root;
+	SceneNodePtr m_root;
 
 	/* The node that is currently viewed/edited. */
 	SceneNode *m_current_node;
