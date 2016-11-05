@@ -131,8 +131,6 @@ SceneNode *Scene::current_node()
 void Scene::current_node(SceneNode *node)
 {
 	m_current_node = node;
-
-	std::cerr << "Setting current node to \"" << node->get_dag_path() << "\"\n";
 }
 
 SceneNode *Scene::root_node()

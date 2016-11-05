@@ -797,11 +797,9 @@ void QtNodeEditor::deselectNodes()
 
 	for (const auto &node : m_selected_nodes) {
 		if (is_object_node(node)) {
-			std::cerr << "Got scene node\n";
 			//m_context->scene->set_active_node(nullptr);
 		}
 		else {
-			std::cerr << "Got object node\n";
 			graph->remove_from_selection(node->getNode());
 		}
 	}
