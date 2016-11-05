@@ -83,34 +83,9 @@ void Scene::intersect(const Ray &/*ray*/)
 }
 
 /* Select the object which is closest to pos. */
-void Scene::selectObject(const glm::vec3 &pos)
+void Scene::selectObject(const glm::vec3 &/*pos*/)
 {
-	float min = 1000.0f;
-	int selected_object = -1, index = 0;
-
-	for (auto &node : m_nodes) {
-		auto object = node.get();
-
-		if (!object || !object->collection()) {
-			continue;
-		}
-
-		for (const auto &prim : object->collection()->primitives()) {
-			float dist = glm::distance(prim->pos(), pos);
-
-			if (/*dist < 1.0f &&*/ dist < min) {
-				selected_object = index;
-				min = dist;
-			}
-		}
-
-		++index;
-	}
-
-	if (selected_object != -1 && m_active_node != (m_nodes[selected_object]).get()) {
-		m_active_node = (m_nodes[selected_object]).get();
-		notify_listeners(event_type::object | event_type::selected);
-	}
+	/* TODO: reimplement this, perhaps using a scene level BVH. */
 }
 
 Depsgraph *Scene::depsgraph()
