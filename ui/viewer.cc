@@ -338,8 +338,8 @@ void Viewer::drawGrid(bool b)
 
 /* ************************************************************************** */
 
-ViewerWidget::ViewerWidget(QWidget *parent)
-    : WidgetBase(parent)
+ViewerWidget::ViewerWidget(Context &context, QWidget *parent)
+    : WidgetBase(context, parent)
     , m_viewer(new Viewer(this))
 {
 	m_viewer->set_base(this);

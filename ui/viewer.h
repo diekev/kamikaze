@@ -132,7 +132,7 @@ class ViewerWidget : public WidgetBase {
 	Viewer *m_viewer;
 
 public:
-	explicit ViewerWidget(QWidget *parent = nullptr);
+	explicit ViewerWidget(Context &context, QWidget *parent = nullptr);
 
 	void update_state(event_type event) override;
 };

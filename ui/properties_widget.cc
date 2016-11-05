@@ -41,8 +41,8 @@
 
 #include "util/utils.h"
 
-PropertiesWidget::PropertiesWidget(QWidget *parent)
-    : WidgetBase(parent)
+PropertiesWidget::PropertiesWidget(Context &context, QWidget *parent)
+    : WidgetBase(context, parent)
     , m_widget(new QWidget())
     , m_scroll(new QScrollArea())
     , m_glayout(new QGridLayout(m_widget))

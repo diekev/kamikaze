@@ -177,8 +177,8 @@ void TreeWidget::dropEvent(QDropEvent *event)
 	QTreeView::dropEvent(event);
 }
 
-OutlinerTreeWidget::OutlinerTreeWidget(QWidget *parent)
-    : WidgetBase(parent)
+OutlinerTreeWidget::OutlinerTreeWidget(Context &context, QWidget *parent)
+    : WidgetBase(context, parent)
     , m_tree_widget(new TreeWidget(this))
 {
 	m_main_layout->addWidget(m_tree_widget);

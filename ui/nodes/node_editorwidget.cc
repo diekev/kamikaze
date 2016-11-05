@@ -59,12 +59,11 @@ static constexpr auto NODE_ACTION_ZOOM_300 = "300%";
 static constexpr auto NODE_ACTION_COLLAPSE_ALL = "Collapse all nodes";
 static constexpr auto NODE_ACTION_EXPAND_ALL = "Expand all nodes";
 static constexpr auto NODE_ENTER_OBJECT = "Enter object";
-static constexpr auto NODE_EXIT_OBJECT = "Exit object";
 
 /* ************************************************************************** */
 
-QtNodeEditor::QtNodeEditor(QWidget *parent)
-    : WidgetBase(parent)
+QtNodeEditor::QtNodeEditor(Context &context, QWidget *parent)
+    : WidgetBase(context, parent)
     , m_view(new NodeView(this))
     , m_graphics_scene(new QtNodeGraphicsScene())
 {
@@ -564,18 +563,6 @@ void QtNodeEditor::enterObjectNode(QAction *action)
 	m_context->eval_ctx->edit_mode = true;
 	m_context->scene->current_node(m_context->scene->active_node());
 	m_context->scene->notify_listeners(event_type::node | event_type::selected);
-
-	if (action) {
-		action->setText(NODE_EXIT_OBJECT);
-	}
-	else {
-		for (auto action : m_context_menu->actions()) {
-			if (action->text() == NODE_ENTER_OBJECT) {
-				action->setText(NODE_EXIT_OBJECT);
-				break;
-			}
-		}
-	}
 }
 
 bool QtNodeEditor::mouseMoveHandler(QGraphicsSceneMouseEvent *mouseEvent)
@@ -1268,18 +1255,6 @@ void QtNodeEditor::contextMenuItemSelected(QAction *action)
 	/* ---------------- Enter object action ---------------- */
 	if (action->text() == NODE_ENTER_OBJECT) {
 		enterObjectNode(action);
-		return;
-	}
-
-	/* ---------------- Exit object action ---------------- */
-	if (action->text() == NODE_EXIT_OBJECT) {
-		m_editor_mode = EDITOR_MODE_SCENE;
-		m_context->eval_ctx->edit_mode = false;
-		m_context->scene->current_node(m_context->scene->current_node()->parent());
-		m_context->scene->notify_listeners(event_type::object | event_type::selected);
-
-		action->setText(NODE_ENTER_OBJECT);
-
 		return;
 	}
 }

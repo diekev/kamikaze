@@ -49,6 +49,7 @@ qt5_wrap_cpp(
 	properties_widget.h
 	timeline_widget.h
 	viewer.h
+	widgetbase.h
 )
 
 add_library(kmk_ui STATIC

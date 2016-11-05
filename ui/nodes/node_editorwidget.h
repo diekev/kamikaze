@@ -81,7 +81,7 @@ class QtNodeEditor : public WidgetBase {
 	QtNode *m_hover_node = nullptr;
 
 public:
-	explicit QtNodeEditor(QWidget *parent = nullptr);
+	explicit QtNodeEditor(Context &context, QWidget *parent = nullptr);
 	virtual ~QtNodeEditor();
 
 	/* If true, a context menu is displayed when the right mousebutton is

@@ -51,7 +51,7 @@ class TimeLineWidget : public WidgetBase {
 	bool m_timer_has_started = false;
 
 public:
-	explicit TimeLineWidget(QWidget *parent = nullptr);
+	explicit TimeLineWidget(Context &context, QWidget *parent = nullptr);
 
 	void update_state(event_type event) override;
 

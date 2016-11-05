@@ -110,6 +110,11 @@ set(ICONS
 	icons/icon_icosphere.png
 	icons/icon_jump_first.png
 	icons/icon_jump_last.png
+	icons/icon_nav_home.png
+	icons/icon_nav_next.png
+	icons/icon_nav_parent.png
+	icons/icon_nav_prev.png
+	icons/icon_nav_reload.png
 	icons/icon_pause.png
 	icons/icon_play_forward.png
 	icons/icon_play_backward.png

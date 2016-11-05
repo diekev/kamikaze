@@ -266,8 +266,7 @@ void MainWindow::addTimeLineWidget()
 	auto dock = new QDockWidget("Time Line", this);
 	dock->setAttribute(Qt::WA_DeleteOnClose);
 
-	TimeLineWidget *time_line = new TimeLineWidget(dock);
-	time_line->listens(&m_context);
+	TimeLineWidget *time_line = new TimeLineWidget(m_context, dock);
 	time_line->update_state(event_type::time | event_type::modified);
 
 	dock->setWidget(time_line);
@@ -281,8 +280,7 @@ void MainWindow::addGraphEditorWidget()
 	auto dock = new QDockWidget("Graph Editor", this);
 	dock->setAttribute(Qt::WA_DeleteOnClose);
 
-	QtNodeEditor *graph_editor = new QtNodeEditor(dock);
-	graph_editor->listens(&m_context);
+	auto graph_editor = new QtNodeEditor(m_context, dock);
 	graph_editor->setAddNodeMenu(m_add_nodes_menu);
 	/* XXX - graph editor needs to be able to draw the scene from the scratch. */
 	graph_editor->update_state(static_cast<event_type>(-1));
@@ -299,8 +297,7 @@ void MainWindow::addGLViewerWidget()
 	if (m_viewer_dock == nullptr) {
 		m_viewer_dock = new QDockWidget("Viewport", this);
 
-		ViewerWidget *glviewer = new ViewerWidget(m_viewer_dock);
-		glviewer->listens(&m_context);
+		ViewerWidget *glviewer = new ViewerWidget(m_context, m_viewer_dock);
 		glviewer->update_state(static_cast<event_type>(-1));
 
 		m_viewer_dock->setWidget(glviewer);
@@ -317,8 +314,7 @@ void MainWindow::addOutlinerWidget()
 	auto dock = new QDockWidget("Outliner", this);
 	dock->setAttribute(Qt::WA_DeleteOnClose);
 
-	OutlinerTreeWidget *outliner = new OutlinerTreeWidget(dock);
-	outliner->listens(&m_context);
+	auto outliner = new OutlinerTreeWidget(m_context, dock);
 	outliner->update_state(event_type::object | event_type::added);
 
 	dock->setWidget(outliner);
@@ -332,8 +328,7 @@ void MainWindow::addGraphOutlinerWidget()
 	auto outliner_dock = new QDockWidget("Outliner", this);
 	outliner_dock->setAttribute(Qt::WA_DeleteOnClose);
 
-	OutlinerTreeWidget *outliner = new OutlinerTreeWidget(outliner_dock);
-	outliner->listens(&m_context);
+	auto outliner = new OutlinerTreeWidget(m_context, outliner_dock);
 	outliner->update_state(event_type::object | event_type::added);
 
 	outliner_dock->setWidget(outliner);
@@ -344,8 +339,7 @@ void MainWindow::addGraphOutlinerWidget()
 	auto graph_dock = new QDockWidget("Graph Editor", this);
 	graph_dock->setAttribute(Qt::WA_DeleteOnClose);
 
-	QtNodeEditor *graph_editor = new QtNodeEditor(graph_dock);
-	graph_editor->listens(&m_context);
+	auto graph_editor = new QtNodeEditor(m_context, graph_dock);
 	graph_editor->setAddNodeMenu(m_add_nodes_menu);
 
 	graph_dock->setWidget(graph_editor);
@@ -364,8 +358,7 @@ void MainWindow::addPropertiesWidget()
 	auto dock = new QDockWidget("Properties", this);
 	dock->setAttribute(Qt::WA_DeleteOnClose);
 
-	PropertiesWidget *properties = new PropertiesWidget(dock);
-	properties->listens(&m_context);
+	auto properties = new PropertiesWidget(m_context, dock);
 	properties->update_state(static_cast<event_type>(-1));
 
 	dock->setWidget(properties);

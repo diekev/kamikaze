@@ -30,19 +30,29 @@
 
 class QFrame;
 class QHBoxLayout;
+class QVBoxLayout;
 
 class WidgetBase : public QWidget, public ContextListener {
+	Q_OBJECT
+
 protected:
 	QFrame *m_frame;
-	QHBoxLayout *m_layout;
+	QVBoxLayout *m_layout;
 	QHBoxLayout *m_main_layout;
 
 public:
-	explicit WidgetBase(QWidget *parent = nullptr);
+	explicit WidgetBase(Context &context, QWidget *parent = nullptr);
 	virtual ~WidgetBase() = default;
 
 	void active(bool yesno);
 	void set_active();
 
 	void mousePressEvent(QMouseEvent *e) override;
+
+public Q_SLOTS:
+	void previous_node();
+	void next_node();
+	void parent_node();
+	void root_node();
+	void reload_view();
 };

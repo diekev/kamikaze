@@ -98,7 +98,7 @@ class OutlinerTreeWidget : public WidgetBase {
 	TreeWidget *m_tree_widget;
 
 public:
-	explicit OutlinerTreeWidget(QWidget *parent = nullptr);
+	explicit OutlinerTreeWidget(Context &context, QWidget *parent = nullptr);
 
 	void update_state(event_type event) override;
 

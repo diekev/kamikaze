@@ -63,8 +63,8 @@ static UIButData transport_controls[TC_NUM_CONTROLS] = {
     { TC_LAST_FRAME,     "Jump To Last Frame",      "icons/icon_jump_last.png" },
 };
 
-TimeLineWidget::TimeLineWidget(QWidget *parent)
-    : WidgetBase(parent)
+TimeLineWidget::TimeLineWidget(Context &context, QWidget *parent)
+    : WidgetBase(context, parent)
     , m_timer(new QTimer(this))
 {
 	m_vbox_layout = new QVBoxLayout();

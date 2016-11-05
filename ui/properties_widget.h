@@ -43,7 +43,7 @@ class PropertiesWidget : public WidgetBase {
 	ParamCallback m_callback;
 
 public:
-	explicit PropertiesWidget(QWidget *parent = nullptr);
+	explicit PropertiesWidget(Context &context, QWidget *parent = nullptr);
 	~PropertiesWidget() = default;
 
 	void update_state(event_type event) override;

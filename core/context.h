@@ -38,9 +38,10 @@ class WidgetBase;
 
 enum class event_type {
 	/* Category. */
-	object = (1 << 0),
-	node   = (2 << 0),
-	time   = (3 << 0),
+	object  = (1 << 0),
+	node    = (2 << 0),
+	time    = (3 << 0),
+	refresh = (4 << 0),
 
 	/* Action. */
 	added     = (1 << 8),
