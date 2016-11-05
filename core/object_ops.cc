@@ -62,7 +62,7 @@ void AddObjectCmd::redo()
 void AddNodeCmd::execute(const Context &context)
 {
 	m_scene = context.scene;
-	auto scene_node = m_scene->active_node();
+	auto scene_node = m_scene->current_node();
 
 	if (scene_node == nullptr) {
 		return;

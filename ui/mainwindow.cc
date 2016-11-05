@@ -379,7 +379,7 @@ void MainWindow::dumpGraph()
 	auto scene = m_context.scene;
 
 	if (data == "dump_object_graph") {
-		auto scene_node = scene->active_node();
+		auto scene_node = scene->current_node();
 
 		if (!scene_node) {
 			return;

@@ -135,7 +135,12 @@ void PropertiesWidget::evalObjectGraph()
 	this->set_active();
 	auto scene = m_context->scene;
 
-	scene->evalObjectDag(*m_context, scene->active_node());
+	if (scene->current_node() == scene->root_node()) {
+		std::cerr << "Trying to evaluate the graph of the root node\n!";
+		return;
+	}
+
+	scene->evalObjectDag(*m_context, scene->current_node());
 	scene->notify_listeners(static_cast<event_type>(-1));
 }
 
