@@ -65,6 +65,7 @@ void PropertiesWidget::update_state(event_type event)
 	Persona *persona = nullptr;
 	bool set_context = true;
 	auto scene = m_context->scene;
+	std::string dag_path;
 
 	if (scene->active_node() == nullptr) {
 		return;
@@ -79,6 +80,7 @@ void PropertiesWidget::update_state(event_type event)
 		if (is_elem(event_action, event_type::added, event_type::selected)) {
 			auto scene_node = scene->active_node();
 			persona = scene_node;
+			dag_path = scene_node->get_dag_path();
 		}
 		else if (is_elem(event_action, event_type::removed)) {
 			m_callback.clear();
@@ -94,6 +96,8 @@ void PropertiesWidget::update_state(event_type event)
 			if (!node) {
 				return;
 			}
+
+			dag_path = scene_node->get_dag_path() + node->name() + "/";
 
 			persona = node;
 			warnings = node->warnings();
@@ -122,6 +126,8 @@ void PropertiesWidget::update_state(event_type event)
 	}
 
 	drawProperties(persona, set_context);
+
+	this->set_path(dag_path);
 }
 
 void PropertiesWidget::evalObjectGraph()

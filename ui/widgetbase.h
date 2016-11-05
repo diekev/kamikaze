@@ -30,6 +30,7 @@
 
 class QFrame;
 class QHBoxLayout;
+class QLineEdit;
 class QVBoxLayout;
 
 class WidgetBase : public QWidget, public ContextListener {
@@ -39,6 +40,7 @@ protected:
 	QFrame *m_frame;
 	QVBoxLayout *m_layout;
 	QHBoxLayout *m_main_layout;
+	QLineEdit *m_path_edit;
 
 public:
 	explicit WidgetBase(Context &context, QWidget *parent = nullptr);
@@ -46,6 +48,8 @@ public:
 
 	void active(bool yesno);
 	void set_active();
+
+	void set_path(const std::string &path);
 
 	void mousePressEvent(QMouseEvent *e) override;
 

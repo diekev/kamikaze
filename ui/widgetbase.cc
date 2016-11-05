@@ -71,15 +71,15 @@ WidgetBase::WidgetBase(Context &context, QWidget *parent)
 	reload->setToolTip("Refresh current view");
 	connect(reload, SIGNAL(clicked()), this, SLOT(reload_view()));
 
-	auto line_edit = new QLineEdit();
-	line_edit->setText(m_context->scene->current_node()->get_dag_path().c_str());
+	m_path_edit = new QLineEdit();
+	m_path_edit->setText(m_context->scene->current_node()->get_dag_path().c_str());
 
 	navigation_layout->addWidget(prev);
 	navigation_layout->addWidget(up);
 	navigation_layout->addWidget(next);
 	navigation_layout->addWidget(reload);
 	navigation_layout->addWidget(home);
-	navigation_layout->addWidget(line_edit);
+	navigation_layout->addWidget(m_path_edit);
 
 	m_layout->addLayout(navigation_layout);
 
@@ -114,6 +114,11 @@ void WidgetBase::set_active()
 
 	m_context->active_widget = this;
 	this->active(true);
+}
+
+void WidgetBase::set_path(const std::string &path)
+{
+	m_path_edit->setText(path.c_str());
 }
 
 void WidgetBase::mousePressEvent(QMouseEvent *e)

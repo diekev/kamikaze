@@ -1361,6 +1361,8 @@ void QtNodeEditor::update_state(event_type event)
 		node_item->setSelected(true);
 		toFront(node_item);
 	}
+
+	this->set_path(m_context->scene->current_node()->get_dag_path());
 }
 
 void QtNodeEditor::setActiveObject(ObjectNodeItem *node)
