@@ -140,6 +140,8 @@ void PropertiesWidget::evalObjectGraph()
 		return;
 	}
 
+	std::cerr << "Evaluate graph for node '" << scene->current_node()->name() << "'\n";
+
 	scene->evalObjectDag(*m_context, scene->current_node());
 	scene->notify_listeners(static_cast<event_type>(-1));
 }

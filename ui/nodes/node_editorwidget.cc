@@ -1347,7 +1347,8 @@ void QtNodeEditor::update_state(event_type event)
 		node_item->setScene(m_graphics_scene);
 		node_item->setPos(node_ptr->xpos(), node_ptr->ypos());
 
-		if (node_ptr == m_context->scene->active_node()) {
+		/* TODO: handle node selection better. */
+		if (m_selected_nodes.empty() && node_ptr == m_context->scene->active_node()) {
 			m_selected_nodes.append(node_item);
 		}
 
