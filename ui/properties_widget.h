@@ -34,7 +34,7 @@ class QGridLayout;
 class QHBoxLayout;
 class QScrollArea;
 
-class PropertiesWidget : public WidgetBase {
+class PropertiesEditor : public WidgetBase {
 	Q_OBJECT
 
 	QWidget *m_widget;
@@ -43,8 +43,8 @@ class PropertiesWidget : public WidgetBase {
 	ParamCallback m_callback;
 
 public:
-	explicit PropertiesWidget(Context &context, QWidget *parent = nullptr);
-	~PropertiesWidget() = default;
+	explicit PropertiesEditor(Context &context, QWidget *parent = nullptr);
+	~PropertiesEditor() = default;
 
 	void update_state(event_type event) override;
 

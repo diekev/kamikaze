@@ -41,7 +41,7 @@
 
 #include "util/utils.h"
 
-PropertiesWidget::PropertiesWidget(Context &context, QWidget *parent)
+PropertiesEditor::PropertiesEditor(Context &context, QWidget *parent)
     : WidgetBase(context, parent)
     , m_widget(new QWidget())
     , m_scroll(new QScrollArea())
@@ -60,7 +60,7 @@ PropertiesWidget::PropertiesWidget(Context &context, QWidget *parent)
 	m_main_layout->addWidget(m_scroll);
 }
 
-void PropertiesWidget::update_state(event_type event)
+void PropertiesEditor::update_state(event_type event)
 {
 	Persona *persona = nullptr;
 	bool set_context = true;
@@ -130,7 +130,7 @@ void PropertiesWidget::update_state(event_type event)
 	this->set_path(dag_path);
 }
 
-void PropertiesWidget::evalObjectGraph()
+void PropertiesEditor::evalObjectGraph()
 {
 	this->set_active();
 	auto scene = m_context->scene;
@@ -146,13 +146,13 @@ void PropertiesWidget::evalObjectGraph()
 	scene->notify_listeners(static_cast<event_type>(-1));
 }
 
-void PropertiesWidget::tagObjectUpdate()
+void PropertiesEditor::tagObjectUpdate()
 {
 	this->set_active();
 	m_context->scene->tagObjectUpdate();
 }
 
-void PropertiesWidget::updateProperties()
+void PropertiesEditor::updateProperties()
 {
 	auto scene = m_context->scene;
 	auto scene_node = scene->active_node();
@@ -184,7 +184,7 @@ void PropertiesWidget::updateProperties()
 	}
 }
 
-void PropertiesWidget::drawProperties(Persona *persona, bool set_context)
+void PropertiesEditor::drawProperties(Persona *persona, bool set_context)
 {
 	persona->update_properties();
 

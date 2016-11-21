@@ -358,7 +358,7 @@ void MainWindow::addPropertiesWidget()
 	auto dock = new QDockWidget("Properties", this);
 	dock->setAttribute(Qt::WA_DeleteOnClose);
 
-	auto properties = new PropertiesWidget(m_context, dock);
+	auto properties = new PropertiesEditor(m_context, dock);
 	properties->update_state(static_cast<event_type>(-1));
 
 	dock->setWidget(properties);
