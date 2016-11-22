@@ -42,7 +42,7 @@
 #include "scene.h"
 #include "task.h"
 
-//#define DEBUG_DEPSGRAPH
+#undef DEBUG_DEPSGRAPH
 
 /* ************************************************************************** */
 
@@ -417,7 +417,8 @@ void Depsgraph::evaluate(const Context &context, SceneNode *scene_node)
 {
 	auto node = find_node(scene_node, true);
 
-	m_need_update |= (m_state != DEG_STATE_OBJECT);
+	/* TODO: need to update the graph when changing current node. */
+	m_need_update |= ((m_state != DEG_STATE_OBJECT) || true);
 	m_state = DEG_STATE_OBJECT;
 
 	GraphEvalTask *t = new(tbb::task::allocate_root()) GraphEvalTask(this, context, node);
@@ -442,6 +443,11 @@ void Depsgraph::evaluate_ex(const Context &context, DepsNode *root, TaskNotifier
 #ifdef DEBUG_DEPSGRAPH
 	std::cerr << "Nodes size: " << m_nodes.size() << '\n';
 	std::cerr << "Stack size: " << m_stack.size() << '\n';
+
+	for (auto iter = m_stack.rbegin(); iter != m_stack.rend(); ++iter) {
+		DepsNode *node = *iter;
+		std::cerr << "Processing node: " << node->name() << '\n';
+	}
 #endif
 
 	for (auto iter = m_stack.rbegin(); iter != m_stack.rend(); ++iter) {

@@ -257,11 +257,15 @@ void PropertiesEditor::drawProperties(Persona *persona, bool set_context)
 	}
 
 	if (set_context) {
-		if (m_context->eval_ctx->edit_mode) {
-			m_callback.setContext(this, SLOT(evalObjectGraph()));
-		}
-		else {
+		auto scene = m_context->scene;
+
+		/* Evaluate the object matrix when modifying an object property. */
+		if (scene->active_node() == persona) {
 			m_callback.setContext(this, SLOT(tagObjectUpdate()));
+		}
+		/* Evaluate the object graph when modifying a node property. */
+		else if ((scene->current_node() != scene->root_node())) {
+			m_callback.setContext(this, SLOT(evalObjectGraph()));
 		}
 	}
 
