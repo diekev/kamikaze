@@ -18,21 +18,21 @@ endif()
 
 set(_filesystem_SEARCH_DIRS
 	${FILESYSTEM_ROOT_DIR}
-	/opt/lib/utils/
+	/opt/lib/girafeenfeu
 )
 
 find_path(FILESYSTEM_INCLUDE_DIR
 	NAMES
-		utils/filesystem.h
+		systeme_fichier/utilitaires.h
 	HINTS
 		${_filesystem_SEARCH_DIRS}
 	PATH_SUFFIXES
-		include
+		include include/systeme_fichier
 )
 
 find_library(FILESYSTEM_LIBRARY
 	NAMES
-		filesystem
+		systeme_fichier
 	HINTS
 		${_filesystem_SEARCH_DIRS}
 	PATH_SUFFIXES

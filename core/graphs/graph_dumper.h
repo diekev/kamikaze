@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include <utils/filesystem.h>
+#include <experimental/filesystem>
 
 class Depsgraph;
 class Graph;
@@ -35,7 +35,7 @@ class GraphDumper {
 public:
 	explicit GraphDumper(Graph *graph);
 
-	void operator()(const filesystem::path &path);
+	void operator()(const std::experimental::filesystem::path &path);
 };
 
 class DepsGraphDumper {
@@ -44,5 +44,5 @@ class DepsGraphDumper {
 public:
 	explicit DepsGraphDumper(Depsgraph *graph);
 
-	void operator()(const filesystem::path &path);
+	void operator()(const std::experimental::filesystem::path &path);
 };

@@ -27,12 +27,12 @@
 #include <kamikaze/nodes.h>
 #include <kamikaze/primitive.h>
 
-#include <utils/filesystem.h>
+#include <girafeenfeu/systeme_fichier/shared_library.h>
 
 #include "scene.h"
 
 class Main final {
-	std::vector<filesystem::shared_library> m_plugins;
+	std::vector<systeme_fichier::shared_library> m_plugins;
 
 	std::unique_ptr<PrimitiveFactory> m_primitive_factory;
 	std::unique_ptr<NodeFactory> m_node_factory;

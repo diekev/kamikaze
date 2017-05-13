@@ -24,35 +24,36 @@
 
 #include "kamikaze_main.h"
 
+#include <girafeenfeu/systeme_fichier/utilitaires.h>
+
 #include <kamikaze/nodes.h>
 #include <kamikaze/mesh.h>
 #include <kamikaze/primitive.h>
 #include <kamikaze/prim_points.h>
 #include <kamikaze/segmentprim.h>
 
-#include <utils/filesystem.h>
-
 #include <dlfcn.h>
 
 #include "graphs/object_nodes.h"
 #include "scene.h"
 
-namespace fs = filesystem;
+namespace fs = std::experimental::filesystem;
+namespace sf = systeme_fichier;
 
-static std::vector<fs::shared_library> load_plugins(const fs::path &path)
+static std::vector<sf::shared_library> load_plugins(const fs::path &path)
 {
-	std::vector<fs::shared_library> plugins;
+	std::vector<sf::shared_library> plugins;
 
 	std::error_code ec;
 	for (const auto &entry : fs::directory_iterator(path)) {
-		if (!fs::is_library(entry)) {
+		if (!sf::est_bibilotheque(entry)) {
 			continue;
 		}
 
-		fs::shared_library lib(entry, ec);
+		sf::shared_library lib(entry, ec);
 
 		if (!lib) {
-			std::cerr << "Invalid library object: " << entry.path_() << '\n';
+			std::cerr << "Invalid library object: " << entry.path() << '\n';
 			std::cerr << dlerror() << '\n';
 			continue;
 		}
@@ -81,14 +82,14 @@ void Main::loadPlugins()
 		}
 
 		auto symbol = plugin("new_kamikaze_prims", ec);
-		auto register_figures = fs::dso_function<void(PrimitiveFactory *)>(symbol);
+		auto register_figures = sf::dso_function<void(PrimitiveFactory *)>(symbol);
 
 		if (register_figures) {
 			register_figures(this->primitive_factory());
 		}
 
 		symbol = plugin("new_kamikaze_node", ec);
-		auto register_node = fs::dso_function<void(NodeFactory *)>(symbol);
+		auto register_node = sf::dso_function<void(NodeFactory *)>(symbol);
 
 		if (register_node) {
 			register_node(this->node_factory());

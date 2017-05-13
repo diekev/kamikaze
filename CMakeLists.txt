@@ -45,8 +45,6 @@ add_definitions(-DGLM_FORCE_RADIANS)
 # ------------------------------------------------------------------------------
 
 find_package(Ego REQUIRED)
-set(EGO_LIBRARIES /opt/lib/ego/lib/libego.a)
-
 find_package(FileSystem REQUIRED)
 find_package(Kamikaze REQUIRED)
 
