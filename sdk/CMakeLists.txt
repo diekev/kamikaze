@@ -46,7 +46,6 @@ add_definitions(-DGLM_FORCE_RADIANS)
 # ------------------------------------------------------------------------------
 
 find_package(Ego REQUIRED)
-set(EGO_LIBRARIES /opt/lib/ego/lib/libego.a)
 
 # ------------------------------------------------------------------------------
 
@@ -55,7 +54,6 @@ set(INC_SYS
 )
 
 set(HEADERS
-	any.h
 	attribute.h
 	context.h
 	cube.h
@@ -76,7 +74,6 @@ set(HEADERS
 )
 
 add_library(kamikaze SHARED
-	any.cc 
 	attribute.cc
 	context.cc
 	cube.cc

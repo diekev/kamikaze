@@ -34,23 +34,23 @@ void Persona::add_prop(std::string name, std::string ui_name, property_type type
 
 	switch (type) {
 		case property_type::prop_bool:
-			prop.data = any(false);
+			prop.data = std::experimental::any(false);
 			break;
 		case property_type::prop_float:
-			prop.data = any(0.0f);
+			prop.data = std::experimental::any(0.0f);
 			break;
 		case property_type::prop_vec3:
-			prop.data = any(glm::vec3(0.0f));
+			prop.data = std::experimental::any(glm::vec3(0.0f));
 			break;
 		case property_type::prop_enum:
 		case property_type::prop_int:
-			prop.data = any(int(0));
+			prop.data = std::experimental::any(int(0));
 			break;
 		case property_type::prop_input_file:
 		case property_type::prop_output_file:
 		case property_type::prop_string:
 		case property_type::prop_list:
-			prop.data = any(std::string(""));
+			prop.data = std::experimental::any(std::string(""));
 			break;
 	}
 
@@ -78,7 +78,7 @@ int Persona::eval_int(const std::string &prop_name)
 	const Property *prop = find_property(prop_name);
 
 	if (prop) {
-		return any_cast<int>(prop->data);
+		return std::experimental::any_cast<int>(prop->data);
 	}
 
 	return 0;
@@ -89,7 +89,7 @@ float Persona::eval_float(const std::string &prop_name)
 	const Property *prop = find_property(prop_name);
 
 	if (prop) {
-		return any_cast<float>(prop->data);
+		return std::experimental::any_cast<float>(prop->data);
 	}
 
 	return 0.0f;
@@ -105,7 +105,7 @@ int Persona::eval_bool(const std::string &prop_name)
 	const Property *prop = find_property(prop_name);
 
 	if (prop) {
-		return any_cast<bool>(prop->data);
+		return std::experimental::any_cast<bool>(prop->data);
 	}
 
 	return false;
@@ -116,7 +116,7 @@ glm::vec3 Persona::eval_vec3(const std::string &prop_name)
 	const Property *prop = find_property(prop_name);
 
 	if (prop) {
-		return any_cast<glm::vec3>(prop->data);
+		return std::experimental::any_cast<glm::vec3>(prop->data);
 	}
 
 	return glm::vec3(0.0f, 0.0f, 0.0f);
@@ -127,7 +127,7 @@ std::string Persona::eval_string(const std::string &prop_name)
 	const Property *prop = find_property(prop_name);
 
 	if (prop) {
-		return any_cast<std::string>(prop->data);
+		return std::experimental::any_cast<std::string>(prop->data);
 	}
 
 	return {};
@@ -168,7 +168,7 @@ void Persona::set_prop_default_value_int(int value)
 
 	assert(prop.type == property_type::prop_int || prop.type == property_type::prop_enum);
 
-	*(prop.data.as_ptr<int>()) = value;
+	prop.data = std::experimental::any(value);
 }
 
 void Persona::set_prop_default_value_float(float value)
@@ -177,7 +177,7 @@ void Persona::set_prop_default_value_float(float value)
 
 	assert(prop.type == property_type::prop_float);
 
-	*(prop.data.as_ptr<float>()) = value;
+	prop.data = std::experimental::any(value);
 }
 
 void Persona::set_prop_default_value_bool(bool value)
@@ -186,7 +186,7 @@ void Persona::set_prop_default_value_bool(bool value)
 
 	assert(prop.type == property_type::prop_bool);
 
-	*(prop.data.as_ptr<bool>()) = value;
+	prop.data = std::experimental::any(value);
 }
 
 void Persona::set_prop_default_value_string(const std::string &value)
@@ -198,7 +198,7 @@ void Persona::set_prop_default_value_string(const std::string &value)
 	       prop.type == property_type::prop_output_file ||
 	       prop.type == property_type::prop_list);
 
-	*(prop.data.as_ptr<std::string>()) = value;
+	prop.data = std::experimental::any(value);
 }
 
 void Persona::set_prop_default_value_vec3(const glm::vec3 &value)
@@ -207,7 +207,7 @@ void Persona::set_prop_default_value_vec3(const glm::vec3 &value)
 
 	assert(prop.type == property_type::prop_vec3);
 
-	*(prop.data.as_ptr<glm::vec3>()) = value;
+	prop.data = std::experimental::any(value);
 }
 
 void Persona::set_prop_tooltip(std::string tooltip)

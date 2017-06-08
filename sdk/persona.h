@@ -24,9 +24,8 @@
 
 #pragma once
 
-#include "any.h"
-
 #include <algorithm>
+#include <experimental/any>
 #include <glm/glm.hpp>
 #include <iostream>
 #include <string>
@@ -68,8 +67,8 @@ struct Property {
 	std::string tooltip;
 	property_type type;
 
-	any data;
-	any default_val;
+	std::experimental::any data;
+	std::experimental::any default_val;
 
 	EnumProperty enum_items;
 

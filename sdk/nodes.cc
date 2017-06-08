@@ -336,8 +336,3 @@ std::vector<std::string> NodeFactory::categories() const
 
 	return v;
 }
-
-void swap(any &&lhs, any &&rhs)
-{
-	lhs.swap(rhs);
-}
