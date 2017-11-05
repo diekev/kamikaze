@@ -72,7 +72,9 @@ Main::Main()
 
 void Main::loadPlugins()
 {
-	m_plugins = load_plugins("plugins");
+	if (std::experimental::filesystem::exists("plugins")) {
+		m_plugins = load_plugins("plugins");
+	}
 
 	std::error_code ec;
 	for (auto &plugin : m_plugins) {
