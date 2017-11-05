@@ -183,57 +183,57 @@ void PropertiesWidget::drawProperties(Persona *persona, bool set_context)
 			case property_type::prop_bool:
 				bool_param(m_callback,
 				           prop.ui_name.c_str(),
-				           any_cast<bool>(&prop.data),
-				           any_cast<bool>(prop.data));
+						   std::experimental::any_cast<bool>(&prop.data),
+						   std::experimental::any_cast<bool>(prop.data));
 				break;
 			case property_type::prop_float:
 				float_param(m_callback,
 				            prop.ui_name.c_str(),
-				            any_cast<float>(&prop.data),
+							std::experimental::any_cast<float>(&prop.data),
 				            prop.min, prop.max,
-				            any_cast<float>(prop.data));
+							std::experimental::any_cast<float>(prop.data));
 				break;
 			case property_type::prop_int:
 				int_param(m_callback,
 				          prop.ui_name.c_str(),
-				          any_cast<int>(&prop.data),
+						  std::experimental::any_cast<int>(&prop.data),
 				          prop.min, prop.max,
-				          any_cast<int>(prop.data));
+						  std::experimental::any_cast<int>(prop.data));
 				break;
 			case property_type::prop_enum:
 				enum_param(m_callback,
 				           prop.ui_name.c_str(),
-				           any_cast<int>(&prop.data),
+						   std::experimental::any_cast<int>(&prop.data),
 				           prop.enum_items,
-				           any_cast<int>(prop.data));
+						   std::experimental::any_cast<int>(prop.data));
 				break;
 			case property_type::prop_vec3:
 				xyz_param(m_callback,
 				          prop.ui_name.c_str(),
-				          &(any_cast<glm::vec3>(&prop.data)->x),
+						  &(std::experimental::any_cast<glm::vec3>(&prop.data)->x),
 				          prop.min, prop.max);
 				break;
 			case property_type::prop_input_file:
 				input_file_param(m_callback,
 				                 prop.ui_name.c_str(),
-				                 any_cast<std::string>(&prop.data));
+								 std::experimental::any_cast<std::string>(&prop.data));
 				break;
 			case property_type::prop_output_file:
 				output_file_param(m_callback,
 				                  prop.ui_name.c_str(),
-				                  any_cast<std::string>(&prop.data));
+								  std::experimental::any_cast<std::string>(&prop.data));
 				break;
 			case property_type::prop_string:
 				string_param(m_callback,
 				             prop.ui_name.c_str(),
-				             any_cast<std::string>(&prop.data),
-				             any_cast<std::string>(prop.data).c_str());
+							 std::experimental::any_cast<std::string>(&prop.data),
+							 std::experimental::any_cast<std::string>(prop.data).c_str());
 				break;
 			case property_type::prop_list:
 				list_selection_param(m_callback,
 				                     prop.ui_name.c_str(),
 				                     prop.enum_items,
-				                     any_cast<std::string>(&prop.data));
+									 std::experimental::any_cast<std::string>(&prop.data));
 				break;
 		}
 
