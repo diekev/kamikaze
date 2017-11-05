@@ -27,7 +27,7 @@ find_path(FILESYSTEM_INCLUDE_DIR
 	HINTS
 		${_filesystem_SEARCH_DIRS}
 	PATH_SUFFIXES
-		include include/systeme_fichier
+	    include/girafeenfeu
 )
 
 find_library(FILESYSTEM_LIBRARY
