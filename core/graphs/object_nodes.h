@@ -24,47 +24,19 @@
 
 #pragma once
 
-#include <glm/glm.hpp>
+#include <kamikaze/operateur.h>
 
-#include <kamikaze/nodes.h>
+/* ************************************************************************** */
 
-void register_builtin_nodes(NodeFactory *factory);
+void enregistre_operateurs_integres(UsineOperateur *usine);
 
-class OutputNode : public Node {
-	PrimitiveCollection *m_collection = nullptr;
+/* ************************************************************************** */
 
+class OperateurSortie : public Operateur {
 public:
-	explicit OutputNode(const std::string &name);
+	OperateurSortie(Noeud *noeud, const Context &contexte);
 
-	PrimitiveCollection *collection() const;
+	const char *nom_entree(size_t /*index*/);
 
-	void process() override;
-};
-
-class TransformNode : public Node {
-public:
-	TransformNode();
-
-	void process() override;
-};
-
-class CreateBoxNode : public Node {
-public:
-	CreateBoxNode();
-
-	void process() override;
-};
-
-class CreateTorusNode : public Node {
-public:
-	CreateTorusNode();
-
-	void process() override;
-};
-
-class CreateGridNode : public Node {
-public:
-	CreateGridNode();
-
-	void process() override;
+	void execute(const Context &contexte, double temps);
 };

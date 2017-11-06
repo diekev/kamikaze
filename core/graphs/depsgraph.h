@@ -109,7 +109,6 @@ public:
 
 	~ObjectGraphDepsNode() = default;
 
-	void pre_process() override;
 	void process(const Context &context, TaskNotifier *notifier) override;
 
 	Graph *graph();

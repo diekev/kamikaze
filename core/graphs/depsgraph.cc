@@ -29,7 +29,7 @@
 #include <iostream>
 
 #include <kamikaze/context.h>
-#include <kamikaze/nodes.h>
+#include <kamikaze/operateur.h>
 
 #include <tbb/tick_count.h>
 
@@ -88,8 +88,8 @@ void DepsObjectNode::process(const Context & /*context*/, TaskNotifier */*notifi
 {
 	/* The graph should already have been updated. */
 	auto graph = m_object->graph();
-	auto output_node = graph->output();
-	m_object->collection(output_node->collection());
+	auto noeud_sortie = graph->sortie();
+	m_object->collection(noeud_sortie->operateur()->collection());
 }
 
 Object *DepsObjectNode::object()
@@ -113,93 +113,31 @@ ObjectGraphDepsNode::ObjectGraphDepsNode(Graph *graph)
     : m_graph(graph)
 {}
 
-void ObjectGraphDepsNode::pre_process()
+void ObjectGraphDepsNode::process(const Context &context, TaskNotifier */*notifier*/)
 {
-	m_graph->clear_cache();
-}
+	auto noeud_sortie = m_graph->sortie();
 
-void ObjectGraphDepsNode::process(const Context &context, TaskNotifier *notifier)
-{
-	auto output_node = m_graph->output();
+	/* À FAIRE : NOTIFIE PROGRESSION. */
 
-	if (!output_node->isLinked()) {
-		output_node->input(0)->collection = nullptr;
-
-		/* Make sure the node's collection is updated, otherwise can crash. */
-		output_node->process();
-		return;
-	}
-
-	m_graph->build();
-
-	/* XXX */
-	for (const auto &node : m_graph->nodes()) {
-		for (OutputSocket *output : node->outputs()) {
-			output->collection = nullptr;
-		}
-	}
-
-	auto stack = m_graph->finished_stack();
-
-	const auto size = static_cast<float>(stack.size());
-	auto index = 0;
-
+#if 0
 	if (notifier) {
 		notifier->signalProgressUpdate(0.0f);
 	}
+#endif
 
-	auto total_process_time = 0.0f;
+	execute_operateur(noeud_sortie->operateur(), context, 0.0);
 
-	for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter) {
-		Node *node = *iter;
-		PrimitiveCollection *collection = nullptr;
+#if 0
+	if (notifier) {
+		const float progress = (++index / size) * 100.0f;
+		notifier->signalProgressUpdate(progress);
 
-		if (node->inputs().empty()) {
-			collection = new PrimitiveCollection(context.primitive_factory);
-		}
-		else {
-			collection = node->getInputCollection(0ul);
-		}
-
-		node->collection(collection);
-
-		/* Make sure warnings are cleared before processing. */
-		node->clear_warnings();
-
-		if (node->collection()) {
-			auto t0 = tbb::tick_count::now();
-
-			try {
-				node->process();
-			}
-			catch (const std::exception &e) {
-				node->add_warning(e.what());
-			}
-
-			auto t1 = tbb::tick_count::now();
-
-			auto delta = (t1 - t0).seconds();
-			total_process_time += delta;
-
-			node->process_time(delta);
-		}
-
-		if (!node->outputs().empty()) {
-			node->setOutputCollection(0ul, node->collection());
-		}
-
-		if (notifier) {
-			const float progress = (++index / size) * 100.0f;
-			notifier->signalProgressUpdate(progress);
-
-			/* To refresh the UI in case new warnings appear. */
-			if (context.eval_ctx->edit_mode && node == m_graph->active_node()) {
-				notifier->signalNodeProcessed();
-			}
+		/* To refresh the UI in case new warnings appear. */
+		if (context.eval_ctx->edit_mode && node == m_graph->active_node()) {
+			notifier->signalNodeProcessed();
 		}
 	}
-
-	output_node->process_time(total_process_time);
+#endif
 }
 
 Graph *ObjectGraphDepsNode::graph()

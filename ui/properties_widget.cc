@@ -29,7 +29,8 @@
 #include <QScrollArea>
 
 #include <kamikaze/context.h>
-#include <kamikaze/nodes.h>
+#include <kamikaze/noeud.h>
+#include <kamikaze/operateur.h>
 
 #include "paramcallback.h"
 #include "paramfactory.h"
@@ -90,17 +91,18 @@ void PropertiesWidget::update_state(event_type event)
 			auto scene_node = scene->active_node();
 			auto object = static_cast<Object *>(scene_node);
 			auto graph = object->graph();
-			auto node = graph->active_node();
+			auto noeud = graph->noeud_actif();
 
-			if (!node) {
+			if (noeud == nullptr) {
 				return;
 			}
 
-			persona = node;
-			warnings = node->warnings();
+			auto operateur = noeud->operateur();
+			persona = operateur;
+			warnings = operateur->avertissements();
 
 			/* Only update/evaluate the graph if the node is connected. */
-			set_context = node->isLinked();
+			set_context = noeud->est_connecte();
 		}
 		else if (is_elem(event_action, event_type::removed)) {
 			m_callback.clear();
@@ -136,6 +138,7 @@ void PropertiesWidget::evalObjectGraph()
 
 void PropertiesWidget::tagObjectUpdate()
 {
+	std::cerr << __func__ << "\n";
 	this->set_active();
 	m_context->scene->tagObjectUpdate();
 }
@@ -153,13 +156,13 @@ void PropertiesWidget::updateProperties()
 
 	if (m_context->eval_ctx->edit_mode) {
 		auto graph = static_cast<Object *>(scene_node)->graph();
-		auto node = graph->active_node();
+		auto noeud = graph->noeud_actif();
 
-		if (node == nullptr) {
+		if (noeud == nullptr) {
 			return;
 		}
 
-		persona = node;
+		persona = noeud->operateur();
 	}
 	else {
 		persona = scene_node;

@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include <kamikaze/nodes.h>
+#include <kamikaze/operateur.h>
 #include <kamikaze/primitive.h>
 
 #include <girafeenfeu/systeme_fichier/shared_library.h>
@@ -35,7 +35,7 @@ class Main final {
 	std::vector<systeme_fichier::shared_library> m_plugins;
 
 	std::unique_ptr<PrimitiveFactory> m_primitive_factory;
-	std::unique_ptr<NodeFactory> m_node_factory;
+	std::unique_ptr<UsineOperateur> m_usine_operateur;
 	std::unique_ptr<Scene> m_scene;
 
 public:
@@ -49,6 +49,6 @@ public:
 	void loadPlugins();
 
 	PrimitiveFactory *primitive_factory() const;
-	NodeFactory *node_factory() const;
+	UsineOperateur *usine_operateur() const;
 	Scene *scene() const;
 };

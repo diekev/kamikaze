@@ -26,7 +26,6 @@
 
 #include <girafeenfeu/systeme_fichier/utilitaires.h>
 
-#include <kamikaze/nodes.h>
 #include <kamikaze/mesh.h>
 #include <kamikaze/primitive.h>
 #include <kamikaze/prim_points.h>
@@ -66,7 +65,7 @@ static std::vector<sf::shared_library> load_plugins(const fs::path &path)
 
 Main::Main()
     : m_primitive_factory(new PrimitiveFactory)
-    , m_node_factory(new NodeFactory)
+	, m_usine_operateur(new UsineOperateur)
     , m_scene(new Scene)
 {}
 
@@ -90,18 +89,18 @@ void Main::loadPlugins()
 			register_figures(this->primitive_factory());
 		}
 
-		symbol = plugin("new_kamikaze_node", ec);
-		auto register_node = sf::dso_function<void(NodeFactory *)>(symbol);
+		symbol = plugin("nouvel_operateur", ec);
+		auto enregistre_operateur = sf::dso_function<void(UsineOperateur *)>(symbol);
 
-		if (register_node) {
-			register_node(this->node_factory());
+		if (enregistre_operateur) {
+			enregistre_operateur(this->usine_operateur());
 		}
 	}
 }
 
 void Main::initialize()
 {
-	register_builtin_nodes(this->node_factory());
+	enregistre_operateurs_integres(this->usine_operateur());
 
 	/* primitive types */
 
@@ -119,9 +118,9 @@ PrimitiveFactory *Main::primitive_factory() const
 	return m_primitive_factory.get();
 }
 
-NodeFactory *Main::node_factory() const
+UsineOperateur *Main::usine_operateur() const
 {
-	return m_node_factory.get();
+	return m_usine_operateur.get();
 }
 
 Scene *Main::scene() const

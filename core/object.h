@@ -28,6 +28,7 @@
 #include "graphs/scene_node.h"
 
 class Node;
+class Noeud;
 class PrimitiveCollection;
 
 class Object : public SceneNode {
@@ -36,13 +37,13 @@ class Object : public SceneNode {
 	glm::mat4 m_matrix = glm::mat4(0.0f);
 	glm::mat4 m_inv_matrix = glm::mat4(0.0f);
 
-	Graph m_graph{};
+	Graph m_graph;
 
 	Object *m_parent = nullptr;
 	std::vector<Object *> m_children;
 
 public:
-	Object();
+	Object(const Context &contexte);
 	~Object() = default;
 
 	PrimitiveCollection *collection() const;
@@ -52,8 +53,8 @@ public:
 	void matrix(const glm::mat4 &m);
 	const glm::mat4 &matrix() const;
 
-	/* Nodes */
-	void addNode(Node *node);
+	/* Noeuds. */
+	void ajoute_noeud(Noeud *noeud);
 
 	Graph *graph();
 	const Graph *graph() const;

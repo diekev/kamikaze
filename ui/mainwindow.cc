@@ -25,7 +25,6 @@
 #include "mainwindow.h"
 
 #include <kamikaze/primitive.h>
-#include <kamikaze/nodes.h>
 
 #include <QDockWidget>
 #include <QMenuBar>
@@ -67,8 +66,8 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	m_eval_context.animation = false;
 	m_context.eval_ctx = &m_eval_context;
 	m_context.scene = m_main->scene();
-	m_context.node_factory = m_main->node_factory();
 	m_context.primitive_factory = m_main->primitive_factory();
+	m_context.usine_operateur = m_main->usine_operateur();
 	m_context.main_window = this;
 	m_context.active_widget = nullptr;
 
@@ -153,19 +152,22 @@ void MainWindow::generateNodeMenu()
 {
 	REGISTER_COMMAND(m_command_factory, "add node", AddNodeCmd);
 
-	m_add_nodes_menu = menuBar()->addMenu("Add Node");
+	m_add_nodes_menu = menuBar()->addMenu("Ajoute Noeud");
 
-	auto categories = m_main->node_factory()->categories();
-	std::sort(categories.begin(), categories.end());
+	auto categories = m_main->usine_operateur()->categories();
 
-	for (const auto &category : categories) {
-		auto sub_menu = m_add_nodes_menu->addMenu(category.c_str());
+	for (const auto &categorie : categories) {
+		auto menu = m_add_nodes_menu->addMenu(categorie.c_str());
 
-		auto keys = m_main->node_factory()->keys(category);
-		std::sort(keys.begin(), keys.end());
+		auto cles = m_main->usine_operateur()->cles(categorie);
+		std::sort(cles.begin(), cles.end(),
+				  [](const DescOperateur &desc1, const DescOperateur &desc2)
+		{
+			return desc1.nom < desc2.nom;
+		});
 
-		for (const auto &key : keys) {
-			auto action = sub_menu->addAction(key.c_str());
+		for (const auto &description : cles) {
+			auto action = menu->addAction(description.nom.c_str());
 			action->setData(QVariant::fromValue(QString("add node")));
 
 			connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
@@ -221,14 +223,14 @@ void MainWindow::generatePresetMenu()
 	addToolBar(Qt::TopToolBarArea, m_tool_bar);
 
 	UIButData props[] = {
-	    { 0, "Grid", "icons/icon_grid.png" },
-	    { 0, "Box", "icons/icon_box.png" },
-	    { 0, "Circle", "icons/icon_circle.png" },
-	    { 0, "IcoSphere", "icons/icon_icosphere.png" },
-	    { 0, "Tube", "icons/icon_tube.png" },
-	    { 0, "Cone", "icons/icon_cone.png" },
-	    { 0, "Torus", "icons/icon_torus.png" },
-	    { 0, "Point Cloud", "icons/icon_point_cloud_cube.png" },
+		{ 0, "Création grille", "icons/icon_grid.png" },
+		{ 0, "Création boîte", "icons/icon_box.png" },
+		{ 0, "Création cercle", "icons/icon_circle.png" },
+		{ 0, "Création icosphère", "icons/icon_icosphere.png" },
+		{ 0, "Création tube", "icons/icon_tube.png" },
+		{ 0, "Création cone", "icons/icon_cone.png" },
+		{ 0, "Création torus", "icons/icon_torus.png" },
+		{ 0, "Création nuage point", "icons/icon_point_cloud_cube.png" },
 	};
 
 	for (const auto &prop : props) {

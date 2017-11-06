@@ -26,7 +26,6 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <kamikaze/nodes.h>
 #include <kamikaze/primitive.h>
 #include <kamikaze/util_string.h>
 

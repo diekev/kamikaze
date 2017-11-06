@@ -225,28 +225,6 @@ bool Primitive::has_attribute(const std::string &name, const AttributeType type)
 
 /* ********************************************** */
 
-void PrimitiveCache::add(PrimitiveCollection *collection)
-{
-	if (collection->refcount() > 0) {
-		return;
-	}
-
-	collection->incref();
-
-	m_collections.push_back(collection);
-}
-
-void PrimitiveCache::clear()
-{
-	for (auto &collection : m_collections) {
-		delete collection;
-	}
-
-	m_collections.clear();
-}
-
-/* ********************************************** */
-
 PrimitiveCollection::PrimitiveCollection(PrimitiveFactory *factory)
     : PrimitiveCollection()
 {

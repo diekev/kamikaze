@@ -27,203 +27,123 @@
 #include <algorithm>
 #include <iostream>
 
-#include "graph_dumper.h"
-#include "graph_tools.h"
 #include "object_nodes.h"
 
-//#define DEBUG_GRAPH
-
-Graph::Graph()
-    : m_need_update(false)
+Graph::Graph(const Context &contexte)
+	: m_besoin_actualisation(false)
 {
-	add(new OutputNode("Output"));
+	auto noeud_sortie = new Noeud();
+	noeud_sortie->nom("Sortie");
+
+	auto operateur = new OperateurSortie(noeud_sortie, contexte);
+	static_cast<void>(operateur);
+
+	noeud_sortie->synchronise_donnees();
+
+	ajoute(noeud_sortie);
 }
 
-Graph::~Graph()
+void Graph::ajoute(Noeud *noeud)
 {
-	clear_cache();
+	m_noeuds.push_back(std::unique_ptr<Noeud>(noeud));
 }
 
-const std::vector<std::unique_ptr<Node>> &Graph::nodes() const
+void Graph::enleve(Noeud *noeud)
 {
-	return m_nodes;
-}
-
-void Graph::add(Node *node)
-{
-	m_nodes.push_back(std::unique_ptr<Node>(node));
-	node->setPrimitiveCache(&m_cache);
-}
-
-void Graph::remove(Node *node)
-{
-	auto iter = std::find_if(m_nodes.begin(), m_nodes.end(),
-	                         [node](const std::unique_ptr<Node> &node_ptr)
+	auto iter = std::find_if(m_noeuds.begin(), m_noeuds.end(),
+							 [noeud](const std::unique_ptr<Noeud> &node_ptr)
 	{
-		return node_ptr.get() == node;
+		return node_ptr.get() == noeud;
 	});
 
-	if (iter == m_nodes.end()) {
-		std::cerr << "Unable to find node in graph!\n";
+	if (iter == m_noeuds.end()) {
+		std::cerr << "Impossible de trouver le noeud dans le graphe !\n";
 		return;
 	}
 
-	/* disconnect inputs */
-	for (InputSocket *input : node->inputs()) {
-		if (input->link) {
-			disconnect(input->link, input);
+	/* Déconnecte les entrées. */
+	for (PriseEntree *entree : noeud->entrees()) {
+		if (entree->lien) {
+			deconnecte(entree->lien, entree);
 		}
 	}
 
-	/* disconnect outputs */
-	for (OutputSocket *output : node->outputs()) {
-		for (InputSocket *input : output->links) {
-			disconnect(output, input);
+	/* Déconnecte les sorties. */
+	for (PriseSortie *sortie : noeud->sorties()) {
+		for (PriseEntree *entree : sortie->liens) {
+			deconnecte(sortie, entree);
 		}
 	}
 
-	m_nodes.erase(iter);
+	m_noeuds.erase(iter);
 
-	m_need_update = true;
+	m_besoin_actualisation = true;
 }
 
-static inline auto is_linked(Node *node)
+void Graph::connecte(PriseSortie *de, PriseEntree *a)
 {
-	return node->isLinked();
-}
-
-static inline auto is_linked(InputSocket *socket)
-{
-	return socket->link != nullptr;
-}
-
-static inline auto get_input(Node *node, size_t index)
-{
-	return node->input(index);
-}
-
-static inline auto get_link_parent(InputSocket *socket)
-{
-	return socket->link->parent;
-}
-
-static inline auto num_inputs(Node *node)
-{
-	return node->inputs().size();
-}
-
-static inline auto is_zero_out_degree(Node *node)
-{
-	return node->outputs().size() == 0;
-}
-
-static inline auto get_degree(Node *node)
-{
-	auto degree = 0;
-
-	for (OutputSocket *socket : node->outputs()) {
-		degree += socket->links.size();
-	}
-
-	return degree;
-}
-
-void Graph::build()
-{
-	if (!m_need_update) {
+	if (a->lien != nullptr) {
+		std::cerr << "L'entrée est déjà connectée !\n";
 		return;
 	}
 
-	/* XXX - TODO, not nice. */
-	std::vector<Node *> nodes(m_nodes.size());
+	a->lien = de;
+	de->liens.push_back(a);
 
-	std::transform(m_nodes.begin(), m_nodes.end(), nodes.begin(),
-	               [](const std::unique_ptr<Node> &node) -> Node*
-	{
-		return node.get();
-	});
-
-	topology_sort(nodes, m_stack);
-
-#ifdef DEBUG_GRAPH
-	std::cerr << "Order of operation:\n";
-
-	for (auto iter = m_stack.rbegin(); iter != m_stack.rend(); ++iter) {
-		Node *node = *iter;
-		std::cerr << node->name() << '\n';
-	}
-#endif
-
-	m_need_update = false;
+	m_besoin_actualisation = true;
 }
 
-const std::vector<Node *> &Graph::finished_stack() const
+void Graph::deconnecte(PriseSortie *de, PriseEntree *a)
 {
-	return m_stack;
-}
+	auto iter = std::find(de->liens.begin(), de->liens.end(), a);
 
-OutputNode *Graph::output() const
-{
-	return static_cast<OutputNode *>(m_nodes.front().get());
-}
-
-void Graph::connect(OutputSocket *from, InputSocket *to)
-{
-	if (to->link != nullptr) {
-		std::cerr << "Input already connected!\n";
+	if (iter == de->liens.end()) {
+		std::cerr << "Il n'y a pas de lien entre les prises !\n";
 		return;
 	}
 
-	to->link = from;
-	from->links.push_back(to);
+	de->liens.erase(iter);
+	a->lien = nullptr;
 
-	m_need_update = true;
+	m_besoin_actualisation = true;
 }
 
-void Graph::disconnect(OutputSocket *from, InputSocket *to)
+const std::vector<std::unique_ptr<Noeud> > &Graph::noeuds() const
 {
-	auto iter = std::find(from->links.begin(), from->links.end(), to);
-
-	if (iter == from->links.end()) {
-		std::cerr << "Connection mismatch!\n";
-		return;
-	}
-
-	from->links.erase(iter);
-	to->link = nullptr;
-
-	m_need_update = true;
+	return m_noeuds;
 }
 
-void Graph::active_node(Node *node)
+void Graph::noeud_actif(Noeud *noeud)
 {
-	m_active_node = node;
+	m_noeud_actif = noeud;
 }
 
-Node *Graph::active_node() const
+Noeud *Graph::noeud_actif() const
 {
-	if (m_selected_nodes.empty()) {
+	if (m_noeuds_selectiones.empty()) {
 		return nullptr;
 	}
 
-	return m_selected_nodes.back();
+	return m_noeuds_selectiones.back();
 }
 
-void Graph::clear_cache()
+Noeud *Graph::sortie() const
 {
-	m_cache.clear();
+	return static_cast<Noeud *>(m_noeuds.front().get());
 }
 
-void Graph::add_to_selection(Node *node)
+void Graph::ajoute_selection(Noeud *noeud)
 {
-	node->set_flags(NODE_SELECTED);
-	m_selected_nodes.push_back(node);
+	noeud->ajoute_drapeau(NOEUD_SELECTIONE);
+	m_noeuds_selectiones.push_back(noeud);
 }
 
-void Graph::remove_from_selection(Node *node)
+void Graph::enleve_selection(Noeud *noeud)
 {
-	node->unset_flags(NODE_SELECTED);
-	m_selected_nodes.erase(std::find(m_selected_nodes.begin(),
-	                                 m_selected_nodes.end(),
-	                                 node));
+	noeud->enleve_drapeau(NOEUD_SELECTIONE);
+
+	m_noeuds_selectiones.erase(
+				std::find(m_noeuds_selectiones.begin(),
+						  m_noeuds_selectiones.end(),
+						  noeud));
 }

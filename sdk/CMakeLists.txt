@@ -60,8 +60,9 @@ set(HEADERS
 	factory.h
 	geomlists.h
 	mesh.h
-	nodes.h
+	noeud.h
 	noise.h
+	operateur.h
 	persona.h
 	prim_points.h
 	primitive.h
@@ -78,9 +79,10 @@ add_library(kamikaze SHARED
 	context.cc
 	cube.cc
 	geomlists.cc
-	nodes.cc
+	noeud.cc
 	noise.cc
 	mesh.cc
+	operateur.cc
 	persona.cc
 	prim_points.cc
 	primitive.cc
