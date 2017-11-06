@@ -6,3 +6,6 @@
 /bin
 
 *.swp
+*.user
+Makefile
+build-sdk
