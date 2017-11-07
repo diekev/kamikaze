@@ -79,7 +79,7 @@ EntreeOperateur::EntreeOperateur(PriseEntree *prise)
 
 PrimitiveCollection *EntreeOperateur::requiers_collection(PrimitiveCollection *collection, const Context &contexte, double temps)
 {
-	if (m_prise == nullptr || m_prise->lien == nullptr) {
+	if (!est_connectee()) {
 		return nullptr;
 	}
 
@@ -113,11 +113,16 @@ PrimitiveCollection *EntreeOperateur::requiers_collection(PrimitiveCollection *c
 
 double EntreeOperateur::temps_execution_parent() const
 {
-	if (m_prise == nullptr || m_prise->lien == nullptr) {
+	if (!est_connectee()) {
 		return 0.0;
 	}
 
 	return m_prise->lien->parent->operateur()->temps_agrege();
+}
+
+bool EntreeOperateur::est_connectee() const
+{
+	return (m_prise != nullptr && m_prise->lien != nullptr);
 }
 
 /* ************************************************************************** */
@@ -265,6 +270,16 @@ void Operateur::a_tampon(bool ouinon)
 bool Operateur::a_tampon() const
 {
 	return m_a_tampon;
+}
+
+std::string Operateur::chemin_icone() const
+{
+	return m_chemin_icone;
+}
+
+void Operateur::chemin_icone(const std::string &chemin)
+{
+	m_chemin_icone = chemin;
 }
 
 /* ************************************************************************** */

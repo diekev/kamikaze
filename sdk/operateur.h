@@ -80,6 +80,11 @@ public:
 	 * Retourne le temps d'exécution des noeuds parents.
 	 */
 	double temps_execution_parent() const;
+
+	/**
+	 * Retourne si oui ou non la prise est connectée.
+	 */
+	bool est_connectee() const;
 };
 
 /* ************************************************************************** */
@@ -118,6 +123,8 @@ class Operateur : public Persona {
 	double m_min_temps_agrege = std::numeric_limits<double>::max();
 
 	int m_nombre_executions = 0;
+
+	std::string m_chemin_icone{};
 
 protected:
 	PrimitiveCollection *m_collection = nullptr;
@@ -277,6 +284,16 @@ public:
 	 * Retourne si oui ou non la collection devra être mis en tampon.
 	 */
 	bool a_tampon() const;
+
+	/**
+	 * Retourne le chemin vers l'icone de cet opérateur.
+	 */
+	std::string chemin_icone() const;
+
+	/**
+	 * Modifie le chemin de l'icone de cet opérateur.
+	 */
+	void chemin_icone(const std::string &chemin);
 };
 
 /* ************************************************************************** */
