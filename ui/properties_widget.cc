@@ -131,8 +131,14 @@ void PropertiesWidget::evalObjectGraph()
 {
 	this->set_active();
 	auto scene = m_context->scene;
+	auto scene_node = scene->active_node();
+	auto object = static_cast<Object *>(scene_node);
+	auto graph = object->graph();
+	auto noeud = graph->noeud_actif();
 
-	scene->evalObjectDag(*m_context, scene->active_node());
+	signifie_sale_aval(noeud);
+
+	scene->evalObjectDag(*m_context, scene_node);
 	scene->notify_listeners(static_cast<event_type>(-1));
 }
 

@@ -34,7 +34,7 @@
 
 void execute_operateur(Operateur *operateur, const Context &contexte, double temps)
 {
-	if (operateur->a_tampon()) {
+	if (operateur->a_tampon() && !operateur->besoin_execution()) {
 		return;
 	}
 
@@ -67,6 +67,8 @@ void execute_operateur(Operateur *operateur, const Context &contexte, double tem
 	}
 
 	operateur->temps_execution(delta - temps_agrege_parent);
+
+	operateur->besoin_execution(false);
 }
 
 /* ************************************************************************** */

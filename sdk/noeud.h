@@ -215,3 +215,13 @@ public:
 		return (m_drapeaux & drapeau) != 0;
 	}
 };
+
+/**
+ * Signifie à tous les noeuds en amont qu'ils ont besoin d'être exécutés.
+ */
+void signifie_sale_amont(Noeud *noeud);
+
+/**
+ * Signifie à tous les noeuds en aval qu'ils ont besoin d'être exécutés.
+ */
+void signifie_sale_aval(Noeud *noeud);

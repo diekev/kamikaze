@@ -208,8 +208,7 @@ void Noeud::posy(double pos)
 
 /* ************************************************************************** */
 
-#if 0
-static void etiquette_sale_amont(Noeud *noeud)
+void signifie_sale_amont(Noeud *noeud)
 {
 	if (noeud == nullptr) {
 		return;
@@ -222,11 +221,11 @@ static void etiquette_sale_amont(Noeud *noeud)
 			break;
 		}
 
-		etiquette_sale_amont(entree->lien->parent);
+		signifie_sale_amont(entree->lien->parent);
 	}
 }
 
-static void etiquette_sale_aval(Noeud *noeud)
+void signifie_sale_aval(Noeud *noeud)
 {
 	if (noeud == nullptr) {
 		return;
@@ -236,8 +235,7 @@ static void etiquette_sale_aval(Noeud *noeud)
 
 	for (const PriseSortie *sortie : noeud->sorties()) {
 		for (const PriseEntree *entree : sortie->liens) {
-			etiquette_sale_aval(entree->parent);
+			signifie_sale_aval(entree->parent);
 		}
 	}
 }
-#endif
