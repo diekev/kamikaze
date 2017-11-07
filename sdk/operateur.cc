@@ -52,6 +52,8 @@ void execute_operateur(Operateur *operateur, const Context &contexte, double tem
 	auto t1 = tbb::tick_count::now();
 	auto delta = (t1 - t0).seconds();
 
+	operateur->incremente_nombre_execution();
+
 	/* À FAIRE : DURÉE EXÉCUTION. */
 	operateur->temps_agrege(delta);
 }
@@ -178,6 +180,7 @@ double Operateur::temps_agrege() const
 
 void Operateur::temps_agrege(double temps)
 {
+	m_min_temps_agrege = std::min(m_temps_agrege, temps);
 	m_temps_agrege = temps;
 }
 
@@ -188,7 +191,28 @@ double Operateur::temps_execution() const
 
 void Operateur::temps_execution(double temps)
 {
+	m_min_temps_execution = std::min(m_temps_execution, temps);
 	m_temps_execution = temps;
+}
+
+double Operateur::min_temps_agrege() const
+{
+	return m_min_temps_agrege;
+}
+
+double Operateur::min_temps_execution() const
+{
+	return m_min_temps_execution;
+}
+
+int Operateur::nombre_executions() const
+{
+	return m_nombre_executions;
+}
+
+void Operateur::incremente_nombre_execution()
+{
+	m_nombre_executions += 1;
 }
 
 void Operateur::ajoute_avertissement(const std::string &avertissement)

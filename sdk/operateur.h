@@ -109,6 +109,10 @@ class Operateur : public Persona {
 
 	double m_temps_execution = 0.0;
 	double m_temps_agrege = 0.0;
+	double m_min_temps_execution = std::numeric_limits<double>::max();
+	double m_min_temps_agrege = std::numeric_limits<double>::max();
+
+	int m_nombre_executions = 0;
 
 protected:
 	PrimitiveCollection *m_collection = nullptr;
@@ -217,6 +221,26 @@ public:
 	 * paramètre.
 	 */
 	void temps_execution(double temps);
+
+	/**
+	 * Retourne le temps d'exécution agrégé minimumde l'opérateur.
+	 */
+	double min_temps_agrege() const;
+
+	/**
+	 * Retourne le temps d'exécution minimum de l'opérateur.
+	 */
+	double min_temps_execution() const;
+
+	/**
+	 * Retourne le nombre de fois que l'opérateur a été exécuté.
+	 */
+	int nombre_executions() const;
+
+	/**
+	 * Incrémente de 1 le nombre de fois que l'opérateur a été exécuté.
+	 */
+	void incremente_nombre_execution();
 
 	/**
 	 * Ajoute un avertissement à la liste d'avertissements de cet opérateur.
