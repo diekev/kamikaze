@@ -543,8 +543,7 @@ void QtNode::pointeur_noeud(Noeud *noeud)
 		           QColor(95, 95, 95));
 	}
 
-	/* À FAIRE : Set the icon. */
-	const auto &path = std::string(""); //noeud->icon_path();
+	const auto &path = noeud->operateur()->chemin_icone();
 
 	if (path.empty()) {
 		return;
