@@ -75,6 +75,11 @@ public:
 			PrimitiveCollection *collection,
 			const Context &contexte,
 			double temps);
+
+	/**
+	 * Retourne le temps d'exécution des noeuds parents.
+	 */
+	double temps_execution_parent() const;
 };
 
 /* ************************************************************************** */

@@ -54,8 +54,19 @@ void execute_operateur(Operateur *operateur, const Context &contexte, double tem
 
 	operateur->incremente_nombre_execution();
 
-	/* À FAIRE : DURÉE EXÉCUTION. */
 	operateur->temps_agrege(delta);
+
+	/* Pour calculer le temps d'exécution de l'opérateur, on soustrait le temps
+	 * d'exécution agrégé des noeuds en amont de celui du neoud courant. */
+	auto temps_agrege_parent = 0.0;
+
+	for (int i = 0; i < operateur->entrees(); ++i) {
+		auto entree = operateur->entree(i);
+
+		temps_agrege_parent += entree->temps_execution_parent();
+	}
+
+	operateur->temps_execution(delta - temps_agrege_parent);
 }
 
 /* ************************************************************************** */
@@ -96,6 +107,15 @@ PrimitiveCollection *EntreeOperateur::requiers_collection(PrimitiveCollection *c
 	}
 
 	return collection;
+}
+
+double EntreeOperateur::temps_execution_parent() const
+{
+	if (m_prise == nullptr || m_prise->lien == nullptr) {
+		return 0.0;
+	}
+
+	return m_prise->lien->parent->operateur()->temps_agrege();
 }
 
 /* ************************************************************************** */
