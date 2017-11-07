@@ -89,7 +89,7 @@ void Main::loadPlugins()
 			register_figures(this->primitive_factory());
 		}
 
-		symbol = plugin("nouvel_operateur", ec);
+		symbol = plugin("nouvel_operateur_kamikaze", ec);
 		auto enregistre_operateur = sf::dso_function<void(UsineOperateur *)>(symbol);
 
 		if (enregistre_operateur) {
