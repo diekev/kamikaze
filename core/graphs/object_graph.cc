@@ -103,6 +103,12 @@ void Graph::deconnecte(PriseSortie *de, PriseEntree *a)
 	}
 
 	de->liens.erase(iter);
+
+	/* S'il reste une seule connection, supprime le tampon. */
+	if (de->liens.size() <= 1) {
+		de->parent->operateur()->a_tampon(false);
+	}
+
 	a->lien = nullptr;
 
 	m_besoin_actualisation = true;

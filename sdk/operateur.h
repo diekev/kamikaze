@@ -102,6 +102,7 @@ class Operateur : public Persona {
 	int m_nombre_entrees = 0;
 	int m_nombre_sorties = 0;
 	bool m_besoin_execution = true;
+	bool m_a_tampon = false;
 
 	std::vector<EntreeOperateur> m_donnees_entree{};
 	std::vector<std::string> m_avertissements{};
@@ -237,6 +238,16 @@ public:
 	 * opérateur.
 	 */
 	void supprime_avertissements();
+
+	/**
+	 * Décide si oui ou non la collection devra être mis en tampon.
+	 */
+	void a_tampon(bool ouinon);
+
+	/**
+	 * Retourne si oui ou non la collection devra être mis en tampon.
+	 */
+	bool a_tampon() const;
 };
 
 /* ************************************************************************** */

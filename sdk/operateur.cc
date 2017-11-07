@@ -34,6 +34,10 @@
 
 void execute_operateur(Operateur *operateur, const Context &contexte, double temps)
 {
+	if (operateur->a_tampon()) {
+		return;
+	}
+
 	operateur->supprime_avertissements();
 
 	auto t0 = tbb::tick_count::now();
@@ -81,10 +85,12 @@ PrimitiveCollection *EntreeOperateur::requiers_collection(PrimitiveCollection *c
 	/* S'il y a plusieurs liens, copie la collection afin d'éviter tout conflit. */
 	if (m_prise->lien->liens.size() > 1) {
 		collection_operateur->copy_collection(*collection);
+		operateur->a_tampon(true);
 	}
 	else {
 		/* Autrement, copie la collection et vide l'original. */
 		collection->merge_collection(*collection_operateur);
+		operateur->a_tampon(false);
 	}
 
 	return collection;
@@ -203,6 +209,16 @@ bool Operateur::a_avertissements() const
 void Operateur::supprime_avertissements()
 {
 	m_avertissements.clear();
+}
+
+void Operateur::a_tampon(bool ouinon)
+{
+	m_a_tampon = ouinon;
+}
+
+bool Operateur::a_tampon() const
+{
+	return m_a_tampon;
 }
 
 /* ************************************************************************** */
