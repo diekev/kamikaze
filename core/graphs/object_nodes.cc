@@ -1893,7 +1893,10 @@ class OperateurModele : public Operateur {
 public:
 	OperateurModele(Noeud *noeud, const Context &contexte)
 		: Operateur(noeud, contexte)
-	{}
+	{
+		entrees(1);
+		sorties(1);
+	}
 
 	const char *nom_entree(size_t /*index*/) override
 	{
@@ -1905,9 +1908,14 @@ public:
 		return "Sortie";
 	}
 
-	void execute(const Context &/*contexte*/, double /*temps*/) override
+	const char *nom() override
 	{
+		retrun NOM_;
+	}
 
+	void execute(const Context &contexte, double temps) override
+	{
+		entree(0)->requiers_collection(m_collection, contexte, temps);
 	}
 };
 #endif
