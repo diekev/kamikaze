@@ -618,24 +618,27 @@ bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 			auto maxX = qMax(m_last_mouse_position.x(), mouseEvent->lastScenePos().x());
 			auto minY = qMin(m_last_mouse_position.y(), mouseEvent->lastScenePos().y());
 			auto maxY = qMax(m_last_mouse_position.y(), mouseEvent->lastScenePos().y());
-			qreal item_Min_X;
-			qreal item_Max_X;
-			qreal item_Min_Y;
-			qreal item_Max_Y;
 
 			/* Select the items */
 			const auto &items = m_graphics_scene->items();
-			QtNode *node;
-			QtConnection *connection;
 			for (const auto &item : items) {
-				if (is_connection(item) && item->isVisible()) {
-					connection = static_cast<QtConnection *>(item);
+				if (!item->isVisible()) {
+					continue;
+				}
 
-					if (connection->getBasePort() && connection->getTargetPort()) {
-						item_Min_X = qMin(connection->getBasePort()->scenePos().x(), connection->getTargetPort()->scenePos().x());
-						item_Max_X = qMax(connection->getBasePort()->scenePos().x(), connection->getTargetPort()->scenePos().x());
-						item_Min_Y = qMin(connection->getBasePort()->scenePos().y(), connection->getTargetPort()->scenePos().y());
-						item_Max_Y = qMax(connection->getBasePort()->scenePos().y(), connection->getTargetPort()->scenePos().y());
+				if (is_connection(item)) {
+					auto connection = static_cast<QtConnection *>(item);
+					auto prise_base = connection->getBasePort();
+					auto prise_cible = connection->getTargetPort();
+
+					if (prise_base && prise_cible) {
+						const auto &pos_prise_base = prise_base->scenePos();
+						const auto &pos_prise_cible = prise_cible->scenePos();
+
+						auto item_Min_X = qMin(pos_prise_base.x(), pos_prise_cible.x());
+						auto item_Max_X = qMax(pos_prise_base.x(), pos_prise_cible.x());
+						auto item_Min_Y = qMin(pos_prise_base.y(), pos_prise_cible.y());
+						auto item_Max_Y = qMax(pos_prise_base.y(), pos_prise_cible.y());
 
 						if (item_Min_X > minX && item_Max_X < maxX &&
 						    item_Min_Y > minY && item_Max_Y < maxY)
@@ -644,17 +647,20 @@ bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 						}
 					}
 				}
-				else if (is_node(item) && item->isVisible()) {
-					node = static_cast<QtNode *>(item);
-					item_Min_X = node->scenePos().x() - 0.5 * node->sceneBoundingRect().width() + 10;
-					item_Min_Y = node->scenePos().y() - 0.5 * node->sceneBoundingRect().height() + 10;
-					item_Max_X = item_Min_X + node->sceneBoundingRect().width() + 10;
-					item_Max_Y = item_Min_Y + node->sceneBoundingRect().height()  + 10;
+				else if (is_node(item)) {
+					auto noeud = static_cast<QtNode *>(item);
+					const auto &pos_neoud = noeud->scenePos();
+					const auto &cadre_noeud = noeud->sceneBoundingRect();
+
+					auto item_Min_X = pos_neoud.x() - 0.5 * cadre_noeud.width() + 10;
+					auto item_Min_Y = pos_neoud.y() - 0.5 * cadre_noeud.height() + 10;
+					auto item_Max_X = item_Min_X + cadre_noeud.width() + 10;
+					auto item_Max_Y = item_Min_Y + cadre_noeud.height()  + 10;
 
 					if (item_Min_X > minX && item_Max_X < maxX &&
 					    item_Min_Y > minY && item_Max_Y < maxY)
 					{
-						selectNode(node, nullptr);
+						selectNode(noeud, nullptr);
 					}
 				}
 			}
