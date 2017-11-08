@@ -221,6 +221,15 @@ bool Scene::has_flags(int flag)
 	return (m_flags & flag) != 0;
 }
 
+void Scene::supprime_tout()
+{
+	for (const auto &node : m_nodes) {
+		m_depsgraph.remove_node(node.get());
+	}
+
+	m_nodes.clear();
+}
+
 int Scene::startFrame() const
 {
 	return m_start_frame;

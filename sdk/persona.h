@@ -123,6 +123,12 @@ public:
 
 	std::vector<Property> &props();
 
+	void valeur_propriete_bool(const std::string &prop_name, bool valeur);
+	void valeur_propriete_int(const std::string &prop_name, int valeur);
+	void valeur_propriete_float(const std::string &prop_name, float valeur);
+	void valeur_propriete_vec3(const std::string &prop_name, const glm::vec3 &valeur);
+	void valeur_propriete_string(const std::string &prop_name, const std::string &valeur);
+
 private:
 	inline Property *find_property(const std::string &prop_name)
 	{

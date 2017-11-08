@@ -71,6 +71,7 @@ public Q_SLOTS:
 	void nodeProcessed();
 
 private:
+	void genere_menu_fichier();
 	void generateWindowMenu();
 	void generateEditMenu();
 	void generateObjectMenu();
@@ -83,6 +84,9 @@ private Q_SLOTS:
 	void undo() const;
 	void redo() const;
 	void handleCommand();
+
+	void ouvre_fichier();
+	void sauve_fichier();
 
 	void addTimeLineWidget();
 	void addGraphEditorWidget();

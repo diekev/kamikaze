@@ -103,6 +103,8 @@ public:
 	void unset_flags(int flag);
 	bool has_flags(int flag);
 
+	void supprime_tout();
+
 private:
 	bool ensureUniqueName(std::string &name) const;
 };

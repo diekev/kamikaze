@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * The Original Code is Copyright (C) 2016 Kévin Dietrich.
+ * The Original Code is Copyright (C) 2017 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
@@ -24,20 +24,14 @@
 
 #pragma once
 
-#include <kamikaze/operateur.h>
+#include <string>
 
-/* ************************************************************************** */
+class Context;
+class Scene;
 
-void enregistre_operateurs_integres(UsineOperateur *usine);
+namespace kamikaze {
 
-/* ************************************************************************** */
+void sauvegarde_projet(const std::string &chemin, const Scene *scene);
+void ouvre_projet(const std::string &chemin, const Context &contexte);
 
-class OperateurSortie : public Operateur {
-public:
-	OperateurSortie(Noeud *noeud, const Context &contexte);
-
-	const char *nom_entree(size_t /*index*/);
-
-	void execute(const Context &contexte, double temps);
-	const char *nom() override;
-};
+}

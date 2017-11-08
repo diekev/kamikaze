@@ -294,6 +294,11 @@ public:
 	 * Modifie le chemin de l'icone de cet opérateur.
 	 */
 	void chemin_icone(const std::string &chemin);
+
+	/**
+	 * Retourne le nom de cet opérateur.
+	 */
+	virtual const char *nom() = 0;
 };
 
 /* ************************************************************************** */

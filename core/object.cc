@@ -80,6 +80,11 @@ void Object::ajoute_noeud(Noeud *noeud)
 {
 	m_graph.ajoute(noeud);
 	m_graph.noeud_actif(noeud);
+
+	/* À FAIRE : quand on ouvre un fichier de sauvegarde, il y a un crash quand
+	 * on clique dans l'éditeur de graphe. Ceci n'est sans doute pas la bonne
+	 * correction. */
+	m_graph.ajoute_selection(noeud);
 }
 
 Graph *Object::graph()

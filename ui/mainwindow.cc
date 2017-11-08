@@ -27,6 +27,7 @@
 #include <kamikaze/primitive.h>
 
 #include <QDockWidget>
+#include <QFileDialog>
 #include <QMenuBar>
 #include <QProgressBar>
 #include <QStatusBar>
@@ -36,6 +37,7 @@
 #include "core/kamikaze_main.h"
 #include "core/object.h"
 #include "core/object_ops.h"
+#include "core/sauvegarde.h"
 
 #include "node_editorwidget.h"
 #include "outliner_widget.h"
@@ -50,6 +52,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
     , m_command_manager(new CommandManager)
     , m_command_factory(new CommandFactory)
 {
+	genere_menu_fichier();
 	generateObjectMenu();
 	generateNodeMenu();
 	generateWindowMenu();
@@ -215,6 +218,19 @@ void MainWindow::generateEditMenu()
 	connect(action, SIGNAL(triggered()), this, SLOT(redo()));
 }
 
+void MainWindow::genere_menu_fichier()
+{
+	auto menu_fichier = menuBar()->addMenu("Fichier");
+
+	QAction *action;
+
+	action = menu_fichier->addAction("Ouvrir");
+	connect(action, SIGNAL(triggered()), this, SLOT(ouvre_fichier()));
+
+	action = menu_fichier->addAction("Sauvegarder");
+	connect(action, SIGNAL(triggered()), this, SLOT(sauve_fichier()));
+}
+
 void MainWindow::generatePresetMenu()
 {
 	REGISTER_COMMAND(m_command_factory, "add preset", AddPresetObjectCmd);
@@ -261,6 +277,28 @@ void MainWindow::handleCommand()
 	/* Execute the command in the current context, the manager will push the
 	* command on the undo stack. */
 	m_command_manager->execute(cmd, m_context);
+}
+
+void MainWindow::ouvre_fichier()
+{
+	const auto nom_fichier = QFileDialog::getOpenFileName(this);
+
+	if (nom_fichier.isEmpty()) {
+		return;
+	}
+
+	kamikaze::ouvre_projet(nom_fichier.toStdString(), m_context);
+}
+
+void MainWindow::sauve_fichier()
+{
+	const auto nom_fichier = QFileDialog::getSaveFileName(this);
+
+	if (nom_fichier.isEmpty()) {
+		return;
+	}
+
+	kamikaze::sauvegarde_projet(nom_fichier.toStdString(), m_context.scene);
 }
 
 void MainWindow::addTimeLineWidget()

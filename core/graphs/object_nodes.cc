@@ -40,6 +40,9 @@
 
 /* ************************************************************************** */
 
+static const char *NOM_SORTIE = "Sortie";
+static const char *AIDE_SORTIE = "Créer un noeud de sortie.";
+
 OperateurSortie::OperateurSortie(Noeud *noeud, const Context &contexte)
 	: Operateur(noeud, contexte)
 {
@@ -49,6 +52,11 @@ OperateurSortie::OperateurSortie(Noeud *noeud, const Context &contexte)
 const char *OperateurSortie::nom_entree(size_t)
 {
 	return "Entrée";
+}
+
+const char *OperateurSortie::nom()
+{
+	return NOM_SORTIE;
 }
 
 void OperateurSortie::execute(const Context &contexte, double temps)
@@ -85,6 +93,11 @@ public:
 	const char *nom_sortie(size_t /*index*/)
 	{
 		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_CREATION_BOITE;
 	}
 
 	void execute(const Context &/*contexte*/, double /*temps*/)
@@ -209,6 +222,11 @@ public:
 		return "Sortie";
 	}
 
+	const char *nom() override
+	{
+		return NOM_TRANSFORMATION;
+	}
+
 	void execute(const Context &contexte, double temps)
 	{
 		entree(0)->requiers_collection(m_collection, contexte, temps);
@@ -312,6 +330,11 @@ public:
 	const char *nom_sortie(size_t /*index*/)
 	{
 		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_CREATION_TORUS;
 	}
 
 	void execute(const Context &/*contexte*/, double /*temps*/)
@@ -424,6 +447,11 @@ public:
 		return "Sortie";
 	}
 
+	const char *nom() override
+	{
+		return NOM_CREATION_GRILLE;
+	}
+
 	void execute(const Context &/*contexte*/, double /*temps*/)
 	{
 		m_collection->free_all();
@@ -510,6 +538,11 @@ public:
 	const char *nom_sortie(size_t /*index*/) override
 	{
 		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_CREATION_CERCLE;
 	}
 
 	void execute(const Context &contexte, double /*temps*/)
@@ -659,6 +692,11 @@ public:
 		return "Sortie";
 	}
 
+	const char *nom() override
+	{
+		return NOM_CREATION_TUBE;
+	}
+
 	void execute(const Context &/*contexte*/, double /*temps*/)
 	{
 		m_collection->free_all();
@@ -708,6 +746,11 @@ public:
 	const char *nom_sortie(size_t /*index*/) override
 	{
 		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_CREATION_CONE;
 	}
 
 	void execute(const Context &/*contexte*/, double /*temps*/)
@@ -781,6 +824,11 @@ public:
 		add_prop("radius", "Radius", property_type::prop_float);
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_default_value_float(1.0f);
+	}
+
+	const char *nom() override
+	{
+		return NOM_CREATION_ICOSPHERE;
 	}
 
 	const char *nom_sortie(size_t /*index*/) override
@@ -860,6 +908,11 @@ public:
 	const char *nom_sortie(size_t /*index*/) override
 	{
 		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_NORMAL;
 	}
 
 	void execute(const Context &/*contexte*/, double /*temps*/) override
@@ -952,6 +1005,11 @@ public:
 	const char *nom_sortie(size_t /*index*/) override
 	{
 		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_BRUIT;
 	}
 
 	void execute(const Context &contexte, double temps) override
@@ -1060,6 +1118,11 @@ public:
 		return "Sortie";
 	}
 
+	const char *nom() override
+	{
+		return NOM_COULEUR;
+	}
+
 	bool update_properties() override
 	{
 		auto method = eval_int("fill_method");
@@ -1155,6 +1218,11 @@ public:
 		return "Sortie";
 	}
 
+	const char *nom() override
+	{
+		return NOM_FUSION_COLLECTION;
+	}
+
 	void execute(const Context &contexte, double temps) override
 	{
 		entree(0)->requiers_collection(m_collection, contexte, temps);
@@ -1197,6 +1265,11 @@ public:
 	const char *nom_sortie(size_t /*index*/) override
 	{
 		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_CREATION_NUAGE_POINT;
 	}
 
 	void execute(const Context &contexte, double /*temps*/) override
@@ -1269,6 +1342,11 @@ public:
 	const char *nom_sortie(size_t /*index*/) override
 	{
 		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_CREATION_ATTRIBUT;
 	}
 
 	void execute(const Context &contexte, double temps) override
@@ -1348,6 +1426,11 @@ public:
 	const char *nom_sortie(size_t /*index*/) override
 	{
 		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_SUPPRESSION_ATTRIBUT;
 	}
 
 	void execute(const Context &contexte, double temps) override
@@ -1447,6 +1530,11 @@ public:
 	const char *nom_sortie(size_t /*index*/) override
 	{
 		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_RANDOMISATION_ATTRIBUT;
 	}
 
 	bool update_properties() override
@@ -1570,6 +1658,11 @@ public:
 		return "Sortie";
 	}
 
+	const char *nom() override
+	{
+		return NOM_CREATION_SEGMENTS;
+	}
+
 	void execute(const Context &contexte, double temps) override
 	{
 		entree(0)->requiers_collection(m_collection, contexte, temps);
@@ -1689,6 +1782,11 @@ public:
 	const char *nom_sortie(size_t /*index*/) override
 	{
 		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_GRAVITE;
 	}
 
 	void execute(const Context &contexte, double temps) override
@@ -1877,4 +1975,13 @@ void enregistre_operateurs_integres(UsineOperateur *usine)
 						   cree_description<OperateurGravite>(NOM_GRAVITE,
 															  AIDE_GRAVITE,
 															  categorie));
+
+	/* Opérateurs autres. */
+
+	categorie = "Autre";
+
+	usine->enregistre_type(NOM_SORTIE,
+						   cree_description<OperateurSortie>(NOM_SORTIE,
+															 AIDE_SORTIE,
+															 categorie));
 }

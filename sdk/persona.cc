@@ -221,4 +221,71 @@ std::vector<Property> &Persona::props()
 	return m_props;
 }
 
+void Persona::valeur_propriete_bool(const std::string &prop_name, bool valeur)
+{
+	Property *prop = find_property(prop_name);
 
+	if (!prop) {
+		return;
+	}
+
+	assert(prop->type == property_type::prop_bool);
+
+	prop->data = std::experimental::any(valeur);
+}
+
+void Persona::valeur_propriete_int(const std::string &prop_name, int valeur)
+{
+	Property *prop = find_property(prop_name);
+
+	if (!prop) {
+		return;
+	}
+
+	assert(prop->type == property_type::prop_int
+		   || prop->type == property_type::prop_enum);
+
+	prop->data = std::experimental::any(valeur);
+}
+
+void Persona::valeur_propriete_float(const std::string &prop_name, float valeur)
+{
+	Property *prop = find_property(prop_name);
+
+	if (!prop) {
+		return;
+	}
+
+	assert(prop->type == property_type::prop_float);
+
+	prop->data = std::experimental::any(valeur);
+}
+
+void Persona::valeur_propriete_vec3(const std::string &prop_name, const glm::vec3 &valeur)
+{
+	Property *prop = find_property(prop_name);
+
+	if (!prop) {
+		return;
+	}
+
+	assert(prop->type == property_type::prop_vec3);
+
+	prop->data = std::experimental::any(valeur);
+}
+
+void Persona::valeur_propriete_string(const std::string &prop_name, const std::string &valeur)
+{
+	Property *prop = find_property(prop_name);
+
+	if (!prop) {
+		return;
+	}
+
+	assert(prop->type == property_type::prop_string
+		   || prop->type == property_type::prop_input_file
+		   || prop->type == property_type::prop_output_file
+		   || prop->type == property_type::prop_list);
+
+	prop->data = std::experimental::any(valeur);
+}
