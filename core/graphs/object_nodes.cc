@@ -1885,6 +1885,52 @@ public:
 };
 
 /* ************************************************************************** */
+
+static const char *NOM_COMMUTATEUR = "Commutateur";
+static const char *AIDE_COMMUTATEUR = "Change la direction de l'évaluation du"
+									  "graphe en fonction de la prise choisie.";
+
+class OperateurCommutateur : public Operateur {
+public:
+	OperateurCommutateur(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		entrees(2);
+		sorties(1);
+
+		add_prop("prise", "Prise", property_type::prop_int);
+		set_prop_tooltip("L'index de la prise à évaluer");
+		set_prop_default_value_int(0);
+		set_prop_min_max(0, 1);
+	}
+
+	const char *nom_entree(size_t index) override
+	{
+		if (index == 0) {
+			return "Entrée 0";
+		}
+
+		return "Entrée 1";
+	}
+
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_COMMUTATEUR;
+	}
+
+	void execute(const Context &contexte, double temps) override
+	{
+		const auto prise = eval_int("prise");
+		entree(prise)->requiers_collection(m_collection, contexte, temps);
+	}
+};
+
+/* ************************************************************************** */
 #if 0
 static const char *NOM_ = "";
 static const char *AIDE_ = "";
@@ -2039,4 +2085,9 @@ void enregistre_operateurs_integres(UsineOperateur *usine)
 						   cree_description<OperateurTampon>(NOM_TAMPON,
 															 AIDE_TAMPON,
 															 categorie));
+
+	usine->enregistre_type(NOM_COMMUTATEUR,
+						   cree_description<OperateurCommutateur>(NOM_COMMUTATEUR,
+																  AIDE_COMMUTATEUR,
+																  categorie));
 }
