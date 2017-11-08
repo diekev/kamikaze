@@ -125,7 +125,7 @@ void ObjectGraphDepsNode::process(const Context &context, TaskNotifier */*notifi
 	}
 #endif
 
-	execute_operateur(noeud_sortie->operateur(), context, 0.0);
+	execute_operateur(noeud_sortie->operateur(), context, context.scene->currentFrame());
 
 #if 0
 	if (notifier) {
@@ -282,6 +282,11 @@ void Depsgraph::create_node(SceneNode *scene_node)
 
 	/* Object depends on its graph. */
 	connect(graph_node->output(), node->input());
+
+	/* À FAIRE : trouver une meilleur solution pour faire dépendre les objets
+	 * sur le temps de sorte que seuls ceux qui sont dynamiques dépendent du
+	 * temps. */
+	connect(m_time_node->output(), graph_node->input());
 
 	m_need_update = true;
 }
