@@ -1843,6 +1843,48 @@ public:
 
 /* ************************************************************************** */
 
+static const char *NOM_TAMPON = "Tampon";
+static const char *AIDE_TAMPON = "Met la collection d'entrée dans un tampon pour ne plus la recalculer.";
+
+class OperateurTampon : public Operateur {
+	PrimitiveCollection *m_collecion_tampon = nullptr;
+
+public:
+	OperateurTampon(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		entrees(1);
+		sorties(1);
+	}
+
+	const char *nom_entree(size_t /*index*/) override
+	{
+		return "Entrée";
+	}
+
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_TAMPON;
+	}
+
+	void execute(const Context &contexte, double temps) override
+	{
+		if (this->besoin_execution() || m_collecion_tampon == nullptr) {
+			entree(0)->requiers_collection(m_collection, contexte, temps);
+			m_collecion_tampon = m_collection->copy();
+		}
+		else if (m_collecion_tampon != nullptr) {
+			m_collection = m_collecion_tampon->copy();
+		}
+	}
+};
+
+/* ************************************************************************** */
 #if 0
 static const char *NOM_ = "";
 static const char *AIDE_ = "";
@@ -1983,5 +2025,10 @@ void enregistre_operateurs_integres(UsineOperateur *usine)
 	usine->enregistre_type(NOM_SORTIE,
 						   cree_description<OperateurSortie>(NOM_SORTIE,
 															 AIDE_SORTIE,
+															 categorie));
+
+	usine->enregistre_type(NOM_TAMPON,
+						   cree_description<OperateurTampon>(NOM_TAMPON,
+															 AIDE_TAMPON,
 															 categorie));
 }
