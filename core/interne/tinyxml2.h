@@ -1484,7 +1484,7 @@ protected:
     char* ParseDeep( char* p, StrPair* endTag );
 
 private:
-    XMLElement( XMLDocument* doc );
+	explicit XMLElement( XMLDocument* doc );
     virtual ~XMLElement();
     XMLElement( const XMLElement& );	// not supported
     void operator=( const XMLElement& );	// not supported

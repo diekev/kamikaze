@@ -63,7 +63,7 @@ public:
 	 * Construit une entrée d'opérateur avec la prise d'entrée de noeud donné en
 	 * paramètre.
 	 */
-	EntreeOperateur(PriseEntree *prise);
+	explicit EntreeOperateur(PriseEntree *prise);
 
 	/**
 	 * Exécute l'opérateur du noeud connecté à la prise d'entrée enveloppée dans

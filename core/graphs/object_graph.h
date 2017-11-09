@@ -44,7 +44,7 @@ class Graph {
 	bool m_besoin_actualisation;
 
 public:
-	Graph(const Context &contexte);
+	explicit Graph(const Context &contexte);
 
 	void ajoute(Noeud *noeud);
 	void enleve(Noeud *noeud);

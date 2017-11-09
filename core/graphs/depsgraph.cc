@@ -218,14 +218,12 @@ void Depsgraph::disconnect(SceneNode *from, SceneNode *to)
 
 DepsNode *Depsgraph::find_node(SceneNode *scene_node, bool graph)
 {
-	DepsNode *node = nullptr;
-
 	/* TODO: find a better way for this. */
 	auto object = static_cast<Object *>(scene_node);
 	auto iter = m_object_graph_map.find(object->graph());
 	assert(iter != m_object_graph_map.end());
 
-	node = iter->second;
+	auto node = iter->second;
 
 	assert(node != nullptr);
 

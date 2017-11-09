@@ -78,6 +78,8 @@ class Noeud {
 	int m_drapeaux = 0;
 
 public:
+	Noeud() = default;
+
 	/**
 	 * Détruit ce noeud.
 	 */

@@ -356,7 +356,7 @@ public:
 	 * @brief primitive_iterator Construct the begin iterator.
 	 * @param collection The PrimitiveCollection to traverse.
 	 */
-	primitive_iterator(const PrimitiveCollection *collection);
+	explicit primitive_iterator(const PrimitiveCollection *collection);
 
 	/**
 	 * @brief primitive_iterator Construct the begin iterator.

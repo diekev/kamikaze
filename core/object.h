@@ -43,7 +43,7 @@ class Object : public SceneNode {
 	std::vector<Object *> m_children;
 
 public:
-	Object(const Context &contexte);
+	explicit Object(const Context &contexte);
 	~Object() = default;
 
 	PrimitiveCollection *collection() const;
