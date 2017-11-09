@@ -93,7 +93,7 @@ distribution.
 	#define TIXML_VSNPRINTF	vsnprintf
 	static inline int TIXML_VSCPRINTF( const char* format, va_list va )
 	{
-		int len = vsnprintf( 0, 0, format, va );
+		int len = printf(format, va);
 		TIXMLASSERT( len >= 0 );
 		return len;
 	}
@@ -409,14 +409,17 @@ void XMLUtil::ConvertUTF32ToUTF8( unsigned long input, char* output, int* length
             --output;
             *output = (char)((input | BYTE_MARK) & BYTE_MASK);
             input >>= 6;
+			[[fallthrough]];
         case 3:
             --output;
             *output = (char)((input | BYTE_MARK) & BYTE_MASK);
             input >>= 6;
+			[[fallthrough]];
         case 2:
             --output;
             *output = (char)((input | BYTE_MARK) & BYTE_MASK);
             input >>= 6;
+			[[fallthrough]];
         case 1:
             --output;
             *output = (char)(input | FIRST_BYTE_MARK[*length]);
@@ -2132,7 +2135,7 @@ void XMLPrinter::Print( const char* format, ... )
     va_start( va, format );
 
     if ( _fp ) {
-        vfprintf( _fp, format, va );
+		fprintf( _fp, format, va );
     }
     else {
         const int len = TIXML_VSCPRINTF( format, va );
@@ -2142,7 +2145,16 @@ void XMLPrinter::Print( const char* format, ... )
         va_start( va, format );
         TIXMLASSERT( _buffer.Size() > 0 && _buffer[_buffer.Size() - 1] == 0 );
         char* p = _buffer.PushArr( len ) - 1;	// back up over the null terminator.
+
+		/* À FAIRE */
+#ifdef __GNUC__
+#	pragma GCC diagnostic push
+#	pragma GCC diagnostic ignored "-Wsuggest-attribute=format"
+#endif
 		TIXML_VSNPRINTF( p, len+1, format, va );
+#ifdef __GNUC__
+#	pragma GCC diagnostic pop
+#endif
     }
     va_end( va );
 }
