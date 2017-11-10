@@ -59,6 +59,10 @@ set(ENTETES_OUTILS
 	outils/interpolation.h
 )
 
+set(ENTETES_GEOMETRIE
+	géométrie/maillage.h
+)
+
 set(HEADERS
 	attribute.h
 	bruit.h
@@ -81,6 +85,8 @@ set(HEADERS
 )
 
 add_library(kamikaze SHARED
+	géométrie/maillage.cc
+
 	attribute.cc
 	bruit.cc
 	context.cc
