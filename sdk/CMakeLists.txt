@@ -55,15 +55,19 @@ set(INC_SYS
 	${EGO_INCLUDE_DIRS}
 )
 
+set(ENTETES_OUTILS
+	outils/interpolation.h
+)
+
 set(HEADERS
 	attribute.h
+	bruit.h
 	context.h
 	cube.h
 	factory.h
 	geomlists.h
 	mesh.h
 	noeud.h
-	noise.h
 	operateur.h
 	persona.h
 	prim_points.h
@@ -78,11 +82,11 @@ set(HEADERS
 
 add_library(kamikaze SHARED
 	attribute.cc
+	bruit.cc
 	context.cc
 	cube.cc
 	geomlists.cc
 	noeud.cc
-	noise.cc
 	mesh.cc
 	operateur.cc
 	persona.cc
@@ -92,6 +96,7 @@ add_library(kamikaze SHARED
 	segmentprim.cc
 
 	${HEADERS}
+	${ENTETES_OUTILS}
 )
 
 target_include_directories(kamikaze PUBLIC "${INC_SYS}")
@@ -108,4 +113,9 @@ install(TARGETS kamikaze LIBRARY DESTINATION lib)
 install(
 	FILES ${HEADERS}
 	DESTINATION include/kamikaze
+)
+
+install(
+	FILES ${ENTETES_OUTILS}
+	DESTINATION include/kamikaze/outils
 )

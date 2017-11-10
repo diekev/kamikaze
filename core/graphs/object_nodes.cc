@@ -24,9 +24,9 @@
 
 #include "object_nodes.h"
 
+#include <kamikaze/bruit.h>
 #include <kamikaze/context.h>
 #include <kamikaze/mesh.h>
-#include <kamikaze/noise.h>
 #include <kamikaze/primitive.h>
 #include <kamikaze/prim_points.h>
 #include <kamikaze/segmentprim.h>
@@ -968,13 +968,46 @@ public:
 static const char *NOM_BRUIT = "Bruit";
 static const char *AIDE_BRUIT = "Ajouter du bruit.";
 
+enum {
+	DIRECTION_X = 0,
+	DIRECTION_Y = 1,
+	DIRECTION_Z = 2,
+	DIRECTION_TOUTE = 3,
+};
+
+enum {
+	BRUIT_SIMPLEX = 0,
+	BRUIT_PERLIN = 1,
+	BRUIT_FLUX = 2,
+};
+
 class OperateurBruit : public Operateur {
+	BruitPerlin3D m_bruit_perlin;
+	BruitFlux3D m_bruit_flux;
+
 public:
 	OperateurBruit(Noeud *noeud, const Context &contexte)
 		: Operateur(noeud, contexte)
 	{
 		entrees(1);
 		sorties(1);
+
+		EnumProperty prop_enum_bruit;
+		prop_enum_bruit.insert("Simplex", BRUIT_SIMPLEX);
+		prop_enum_bruit.insert("Perlin", BRUIT_PERLIN);
+		prop_enum_bruit.insert("Flux", BRUIT_FLUX);
+
+		add_prop("bruit", "Bruit", property_type::prop_enum);
+		set_prop_enum_values(prop_enum_bruit);
+
+		EnumProperty prop_enum;
+		prop_enum.insert("X", DIRECTION_X);
+		prop_enum.insert("Y", DIRECTION_Y);
+		prop_enum.insert("Z", DIRECTION_Z);
+		prop_enum.insert("Toute", DIRECTION_TOUTE);
+
+		add_prop("direction", "Direction", property_type::prop_enum);
+		set_prop_enum_values(prop_enum);
 
 		add_prop("octaves", "Octaves", property_type::prop_int);
 		set_prop_min_max(1, 10);
@@ -995,6 +1028,19 @@ public:
 		add_prop("lacunarity", "Lacunarity", property_type::prop_float);
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_default_value_float(2.0f);
+
+		add_prop("temps", "Temps", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(2.0f);
+	}
+
+	bool update_properties() override
+	{
+		const auto bruit = eval_enum("bruit");
+
+		set_prop_visible("temps", bruit == BRUIT_FLUX);
+
+		return true;
 	}
 
 	const char *nom_entree(size_t /*index*/) override
@@ -1021,6 +1067,13 @@ public:
 		const auto persistence = eval_float("persistence");
 		const auto ofrequency = eval_float("frequency");
 		const auto oamplitude = eval_float("amplitude");
+		const auto direction = eval_enum("direction");
+		const auto bruit = eval_enum("bruit");
+
+		if (bruit == BRUIT_FLUX) {
+			const auto temps_bruit = eval_float("temps");
+			m_bruit_flux.change_temps(temps_bruit);
+		}
 
 		for (auto prim : primitive_iterator(this->m_collection)) {
 			PointList *points;
@@ -1040,24 +1093,45 @@ public:
 			for (size_t i = 0, e = points->size(); i < e; ++i) {
 				auto &point = (*points)[i];
 				const auto x = point.x;
-				const auto y = point.x;
-				const auto z = point.x;
-				auto output = 0.0f;
+				const auto y = point.y;
+				const auto z = point.z;
+				auto valeur = 0.0f;
 
 				auto frequency = ofrequency;
 				auto amplitude = oamplitude;
 
 				for (size_t j = 0; j < octaves; ++j) {
-
-					output += (amplitude * simplex_noise_3d(x * frequency, y * frequency, z * frequency));
+					if (bruit == BRUIT_SIMPLEX) {
+						valeur += (amplitude * bruit_simplex_3d(x * frequency, y * frequency, z * frequency));
+					}
+					else if (bruit == BRUIT_PERLIN) {
+						valeur += (amplitude * m_bruit_perlin(x * frequency, y * frequency, z * frequency));
+					}
+					else {
+						valeur += (amplitude * m_bruit_flux(x * frequency, y * frequency, z * frequency));
+					}
 
 					frequency *= lacunarity;
 					amplitude *= persistence;
 				}
 
-				point.x += output;
-				point.y += output;
-				point.z += output;
+				switch (direction) {
+					case DIRECTION_X:
+						point.x += valeur;
+						break;
+					case DIRECTION_Y:
+						point.y += valeur;
+						break;
+					case DIRECTION_Z:
+						point.z += valeur;
+						break;
+					default:
+					case DIRECTION_TOUTE:
+						point.x += valeur;
+						point.y += valeur;
+						point.z += valeur;
+						break;
+				}
 			}
 		}
 	}
