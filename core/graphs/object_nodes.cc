@@ -2032,6 +2032,13 @@ public:
 	{
 		entrees(1);
 		sorties(1);
+
+		m_collecion_tampon = new PrimitiveCollection(contexte.primitive_factory);
+	}
+
+	~OperateurTampon()
+	{
+		delete m_collecion_tampon;
 	}
 
 	const char *nom_entree(size_t /*index*/) override
@@ -2051,13 +2058,17 @@ public:
 
 	void execute(const Context &contexte, double temps) override
 	{
-		if (this->besoin_execution() || m_collecion_tampon == nullptr) {
-			entree(0)->requiers_collection(m_collection, contexte, temps);
-			m_collecion_tampon = m_collection->copy();
+		/* À FAIRE : généraliser à tous les noeuds + meilleur solution. */
+		m_collection->free_all();
+
+		if (this->besoin_execution()) {
+			m_collecion_tampon->free_all();
+			entree(0)->requiers_collection(m_collecion_tampon, contexte, temps);
 		}
-		else if (m_collecion_tampon != nullptr) {
-			m_collection = m_collecion_tampon->copy();
-		}
+
+		auto collection_temporaire = m_collecion_tampon->copy();
+		m_collection->merge_collection(*collection_temporaire);
+		delete collection_temporaire;
 	}
 };
 
