@@ -2034,6 +2034,106 @@ public:
 };
 
 /* ************************************************************************** */
+
+static const char *NOM_DISPERSION_POINTS = "Dispersion Points";
+static const char *AIDE_DISPERSION_POINTS = "Disperse des points sur une surface.";
+
+class OperateurDispersionPoints : public Operateur {
+public:
+	OperateurDispersionPoints(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		entrees(1);
+		sorties(1);
+
+		/* graine */
+		add_prop("graine", "Graine", property_type::prop_int);
+		set_prop_min_max(1, 100000);
+		set_prop_default_value_int(1);
+
+		/* nombre courbes */
+		add_prop("nombre_points_polys", "Nombre Points Par Polygones", property_type::prop_int);
+		set_prop_min_max(1, 1000);
+		set_prop_default_value_int(100);
+		set_prop_tooltip("Nombre de points par polygone.");
+	}
+
+	const char *nom_entree(size_t /*index*/) override
+	{
+		return "Entrée";
+	}
+
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_DISPERSION_POINTS;
+	}
+
+	void execute(const Context &contexte, double temps) override
+	{
+		entree(0)->requiers_collection(m_collection, contexte, temps);
+
+		auto iter = primitive_iterator(m_collection, Mesh::id);
+
+		if (iter.get() == nullptr) {
+			this->ajoute_avertissement("Il n'y a pas de mesh dans la collecion d'entrée !");
+			return;
+		}
+
+		const auto input_mesh = static_cast<Mesh *>(iter.get());
+		const auto points_entrees = input_mesh->points();
+		const auto polygones = input_mesh->polys();
+		const auto nombre_polys = polygones->size();
+
+		auto nuage_points = static_cast<PrimPoints *>(m_collection->build("PrimPoints"));
+		auto points_sorties = nuage_points->points();
+
+		const auto nombre_points_polys = eval_int("nombre_points_polys");
+		const auto nombre_points = nombre_polys * nombre_points_polys;
+
+		points_sorties->reserve(nombre_points);
+
+		const auto graine = eval_int("graine");
+
+		std::mt19937 rng(19937 + graine);
+		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+		for (size_t i = 0, f = nombre_polys; i < f; ++i) {
+			const auto poly = (*polygones)[i];
+			const auto v1 = (*points_entrees)[poly[0]];
+			const auto v2 = (*points_entrees)[poly[1]];
+			const auto v3 = (*points_entrees)[poly[2]];
+			const auto v4 = (poly[3] != INVALID_INDEX) ? (*points_entrees)[poly[3]] : glm::vec3(0.0f);
+
+			for (size_t j = 0; j < nombre_points_polys; ++j) {
+				const auto t1 = dist(rng);
+				const auto t2 = dist(rng);
+				const auto t3 = dist(rng);
+
+				auto pos = interp(v1, v2, t1);
+				pos += interp(v2, v3, t2);
+
+				if (poly[3] != INVALID_INDEX) {
+					pos += interp(v3, v4, t3);
+
+					const auto t4 = dist(rng);
+					pos += interp(v4, v1, t4);
+				}
+				else {
+					pos += interp(v3, v1, t3);
+				}
+
+				points_sorties->push_back(pos);
+			}
+		}
+	}
+};
+
+/* ************************************************************************** */
 #if 0
 static const char *NOM_ = "";
 static const char *AIDE_ = "";
@@ -2145,6 +2245,11 @@ void enregistre_operateurs_integres(UsineOperateur *usine)
 	usine->enregistre_type(NOM_CREATION_SEGMENTS,
 						   cree_description<OperateurCreationCourbes>(NOM_CREATION_SEGMENTS,
 																	   AIDE_CREATION_SEGMENTS,
+																	   categorie));
+
+	usine->enregistre_type(NOM_DISPERSION_POINTS,
+						   cree_description<OperateurDispersionPoints>(NOM_DISPERSION_POINTS,
+																	   AIDE_DISPERSION_POINTS,
 																	   categorie));
 
 	/* Opérateurs attributs. */
