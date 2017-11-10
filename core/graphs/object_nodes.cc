@@ -1044,9 +1044,10 @@ public:
 				const auto z = point.x;
 				auto output = 0.0f;
 
+				auto frequency = ofrequency;
+				auto amplitude = oamplitude;
+
 				for (size_t j = 0; j < octaves; ++j) {
-					auto frequency = ofrequency;
-					auto amplitude = oamplitude;
 
 					output += (amplitude * simplex_noise_3d(x * frequency, y * frequency, z * frequency));
 
@@ -1621,31 +1622,72 @@ public:
 
 /* ************************************************************************** */
 
-static const char *NOM_CREATION_SEGMENTS = "Création segments";
-static const char *AIDE_CREATION_SEGMENTS = "Création de segments.";
+static const char *NOM_CREATION_SEGMENTS = "Création courbes";
+static const char *AIDE_CREATION_SEGMENTS = "Création de courbes.";
 
-class OperateurCreationSegments : public Operateur {
+template <typename T, glm::precision P>
+auto interp(const glm::detail::tvec3<T, P> &a, const glm::detail::tvec3<T, P> &b, const T &t)
+{
+	return a * (static_cast<T>(1) - t) + b * t;
+}
+
+enum {
+	CREER_COURBES_VERTS = 0,
+	CREER_COURBES_POLYS = 1,
+};
+
+class OperateurCreationCourbes : public Operateur {
 public:
-	OperateurCreationSegments(Noeud *noeud, const Context &contexte)
+	OperateurCreationCourbes(Noeud *noeud, const Context &contexte)
 		: Operateur(noeud, contexte)
 	{
 		entrees(1);
 		sorties(1);
 
-		add_prop("segment", "Segment", property_type::prop_int);
+		/* méthode */
+		EnumProperty prop_enum;
+		prop_enum.insert("Vertices", CREER_COURBES_VERTS);
+		prop_enum.insert("Polygones", CREER_COURBES_POLYS);
+
+		add_prop("méthode", "Méthode", property_type::prop_enum);
+		set_prop_enum_values(prop_enum);
+		set_prop_default_value_int(0);
+
+		/* graine */
+		add_prop("graine", "Graine", property_type::prop_int);
+		set_prop_min_max(1, 100000);
+		set_prop_default_value_int(1);
+
+		/* nombre courbes */
+		add_prop("nombre_courbes", "Nombre Courbes", property_type::prop_int);
+		set_prop_min_max(1, 1000);
+		set_prop_default_value_int(100);
+		set_prop_tooltip("Nombre de courbes par polygone.");
+
+		add_prop("segments", "Segments", property_type::prop_int);
 		set_prop_default_value_int(1);
 		set_prop_min_max(1, 10);
-		set_prop_tooltip("Number of segments in each generated curve.");
+		set_prop_tooltip("Nombre de segments dans chaque courbe.");
 
-		add_prop("size", "Size", property_type::prop_float);
+		add_prop("taille", "Taille", property_type::prop_float);
 		set_prop_default_value_float(1);
 		set_prop_min_max(0.0f, 10.0f);
-		set_prop_tooltip("Size of each segment.");
+		set_prop_tooltip("Taille de chaque segment.");
 
-		add_prop("normal", "Normal", property_type::prop_vec3);
+		add_prop("normale", "Normale", property_type::prop_vec3);
 		set_prop_default_value_vec3(glm::vec3{0.0f, 1.0f, 0.0f});
 		set_prop_min_max(-1.0f, 1.0f);
-		set_prop_tooltip("Direction of the generated curves.");
+		set_prop_tooltip("Direction de la courbe.");
+	}
+
+	bool update_properties() override
+	{
+		auto methode = eval_enum("méthode");
+
+		set_prop_visible("graine", methode == CREER_COURBES_POLYS);
+		set_prop_visible("nombre_courbes", methode == CREER_COURBES_POLYS);
+
+		return true;
 	}
 
 	const char *nom_entree(size_t /*index*/) override
@@ -1674,38 +1716,99 @@ public:
 			return;
 		}
 
-		auto input_mesh = static_cast<Mesh *>(iter.get());
-		auto input_points = input_mesh->points();
+		const auto input_mesh = static_cast<Mesh *>(iter.get());
+		const auto input_points = input_mesh->points();
 
-		const auto segment_number = eval_int("segment");
-		const auto segment_normal = eval_vec3("normal");
-		const auto segment_size = eval_float("size");
+		const auto segment_number = eval_int("segments");
+		const auto segment_normal = eval_vec3("normale");
+		const auto segment_size = eval_float("taille");
+		const auto methode = eval_enum("méthode");
 
 		auto segment_prim = static_cast<SegmentPrim *>(m_collection->build("SegmentPrim"));
 		auto output_edges = segment_prim->edges();
-		output_edges->reserve(input_points->size() * segment_number);
-
 		auto output_points = segment_prim->points();
-		auto total_points = input_points->size() * (segment_number + 1);
-		output_points->reserve(total_points);
 
-		auto num_points = 0;
-		auto head = 0;
+		auto num_points = 0ul;
+		auto total_points = 0ul;
 
-		for (size_t i = 0; i < input_points->size(); ++i) {
-			auto point = (*input_points)[i];
+		if (methode == CREER_COURBES_VERTS) {
+			total_points = input_points->size() * (segment_number + 1);
 
-			output_points->push_back(point);
-			++num_points;
+			output_edges->reserve(input_points->size() * segment_number);
+			output_points->reserve(total_points);
+			auto head = 0;
 
-			for (int j = 0; j < segment_number; ++j, ++num_points) {
-				point += (segment_size * segment_normal);
+			for (size_t i = 0; i < input_points->size(); ++i) {
+				auto point = (*input_points)[i];
+
 				output_points->push_back(point);
+				++num_points;
 
-				output_edges->push_back(glm::uvec2{head, ++head});
+				for (int j = 0; j < segment_number; ++j, ++num_points) {
+					point += (segment_size * segment_normal);
+					output_points->push_back(point);
+
+					output_edges->push_back(glm::uvec2{head, ++head});
+				}
+
+				++head;
 			}
+		}
+		else if (methode == CREER_COURBES_POLYS) {
+			const auto polys = input_mesh->polys();
 
-			++head;
+			const auto nombre_courbes = eval_int("nombre_courbes");
+			const auto nombre_polys = polys->size();
+
+			total_points = nombre_polys * nombre_courbes * (segment_number + 1);
+
+			output_edges->reserve((nombre_courbes * segment_number) * nombre_polys);
+			output_points->reserve(total_points);
+
+			const auto graine = eval_int("graine");
+			auto head = 0;
+
+			std::mt19937 rng(19937 + graine);
+			std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+			for (size_t i = 0; i < nombre_polys; ++i) {
+				const auto poly = (*polys)[i];
+				const auto v1 = (*input_points)[poly[0]];
+				const auto v2 = (*input_points)[poly[1]];
+				const auto v3 = (*input_points)[poly[2]];
+				const auto v4 = (poly[3] != INVALID_INDEX) ? (*input_points)[poly[3]] : glm::vec3(0.0f);
+
+				for (size_t j = 0; j < nombre_courbes; ++j) {
+					const auto t1 = dist(rng);
+					const auto t2 = dist(rng);
+					const auto t3 = dist(rng);
+
+					auto pos = interp(v1, v2, t1);
+					pos += interp(v2, v3, t2);
+
+					if (poly[3] != INVALID_INDEX) {
+						pos += interp(v3, v4, t3);
+
+						const auto t4 = dist(rng);
+						pos += interp(v4, v1, t4);
+					}
+					else {
+						pos += interp(v3, v1, t3);
+					}
+
+					output_points->push_back(pos);
+					++num_points;
+
+					for (int k = 0; k < segment_number; ++k, ++num_points) {
+						pos += (segment_size * segment_normal);
+						output_points->push_back(pos);
+
+						output_edges->push_back(glm::uvec2{head, ++head});
+					}
+
+					++head;
+				}
+			}
 		}
 
 		if (num_points != total_points) {
@@ -2040,7 +2143,7 @@ void enregistre_operateurs_integres(UsineOperateur *usine)
 																		 categorie));
 
 	usine->enregistre_type(NOM_CREATION_SEGMENTS,
-						   cree_description<OperateurCreationSegments>(NOM_CREATION_SEGMENTS,
+						   cree_description<OperateurCreationCourbes>(NOM_CREATION_SEGMENTS,
 																	   AIDE_CREATION_SEGMENTS,
 																	   categorie));
 
