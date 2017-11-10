@@ -229,6 +229,9 @@ void MainWindow::genere_menu_fichier()
 
 	action = menu_fichier->addAction("Sauvegarder");
 	connect(action, SIGNAL(triggered()), this, SLOT(sauve_fichier()));
+
+	action = menu_fichier->addAction("Sauvegarder sous...");
+	connect(action, SIGNAL(triggered()), this, SLOT(sauve_fichier_sous()));
 }
 
 void MainWindow::generatePresetMenu()
@@ -287,10 +290,25 @@ void MainWindow::ouvre_fichier()
 		return;
 	}
 
-	kamikaze::ouvre_projet(nom_fichier.toStdString(), m_context);
+	const auto &chemin_projet = nom_fichier.toStdString();
+
+	kamikaze::ouvre_projet(chemin_projet, m_context);
+
+	m_main->chemin_projet(chemin_projet);
+	m_main->projet_ouvert(true);
 }
 
 void MainWindow::sauve_fichier()
+{
+	if (m_main->projet_ouvert()) {
+		kamikaze::sauvegarde_projet(m_main->chemin_projet(), m_context.scene);
+	}
+	else {
+		sauve_fichier_sous();
+	}
+}
+
+void MainWindow::sauve_fichier_sous()
 {
 	const auto nom_fichier = QFileDialog::getSaveFileName(this);
 
@@ -298,7 +316,12 @@ void MainWindow::sauve_fichier()
 		return;
 	}
 
-	kamikaze::sauvegarde_projet(nom_fichier.toStdString(), m_context.scene);
+	const auto &chemin_projet = nom_fichier.toStdString();
+
+	m_main->chemin_projet(chemin_projet);
+	m_main->projet_ouvert(true);
+
+	kamikaze::sauvegarde_projet(chemin_projet, m_context.scene);
 }
 
 void MainWindow::addTimeLineWidget()

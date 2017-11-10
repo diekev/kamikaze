@@ -87,6 +87,7 @@ private Q_SLOTS:
 
 	void ouvre_fichier();
 	void sauve_fichier();
+	void sauve_fichier_sous();
 
 	void addTimeLineWidget();
 	void addGraphEditorWidget();

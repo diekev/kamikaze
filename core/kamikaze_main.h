@@ -38,6 +38,10 @@ class Main final {
 	std::unique_ptr<UsineOperateur> m_usine_operateur;
 	std::unique_ptr<Scene> m_scene;
 
+	std::string m_chemin_projet{};
+
+	bool m_projet_ouvert = false;
+
 public:
 	Main();
 
@@ -51,4 +55,12 @@ public:
 	PrimitiveFactory *primitive_factory() const;
 	UsineOperateur *usine_operateur() const;
 	Scene *scene() const;
+
+	std::string chemin_projet() const;
+
+	void chemin_projet(const std::string &chemin);
+
+	bool projet_ouvert() const;
+
+	void projet_ouvert(bool ouinon);
 };

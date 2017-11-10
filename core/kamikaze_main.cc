@@ -127,3 +127,23 @@ Scene *Main::scene() const
 {
 	return m_scene.get();
 }
+
+std::string Main::chemin_projet() const
+{
+	return m_chemin_projet;
+}
+
+void Main::chemin_projet(const std::string &chemin)
+{
+	m_chemin_projet = chemin;
+}
+
+bool Main::projet_ouvert() const
+{
+	return m_projet_ouvert;
+}
+
+void Main::projet_ouvert(bool ouinon)
+{
+	m_projet_ouvert = ouinon;
+}
