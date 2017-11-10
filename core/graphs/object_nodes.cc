@@ -915,8 +915,10 @@ public:
 		return NOM_NORMAL;
 	}
 
-	void execute(const Context &/*contexte*/, double /*temps*/) override
+	void execute(const Context &contexte, double temps) override
 	{
+		entree(0)->requiers_collection(m_collection, contexte, temps);
+
 		const auto flip = eval_bool("flip");
 
 		for (auto &prim : primitive_iterator(this->m_collection, Mesh::id)) {
