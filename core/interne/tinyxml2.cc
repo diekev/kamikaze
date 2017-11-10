@@ -93,7 +93,15 @@ distribution.
 	#define TIXML_VSNPRINTF	vsnprintf
 	static inline int TIXML_VSCPRINTF( const char* format, va_list va )
 	{
-		int len = printf(format, va);
+		/* À FAIRE */
+#ifdef __GNUC__
+#	pragma GCC diagnostic push
+#	pragma GCC diagnostic ignored "-Wsuggest-attribute=format"
+#endif
+		int len = vsnprintf(0, 0, format, va);
+#ifdef __GNUC__
+#	pragma GCC diagnostic pop
+#endif
 		TIXMLASSERT( len >= 0 );
 		return len;
 	}
@@ -2135,7 +2143,15 @@ void XMLPrinter::Print( const char* format, ... )
     va_start( va, format );
 
     if ( _fp ) {
-		fprintf( _fp, format, va );
+		/* À FAIRE */
+#ifdef __GNUC__
+#	pragma GCC diagnostic push
+#	pragma GCC diagnostic ignored "-Wsuggest-attribute=format"
+#endif
+		vfprintf( _fp, format, va );
+#ifdef __GNUC__
+#	pragma GCC diagnostic pop
+#endif
     }
     else {
         const int len = TIXML_VSCPRINTF( format, va );
