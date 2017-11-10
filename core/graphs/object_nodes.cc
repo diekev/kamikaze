@@ -1013,6 +1013,10 @@ public:
 		add_prop("direction", "Direction", property_type::prop_enum);
 		set_prop_enum_values(prop_enum);
 
+		add_prop("taille", "Taille", property_type::prop_float);
+		set_prop_min_max(0.0f, 20.0f);
+		set_prop_default_value_float(1.0f);
+
 		add_prop("octaves", "Octaves", property_type::prop_int);
 		set_prop_min_max(1, 10);
 		set_prop_default_value_int(1);
@@ -1066,6 +1070,8 @@ public:
 	{
 		entree(0)->requiers_collection(m_collection, contexte, temps);
 
+		const auto taille = eval_float("taille");
+		const auto taille_inverse = (taille > 0.0f) ? 1.0f / taille : 0.0f;
 		const auto octaves = eval_int("octaves");
 		const auto lacunarity = eval_float("lacunarity");
 		const auto persistence = eval_float("persistence");
@@ -1109,9 +1115,9 @@ public:
 
 			for (size_t i = 0, e = points->size(); i < e; ++i) {
 				auto &point = (*points)[i];
-				const auto x = point.x;
-				const auto y = point.y;
-				const auto z = point.z;
+				const auto x = point.x * taille_inverse;
+				const auto y = point.y * taille_inverse;
+				const auto z = point.z * taille_inverse;
 				auto valeur = 0.0f;
 
 				auto frequency = ofrequency;
