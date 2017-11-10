@@ -973,6 +973,7 @@ enum {
 	DIRECTION_Y = 1,
 	DIRECTION_Z = 2,
 	DIRECTION_TOUTE = 3,
+	DIRECTION_NORMALE = 4,
 };
 
 enum {
@@ -1005,6 +1006,7 @@ public:
 		prop_enum.insert("Y", DIRECTION_Y);
 		prop_enum.insert("Z", DIRECTION_Z);
 		prop_enum.insert("Toute", DIRECTION_TOUTE);
+		prop_enum.insert("Normale", DIRECTION_NORMALE);
 
 		add_prop("direction", "Direction", property_type::prop_enum);
 		set_prop_enum_values(prop_enum);
@@ -1078,13 +1080,26 @@ public:
 		for (auto prim : primitive_iterator(this->m_collection)) {
 			PointList *points;
 
+			Attribute *normales = nullptr;
+
 			if (prim->typeID() == Mesh::id) {
 				auto mesh = static_cast<Mesh *>(prim);
 				points = mesh->points();
+				normales = mesh->attribute("normal", ATTR_TYPE_VEC3);
+
+				if (direction == DIRECTION_NORMALE && normales == nullptr) {
+					this->ajoute_avertissement("Absence de normales pour calculer le bruit !");
+					continue;
+				}
 			}
 			else if (prim->typeID() == PrimPoints::id) {
 				auto prim_points = static_cast<PrimPoints *>(prim);
 				points = prim_points->points();
+
+				if (direction == DIRECTION_NORMALE) {
+					this->ajoute_avertissement("On ne peut calculer le bruit suivant la normale sur un nuage de points !");
+					continue;
+				}
 			}
 			else {
 				continue;
@@ -1131,6 +1146,14 @@ public:
 						point.y += valeur;
 						point.z += valeur;
 						break;
+					case DIRECTION_NORMALE:
+					{
+						const auto normale = normales->vec3(i);
+						point.x += valeur * normale.x;
+						point.y += valeur * normale.y;
+						point.z += valeur * normale.z;
+						break;
+					}
 				}
 			}
 		}
