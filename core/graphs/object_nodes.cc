@@ -33,6 +33,9 @@
 #include <kamikaze/util_parallel.h>
 #include <kamikaze/utils_glm.h>
 
+#include <kamikaze/outils/géométrie.h>
+#include <kamikaze/outils/interpolation.h>
+
 #include <random>
 #include <sstream>
 
@@ -878,14 +881,6 @@ public:
 
 /* ************************************************************************** */
 
-static inline glm::vec3 get_normal(const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2)
-{
-	const auto n0 = v0 - v1;
-	const auto n1 = v2 - v1;
-
-	return glm::cross(n1, n0);
-}
-
 static const char *NOM_NORMAL = "Normal";
 static const char *AIDE_NORMAL = "Éditer les normales.";
 
@@ -934,33 +929,7 @@ public:
 				normals->vec3(i, glm::vec3(0.0f));
 			}
 
-			parallel_for(tbb::blocked_range<size_t>(0, polys->size()),
-						 [&](const tbb::blocked_range<size_t> &r)
-			{
-				for (auto i = r.begin(), ie = r.end(); i < ie ; ++i) {
-					const auto &quad = (*polys)[i];
-
-					const auto v0 = (*points)[quad[0]];
-					const auto v1 = (*points)[quad[1]];
-					const auto v2 = (*points)[quad[2]];
-
-					const auto normal = get_normal(v0, v1, v2);
-
-					normals->vec3(quad[0], normals->vec3(quad[0]) + normal);
-					normals->vec3(quad[1], normals->vec3(quad[1]) + normal);
-					normals->vec3(quad[2], normals->vec3(quad[2]) + normal);
-
-					if (quad[3] != INVALID_INDEX) {
-						normals->vec3(quad[3], normals->vec3(quad[3]) + normal);
-					}
-				}
-			});
-
-			if (flip) {
-				for (size_t i = 0, ie = points->size(); i < ie ; ++i) {
-					normals->vec3(i, -glm::normalize(normals->vec3(i)));
-				}
-			}
+			calcule_normales(*points, *polys, *normals, flip);
 		}
 	}
 };
@@ -1730,12 +1699,6 @@ public:
 static const char *NOM_CREATION_SEGMENTS = "Création courbes";
 static const char *AIDE_CREATION_SEGMENTS = "Création de courbes.";
 
-template <typename T, glm::precision P>
-auto interp(const glm::detail::tvec3<T, P> &a, const glm::detail::tvec3<T, P> &b, const T &t)
-{
-	return a * (static_cast<T>(1) - t) + b * t;
-}
-
 enum {
 	CREER_COURBES_VERTS = 0,
 	CREER_COURBES_POLYS = 1,
@@ -1934,7 +1897,7 @@ public:
 					case DIRECTION_COURBE_NORMALE:
 					{
 						/* Calcul la normale du polygone. */
-						normale = glm::normalize(get_normal(v1, v2, v3));
+						normale = glm::normalize(normale_triangle(v1, v2, v3));
 						break;
 					}
 					case DIRECTION_COURBE_PERSONNALISEE:
@@ -1949,17 +1912,17 @@ public:
 					const auto t2 = dist(rng);
 					const auto t3 = dist(rng);
 
-					auto pos = interp(v1, v2, t1);
-					pos += interp(v2, v3, t2);
+					auto pos = interp_lineaire(v1, v2, t1);
+					pos += interp_lineaire(v2, v3, t2);
 
 					if (poly[3] != INVALID_INDEX) {
-						pos += interp(v3, v4, t3);
+						pos += interp_lineaire(v3, v4, t3);
 
 						const auto t4 = dist(rng);
-						pos += interp(v4, v1, t4);
+						pos += interp_lineaire(v4, v1, t4);
 					}
 					else {
-						pos += interp(v3, v1, t3);
+						pos += interp_lineaire(v3, v1, t3);
 					}
 
 					output_points->push_back(pos);
@@ -2291,17 +2254,17 @@ public:
 				const auto t2 = dist(rng);
 				const auto t3 = dist(rng);
 
-				auto pos = interp(v1, v2, t1);
-				pos += interp(v2, v3, t2);
+				auto pos = interp_lineaire(v1, v2, t1);
+				pos += interp_lineaire(v2, v3, t2);
 
 				if (poly[3] != INVALID_INDEX) {
-					pos += interp(v3, v4, t3);
+					pos += interp_lineaire(v3, v4, t3);
 
 					const auto t4 = dist(rng);
-					pos += interp(v4, v1, t4);
+					pos += interp_lineaire(v4, v1, t4);
 				}
 				else {
-					pos += interp(v3, v1, t3);
+					pos += interp_lineaire(v3, v1, t3);
 				}
 
 				points_sorties->push_back(pos);

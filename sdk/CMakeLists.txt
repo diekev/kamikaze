@@ -56,6 +56,7 @@ set(INC_SYS
 )
 
 set(ENTETES_OUTILS
+	outils/géométrie.h
 	outils/interpolation.h
 )
 
@@ -81,6 +82,8 @@ set(HEADERS
 )
 
 add_library(kamikaze SHARED
+	outils/géométrie.cc
+
 	attribute.cc
 	bruit.cc
 	context.cc

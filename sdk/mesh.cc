@@ -29,6 +29,8 @@
 #include <GL/glew.h>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "outils/géométrie.h"
+
 #include "context.h"
 #include "renderbuffer.h"
 #include "util_parallel.h"
@@ -223,7 +225,12 @@ void Mesh::prepareRenderData()
 
 	if (normals != nullptr) {
 		if (normals->size() != this->points()->size()) {
-			computeNormals();
+			auto normals = this->attribute("normal", ATTR_TYPE_VEC3);
+			normals->resize(this->points()->size());
+
+			auto polys = this->polys();
+
+			calcule_normales(m_point_list, *polys, *normals, false);
 		}
 
 		m_renderbuffer->set_normal_buffer("normal", normals->data(), normals->byte_size());
@@ -268,46 +275,4 @@ void Mesh::computeBBox(glm::vec3 &min, glm::vec3 &max)
 	min = m_min;
 	max = m_max;
 	m_dimensions = m_max - m_min;
-}
-
-static inline glm::vec3 get_normal(const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2)
-{
-	const auto n0 = v0 - v1;
-	const auto n1 = v2 - v1;
-
-	return glm::cross(n1, n0);
-}
-
-void Mesh::computeNormals()
-{
-	auto normals = this->attribute("normal", ATTR_TYPE_VEC3);
-	normals->resize(this->points()->size());
-
-	auto polys = this->polys();
-
-	parallel_for(tbb::blocked_range<size_t>(0, polys->size()),
-	             [&](const tbb::blocked_range<size_t> &r)
-	{
-		for (auto i = r.begin(), ie = r.end(); i < ie ; ++i) {
-			const auto &quad = (*polys)[i];
-
-			const auto v0 = m_point_list[quad[0]];
-			const auto v1 = m_point_list[quad[1]];
-			const auto v2 = m_point_list[quad[2]];
-
-			const auto normal = get_normal(v0, v1, v2);
-
-			normals->vec3(quad[0], normals->vec3(quad[0]) + normal);
-			normals->vec3(quad[1], normals->vec3(quad[1]) + normal);
-			normals->vec3(quad[2], normals->vec3(quad[2]) + normal);
-
-			if (quad[3] != INVALID_INDEX) {
-				normals->vec3(quad[3], normals->vec3(quad[3]) + normal);
-			}
-		}
-	});
-
-	for (size_t i = 0, ie = this->points()->size(); i < ie ; ++i) {
-		normals->vec3(i, -glm::normalize(normals->vec3(i)));
-	}
 }
