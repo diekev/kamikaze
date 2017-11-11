@@ -1741,6 +1741,11 @@ enum {
 	CREER_COURBES_POLYS = 1,
 };
 
+enum {
+	DIRECTION_COURBE_NORMALE       = 0,
+	DIRECTION_COURBE_PERSONNALISEE = 1,
+};
+
 class OperateurCreationCourbes : public Operateur {
 public:
 	OperateurCreationCourbes(Noeud *noeud, const Context &contexte)
@@ -1779,6 +1784,15 @@ public:
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_tooltip("Taille de chaque segment.");
 
+		/* direction */
+		EnumProperty enum_direcion;
+		enum_direcion.insert("Normale", DIRECTION_COURBE_NORMALE);
+		enum_direcion.insert("Personnalisée", DIRECTION_COURBE_PERSONNALISEE);
+
+		add_prop("direction", "Direction", property_type::prop_enum);
+		set_prop_enum_values(enum_direcion);
+		set_prop_default_value_int(0);
+
 		add_prop("normale", "Normale", property_type::prop_vec3);
 		set_prop_default_value_vec3(glm::vec3{0.0f, 1.0f, 0.0f});
 		set_prop_min_max(-1.0f, 1.0f);
@@ -1791,6 +1805,9 @@ public:
 
 		set_prop_visible("graine", methode == CREER_COURBES_POLYS);
 		set_prop_visible("nombre_courbes", methode == CREER_COURBES_POLYS);
+
+		const auto direction = eval_enum("direction");
+		set_prop_visible("normale", direction == DIRECTION_COURBE_PERSONNALISEE);
 
 		return true;
 	}
@@ -1828,6 +1845,7 @@ public:
 		const auto segment_normal = eval_vec3("normale");
 		const auto segment_size = eval_float("taille");
 		const auto methode = eval_enum("méthode");
+		const auto direction = eval_enum("direction");
 
 		auto segment_prim = static_cast<SegmentPrim *>(m_collection->build("SegmentPrim"));
 		auto output_edges = segment_prim->edges();
@@ -1837,20 +1855,46 @@ public:
 		auto total_points = 0ul;
 
 		if (methode == CREER_COURBES_VERTS) {
+			Attribute *normales = nullptr;
+
+			if (direction == DIRECTION_COURBE_NORMALE) {
+				normales = input_mesh->attribute("normal", ATTR_TYPE_VEC3);
+
+				if (normales == nullptr || normales->size() == 0) {
+					this->ajoute_avertissement("Il n'y a pas de données de normales sur les vertex d'entrées !");
+					return;
+				}
+			}
+
 			total_points = input_points->size() * (segment_number + 1);
 
 			output_edges->reserve(input_points->size() * segment_number);
 			output_points->reserve(total_points);
 			auto head = 0;
+			glm::vec3 normale;
 
 			for (size_t i = 0; i < input_points->size(); ++i) {
 				auto point = (*input_points)[i];
+
+				switch (direction) {
+					default:
+					case DIRECTION_COURBE_NORMALE:
+					{
+						normale = normales->vec3(i);
+						break;
+					}
+					case DIRECTION_COURBE_PERSONNALISEE:
+					{
+						normale = segment_normal;
+						break;
+					}
+				}
 
 				output_points->push_back(point);
 				++num_points;
 
 				for (int j = 0; j < segment_number; ++j, ++num_points) {
-					point += (segment_size * segment_normal);
+					point += (segment_size * normale);
 					output_points->push_back(point);
 
 					output_edges->push_back(glm::uvec2{head, ++head});
@@ -1876,12 +1920,29 @@ public:
 			std::mt19937 rng(19937 + graine);
 			std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
+			glm::vec3 normale;
+
 			for (size_t i = 0; i < nombre_polys; ++i) {
 				const auto poly = (*polys)[i];
 				const auto v1 = (*input_points)[poly[0]];
 				const auto v2 = (*input_points)[poly[1]];
 				const auto v3 = (*input_points)[poly[2]];
 				const auto v4 = (poly[3] != INVALID_INDEX) ? (*input_points)[poly[3]] : glm::vec3(0.0f);
+
+				switch (direction) {
+					default:
+					case DIRECTION_COURBE_NORMALE:
+					{
+						/* Calcul la normale du polygone. */
+						normale = glm::normalize(get_normal(v1, v2, v3));
+						break;
+					}
+					case DIRECTION_COURBE_PERSONNALISEE:
+					{
+						normale = segment_normal;
+						break;
+					}
+				}
 
 				for (size_t j = 0; j < nombre_courbes; ++j) {
 					const auto t1 = dist(rng);
@@ -1905,7 +1966,7 @@ public:
 					++num_points;
 
 					for (int k = 0; k < segment_number; ++k, ++num_points) {
-						pos += (segment_size * segment_normal);
+						pos += (segment_size * normale);
 						output_points->push_back(pos);
 
 						output_edges->push_back(glm::uvec2{head, ++head});
