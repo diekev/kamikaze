@@ -44,10 +44,10 @@ inline auto interp_bilineaire(
 
 template <class S, class T>
 inline auto interp_trilineaire(
-		const S& v000, const S& v100,
-		const S& v010, const S& v110,
-		const S& v001, const S& v101,
-		const S& v011, const S& v111,
+		const S &v000, const S &v100,
+		const S &v010, const S &v110,
+		const S &v001, const S &v101,
+		const S &v011, const S &v111,
 		T fx, T fy, T fz)
 {
 	return interp_lineaire(
@@ -58,17 +58,17 @@ inline auto interp_trilineaire(
 
 template <class S, class T>
 inline auto interp_quadrilineaire(
-		const S& v0000, const S& v1000,
-		const S& v0100, const S& v1100,
-		const S& v0010, const S& v1010,
-		const S& v0110, const S& v1110,
-		const S& v0001, const S& v1001,
-		const S& v0101, const S& v1101,
-		const S& v0011, const S& v1011,
-		const S& v0111, const S& v1111,
+		const S &v0000, const S &v1000,
+		const S &v0100, const S &v1100,
+		const S &v0010, const S &v1010,
+		const S &v0110, const S &v1110,
+		const S &v0001, const S &v1001,
+		const S &v0101, const S &v1101,
+		const S &v0011, const S &v1011,
+		const S &v0111, const S &v1111,
 		T fx, T fy, T fz, T ft)
 {
-	return lerp(
+	return interp_lineaire(
 				interp_trilineaire(v0000, v1000, v0100, v1100, v0010, v1010, v0110, v1110, fx, fy, fz),
 				interp_trilineaire(v0001, v1001, v0101, v1101, v0011, v1011, v0111, v1111, fx, fy, fz),
 				ft);
