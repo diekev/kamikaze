@@ -26,7 +26,7 @@
 
 #include <QString>
 
-#include <kamikaze/util_render.h>
+#include <kamikaze/outils/rendu.h>
 
 #include "context.h"
 #include "object.h"

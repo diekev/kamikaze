@@ -30,11 +30,11 @@
 #include <kamikaze/primitive.h>
 #include <kamikaze/prim_points.h>
 #include <kamikaze/segmentprim.h>
-#include <kamikaze/util_parallel.h>
-#include <kamikaze/utils_glm.h>
 
 #include <kamikaze/outils/géométrie.h>
 #include <kamikaze/outils/interpolation.h>
+#include <kamikaze/outils/mathématiques.h>
+#include <kamikaze/outils/parallélisme.h>
 
 #include <random>
 #include <sstream>

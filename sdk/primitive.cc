@@ -27,8 +27,8 @@
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "util_render.h"
-#include "util_string.h"
+#include "outils/chaîne_caractère.h"
+#include "outils/rendu.h"
 
 Primitive::Primitive(const Primitive &other)
     : m_dimensions(other.m_dimensions)

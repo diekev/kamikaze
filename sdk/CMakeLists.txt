@@ -56,8 +56,12 @@ set(INC_SYS
 )
 
 set(ENTETES_OUTILS
+	outils/chaîne_caractère.h
 	outils/géométrie.h
 	outils/interpolation.h
+	outils/mathématiques.h
+	outils/parallélisme.h
+	outils/rendu.h
 )
 
 set(HEADERS
@@ -75,10 +79,6 @@ set(HEADERS
 	primitive.h
 	renderbuffer.h
 	segmentprim.h
-	utils_glm.h
-	util_parallel.h
-	util_render.h
-	util_string.h
 )
 
 add_library(kamikaze SHARED

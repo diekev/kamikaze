@@ -30,10 +30,10 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "outils/géométrie.h"
+#include "outils/parallélisme.h"
 
 #include "context.h"
 #include "renderbuffer.h"
-#include "util_parallel.h"
 
 /* ************************************************************************** */
 

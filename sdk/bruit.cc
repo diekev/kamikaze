@@ -27,7 +27,7 @@
 #include <cmath>
 
 #include "outils/interpolation.h"
-#include "utils_glm.h"
+#include "outils/mathématiques.h"
 
 /* ************************************************************************** */
 

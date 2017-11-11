@@ -27,7 +27,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <kamikaze/primitive.h>
-#include <kamikaze/util_string.h>
+#include <kamikaze/outils/chaîne_caractère.h>
 
 void Scene::removeObject(SceneNode *node)
 {

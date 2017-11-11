@@ -26,7 +26,8 @@
 
 #include "../attribute.h"
 #include "../geomlists.h"
-#include "../util_parallel.h"
+
+#include "parallélisme.h"
 
 void calcule_normales(
 		const PointList &points,
