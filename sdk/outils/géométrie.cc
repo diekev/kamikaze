@@ -68,3 +68,34 @@ void calcule_normales(
 		}
 	}
 }
+
+void calcule_boite_delimitation(
+		const PointList &points,
+		glm::vec3 &min,
+		glm::vec3 &max)
+{
+	for (size_t i = 0, ie = points.size(); i < ie; ++i) {
+		auto vert = points[i];
+
+		if (vert.x < min.x) {
+			min.x = vert.x;
+		}
+		else if (vert.x > max.x) {
+			max.x = vert.x;
+		}
+
+		if (vert.y < min.y) {
+			min.y = vert.y;
+		}
+		else if (vert.y > max.y) {
+			max.y = vert.y;
+		}
+
+		if (vert.z < min.z) {
+			min.z = vert.z;
+		}
+		else if (vert.z > max.z) {
+			max.z = vert.z;
+		}
+	}
+}

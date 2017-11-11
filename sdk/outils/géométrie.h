@@ -46,3 +46,8 @@ void calcule_normales(
 		const PolygonList &polygones,
 		Attribute &normales,
 		bool flip);
+
+void calcule_boite_delimitation(
+		const PointList &points,
+		glm::vec3 &min,
+		glm::vec3 &max);
