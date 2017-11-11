@@ -1095,7 +1095,7 @@ public:
 				points = mesh->points();
 				normales = mesh->attribute("normal", ATTR_TYPE_VEC3);
 
-				if (direction == DIRECTION_NORMALE && normales == nullptr) {
+				if (direction == DIRECTION_NORMALE && (normales == nullptr || normales->size() == 0)) {
 					this->ajoute_avertissement("Absence de normales pour calculer le bruit !");
 					continue;
 				}
