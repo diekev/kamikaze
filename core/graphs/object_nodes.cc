@@ -1696,6 +1696,50 @@ public:
 
 /* ************************************************************************** */
 
+struct Triangle {
+	glm::vec3 v0, v1, v2;
+};
+
+std::vector<Triangle> convertis_maillage_triangles(const Mesh *maillage_entree)
+{
+	std::vector<Triangle> triangles;
+	const auto points = maillage_entree->points();
+	const auto polygones = maillage_entree->polys();
+
+	/* Convertis le maillage en triangles. */
+	auto nombre_triangles = 0ul;
+
+	for (auto i = 0ul; i < polygones->size(); ++i) {
+		const auto polygone = (*polygones)[i];
+
+		nombre_triangles += ((polygone[3] == INVALID_INDEX) ? 1 : 2);
+	}
+
+	triangles.reserve(nombre_triangles);
+
+	for (auto i = 0ul; i < polygones->size(); ++i) {
+		const auto polygone = (*polygones)[i];
+
+		Triangle triangle;
+		triangle.v0 = (*points)[polygone[0]];
+		triangle.v1 = (*points)[polygone[1]];
+		triangle.v2 = (*points)[polygone[2]];
+
+		triangles.push_back(triangle);
+
+		if (polygone[3] != INVALID_INDEX) {
+			Triangle triangle2;
+			triangle2.v0 = (*points)[polygone[0]];
+			triangle2.v1 = (*points)[polygone[2]];
+			triangle2.v2 = (*points)[polygone[3]];
+
+			triangles.push_back(triangle2);
+		}
+	}
+
+	return triangles;
+}
+
 static const char *NOM_CREATION_SEGMENTS = "Création courbes";
 static const char *AIDE_CREATION_SEGMENTS = "Création de courbes.";
 
@@ -1867,37 +1911,39 @@ public:
 			}
 		}
 		else if (methode == CREER_COURBES_POLYS) {
-			const auto polys = input_mesh->polys();
+			auto triangles = convertis_maillage_triangles(input_mesh);
 
 			const auto nombre_courbes = eval_int("nombre_courbes");
-			const auto nombre_polys = polys->size();
-
-			total_points = nombre_polys * nombre_courbes * (segment_number + 1);
+			const auto nombre_polys = triangles.size();
 
 			output_edges->reserve((nombre_courbes * segment_number) * nombre_polys);
 			output_points->reserve(total_points);
 
+			total_points = nombre_polys * nombre_courbes * (segment_number + 1);
+
 			const auto graine = eval_int("graine");
-			auto head = 0;
 
 			std::mt19937 rng(19937 + graine);
 			std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
+			auto head = 0;
+
 			glm::vec3 normale;
 
-			for (size_t i = 0; i < nombre_polys; ++i) {
-				const auto poly = (*polys)[i];
-				const auto v1 = (*input_points)[poly[0]];
-				const auto v2 = (*input_points)[poly[1]];
-				const auto v3 = (*input_points)[poly[2]];
-				const auto v4 = (poly[3] != INVALID_INDEX) ? (*input_points)[poly[3]] : glm::vec3(0.0f);
+			for (const Triangle &triangle : triangles) {
+				const auto v0 = triangle.v0;
+				const auto v1 = triangle.v1;
+				const auto v2 = triangle.v2;
+
+				const auto e0 = v1 - v0;
+				const auto e1 = v2 - v0;
 
 				switch (direction) {
 					default:
 					case DIRECTION_COURBE_NORMALE:
 					{
 						/* Calcul la normale du polygone. */
-						normale = glm::normalize(normale_triangle(v1, v2, v3));
+						normale = glm::normalize(normale_triangle(v0, v1, v2));
 						break;
 					}
 					case DIRECTION_COURBE_PERSONNALISEE:
@@ -1908,22 +1954,16 @@ public:
 				}
 
 				for (size_t j = 0; j < nombre_courbes; ++j) {
-					const auto t1 = dist(rng);
-					const auto t2 = dist(rng);
-					const auto t3 = dist(rng);
+					/* Génère des coordonnées barycentriques aléatoires. */
+					auto r = dist(rng);
+					auto s = dist(rng);
 
-					auto pos = interp_lineaire(v1, v2, t1);
-					pos += interp_lineaire(v2, v3, t2);
-
-					if (poly[3] != INVALID_INDEX) {
-						pos += interp_lineaire(v3, v4, t3);
-
-						const auto t4 = dist(rng);
-						pos += interp_lineaire(v4, v1, t4);
+					if (r + s >= 1.0f) {
+						r = 1.0f - r;
+						s = 1.0f - s;
 					}
-					else {
-						pos += interp_lineaire(v3, v1, t3);
-					}
+
+					auto pos = v0 + r * e0 + s * e1;
 
 					output_points->push_back(pos);
 					++num_points;
@@ -2224,16 +2264,15 @@ public:
 			return;
 		}
 
-		const auto input_mesh = static_cast<Mesh *>(iter.get());
-		const auto points_entrees = input_mesh->points();
-		const auto polygones = input_mesh->polys();
-		const auto nombre_polys = polygones->size();
+		const auto maillage_entree = static_cast<Mesh *>(iter.get());
+
+		auto triangles = convertis_maillage_triangles(maillage_entree);
 
 		auto nuage_points = static_cast<PrimPoints *>(m_collection->build("PrimPoints"));
 		auto points_sorties = nuage_points->points();
 
 		const auto nombre_points_polys = eval_int("nombre_points_polys");
-		const auto nombre_points = nombre_polys * nombre_points_polys;
+		const auto nombre_points = triangles.size() * nombre_points_polys;
 
 		points_sorties->reserve(nombre_points);
 
@@ -2242,30 +2281,25 @@ public:
 		std::mt19937 rng(19937 + graine);
 		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
-		for (size_t i = 0, f = nombre_polys; i < f; ++i) {
-			const auto poly = (*polygones)[i];
-			const auto v1 = (*points_entrees)[poly[0]];
-			const auto v2 = (*points_entrees)[poly[1]];
-			const auto v3 = (*points_entrees)[poly[2]];
-			const auto v4 = (poly[3] != INVALID_INDEX) ? (*points_entrees)[poly[3]] : glm::vec3(0.0f);
+		for (const Triangle &triangle : triangles) {
+			const auto v0 = triangle.v0;
+			const auto v1 = triangle.v1;
+			const auto v2 = triangle.v2;
+
+			const auto e0 = v1 - v0;
+			const auto e1 = v2 - v0;
 
 			for (size_t j = 0; j < nombre_points_polys; ++j) {
-				const auto t1 = dist(rng);
-				const auto t2 = dist(rng);
-				const auto t3 = dist(rng);
+				/* Génère des coordonnées barycentriques aléatoires. */
+				auto r = dist(rng);
+				auto s = dist(rng);
 
-				auto pos = interp_lineaire(v1, v2, t1);
-				pos += interp_lineaire(v2, v3, t2);
-
-				if (poly[3] != INVALID_INDEX) {
-					pos += interp_lineaire(v3, v4, t3);
-
-					const auto t4 = dist(rng);
-					pos += interp_lineaire(v4, v1, t4);
+				if (r + s >= 1.0f) {
+					r = 1.0f - r;
+					s = 1.0f - s;
 				}
-				else {
-					pos += interp_lineaire(v3, v1, t3);
-				}
+
+				auto pos = v0 + r * e0 + s * e1;
 
 				points_sorties->push_back(pos);
 			}
