@@ -59,6 +59,9 @@ class MainWindow : public QMainWindow {
 
 	QDockWidget *m_viewer_dock = nullptr;
 
+	std::vector<QAction *> m_actions_menu_recent;
+	std::vector<QString> m_fichiers_recent = {};
+
 public:
 	explicit MainWindow(Main *main, QWidget *parent = nullptr);
 	~MainWindow();
@@ -79,6 +82,14 @@ private:
 	void generatePresetMenu();
 	void generateDebugMenu();
 
+	void ajoute_fichier_recent(const QString &name, bool update_menu);
+	void mis_a_jour_menu_fichier_recent();
+
+	void ecrit_reglages() const;
+	void charge_reglages();
+
+	void closeEvent(QCloseEvent *) override;
+
 private Q_SLOTS:
 	/* Undo & commands */
 	void undo() const;
@@ -86,6 +97,7 @@ private Q_SLOTS:
 	void handleCommand();
 
 	void ouvre_fichier();
+	void ouvre_fichier_recent();
 	void sauve_fichier();
 	void sauve_fichier_sous();
 

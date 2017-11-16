@@ -31,6 +31,7 @@
 #include <QMenuBar>
 #include <QProgressBar>
 #include <QStatusBar>
+#include <QSettings>
 #include <QToolBar>
 
 #include "core/graphs/graph_dumper.h"
@@ -45,6 +46,8 @@
 #include "timeline_widget.h"
 #include "utils_ui.h"
 #include "viewer.h"
+
+static constexpr auto MAX_FICHIER_RECENT = 10;
 
 MainWindow::MainWindow(Main *main, QWidget *parent)
     : QMainWindow(parent)
@@ -82,6 +85,8 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	addTimeLineWidget();
 
 	setCentralWidget(nullptr);
+
+	charge_reglages();
 }
 
 MainWindow::~MainWindow()
@@ -227,6 +232,19 @@ void MainWindow::genere_menu_fichier()
 	action = menu_fichier->addAction("Ouvrir");
 	connect(action, SIGNAL(triggered()), this, SLOT(ouvre_fichier()));
 
+	auto sous_menu = menu_fichier->addMenu("Projets récents...");
+
+	m_actions_menu_recent.resize(MAX_FICHIER_RECENT);
+
+	for (auto &action_menu_recent : m_actions_menu_recent) {
+		action_menu_recent = new QAction(this);
+		action_menu_recent->setVisible(false);
+		sous_menu->addAction(action_menu_recent);
+		connect(action_menu_recent, SIGNAL(triggered()), this, SLOT(ouvre_fichier_recent()));
+	}
+
+	menu_fichier->addSeparator();
+
 	action = menu_fichier->addAction("Sauvegarder");
 	connect(action, SIGNAL(triggered()), this, SLOT(sauve_fichier()));
 
@@ -296,6 +314,66 @@ void MainWindow::ouvre_fichier()
 
 	m_main->chemin_projet(chemin_projet);
 	m_main->projet_ouvert(true);
+
+	ajoute_fichier_recent(chemin_projet.c_str(), true);
+	setWindowTitle(chemin_projet.c_str());
+}
+
+void MainWindow::ouvre_fichier_recent()
+{
+	auto action = qobject_cast<QAction *>(sender());
+
+	if (action == nullptr) {
+		return;
+	}
+
+	auto chemin_projet = action->data().toString().toStdString();
+
+	kamikaze::ouvre_projet(chemin_projet, m_context);
+
+	m_main->chemin_projet(chemin_projet);
+	m_main->projet_ouvert(true);
+
+	ajoute_fichier_recent(chemin_projet.c_str(), true);
+	setWindowTitle(chemin_projet.c_str());
+}
+
+void MainWindow::ajoute_fichier_recent(const QString &name, bool update_menu)
+{
+	auto index = std::find(m_fichiers_recent.begin(), m_fichiers_recent.end(), name);
+
+	if (index != m_fichiers_recent.end()) {
+		std::rotate(m_fichiers_recent.begin(), index, index + 1);
+	}
+	else {
+		m_fichiers_recent.insert(m_fichiers_recent.begin(), name);
+
+		if (m_fichiers_recent.size() > MAX_FICHIER_RECENT) {
+			m_fichiers_recent.resize(MAX_FICHIER_RECENT);
+		}
+	}
+
+	if (update_menu) {
+		mis_a_jour_menu_fichier_recent();
+	}
+}
+
+void MainWindow::mis_a_jour_menu_fichier_recent()
+{
+	if (m_fichiers_recent.empty()) {
+		return;
+	}
+
+	//ui->m_no_recent_act->setVisible(false);
+
+	for (int i(0); i < m_fichiers_recent.size();  ++i) {
+		auto filename = m_fichiers_recent[i];
+		auto name = QFileInfo(filename).fileName();
+
+		m_actions_menu_recent[i]->setText(name);
+		m_actions_menu_recent[i]->setData(filename);
+		m_actions_menu_recent[i]->setVisible(true);
+	}
 }
 
 void MainWindow::sauve_fichier()
@@ -472,4 +550,36 @@ void MainWindow::dumpGraph()
 			std::cerr << "Cannot create graph image from dot\n";
 		}
 	}
+}
+
+void MainWindow::closeEvent(QCloseEvent *)
+{
+	ecrit_reglages();
+}
+
+void MainWindow::ecrit_reglages() const
+{
+	QSettings settings;
+	QStringList recent;
+
+	for (const auto &recent_file : m_fichiers_recent) {
+		recent.push_front(recent_file);
+	}
+
+	settings.setValue("projet_récents", recent);
+}
+
+void MainWindow::charge_reglages()
+{
+	QSettings settings;
+
+	const auto &recent_files = settings.value("projet_récents").toStringList();
+
+	for (const auto &file : recent_files) {
+		if (QFile(file).exists()) {
+			ajoute_fichier_recent(file, false);
+		}
+	}
+
+	mis_a_jour_menu_fichier_recent();
 }
