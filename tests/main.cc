@@ -32,7 +32,7 @@ void test_lecture_fichier(ControleurUnitaire &controleur)
 {
 	Main racine;
 	racine.initialize();
-	racine.loadPlugins();
+	racine.charge_greffons();
 
 	auto scene = Scene();
 

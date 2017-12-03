@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 		main.initialize();
 
 		splash->showMessage("Loading plugins...");
-		main.loadPlugins();
+		main.charge_greffons();
 
 		MainWindow w(&main);
 		w.setWindowTitle(QCoreApplication::applicationName());

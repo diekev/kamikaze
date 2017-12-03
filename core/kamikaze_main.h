@@ -32,7 +32,7 @@
 #include "scene.h"
 
 class Main final {
-	std::vector<systeme_fichier::shared_library> m_plugins;
+	std::vector<systeme_fichier::shared_library> m_greffons;
 
 	std::unique_ptr<PrimitiveFactory> m_primitive_factory;
 	std::unique_ptr<UsineOperateur> m_usine_operateur;
@@ -50,7 +50,7 @@ public:
 	Main &operator=(const Main &other) = delete;
 
 	void initialize();
-	void loadPlugins();
+	void charge_greffons();
 
 	PrimitiveFactory *primitive_factory() const;
 	UsineOperateur *usine_operateur() const;
@@ -63,4 +63,6 @@ public:
 	bool projet_ouvert() const;
 
 	void projet_ouvert(bool ouinon);
+
+	const std::vector<systeme_fichier::shared_library> &greffons() const;
 };
