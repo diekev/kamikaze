@@ -21,7 +21,7 @@
 
 # ------------------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.8)
 
 # ------------------------------------------------------------------------------
 
@@ -37,7 +37,8 @@ set(CMAKE_BUILD_TYPE_INIT "Release")
 
 # ------------------------------------------------------------------------------
 
-add_compile_options(-std=c++1z)
+set(CMAKE_CXX_STANDARD 17)
+
 add_compile_options(-fconcepts)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -g -Og -Wno-error=unused-function -Wextra -Wno-ignored-qualifiers -Wno-unused-parameter -Wno-unknown-pragmas -Wno-missing-field-initializers -Wno-sign-compare -Wno-type-limits -Wmissing-format-attribute -fno-common -Wundef -Wno-delete-non-virtual-dtor -Wno-div-by-zero  -Wstrict-aliasing=2 -Wsizeof-pointer-memaccess -Wformat=2 -Wno-format-nonliteral -Wno-format-y2k -fstrict-overflow -Wstrict-overflow=2 -Wwrite-strings -Wformat-extra-args -Wlogical-op -Wnonnull -fno-omit-frame-pointer -Wno-error=unused-result -Wno-error=clobbered -fstack-protector-all --param=ssp-buffer-size=4 -Werror -Wno-maybe-uninitialized -Wmissing-include-dirs -Wdate-time -Wuninitialized -Winit-self -Wtype-limits -fno-nonansi-builtins -Warray-bounds -Wno-error=unused-local-typedefs -fdiagnostics-color=always -fsanitize=address -fuse-ld=gold")
@@ -50,6 +51,7 @@ add_definitions(-DGLM_FORCE_RADIANS)
 find_package(Ego REQUIRED)
 find_package(FileSystem REQUIRED)
 find_package(Kamikaze REQUIRED)
+find_package(TestUnitaire REQUIRED)
 
 find_package(Qt5Core REQUIRED)
 set(QT5_CORE_INCLUDE_DIRS ${Qt5Core_INCLUDE_DIRS})
@@ -75,3 +77,4 @@ add_subdirectory(core)
 add_subdirectory(ui)
 add_subdirectory(util)
 add_subdirectory(app)
+add_subdirectory(tests)

@@ -29,6 +29,8 @@
 #include <GL/glew.h>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "outils/géométrie.h"
+
 #include "context.h"
 #include "renderbuffer.h"
 
@@ -153,30 +155,7 @@ void PrimPoints::prepareRenderData()
 
 void PrimPoints::computeBBox(glm::vec3 &min, glm::vec3 &max)
 {
-	for (size_t i = 0, ie = this->points()->size(); i < ie; ++i) {
-		auto vert = m_points[i];
-
-		if (vert.x < m_min.x) {
-			m_min.x = vert.x;
-		}
-		else if (vert.x > m_max.x) {
-			m_max.x = vert.x;
-		}
-
-		if (vert.y < m_min.y) {
-			m_min.y = vert.y;
-		}
-		else if (vert.y > m_max.y) {
-			m_max.y = vert.y;
-		}
-
-		if (vert.z < m_min.z) {
-			m_min.z = vert.z;
-		}
-		else if (vert.z > m_max.z) {
-			m_max.z = vert.z;
-		}
-	}
+	calcule_boite_delimitation(m_points, m_min, m_max);
 
 	min = m_min;
 	max = m_max;

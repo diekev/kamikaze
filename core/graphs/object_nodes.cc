@@ -30,8 +30,11 @@
 #include <kamikaze/primitive.h>
 #include <kamikaze/prim_points.h>
 #include <kamikaze/segmentprim.h>
-#include <kamikaze/util_parallel.h>
-#include <kamikaze/utils_glm.h>
+
+#include <kamikaze/outils/géométrie.h>
+#include <kamikaze/outils/interpolation.h>
+#include <kamikaze/outils/mathématiques.h>
+#include <kamikaze/outils/parallélisme.h>
 
 #include <random>
 #include <sstream>
@@ -878,14 +881,6 @@ public:
 
 /* ************************************************************************** */
 
-static inline glm::vec3 get_normal(const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2)
-{
-	const auto n0 = v0 - v1;
-	const auto n1 = v2 - v1;
-
-	return glm::cross(n1, n0);
-}
-
 static const char *NOM_NORMAL = "Normal";
 static const char *AIDE_NORMAL = "Éditer les normales.";
 
@@ -915,8 +910,10 @@ public:
 		return NOM_NORMAL;
 	}
 
-	void execute(const Context &/*contexte*/, double /*temps*/) override
+	void execute(const Context &contexte, double temps) override
 	{
+		entree(0)->requiers_collection(m_collection, contexte, temps);
+
 		const auto flip = eval_bool("flip");
 
 		for (auto &prim : primitive_iterator(this->m_collection, Mesh::id)) {
@@ -932,33 +929,7 @@ public:
 				normals->vec3(i, glm::vec3(0.0f));
 			}
 
-			parallel_for(tbb::blocked_range<size_t>(0, polys->size()),
-						 [&](const tbb::blocked_range<size_t> &r)
-			{
-				for (auto i = r.begin(), ie = r.end(); i < ie ; ++i) {
-					const auto &quad = (*polys)[i];
-
-					const auto v0 = (*points)[quad[0]];
-					const auto v1 = (*points)[quad[1]];
-					const auto v2 = (*points)[quad[2]];
-
-					const auto normal = get_normal(v0, v1, v2);
-
-					normals->vec3(quad[0], normals->vec3(quad[0]) + normal);
-					normals->vec3(quad[1], normals->vec3(quad[1]) + normal);
-					normals->vec3(quad[2], normals->vec3(quad[2]) + normal);
-
-					if (quad[3] != INVALID_INDEX) {
-						normals->vec3(quad[3], normals->vec3(quad[3]) + normal);
-					}
-				}
-			});
-
-			if (flip) {
-				for (size_t i = 0, ie = points->size(); i < ie ; ++i) {
-					normals->vec3(i, -glm::normalize(normals->vec3(i)));
-				}
-			}
+			calcule_normales(*points, *polys, *normals, flip);
 		}
 	}
 };
@@ -973,6 +944,7 @@ enum {
 	DIRECTION_Y = 1,
 	DIRECTION_Z = 2,
 	DIRECTION_TOUTE = 3,
+	DIRECTION_NORMALE = 4,
 };
 
 enum {
@@ -1005,9 +977,14 @@ public:
 		prop_enum.insert("Y", DIRECTION_Y);
 		prop_enum.insert("Z", DIRECTION_Z);
 		prop_enum.insert("Toute", DIRECTION_TOUTE);
+		prop_enum.insert("Normale", DIRECTION_NORMALE);
 
 		add_prop("direction", "Direction", property_type::prop_enum);
 		set_prop_enum_values(prop_enum);
+
+		add_prop("taille", "Taille", property_type::prop_float);
+		set_prop_min_max(0.0f, 20.0f);
+		set_prop_default_value_float(1.0f);
 
 		add_prop("octaves", "Octaves", property_type::prop_int);
 		set_prop_min_max(1, 10);
@@ -1062,6 +1039,8 @@ public:
 	{
 		entree(0)->requiers_collection(m_collection, contexte, temps);
 
+		const auto taille = eval_float("taille");
+		const auto taille_inverse = (taille > 0.0f) ? 1.0f / taille : 0.0f;
 		const auto octaves = eval_int("octaves");
 		const auto lacunarity = eval_float("lacunarity");
 		const auto persistence = eval_float("persistence");
@@ -1078,13 +1057,26 @@ public:
 		for (auto prim : primitive_iterator(this->m_collection)) {
 			PointList *points;
 
+			Attribute *normales = nullptr;
+
 			if (prim->typeID() == Mesh::id) {
 				auto mesh = static_cast<Mesh *>(prim);
 				points = mesh->points();
+				normales = mesh->attribute("normal", ATTR_TYPE_VEC3);
+
+				if (direction == DIRECTION_NORMALE && (normales == nullptr || normales->size() == 0)) {
+					this->ajoute_avertissement("Absence de normales pour calculer le bruit !");
+					continue;
+				}
 			}
 			else if (prim->typeID() == PrimPoints::id) {
 				auto prim_points = static_cast<PrimPoints *>(prim);
 				points = prim_points->points();
+
+				if (direction == DIRECTION_NORMALE) {
+					this->ajoute_avertissement("On ne peut calculer le bruit suivant la normale sur un nuage de points !");
+					continue;
+				}
 			}
 			else {
 				continue;
@@ -1092,9 +1084,9 @@ public:
 
 			for (size_t i = 0, e = points->size(); i < e; ++i) {
 				auto &point = (*points)[i];
-				const auto x = point.x;
-				const auto y = point.y;
-				const auto z = point.z;
+				const auto x = point.x * taille_inverse;
+				const auto y = point.y * taille_inverse;
+				const auto z = point.z * taille_inverse;
 				auto valeur = 0.0f;
 
 				auto frequency = ofrequency;
@@ -1131,6 +1123,14 @@ public:
 						point.y += valeur;
 						point.z += valeur;
 						break;
+					case DIRECTION_NORMALE:
+					{
+						const auto normale = normales->vec3(i);
+						point.x += valeur * normale.x;
+						point.y += valeur * normale.y;
+						point.z += valeur * normale.z;
+						break;
+					}
 				}
 			}
 		}
@@ -1696,18 +1696,61 @@ public:
 
 /* ************************************************************************** */
 
+struct Triangle {
+	glm::vec3 v0, v1, v2;
+};
+
+std::vector<Triangle> convertis_maillage_triangles(const Mesh *maillage_entree)
+{
+	std::vector<Triangle> triangles;
+	const auto points = maillage_entree->points();
+	const auto polygones = maillage_entree->polys();
+
+	/* Convertis le maillage en triangles. */
+	auto nombre_triangles = 0ul;
+
+	for (auto i = 0ul; i < polygones->size(); ++i) {
+		const auto polygone = (*polygones)[i];
+
+		nombre_triangles += ((polygone[3] == INVALID_INDEX) ? 1 : 2);
+	}
+
+	triangles.reserve(nombre_triangles);
+
+	for (auto i = 0ul; i < polygones->size(); ++i) {
+		const auto polygone = (*polygones)[i];
+
+		Triangle triangle;
+		triangle.v0 = (*points)[polygone[0]];
+		triangle.v1 = (*points)[polygone[1]];
+		triangle.v2 = (*points)[polygone[2]];
+
+		triangles.push_back(triangle);
+
+		if (polygone[3] != INVALID_INDEX) {
+			Triangle triangle2;
+			triangle2.v0 = (*points)[polygone[0]];
+			triangle2.v1 = (*points)[polygone[2]];
+			triangle2.v2 = (*points)[polygone[3]];
+
+			triangles.push_back(triangle2);
+		}
+	}
+
+	return triangles;
+}
+
 static const char *NOM_CREATION_SEGMENTS = "Création courbes";
 static const char *AIDE_CREATION_SEGMENTS = "Création de courbes.";
-
-template <typename T, glm::precision P>
-auto interp(const glm::detail::tvec3<T, P> &a, const glm::detail::tvec3<T, P> &b, const T &t)
-{
-	return a * (static_cast<T>(1) - t) + b * t;
-}
 
 enum {
 	CREER_COURBES_VERTS = 0,
 	CREER_COURBES_POLYS = 1,
+};
+
+enum {
+	DIRECTION_COURBE_NORMALE       = 0,
+	DIRECTION_COURBE_PERSONNALISEE = 1,
 };
 
 class OperateurCreationCourbes : public Operateur {
@@ -1748,6 +1791,15 @@ public:
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_tooltip("Taille de chaque segment.");
 
+		/* direction */
+		EnumProperty enum_direcion;
+		enum_direcion.insert("Normale", DIRECTION_COURBE_NORMALE);
+		enum_direcion.insert("Personnalisée", DIRECTION_COURBE_PERSONNALISEE);
+
+		add_prop("direction", "Direction", property_type::prop_enum);
+		set_prop_enum_values(enum_direcion);
+		set_prop_default_value_int(0);
+
 		add_prop("normale", "Normale", property_type::prop_vec3);
 		set_prop_default_value_vec3(glm::vec3{0.0f, 1.0f, 0.0f});
 		set_prop_min_max(-1.0f, 1.0f);
@@ -1760,6 +1812,9 @@ public:
 
 		set_prop_visible("graine", methode == CREER_COURBES_POLYS);
 		set_prop_visible("nombre_courbes", methode == CREER_COURBES_POLYS);
+
+		const auto direction = eval_enum("direction");
+		set_prop_visible("normale", direction == DIRECTION_COURBE_PERSONNALISEE);
 
 		return true;
 	}
@@ -1797,6 +1852,7 @@ public:
 		const auto segment_normal = eval_vec3("normale");
 		const auto segment_size = eval_float("taille");
 		const auto methode = eval_enum("méthode");
+		const auto direction = eval_enum("direction");
 
 		auto segment_prim = static_cast<SegmentPrim *>(m_collection->build("SegmentPrim"));
 		auto output_edges = segment_prim->edges();
@@ -1806,20 +1862,46 @@ public:
 		auto total_points = 0ul;
 
 		if (methode == CREER_COURBES_VERTS) {
+			Attribute *normales = nullptr;
+
+			if (direction == DIRECTION_COURBE_NORMALE) {
+				normales = input_mesh->attribute("normal", ATTR_TYPE_VEC3);
+
+				if (normales == nullptr || normales->size() == 0) {
+					this->ajoute_avertissement("Il n'y a pas de données de normales sur les vertex d'entrées !");
+					return;
+				}
+			}
+
 			total_points = input_points->size() * (segment_number + 1);
 
 			output_edges->reserve(input_points->size() * segment_number);
 			output_points->reserve(total_points);
 			auto head = 0;
+			glm::vec3 normale;
 
 			for (size_t i = 0; i < input_points->size(); ++i) {
 				auto point = (*input_points)[i];
+
+				switch (direction) {
+					default:
+					case DIRECTION_COURBE_NORMALE:
+					{
+						normale = normales->vec3(i);
+						break;
+					}
+					case DIRECTION_COURBE_PERSONNALISEE:
+					{
+						normale = segment_normal;
+						break;
+					}
+				}
 
 				output_points->push_back(point);
 				++num_points;
 
 				for (int j = 0; j < segment_number; ++j, ++num_points) {
-					point += (segment_size * segment_normal);
+					point += (segment_size * normale);
 					output_points->push_back(point);
 
 					output_edges->push_back(glm::uvec2{head, ++head});
@@ -1829,52 +1911,65 @@ public:
 			}
 		}
 		else if (methode == CREER_COURBES_POLYS) {
-			const auto polys = input_mesh->polys();
+			auto triangles = convertis_maillage_triangles(input_mesh);
 
 			const auto nombre_courbes = eval_int("nombre_courbes");
-			const auto nombre_polys = polys->size();
-
-			total_points = nombre_polys * nombre_courbes * (segment_number + 1);
+			const auto nombre_polys = triangles.size();
 
 			output_edges->reserve((nombre_courbes * segment_number) * nombre_polys);
 			output_points->reserve(total_points);
 
+			total_points = nombre_polys * nombre_courbes * (segment_number + 1);
+
 			const auto graine = eval_int("graine");
-			auto head = 0;
 
 			std::mt19937 rng(19937 + graine);
 			std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
-			for (size_t i = 0; i < nombre_polys; ++i) {
-				const auto poly = (*polys)[i];
-				const auto v1 = (*input_points)[poly[0]];
-				const auto v2 = (*input_points)[poly[1]];
-				const auto v3 = (*input_points)[poly[2]];
-				const auto v4 = (poly[3] != INVALID_INDEX) ? (*input_points)[poly[3]] : glm::vec3(0.0f);
+			auto head = 0;
+
+			glm::vec3 normale;
+
+			for (const Triangle &triangle : triangles) {
+				const auto v0 = triangle.v0;
+				const auto v1 = triangle.v1;
+				const auto v2 = triangle.v2;
+
+				const auto e0 = v1 - v0;
+				const auto e1 = v2 - v0;
+
+				switch (direction) {
+					default:
+					case DIRECTION_COURBE_NORMALE:
+					{
+						/* Calcul la normale du polygone. */
+						normale = glm::normalize(normale_triangle(v0, v1, v2));
+						break;
+					}
+					case DIRECTION_COURBE_PERSONNALISEE:
+					{
+						normale = segment_normal;
+						break;
+					}
+				}
 
 				for (size_t j = 0; j < nombre_courbes; ++j) {
-					const auto t1 = dist(rng);
-					const auto t2 = dist(rng);
-					const auto t3 = dist(rng);
+					/* Génère des coordonnées barycentriques aléatoires. */
+					auto r = dist(rng);
+					auto s = dist(rng);
 
-					auto pos = interp(v1, v2, t1);
-					pos += interp(v2, v3, t2);
-
-					if (poly[3] != INVALID_INDEX) {
-						pos += interp(v3, v4, t3);
-
-						const auto t4 = dist(rng);
-						pos += interp(v4, v1, t4);
+					if (r + s >= 1.0f) {
+						r = 1.0f - r;
+						s = 1.0f - s;
 					}
-					else {
-						pos += interp(v3, v1, t3);
-					}
+
+					auto pos = v0 + r * e0 + s * e1;
 
 					output_points->push_back(pos);
 					++num_points;
 
 					for (int k = 0; k < segment_number; ++k, ++num_points) {
-						pos += (segment_size * segment_normal);
+						pos += (segment_size * normale);
 						output_points->push_back(pos);
 
 						output_edges->push_back(glm::uvec2{head, ++head});
@@ -2169,16 +2264,15 @@ public:
 			return;
 		}
 
-		const auto input_mesh = static_cast<Mesh *>(iter.get());
-		const auto points_entrees = input_mesh->points();
-		const auto polygones = input_mesh->polys();
-		const auto nombre_polys = polygones->size();
+		const auto maillage_entree = static_cast<Mesh *>(iter.get());
+
+		auto triangles = convertis_maillage_triangles(maillage_entree);
 
 		auto nuage_points = static_cast<PrimPoints *>(m_collection->build("PrimPoints"));
 		auto points_sorties = nuage_points->points();
 
 		const auto nombre_points_polys = eval_int("nombre_points_polys");
-		const auto nombre_points = nombre_polys * nombre_points_polys;
+		const auto nombre_points = triangles.size() * nombre_points_polys;
 
 		points_sorties->reserve(nombre_points);
 
@@ -2187,30 +2281,25 @@ public:
 		std::mt19937 rng(19937 + graine);
 		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
-		for (size_t i = 0, f = nombre_polys; i < f; ++i) {
-			const auto poly = (*polygones)[i];
-			const auto v1 = (*points_entrees)[poly[0]];
-			const auto v2 = (*points_entrees)[poly[1]];
-			const auto v3 = (*points_entrees)[poly[2]];
-			const auto v4 = (poly[3] != INVALID_INDEX) ? (*points_entrees)[poly[3]] : glm::vec3(0.0f);
+		for (const Triangle &triangle : triangles) {
+			const auto v0 = triangle.v0;
+			const auto v1 = triangle.v1;
+			const auto v2 = triangle.v2;
+
+			const auto e0 = v1 - v0;
+			const auto e1 = v2 - v0;
 
 			for (size_t j = 0; j < nombre_points_polys; ++j) {
-				const auto t1 = dist(rng);
-				const auto t2 = dist(rng);
-				const auto t3 = dist(rng);
+				/* Génère des coordonnées barycentriques aléatoires. */
+				auto r = dist(rng);
+				auto s = dist(rng);
 
-				auto pos = interp(v1, v2, t1);
-				pos += interp(v2, v3, t2);
-
-				if (poly[3] != INVALID_INDEX) {
-					pos += interp(v3, v4, t3);
-
-					const auto t4 = dist(rng);
-					pos += interp(v4, v1, t4);
+				if (r + s >= 1.0f) {
+					r = 1.0f - r;
+					s = 1.0f - s;
 				}
-				else {
-					pos += interp(v3, v1, t3);
-				}
+
+				auto pos = v0 + r * e0 + s * e1;
 
 				points_sorties->push_back(pos);
 			}

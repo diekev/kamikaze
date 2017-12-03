@@ -34,8 +34,8 @@
 int main(int argc, char *argv[])
 {
 	QApplication a(argc, argv);
-	QCoreApplication::setOrganizationName("giraffeenfeu");
-	QCoreApplication::setApplicationName("Kamikaze");
+	a.setOrganizationName("numéro7");
+	a.setApplicationName("kamikaze");
 
 	QFile file("styles/main.qss");
 	file.open(QFile::ReadOnly);

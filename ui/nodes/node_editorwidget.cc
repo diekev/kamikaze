@@ -466,16 +466,16 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 				auto operateur = noeud->operateur();
 
 				std::stringstream ss;
-				ss << "Opérateur : " << noeud->nom();
-				ss << "\n-----------------------------------------------------";
-				ss << "\nTemps d'exécution :";
-				ss << "\n- dernière : " << operateur->temps_execution() << " secondes.";
-				ss << "\n- minimum : " << operateur->min_temps_execution() << " secondes.";
-				ss << "\n- agrégé : " << operateur->temps_agrege() << " secondes.";
-				ss << "\n- minimum agrégé : " << operateur->min_temps_agrege() << " secondes.";
-				ss << "\n-----------------------------------------------------";
-				ss << "\nNombre d'exécution : " << operateur->nombre_executions();
-				ss << "\n-----------------------------------------------------";
+				ss << "<p>Opérateur : " << noeud->nom() << "</p>";
+				ss << "<hr/>";
+				ss << "<p>Temps d'exécution :";
+				ss << "<p>- dernière : " << operateur->temps_execution() << " secondes.</p>";
+				ss << "<p>- minimum : " << operateur->min_temps_execution() << " secondes.</p>";
+				ss << "<p>- agrégé : " << operateur->temps_agrege() << " secondes.</p>";
+				ss << "<p>- minimum agrégé : " << operateur->min_temps_agrege() << " secondes.</p>";
+				ss << "<hr/>";
+				ss << "<p>Nombre d'exécution : " << operateur->nombre_executions() << "</p>";
+				ss << "<hr/>";
 
 				QToolTip::showText(mouseEvent->screenPos(), ss.str().c_str());
 			}

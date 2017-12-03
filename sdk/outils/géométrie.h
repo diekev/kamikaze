@@ -24,24 +24,30 @@
 
 #pragma once
 
-#include <experimental/filesystem>
+#include <glm/glm.hpp>
 
-class Context;
-class Scene;
+class Attribute;
+class PointList;
+class PolygonList;
 
-namespace filesystem = std::experimental::filesystem;
+inline glm::vec3 normale_triangle(
+		const glm::vec3 &v0,
+		const glm::vec3 &v1,
+		const glm::vec3 &v2)
+{
+	const auto n0 = v0 - v1;
+	const auto n1 = v2 - v1;
 
-namespace kamikaze {
-
-enum erreur_fichier {
-	AUCUNE_ERREUR = 0,
-	NON_OUVERT,
-	NON_TROUVE,
-	CORROMPU,
-	INCONNU,
-};
-
-erreur_fichier sauvegarde_projet(const filesystem::path &chemin, const Scene *scene);
-erreur_fichier ouvre_projet(const filesystem::path &chemin, const Context &contexte);
-
+	return glm::cross(n1, n0);
 }
+
+void calcule_normales(
+		const PointList &points,
+		const PolygonList &polygones,
+		Attribute &normales,
+		bool flip);
+
+void calcule_boite_delimitation(
+		const PointList &points,
+		glm::vec3 &min,
+		glm::vec3 &max);
