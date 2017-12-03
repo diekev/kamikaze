@@ -27,6 +27,7 @@
 #include <kamikaze/primitive.h>
 
 #include <QDockWidget>
+#include <QMessageBox>
 #include <QFileDialog>
 #include <QMenuBar>
 #include <QProgressBar>
@@ -309,14 +310,7 @@ void MainWindow::ouvre_fichier()
 	}
 
 	const auto &chemin_projet = nom_fichier.toStdString();
-
-	kamikaze::ouvre_projet(chemin_projet, *m_main, m_context);
-
-	m_main->chemin_projet(chemin_projet);
-	m_main->projet_ouvert(true);
-
-	ajoute_fichier_recent(chemin_projet.c_str(), true);
-	setWindowTitle(chemin_projet.c_str());
+	ouvre_fichier_implementation(chemin_projet);
 }
 
 void MainWindow::ouvre_fichier_recent()
@@ -328,8 +322,39 @@ void MainWindow::ouvre_fichier_recent()
 	}
 
 	auto chemin_projet = action->data().toString().toStdString();
+	ouvre_fichier_implementation(chemin_projet);
+}
 
-	kamikaze::ouvre_projet(chemin_projet, *m_main, m_context);
+void MainWindow::ouvre_fichier_implementation(const std::string &chemin_projet)
+{
+	const auto erreur = kamikaze::ouvre_projet(chemin_projet, *m_main, m_context);
+
+	if (erreur != kamikaze::erreur_fichier::AUCUNE_ERREUR) {
+		QMessageBox boite_message;
+
+		switch (erreur) {
+			case kamikaze::erreur_fichier::CORROMPU:
+				boite_message.critical(nullptr, "Error", "Le fichier est corrompu !");
+				break;
+			case kamikaze::erreur_fichier::NON_OUVERT:
+				boite_message.critical(nullptr, "Error", "Le fichier n'est pas ouvert !");
+				break;
+			case kamikaze::erreur_fichier::NON_TROUVE:
+				boite_message.critical(nullptr, "Error", "Le fichier n'a pas été trouvé !");
+				break;
+			case kamikaze::erreur_fichier::INCONNU:
+				boite_message.critical(nullptr, "Error", "Erreur inconnu !");
+				break;
+			case kamikaze::erreur_fichier::GREFFON_MANQUANT:
+				boite_message.critical(nullptr, "Error",
+									   "Le fichier ne pas être ouvert car il"
+									   " y a un greffon manquant !");
+				break;
+		}
+
+		boite_message.setFixedSize(500, 200);
+		return;
+	}
 
 	m_main->chemin_projet(chemin_projet);
 	m_main->projet_ouvert(true);
