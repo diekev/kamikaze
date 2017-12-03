@@ -99,6 +99,7 @@ add_library(kmk_core STATIC
 )
 
 target_include_directories(kmk_core PUBLIC "${INC_SYS}")
+target_link_libraries(kmk_core stdc++fs)
 
 install(
 	FILES ${SHADERS}

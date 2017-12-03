@@ -106,7 +106,7 @@ static void sauvegarde_proprietes(
 	}
 }
 
-void sauvegarde_projet(const std::string &chemin, const Scene *scene)
+erreur_fichier sauvegarde_projet(const filesystem::path &chemin, const Scene *scene)
 {
 	tinyxml2::XMLDocument doc;
 	doc.InsertFirstChild(doc.NewDeclaration());
@@ -192,9 +192,16 @@ void sauvegarde_projet(const std::string &chemin, const Scene *scene)
 
 	const auto resultat = doc.SaveFile(chemin.c_str());
 
-	if (resultat != tinyxml2::XML_SUCCESS) {
-		std::cerr << "Une erreur s'est produite lors de l'écriture du fichier !\n";
+	if (resultat == tinyxml2::XML_ERROR_FILE_COULD_NOT_BE_OPENED) {
+		return erreur_fichier::NON_OUVERT;
 	}
+
+	/* À FAIRE : trouver quelles sont les autres erreurs possibles. */
+	if (resultat != tinyxml2::XML_SUCCESS) {
+		return erreur_fichier::INCONNU;
+	}
+
+	return erreur_fichier::AUCUNE_ERREUR;
 }
 
 /* ************************************************************************** */
@@ -357,8 +364,12 @@ static void lecture_graphe(
 	}
 }
 
-void ouvre_projet(const std::string &chemin, const Context &contexte)
+erreur_fichier ouvre_projet(const filesystem::path &chemin, const Context &contexte)
 {
+	if (!std::experimental::filesystem::exists(chemin)) {
+		return erreur_fichier::NON_TROUVE;
+	}
+
 	tinyxml2::XMLDocument doc;
 	doc.LoadFile(chemin.c_str());
 
@@ -367,6 +378,11 @@ void ouvre_projet(const std::string &chemin, const Context &contexte)
 
 	/* Lecture de la scène. */
 	const auto racine_scene = doc.FirstChildElement("scene");
+
+	if (racine_scene == nullptr) {
+		return erreur_fichier::CORROMPU;
+	}
+
 	const auto image_depart = racine_scene->Attribute("image_depart");
 	const auto image_fin = racine_scene->Attribute("image_fin");
 	const auto image_courante = racine_scene->Attribute("image_courante");
@@ -404,6 +420,8 @@ void ouvre_projet(const std::string &chemin, const Context &contexte)
 	}
 
 	scene->updateForNewFrame(contexte);
+
+	return erreur_fichier::AUCUNE_ERREUR;
 }
 
 }  /* namespace kamikaze */

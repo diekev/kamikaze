@@ -24,14 +24,24 @@
 
 #pragma once
 
-#include <string>
+#include <experimental/filesystem>
 
 class Context;
 class Scene;
 
+namespace filesystem = std::experimental::filesystem;
+
 namespace kamikaze {
 
-void sauvegarde_projet(const std::string &chemin, const Scene *scene);
-void ouvre_projet(const std::string &chemin, const Context &contexte);
+enum erreur_fichier {
+	AUCUNE_ERREUR = 0,
+	NON_OUVERT,
+	NON_TROUVE,
+	CORROMPU,
+	INCONNU,
+};
+
+erreur_fichier sauvegarde_projet(const filesystem::path &chemin, const Scene *scene);
+erreur_fichier ouvre_projet(const filesystem::path &chemin, const Context &contexte);
 
 }
