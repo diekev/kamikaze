@@ -55,3 +55,5 @@ target_include_directories(test_kamikaze PUBLIC "${INCLUSIONS}")
 target_link_libraries(test_kamikaze "${BIBLIOTHEQUES}")
 
 add_test(tests test_kamikaze)
+
+install(TARGETS test_kamikaze RUNTIME DESTINATION .)
