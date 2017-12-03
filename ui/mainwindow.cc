@@ -310,7 +310,7 @@ void MainWindow::ouvre_fichier()
 
 	const auto &chemin_projet = nom_fichier.toStdString();
 
-	kamikaze::ouvre_projet(chemin_projet, m_context);
+	kamikaze::ouvre_projet(chemin_projet, *m_main, m_context);
 
 	m_main->chemin_projet(chemin_projet);
 	m_main->projet_ouvert(true);
@@ -329,7 +329,7 @@ void MainWindow::ouvre_fichier_recent()
 
 	auto chemin_projet = action->data().toString().toStdString();
 
-	kamikaze::ouvre_projet(chemin_projet, m_context);
+	kamikaze::ouvre_projet(chemin_projet, *m_main, m_context);
 
 	m_main->chemin_projet(chemin_projet);
 	m_main->projet_ouvert(true);
@@ -379,7 +379,7 @@ void MainWindow::mis_a_jour_menu_fichier_recent()
 void MainWindow::sauve_fichier()
 {
 	if (m_main->projet_ouvert()) {
-		kamikaze::sauvegarde_projet(m_main->chemin_projet(), m_context.scene);
+		kamikaze::sauvegarde_projet(m_main->chemin_projet(), *m_main, m_context.scene);
 	}
 	else {
 		sauve_fichier_sous();
@@ -399,7 +399,7 @@ void MainWindow::sauve_fichier_sous()
 	m_main->chemin_projet(chemin_projet);
 	m_main->projet_ouvert(true);
 
-	kamikaze::sauvegarde_projet(chemin_projet, m_context.scene);
+	kamikaze::sauvegarde_projet(chemin_projet, *m_main, m_context.scene);
 }
 
 void MainWindow::addTimeLineWidget()

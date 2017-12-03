@@ -31,6 +31,7 @@
 
 #include "interne/tinyxml2.h"
 
+#include "kamikaze_main.h"
 #include "scene.h"
 
 namespace kamikaze {
@@ -106,11 +107,26 @@ static void sauvegarde_proprietes(
 	}
 }
 
-erreur_fichier sauvegarde_projet(const filesystem::path &chemin, const Scene *scene)
+erreur_fichier sauvegarde_projet(const filesystem::path &chemin, const Main &main, const Scene *scene)
 {
 	tinyxml2::XMLDocument doc;
 	doc.InsertFirstChild(doc.NewDeclaration());
 
+	auto racine_projet = doc.NewElement("projet");
+	doc.InsertEndChild(racine_projet);
+
+	/* Écriture de la liste de greffons. */
+	auto racine_greffon = doc.NewElement("greffons");
+	racine_projet->InsertEndChild(racine_greffon);
+
+	for (const auto &greffon : main.greffons()) {
+		auto element_greffon = doc.NewElement("greffon");
+		element_greffon->SetAttribute("nom", greffon.chemin().c_str());
+
+		racine_greffon->InsertEndChild(element_greffon);
+	}
+
+	/* Écriture de la scène. */
 	tinyxml2::XMLElement *racine_scene = doc.NewElement("scene");
 	racine_scene->SetAttribute("image_courante", scene->currentFrame());
 	racine_scene->SetAttribute("image_depart", scene->startFrame());
@@ -118,7 +134,7 @@ erreur_fichier sauvegarde_projet(const filesystem::path &chemin, const Scene *sc
 	racine_scene->SetAttribute("ips", scene->framesPerSecond());
 	racine_scene->SetAttribute("drapeaux", scene->flags());
 
-	doc.InsertEndChild(racine_scene);
+	racine_projet->InsertEndChild(racine_scene);
 
 	tinyxml2::XMLElement *racine_objet = doc.NewElement("objets");
 	racine_scene->InsertEndChild(racine_objet);
@@ -364,7 +380,7 @@ static void lecture_graphe(
 	}
 }
 
-erreur_fichier ouvre_projet(const filesystem::path &chemin, const Context &contexte)
+erreur_fichier ouvre_projet(const filesystem::path &chemin, const Main &main, const Context &contexte)
 {
 	if (!std::experimental::filesystem::exists(chemin)) {
 		return erreur_fichier::NON_TROUVE;
@@ -376,8 +392,41 @@ erreur_fichier ouvre_projet(const filesystem::path &chemin, const Context &conte
 	Scene *scene = contexte.scene;
 	scene->supprime_tout();
 
+	/* Lecture du projet. */
+	const auto racine_projet = doc.FirstChildElement("projet");
+
+	if (racine_projet == nullptr) {
+		return erreur_fichier::CORROMPU;
+	}
+
+	/* Lecture des greffons. */
+	const auto racine_greffons = racine_projet->FirstChildElement("greffons");
+
+	if (racine_greffons == nullptr) {
+		return erreur_fichier::CORROMPU;
+	}
+
+	/* Crétion d'un ensemble contenant les chemin des greffons connus. */
+	std::set<filesystem::path> ensemble_greffons;
+
+	for (const auto &greffon : main.greffons()) {
+		ensemble_greffons.insert(greffon.chemin());
+	}
+
+	auto element_greffon = racine_greffons->FirstChildElement("greffon");
+
+	while (element_greffon != nullptr) {
+		const auto chemin_greffon = element_greffon->Attribute("nom");
+
+		if (ensemble_greffons.find(chemin_greffon) == ensemble_greffons.end()) {
+			return erreur_fichier::GREFFON_MANQUANT;
+		}
+
+		element_greffon = element_greffon->NextSiblingElement("greffon");
+	}
+
 	/* Lecture de la scène. */
-	const auto racine_scene = doc.FirstChildElement("scene");
+	const auto racine_scene = racine_projet->FirstChildElement("scene");
 
 	if (racine_scene == nullptr) {
 		return erreur_fichier::CORROMPU;

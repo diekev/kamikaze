@@ -41,19 +41,23 @@ void test_lecture_fichier(ControleurUnitaire &controleur)
 	contexte.primitive_factory = racine.primitive_factory();
 	contexte.usine_operateur = racine.usine_operateur();
 
-	auto erreur = kamikaze::ouvre_projet("projets/projet_1_objet.kmkz", contexte);
+	auto erreur = kamikaze::ouvre_projet("projets/projet_1_objet.kmkz", racine, contexte);
 
 	CU_VERIFIE_CONDITION(controleur, erreur == kamikaze::erreur_fichier::AUCUNE_ERREUR);
 	CU_VERIFIE_CONDITION(controleur, scene.nodes().size() == 1);
 
-	erreur = kamikaze::ouvre_projet("projets/projet_corrompu.kmkz", contexte);
+	erreur = kamikaze::ouvre_projet("projets/projet_corrompu.kmkz", racine, contexte);
 
 	CU_VERIFIE_CONDITION(controleur, erreur == kamikaze::erreur_fichier::CORROMPU);
 	CU_VERIFIE_CONDITION(controleur, scene.nodes().size() == 0);
 
-	erreur = kamikaze::ouvre_projet("projets/projet_introuvable.kmkz", contexte);
+	erreur = kamikaze::ouvre_projet("projets/projet_introuvable.kmkz", racine, contexte);
 
 	CU_VERIFIE_CONDITION(controleur, erreur == kamikaze::erreur_fichier::NON_TROUVE);
+
+	erreur = kamikaze::ouvre_projet("projets/projet_greffon_manquant.kmkz", racine, contexte);
+
+	CU_VERIFIE_CONDITION(controleur, erreur == kamikaze::erreur_fichier::GREFFON_MANQUANT);
 }
 
 int main()
