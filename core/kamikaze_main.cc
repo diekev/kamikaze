@@ -37,7 +37,7 @@
 #include "scene.h"
 
 namespace fs = std::experimental::filesystem;
-namespace sf = systeme_fichier;
+namespace sf = numero7::systeme_fichier;
 
 namespace detail {
 
@@ -152,7 +152,7 @@ void Main::projet_ouvert(bool ouinon)
 	m_projet_ouvert = ouinon;
 }
 
-const std::vector<systeme_fichier::shared_library> &Main::greffons() const
+const std::vector<numero7::systeme_fichier::shared_library> &Main::greffons() const
 {
 	return m_greffons;
 }

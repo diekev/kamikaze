@@ -32,7 +32,7 @@
 #include "scene.h"
 
 class Main final {
-	std::vector<systeme_fichier::shared_library> m_greffons;
+	std::vector<numero7::systeme_fichier::shared_library> m_greffons;
 
 	std::unique_ptr<PrimitiveFactory> m_primitive_factory;
 	std::unique_ptr<UsineOperateur> m_usine_operateur;
@@ -64,5 +64,5 @@ public:
 
 	void projet_ouvert(bool ouinon);
 
-	const std::vector<systeme_fichier::shared_library> &greffons() const;
+	const std::vector<numero7::systeme_fichier::shared_library> &greffons() const;
 };

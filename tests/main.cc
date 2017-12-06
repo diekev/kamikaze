@@ -28,7 +28,7 @@
 #include "core/sauvegarde.h"
 #include "core/scene.h"
 
-void test_lecture_fichier(ControleurUnitaire &controleur)
+void test_lecture_fichier(numero7::test_unitaire::ControleurUnitaire &controleur)
 {
 	Main racine;
 	racine.initialize();
@@ -62,7 +62,7 @@ void test_lecture_fichier(ControleurUnitaire &controleur)
 
 int main()
 {
-	ControleurUnitaire controlleur;
+	numero7::test_unitaire::ControleurUnitaire controlleur;
 
 	controlleur.ajoute_fonction(test_lecture_fichier);
 

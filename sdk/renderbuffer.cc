@@ -136,7 +136,7 @@ void RenderBuffer::can_outline(bool yesno)
 void RenderBuffer::init()
 {
 	if (m_buffer_data == nullptr) {
-		m_buffer_data = ego::BufferObject::create();
+		m_buffer_data = numero7::ego::BufferObject::create();
 	}
 }
 
@@ -275,7 +275,7 @@ void RenderBuffer::render(const ViewerContext &context)
 		glDrawArrays(m_params.draw_type(), 0, m_elements);
 	}
 
-	ego::util::GPU_check_errors("Error rendering buffer\n");
+	numero7::ego::util::GPU_check_errors("Error rendering buffer\n");
 
 	m_buffer_data->unbind();
 	m_program.disable();
@@ -288,7 +288,7 @@ void RenderBuffer::render(const ViewerContext &context)
 	}
 }
 
-ego::Program *RenderBuffer::program()
+numero7::ego::Program *RenderBuffer::program()
 {
 	return &m_program;
 }
