@@ -18,7 +18,7 @@ endif()
 
 set(_ego_SEARCH_DIRS
 	${EGO_ROOT_DIR}
-	/opt/lib/girafeenfeu
+	/opt/lib/numero7
 )
 
 find_path(EGO_INCLUDE_DIR
@@ -27,7 +27,7 @@ find_path(EGO_INCLUDE_DIR
 	HINTS
 		${_ego_SEARCH_DIRS}
 	PATH_SUFFIXES
-	    include/girafeenfeu
+	    include/numero7
 )
 
 find_library(EGO_LIBRARY

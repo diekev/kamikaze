@@ -22,7 +22,7 @@
  *
  */
 
-#include <girafeenfeu/test_unitaire/test_unitaire.h>
+#include <numero7/test_unitaire/test_unitaire.h>
 
 #include "core/kamikaze_main.h"
 #include "core/sauvegarde.h"

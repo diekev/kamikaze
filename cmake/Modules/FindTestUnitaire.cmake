@@ -18,7 +18,7 @@ endif()
 
 set(_test_unitaire_SEARCH_DIRS
 	${TEST_UNITAIRE_ROOT_DIR}
-	/opt/lib/girafeenfeu
+	/opt/lib/numero7
 )
 
 find_path(TEST_UNITAIRE_INCLUDE_DIR
@@ -27,7 +27,7 @@ find_path(TEST_UNITAIRE_INCLUDE_DIR
 	HINTS
 		${_test_unitaire_SEARCH_DIRS}
 	PATH_SUFFIXES
-		include/girafeenfeu
+		include/numero7
 )
 
 find_library(TEST_UNITAIRE_LIBRARY

@@ -34,7 +34,6 @@ TaskNotifier::TaskNotifier(MainWindow *window)
 		return;
 	}
 
-	connect(this, SIGNAL(startTask()), window, SLOT(taskStarted()));
 	connect(this, SIGNAL(updateProgress(float)), window, SLOT(updateProgress(float)));
 	connect(this, SIGNAL(endTask()), window, SLOT(taskEnded()));
 	connect(this, SIGNAL(nodeProcessed()), window, SLOT(nodeProcessed()));

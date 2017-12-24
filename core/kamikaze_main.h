@@ -27,7 +27,7 @@
 #include <kamikaze/operateur.h>
 #include <kamikaze/primitive.h>
 
-#include <girafeenfeu/systeme_fichier/shared_library.h>
+#include <numero7/systeme_fichier/shared_library.h>
 
 #include "scene.h"
 
