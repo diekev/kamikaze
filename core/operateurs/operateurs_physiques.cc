@@ -112,6 +112,8 @@ public:
 
 		execute_algorithme(contexte, temps);
 
+		synchronise_donnees();
+
 		/* Sauvegarde la collection */
 		delete m_derniere_collection;
 		m_derniere_collection = m_collection->copy();
@@ -191,25 +193,49 @@ struct MasseRessort {
 	MasseRessort *suivant = nullptr;
 
 	glm::vec3 position_repos = glm::vec3(0.0);
-	glm::vec3 position_courante = glm::vec3(0.0);
+	glm::vec3 position = glm::vec3(0.0);
 	glm::vec3 velocite = glm::vec3(0.0);
-	glm::vec3 accelaration = glm::vec3(0.0);
 
 	MasseRessort() = default;
 };
 
 struct DonneesSysteme {
 	float masse = 0.0f;
+	float masse_inverse = 0.0f;
 	float rigidite = 0.0f;
 	float amortissement = 0.0f;
 	float temps_par_image = 0.0f;
+	glm::vec3 gravite = glm::vec3(0.0);
 
 	DonneesSysteme() = default;
 };
 
-static void resoud_masse_ressort(MasseRessort *racine, const DonneesSysteme &donnees)
+static void resoud_masse_ressort(MasseRessort *masse_ressort, const DonneesSysteme &donnees)
 {
+	const auto precedent = masse_ressort->precedent;
 
+	/* force = masse * acceleration */
+	auto force = donnees.masse * donnees.gravite;
+
+	/* Ajout d'une force de ressort selon la loi de Hooke :
+	 * f = -k * déplacement */
+	auto force_ressort = -donnees.rigidite * (masse_ressort->position - precedent->position);
+	force += force_ressort;
+
+	/* Amortissement : retrait de la vélocité selon le coefficient
+	 * d'amortissement. */
+	auto force_amortisseur = masse_ressort->velocite * donnees.amortissement;
+	force -= force_amortisseur;
+
+	/* acceleration = force / masse */
+	auto acceleration = force * donnees.masse_inverse;
+
+	masse_ressort->velocite = masse_ressort->velocite + acceleration * donnees.temps_par_image;
+	masse_ressort->position = masse_ressort->position + masse_ressort->velocite * donnees.temps_par_image;
+
+	if (masse_ressort->suivant != nullptr) {
+		resoud_masse_ressort(masse_ressort->suivant, donnees);
+	}
 }
 
 class OperateurMasseRessort : public OperateurPhysique {
@@ -267,6 +293,7 @@ public:
 			for (size_t j = 0; j < points_par_courbes; ++j, ++index) {
 				auto masse_ressort = new MasseRessort;
 				masse_ressort->position_repos = (*liste_points)[index];
+				masse_ressort->position = masse_ressort->position_repos;
 
 				m_masses_ressorts.push_back(masse_ressort);
 
@@ -285,10 +312,18 @@ public:
 		return true;
 	}
 
-	void execute_algorithme(const Context &contexte, double temps) override
+	void execute_algorithme(const Context &/*contexte*/, double /*temps*/) override
 	{
-		for (auto &racine : m_racines) {
+		DonneesSysteme donnees;
+		donnees.gravite = m_gravite;
+		donnees.amortissement = 1.0f;
+		donnees.masse = 5.0f;
+		donnees.masse_inverse = 1.0f / donnees.masse;
+		donnees.rigidite = 10.0f;
+		donnees.temps_par_image = 1.0f / 24.0f;
 
+		for (auto &racine : m_racines) {
+			resoud_masse_ressort(racine->suivant, donnees);
 		}
 	}
 
@@ -300,7 +335,7 @@ public:
 		auto liste_points = primitive_courbes->points();
 
 		for (size_t i = 0; i < m_masses_ressorts.size(); ++i) {
-			(*liste_points)[i] = m_masses_ressorts[i]->position_courante;
+			(*liste_points)[i] = m_masses_ressorts[i]->position;
 		}
 	}
 };
