@@ -19,47 +19,41 @@
 #
 # ***** END GPL LICENSE BLOCK *****
 
-set(INC_SYS
+set(INCLUSIONS
+	${TEST_UNITAIRE_INCLUDE_DIRS}
 	${CMAKE_CURRENT_SOURCE_DIR}/../
-	${EGO_INCLUDE_DIRS}
-	${FILESYSTEM_INCLUDE_DIRS}
-	${KAMIKAZE_INCLUDE_DIRS}
-	${QT5_WIDGETS_INCLUDE_DIRS}
 )
 
-set(DL_LIBRARIES dl)
+set(SOURCES
+	main.cc
+)
+
+set(BIBLIOTHEQUES_DL dl)
 set(OPENGL_LIBRARIES GLEW GLU GL glut)
 set(TBB_LIBRARIES tbb)
-set(FILESYSTEM_LIBS ${FILESYSTEM_LIBRARIES} stdc++fs)
 
-set(LIBS
-	${QT5_WIDGETS_LIBRARIES}
-	${QT5_GUI_LIBRARIES}
-	${QT5_OPENGL_LIBRARIES}
-	${QT5_CORE_LIBRARIES}
+set(BIBLIOTHEQUES
+	${TEST_UNITAIRE_LIBRARIES}
 
-	kmk_ui
-	${QT5_OPENGL_LIBRARIES}
-	${OPENGL_LIBRARIES}
 	kmk_core
-	${EGO_LIBRARIES}
-	kmk_util
-
-	${FILESYSTEM_LIBS}
-	${DL_LIBRARIES}
 
 	${KAMIKAZE_LIBRARIES}
+	${QT5_CORE_LIBRARIES}
 	${TBB_LIBRARIES}
 
 	${EGO_LIBRARIES}
+	${OPENGL_LIBRARIES}
+	${BIBLIOTHEQUES_DL}
+	${FILESYSTEM_LIBRARIES}
 )
 
 add_compile_options(-fPIC)
 
-add_executable(kamikaze main.cc)
+add_executable(test_kamikaze ${SOURCES})
 
-target_include_directories(kamikaze PUBLIC "${INC_SYS}")
+target_include_directories(test_kamikaze PUBLIC "${INCLUSIONS}")
+target_link_libraries(test_kamikaze "${BIBLIOTHEQUES}")
 
-target_link_libraries(kamikaze "${LIBS}")
+add_test(tests test_kamikaze)
 
-install(TARGETS kamikaze RUNTIME DESTINATION .)
+install(TARGETS test_kamikaze RUNTIME DESTINATION .)

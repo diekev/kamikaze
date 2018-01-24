@@ -20,7 +20,7 @@
 
 #include "node_node.h"
 
-#include <kamikaze/nodes.h>
+#include <kamikaze/operateur.h>
 
 #include <memory>
 
@@ -103,7 +103,7 @@ void TextItem::setTextInteraction(bool on, bool select_all)
 		}
 		else {
 			auto node_item = static_cast<QtNode *>(this->parentItem());
-			node_item->getNode()->name(this->toPlainText().toStdString());
+			node_item->pointeur_noeud()->nom(this->toPlainText().toStdString());
 			node_item->notifyEditor();
 		}
 	}
@@ -382,8 +382,8 @@ bool QtNode::mouseLeftClickHandler(QGraphicsSceneMouseEvent *mouseEvent,
 
 void QtNode::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-	this->getNode()->xpos(this->scenePos().x());
-	this->getNode()->ypos(this->scenePos().y());
+	this->pointeur_noeud()->posx(this->scenePos().x());
+	this->pointeur_noeud()->posy(this->scenePos().y());
 	return QGraphicsPathItem::mouseMoveEvent(event);
 }
 
@@ -489,7 +489,7 @@ void QtNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
 	Q_UNUSED(widget)
 
 	/* Set header color. */
-	if (m_data && m_data->has_warning()) {
+	if (m_data && m_data->operateur()->a_avertissements()) {
 		m_header_brush.setColor(QColor("#ffd42a"));
 	}
 	else {
@@ -523,28 +523,27 @@ void QtNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
 	}
 }
 
-void QtNode::setNode(Node *node)
+void QtNode::pointeur_noeud(Noeud *noeud)
 {
-	m_data = node;
+	m_data = noeud;
 
-	for (const auto &input : node->inputs()) {
-		createPort(input->name.c_str(),
+	for (const auto &entree : noeud->entrees()) {
+		createPort(entree->nom.c_str(),
 		           NODE_PORT_TYPE_INPUT,
 		           QColor(95, 95, 95),
 		           ALIGNED_LEFT,
 		           QColor(95, 95, 95));
 	}
 
-	for (const auto &output : node->outputs()) {
-		createPort(output->name.c_str(),
+	for (const auto &sortie : noeud->sorties()) {
+		createPort(sortie->nom.c_str(),
 		           NODE_PORT_TYPE_OUTPUT,
 		           QColor(95, 95, 95),
 		           ALIGNED_RIGHT,
 		           QColor(95, 95, 95));
 	}
 
-	/* Set the icon. */
-	const auto &path = node->icon_path();
+	const auto &path = noeud->operateur()->chemin_icone();
 
 	if (path.empty()) {
 		return;
@@ -561,7 +560,7 @@ void QtNode::setNode(Node *node)
     }
 }
 
-Node *QtNode::getNode() const
+Noeud *QtNode::pointeur_noeud() const
 {
 	return m_data;
 }

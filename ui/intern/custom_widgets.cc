@@ -88,6 +88,9 @@ float FloatSpinBox::value() const
 
 void FloatSpinBox::setRange(float min, float max)
 {
+	/* Le slider ne prend que des valeurs entières, donc on crée une échelle
+	 * qui nous permettra de nous donner l'impression que le slider peut prendre
+	 * des valeurs décimales. */
 	if (min > 0.0f && min < 1.0f) {
 		m_scale = 1.0f / min;
 	}
@@ -96,7 +99,7 @@ void FloatSpinBox::setRange(float min, float max)
 	}
 
 	m_slider->setRange(min * m_scale, max * m_scale);
-	m_spin_box->setRange(min * m_scale, max * m_scale);
+	m_spin_box->setRange(min, max);
 }
 
 /* ********************************** */

@@ -12,43 +12,38 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
+ * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * The Original Code is Copyright (C) 2015 Kévin Dietrich.
+ * The Original Code is Copyright (C) 2017 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
+ *
  */
 
 #pragma once
 
-#include <openvdb/tools/VolumeAdvect.h>
+#include <experimental/filesystem>
 
-enum {
-	ADVECT_SEMI = 0,
-	ADVECT_MID,
-	ADVECT_RK3,
-	ADVECT_RK4,
-	ADVECT_MAC,
-	ADVECT_BFECC
+class Context;
+class Main;
+class Scene;
+
+namespace filesystem = std::experimental::filesystem;
+
+namespace kamikaze {
+
+enum erreur_fichier {
+	AUCUNE_ERREUR = 0,
+	NON_OUVERT,
+	NON_TROUVE,
+	CORROMPU,
+	INCONNU,
+	GREFFON_MANQUANT,
 };
 
-openvdb::tools::Scheme::SemiLagrangian advection_scheme(int scheme)
-{
-	switch (scheme) {
-		default:
-		case ADVECT_SEMI:
-			return openvdb::tools::Scheme::SEMI;
-		case ADVECT_MID:
-			return openvdb::tools::Scheme::MID;
-		case ADVECT_RK3:
-			return openvdb::tools::Scheme::RK3;
-		case ADVECT_RK4:
-			return openvdb::tools::Scheme::RK4;
-		case ADVECT_MAC:
-			return openvdb::tools::Scheme::MAC;
-		case ADVECT_BFECC:
-			return openvdb::tools::Scheme::BFECC;
-	}
+erreur_fichier sauvegarde_projet(const filesystem::path &chemin, const Main &main, const Scene *scene);
+erreur_fichier ouvre_projet(const filesystem::path &chemin, const Main &main, const Context &contexte);
+
 }

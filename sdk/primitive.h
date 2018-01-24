@@ -388,20 +388,6 @@ public:
 /* ********************************************** */
 
 /**
- * @brief This class is used to gather and release the collections created
- *        inside of an object's node graph.
- */
-class PrimitiveCache {
-	std::vector<PrimitiveCollection *> m_collections;
-
-public:
-	void add(PrimitiveCollection *collection);
-	void clear();
-};
-
-/* ********************************************** */
-
-/**
  * @brief A C++ standard compliant iterator used to traverse the primitives
  *        contained in a PrimitiveCollection. Only the primitives whose type ID
  *        match the type given in the construtor are returned by the iterator.
@@ -427,7 +413,7 @@ public:
 	 * @brief primitive_iterator Construct the begin iterator.
 	 * @param collection The PrimitiveCollection to traverse.
 	 */
-	primitive_iterator(const PrimitiveCollection *collection);
+	explicit primitive_iterator(const PrimitiveCollection *collection);
 
 	/**
 	 * @brief primitive_iterator Construct the begin iterator.

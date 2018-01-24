@@ -35,7 +35,8 @@
 
 #include "ui/paramfactory.h"
 
-Object::Object()
+Object::Object(const Context &contexte)
+	: m_graph(contexte)
 {
 	add_input("Parent");
 	add_output("Child");
@@ -75,10 +76,15 @@ const glm::mat4 &Object::matrix() const
 	return m_matrix;
 }
 
-void Object::addNode(Node *node)
+void Object::ajoute_noeud(Noeud *noeud)
 {
-	m_graph.add(node);
-	m_graph.active_node(node);
+	m_graph.ajoute(noeud);
+	m_graph.noeud_actif(noeud);
+
+	/* À FAIRE : quand on ouvre un fichier de sauvegarde, il y a un crash quand
+	 * on clique dans l'éditeur de graphe. Ceci n'est sans doute pas la bonne
+	 * correction. */
+	m_graph.ajoute_selection(noeud);
 }
 
 Graph *Object::graph()

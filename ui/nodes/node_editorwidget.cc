@@ -31,6 +31,7 @@
 
 #include <iostream>
 #include <kamikaze/context.h>
+#include <kamikaze/operateur.h>
 #include <sstream>
 
 #include "node_compound.h"
@@ -438,19 +439,19 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 
 			const auto type = item->data(NODE_KEY_GRAPHIC_ITEM_TYPE).toInt();
 
-			Node *node = nullptr;
+			Noeud *noeud = nullptr;
 
 			switch (type) {
 				case NODE_VALUE_TYPE_NODE_BODY:
 				case NODE_VALUE_TYPE_HEADER_TITLE:
 				case NODE_VALUE_TYPE_HEADER_ICON:
 				{
-					node = static_cast<QtNode *>(item->parentItem())->getNode();
+					noeud = static_cast<QtNode *>(item->parentItem())->pointeur_noeud();
 					break;
 				}
 				case NODE_VALUE_TYPE_NODE:
 				{
-					node = static_cast<QtNode *>(item)->getNode();
+					noeud = static_cast<QtNode *>(item)->pointeur_noeud();
 					break;
 				}
 				case NODE_VALUE_TYPE_CONNECTION:
@@ -461,10 +462,20 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 				}
 			}
 
-			if (node != nullptr) {
+			if (noeud != nullptr) {
+				auto operateur = noeud->operateur();
+
 				std::stringstream ss;
-				ss << "Node: " << node->name() << '\n';
-				ss << "Processing time: " << node->process_time() << " seconds.";
+				ss << "<p>Opérateur : " << noeud->nom() << "</p>";
+				ss << "<hr/>";
+				ss << "<p>Temps d'exécution :";
+				ss << "<p>- dernière : " << operateur->temps_execution() << " secondes.</p>";
+				ss << "<p>- minimum : " << operateur->min_temps_execution() << " secondes.</p>";
+				ss << "<p>- agrégé : " << operateur->temps_agrege() << " secondes.</p>";
+				ss << "<p>- minimum agrégé : " << operateur->min_temps_agrege() << " secondes.</p>";
+				ss << "<hr/>";
+				ss << "<p>Nombre d'exécution : " << operateur->nombre_executions() << "</p>";
+				ss << "<hr/>";
 
 				QToolTip::showText(mouseEvent->screenPos(), ss.str().c_str());
 			}
@@ -607,24 +618,27 @@ bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 			auto maxX = qMax(m_last_mouse_position.x(), mouseEvent->lastScenePos().x());
 			auto minY = qMin(m_last_mouse_position.y(), mouseEvent->lastScenePos().y());
 			auto maxY = qMax(m_last_mouse_position.y(), mouseEvent->lastScenePos().y());
-			qreal item_Min_X;
-			qreal item_Max_X;
-			qreal item_Min_Y;
-			qreal item_Max_Y;
 
 			/* Select the items */
 			const auto &items = m_graphics_scene->items();
-			QtNode *node;
-			QtConnection *connection;
 			for (const auto &item : items) {
-				if (is_connection(item) && item->isVisible()) {
-					connection = static_cast<QtConnection *>(item);
+				if (!item->isVisible()) {
+					continue;
+				}
 
-					if (connection->getBasePort() && connection->getTargetPort()) {
-						item_Min_X = qMin(connection->getBasePort()->scenePos().x(), connection->getTargetPort()->scenePos().x());
-						item_Max_X = qMax(connection->getBasePort()->scenePos().x(), connection->getTargetPort()->scenePos().x());
-						item_Min_Y = qMin(connection->getBasePort()->scenePos().y(), connection->getTargetPort()->scenePos().y());
-						item_Max_Y = qMax(connection->getBasePort()->scenePos().y(), connection->getTargetPort()->scenePos().y());
+				if (is_connection(item)) {
+					auto connection = static_cast<QtConnection *>(item);
+					auto prise_base = connection->getBasePort();
+					auto prise_cible = connection->getTargetPort();
+
+					if (prise_base && prise_cible) {
+						const auto &pos_prise_base = prise_base->scenePos();
+						const auto &pos_prise_cible = prise_cible->scenePos();
+
+						auto item_Min_X = qMin(pos_prise_base.x(), pos_prise_cible.x());
+						auto item_Max_X = qMax(pos_prise_base.x(), pos_prise_cible.x());
+						auto item_Min_Y = qMin(pos_prise_base.y(), pos_prise_cible.y());
+						auto item_Max_Y = qMax(pos_prise_base.y(), pos_prise_cible.y());
 
 						if (item_Min_X > minX && item_Max_X < maxX &&
 						    item_Min_Y > minY && item_Max_Y < maxY)
@@ -633,17 +647,20 @@ bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 						}
 					}
 				}
-				else if (is_node(item) && item->isVisible()) {
-					node = static_cast<QtNode *>(item);
-					item_Min_X = node->scenePos().x() - 0.5 * node->sceneBoundingRect().width() + 10;
-					item_Min_Y = node->scenePos().y() - 0.5 * node->sceneBoundingRect().height() + 10;
-					item_Max_X = item_Min_X + node->sceneBoundingRect().width() + 10;
-					item_Max_Y = item_Min_Y + node->sceneBoundingRect().height()  + 10;
+				else if (is_node(item)) {
+					auto noeud = static_cast<QtNode *>(item);
+					const auto &pos_neoud = noeud->scenePos();
+					const auto &cadre_noeud = noeud->sceneBoundingRect();
+
+					auto item_Min_X = pos_neoud.x() - 0.5 * cadre_noeud.width() + 10;
+					auto item_Min_Y = pos_neoud.y() - 0.5 * cadre_noeud.height() + 10;
+					auto item_Max_X = item_Min_X + cadre_noeud.width() + 10;
+					auto item_Max_Y = item_Min_Y + cadre_noeud.height()  + 10;
 
 					if (item_Min_X > minX && item_Max_X < maxX &&
 					    item_Min_Y > minY && item_Max_Y < maxY)
 					{
-						selectNode(node, nullptr);
+						selectNode(noeud, nullptr);
 					}
 				}
 			}
@@ -707,7 +724,7 @@ void QtNodeEditor::selectNode(QtNode *node, QGraphicsSceneMouseEvent *mouseEvent
 		auto object = static_cast<Object *>(m_context->scene->active_node());
 
 		auto graph = object->graph();
-		graph->add_to_selection(node->getNode());
+		graph->ajoute_selection(node->pointeur_noeud());
 
 		m_context->scene->notify_listeners(event_type::node | event_type::selected);
 	}
@@ -766,7 +783,7 @@ void QtNodeEditor::deselectNodes()
 		auto graph = object->graph();
 
 		for (const auto &node : m_selected_nodes) {
-			graph->remove_from_selection(node->getNode());
+			graph->enleve_selection(node->pointeur_noeud());
 		}
 	}
 	else {
@@ -832,12 +849,12 @@ void QtNodeEditor::removeNode(QtNode *node)
 		auto scene = m_context->scene;
 		auto object = static_cast<Object *>(scene->active_node());
 		auto graph = object->graph();
+		auto pointeur_noeud = node->pointeur_noeud();
+		const auto avait_liaison = pointeur_noeud->est_connecte();
 
-		const auto was_connected = node->getNode()->isLinked();
+		graph->enleve(pointeur_noeud);
 
-		graph->remove(node->getNode());
-
-		if (was_connected) {
+		if (avait_liaison) {
 			scene->evalObjectDag(*m_context, object);
 		}
 
@@ -892,24 +909,24 @@ void QtNodeEditor::splitConnectionWithNode(QtNode *node)
 	auto object = static_cast<Object *>(scene->active_node());
 	auto graph = object->graph();
 
-	auto node_from = base.first->getNode();
-	auto node_to = target.first->getNode();
+	auto noeud_de = base.first->pointeur_noeud();
+	auto noeud_a = target.first->pointeur_noeud();
 
 	/* remove connection */
-	auto output_socket = node_from->output(base.second->getPortName().toStdString());
-	auto input_socket = node_to->input(target.second->getPortName().toStdString());
+	auto prise_sortie = noeud_de->sortie(base.second->getPortName().toStdString());
+	auto prise_entree = noeud_a->entree(target.second->getPortName().toStdString());
 
-	assert((output_socket != nullptr) && (input_socket != nullptr));
+	assert((prise_sortie != nullptr) && (prise_entree != nullptr));
 
-	graph->disconnect(output_socket, input_socket);
+	graph->deconnecte(prise_sortie, prise_entree);
 
-	auto middle_node = node->getNode();
+	auto noeud_milieu = node->pointeur_noeud();
 
 	/* connect from base port to first input port in node */
-	graph->connect(output_socket, middle_node->input(0));
+	graph->connecte(prise_sortie, noeud_milieu->entree(0));
 
 	/* connect from first output port in node to target port */
-	graph->connect(middle_node->output(0), input_socket);
+	graph->connecte(noeud_milieu->sortie(0), prise_entree);
 
 	/* notify */
 	scene->evalObjectDag(*m_context, object);
@@ -1260,47 +1277,47 @@ void QtNodeEditor::update_state(event_type event)
 			return;
 		}
 
-		std::unordered_map<Node *, QtNode *> node_items_map;
+		std::unordered_map<Noeud *, QtNode *> node_items_map;
 
 		auto object = static_cast<Object *>(scene_node);
 		auto graph = object->graph();
 
 		/* Add the nodes. */
-		for (const auto &node : graph->nodes()) {
-			Node *node_ptr = node.get();
+		for (const auto &noeud : graph->noeuds()) {
+			Noeud *pointeur_noeud = noeud.get();
 
-			auto node_item = new QtNode(node_ptr->name().c_str());
+			auto node_item = new QtNode(pointeur_noeud->nom().c_str());
 			node_item->setTitleColor(Qt::white);
 			node_item->alignTitle(ALIGNED_LEFT);
-			node_item->setNode(node_ptr);
+			node_item->pointeur_noeud(pointeur_noeud);
 			node_item->setScene(m_graphics_scene);
 			node_item->setEditor(this);
-			node_item->setPos(node_ptr->xpos(), node_ptr->ypos());
+			node_item->setPos(pointeur_noeud->posx(), pointeur_noeud->posy());
 
-			node_items_map[node_ptr] = node_item;
+			node_items_map[pointeur_noeud] = node_item;
 
 			m_graphics_scene->addItem(node_item);
 
-			if (node_ptr->has_flags(NODE_SELECTED)) {
+			if (pointeur_noeud->a_drapeau(NOEUD_SELECTIONE)) {
 				m_selected_nodes.append(node_item);
 			}
 		}
 
 		/* Add the connections. */
-		for (const auto &node : graph->nodes()) {
+		for (const auto &noeud : graph->noeuds()) {
 			/* Skip if no outputs. */
-			if (node->outputs().empty()) {
+			if (noeud->sorties().empty()) {
 				continue;
 			}
 
-			QtNode *from_node_item = node_items_map[node.get()];
+			QtNode *from_node_item = node_items_map[noeud.get()];
 
-			for (const OutputSocket *output : node->outputs()) {
-				for (const InputSocket *input : output->links) {
-					QtNode *to_node_item = node_items_map[input->parent];
+			for (const PriseSortie *sortie : noeud->sorties()) {
+				for (const PriseEntree *entree : sortie->liens) {
+					QtNode *to_node_item = node_items_map[entree->parent];
 
-					QtPort *from_port = from_node_item->output(output->name.c_str());
-					QtPort *to_port = to_node_item->input(input->name.c_str());
+					QtPort *from_port = from_node_item->output(sortie->nom.c_str());
+					QtPort *to_port = to_node_item->input(entree->nom.c_str());
 
 					assert(from_port != nullptr && to_port != nullptr);
 
@@ -1364,15 +1381,15 @@ void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNo
 		auto object = static_cast<Object *>(scene->active_node());
 		auto graph = object->graph();
 
-		auto node_from = from->getNode();
-		auto node_to = to->getNode();
+		auto noeud_de = from->pointeur_noeud();
+		auto noeud_a = to->pointeur_noeud();
 
-		auto output_socket = node_from->output(socket_from.toStdString());
-		auto input_socket = node_to->input(socket_to.toStdString());
+		auto prise_sortie = noeud_de->sortie(socket_from.toStdString());
+		auto prise_entree = noeud_a->entree(socket_to.toStdString());
 
-		assert((output_socket != nullptr) && (input_socket != nullptr));
+		assert((prise_sortie != nullptr) && (prise_entree != nullptr));
 
-		graph->connect(output_socket, input_socket);
+		graph->connecte(prise_sortie, prise_entree);
 
 		/* Needed to prevent updating needlessly the graph when dropping a node on
 		 * a connection. */
@@ -1398,15 +1415,15 @@ void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, Q
 		auto object = static_cast<Object *>(scene->active_node());
 		auto graph = object->graph();
 
-		auto node_from = from->getNode();
-		auto node_to = to->getNode();
+		auto noeud_de = from->pointeur_noeud();
+		auto noeud_a = to->pointeur_noeud();
 
-		auto output_socket = node_from->output(socket_from.toStdString());
-		auto input_socket = node_to->input(socket_to.toStdString());
+		auto prise_sortie = noeud_de->sortie(socket_from.toStdString());
+		auto prise_entree = noeud_a->entree(socket_to.toStdString());
 
-		assert((output_socket != nullptr) && (input_socket != nullptr));
+		assert((prise_sortie != nullptr) && (prise_entree != nullptr));
 
-		graph->disconnect(output_socket, input_socket);
+		graph->deconnecte(prise_sortie, prise_entree);
 
 		if (notify) {
 			scene->evalObjectDag(*m_context, object);

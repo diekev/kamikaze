@@ -24,53 +24,43 @@
 
 #pragma once
 
-#include <kamikaze/nodes.h>
+#include <kamikaze/noeud.h>
 #include <kamikaze/primitive.h>
 #include <memory>
 #include <vector>
 
-class InputSocket;
-class OutputNode;
-class OutputSocket;
+class Context;
 
 enum {
-	NODE_SELECTED = (1 << 0),
+	NOEUD_SELECTIONE = (1 << 0),
 };
 
 class Graph {
-	std::vector<std::unique_ptr<Node>> m_nodes;
-	std::vector<Node *> m_stack;
-	std::vector<Node *> m_selected_nodes;
+	std::vector<std::unique_ptr<Noeud>> m_noeuds{};
+	std::vector<Noeud *> m_noeuds_selectiones{};
 
-	Node *m_active_node = nullptr;
+	Noeud *m_noeud_actif = nullptr;
 
-	PrimitiveCache m_cache;
-
-	bool m_need_update;
+	bool m_besoin_actualisation;
 
 public:
-	Graph();
-	~Graph();
+	explicit Graph(const Context &contexte);
 
-	void add(Node *node);
-	void remove(Node *node);
+	void ajoute(Noeud *noeud);
+	void enleve(Noeud *noeud);
 
-	void connect(OutputSocket *from, InputSocket *to);
-	void disconnect(OutputSocket *from, InputSocket *to);
+	void connecte(PriseSortie *de, PriseEntree *a);
+	void deconnecte(PriseSortie *de, PriseEntree *a);
 
-	void build();
+	const std::vector<std::unique_ptr<Noeud>> &noeuds() const;
 
-	OutputNode *output() const;
+	void noeud_actif(Noeud *noeud);
 
-	const std::vector<std::unique_ptr<Node> > &nodes() const;
-	const std::vector<Node *> &finished_stack() const;
+	Noeud *noeud_actif() const;
 
-	void active_node(Node *node);
-	Node *active_node() const;
+	Noeud *sortie() const;
 
-	void clear_cache();
+	void ajoute_selection(Noeud *noeud);
 
-	void add_to_selection(Node *node);
-
-	void remove_from_selection(Node *node);
+	void enleve_selection(Noeud *noeud);
 };
