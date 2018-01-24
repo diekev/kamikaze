@@ -138,18 +138,49 @@ void OperateurPhysique::execute(const Context &contexte, double temps)
 
 /* ************************************************************************** */
 
+struct Particule {
+	glm::vec3 position;
+	glm::vec3 velocite;
+};
+
+#if 0
+class GrilleParticule {
+	std::vector<std::vector<Particule *>> m_donnees;
+	int m_res_x;
+	int m_res_y;
+	int m_res_z;
+
+public:
+	GrilleParticule() = default;
+	~GrilleParticule() = default;
+
+	void ajoute_particule(Particule *particule);
+
+	std::vector<Particule *> particules_voisines(Particule *particule);
+};
+#endif
+
 static const char *NOM_GRAVITE = "Gravité";
 static const char *AIDE_GRAVITE = "Applique une force de gravité aux primitives d'entrées.";
 
 class OperateurGravite final : public OperateurPhysique {
+	std::vector<Particule *> m_particules;
+
+	glm::mat4 m_matrice;
+
 public:
 	OperateurGravite(Noeud *noeud, const Context &contexte);
 
-	~OperateurGravite() = default;
+	~OperateurGravite()
+	{
+		supprime_donnees();
+	}
 
 	const char *nom() override;
 
 	bool initialise_donnees() override;
+
+	void supprime_donnees();
 
 	void execute_algorithme(const Context &/*contexte*/, double /*temps*/) override;
 
@@ -184,7 +215,41 @@ const char *OperateurGravite::nom()
 
 bool OperateurGravite::initialise_donnees()
 {
+	supprime_donnees();
+
+	auto iterateur_points = primitive_iterator(m_collection, PrimPoints::id);
+
+	if (iterateur_points.get() == nullptr) {
+		ajoute_avertissement("Il n'y a pas de primitive à points en entrée !");
+		return false;
+	}
+
+	auto primitive_points = static_cast<PrimPoints *>(iterateur_points.get());
+	auto nuage_points = static_cast<PrimPoints *>(primitive_points);
+	auto points = nuage_points->points();
+	auto nombre_points = points->size();
+
+	m_matrice = nuage_points->matrix();
+	m_particules.reserve(nombre_points);
+
+	for (auto i = 0ul; i < nombre_points; ++i) {
+		Particule *particule = new Particule();
+		particule->position = (*points)[i];
+		particule->velocite = glm::vec3(0.0, 0.0, 0.0);
+
+		m_particules.push_back(particule);
+	}
+
 	return true;
+}
+
+void OperateurGravite::supprime_donnees()
+{
+	for (auto &particule : m_particules) {
+		delete particule;
+	}
+
+	m_particules.clear();
 }
 
 void OperateurGravite::execute_algorithme(const Context &, double)
@@ -196,49 +261,50 @@ void OperateurGravite::execute_algorithme(const Context &, double)
 	const auto masse = eval_float("masse");
 	const auto masse_inverse = 1.0f / masse;
 
-	for (Primitive *prim : primitive_iterator(m_collection, PrimPoints::id)) {
-		auto nuage_points = static_cast<PrimPoints *>(prim);
-		auto points = nuage_points->points();
-		auto nombre_points = points->size();
+	for (Particule *particule : m_particules) {
+		/* f = m * a */
+		const auto force = masse * m_gravite;
 
-		auto attr_vel = nuage_points->add_attribute("velocité", ATTR_TYPE_VEC3, nombre_points);
+		/* a = f / m */
+		const auto acceleration = force * masse_inverse;
 
-		for (auto i = 0ul; i < nombre_points; ++i) {
-			/* f = m * a */
-			const auto force = masse * m_gravite;
+		/* velocite = acceleration * temp_par_image + velocite */
+		auto velocite = particule->velocite + acceleration * temps_par_image;
 
-			/* a = f / m */
-			const auto acceleration = force * masse_inverse;
+		/* position = velocite * temps_par_image + position */
+		particule->position += velocite * temps_par_image;
 
-			/* velocite = acceleration * temp_par_image + velocite */
-			const auto velocite = attr_vel->vec3(i) + acceleration * temps_par_image;
-			attr_vel->vec3(i, velocite);
+		/* Calcul la position en espace objet. */
+		const auto pos = m_matrice * particule->position;
 
-			/* position = velocite * temps_par_image + position */
-			auto &point = (*points)[i];
-			point += velocite * temps_par_image;
+		/* Vérifie l'existence d'une collision avec le plan global. */
+		if (verifie_collision(plan_global, pos, velocite, rayon)) {
+			/* Trouve le normal de la vélocité au point de collision. */
+			auto nv = glm::dot(plan_global.nor, velocite) * plan_global.nor;
 
-			/* Calcul la position en espace objet. */
-			const auto pos = nuage_points->matrix() * point;
+			/* Trouve la tangente de la vélocité. */
+			auto tv = velocite - nv;
 
-			/* Vérifie l'existence d'une collision avec le plan global. */
-			if (verifie_collision(plan_global, pos, velocite, rayon)) {
-				/* Trouve le normal de la vélocité au point de collision. */
-				auto nv = glm::dot(plan_global.nor, velocite) * plan_global.nor;
-
-				/* Trouve la tangente de la vélocité. */
-				auto tv = velocite - nv;
-
-				/* Le normal de la vélocité est multiplité par le coefficient
+			/* Le normal de la vélocité est multiplité par le coefficient
 				 * d'élasticité. */
-				attr_vel->vec3(i, -elasticite * nv + tv);
-			}
+			velocite = -elasticite * nv + tv;
 		}
+
+		particule->velocite = velocite;
 	}
 }
 
 void OperateurGravite::synchronise_donnees()
 {
+	auto iterateur_points = primitive_iterator(m_collection, PrimPoints::id);
+	auto primitive_points = static_cast<PrimPoints *>(iterateur_points.get());
+	auto nuage_points = static_cast<PrimPoints *>(primitive_points);
+	auto points = nuage_points->points();
+	auto nombre_points = points->size();
+
+	for (auto i = 0ul; i < nombre_points; ++i) {
+		(*points)[i] = m_particules[i]->position;
+	}
 }
 
 /* ************************************************************************** */
