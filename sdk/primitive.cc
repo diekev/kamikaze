@@ -27,8 +27,8 @@
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "util_render.h"
-#include "util_string.h"
+#include "outils/chaîne_caractère.h"
+#include "outils/rendu.h"
 
 Primitive::Primitive(const Primitive &other)
     : m_dimensions(other.m_dimensions)
@@ -221,28 +221,6 @@ void Primitive::remove_attribute(const std::string &name, const AttributeType ty
 bool Primitive::has_attribute(const std::string &name, const AttributeType type)
 {
 	return (attribute(name, type) != nullptr);
-}
-
-/* ********************************************** */
-
-void PrimitiveCache::add(PrimitiveCollection *collection)
-{
-	if (collection->refcount() > 0) {
-		return;
-	}
-
-	collection->incref();
-
-	m_collections.push_back(collection);
-}
-
-void PrimitiveCache::clear()
-{
-	for (auto &collection : m_collections) {
-		delete collection;
-	}
-
-	m_collections.clear();
 }
 
 /* ********************************************** */

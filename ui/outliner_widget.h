@@ -28,7 +28,7 @@
 
 #include "widgetbase.h"
 
-class Node;
+class Noeud;
 class Scene;
 class SceneNode;
 
@@ -65,12 +65,12 @@ public:
 /* ************************************************************************** */
 
 class ObjectNodeTreeWidgetItem : public QTreeWidgetItem {
-	Node *m_node;
+	Noeud *m_noeud;
 
 public:
-    explicit ObjectNodeTreeWidgetItem(Node *node, QTreeWidgetItem *parent = nullptr);
+	explicit ObjectNodeTreeWidgetItem(Noeud *noeud, QTreeWidgetItem *parent = nullptr);
 
-    Node *getNode() const;
+	Noeud *pointeur_noeud() const;
 };
 
 /* ************************************************************************** */

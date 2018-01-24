@@ -25,7 +25,7 @@
 #include "outliner_widget.h"
 
 #include <kamikaze/context.h>
-#include <kamikaze/nodes.h>
+#include <kamikaze/noeud.h>
 
 #include <QDropEvent>
 #include <QHBoxLayout>
@@ -96,16 +96,16 @@ void ObjectTreeWidgetItem::setVisited()
 
 /* ************************************************************************** */
 
-ObjectNodeTreeWidgetItem::ObjectNodeTreeWidgetItem(Node *node, QTreeWidgetItem *parent)
+ObjectNodeTreeWidgetItem::ObjectNodeTreeWidgetItem(Noeud *noeud, QTreeWidgetItem *parent)
     : QTreeWidgetItem(parent)
-    , m_node(node)
+	, m_noeud(noeud)
 {
-	setText(0, m_node->name().c_str());
+	setText(0, m_noeud->nom().c_str());
 }
 
-Node *ObjectNodeTreeWidgetItem::getNode() const
+Noeud *ObjectNodeTreeWidgetItem::pointeur_noeud() const
 {
-	return m_node;
+	return m_noeud;
 }
 
 /* ************************************************************************** */
@@ -253,8 +253,8 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 		scene_node->set_flags(SNODE_OL_EXPANDED);
 		auto object = static_cast<Object *>(scene_node);
 
-		for (const auto &node : object->graph()->nodes()) {
-			auto node_item = new ObjectNodeTreeWidgetItem(node.get(), object_item);
+		for (const auto &noeud : object->graph()->noeuds()) {
+			auto node_item = new ObjectNodeTreeWidgetItem(noeud.get(), object_item);
 			object_item->addChild(node_item);
 		}
 
