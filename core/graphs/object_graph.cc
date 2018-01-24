@@ -27,7 +27,7 @@
 #include <algorithm>
 #include <iostream>
 
-#include "object_nodes.h"
+#include "operateurs/operateurs_standards.h"
 
 Graph::Graph(const Context &contexte)
 	: m_besoin_actualisation(false)

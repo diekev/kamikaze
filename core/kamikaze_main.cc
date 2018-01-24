@@ -33,7 +33,9 @@
 
 #include <dlfcn.h>
 
-#include "graphs/object_nodes.h"
+#include "operateurs/operateurs_physiques.h"
+#include "operateurs/operateurs_standards.h"
+
 #include "scene.h"
 
 namespace fs = std::experimental::filesystem;
@@ -105,6 +107,7 @@ void Main::charge_greffons()
 void Main::initialize()
 {
 	enregistre_operateurs_integres(this->usine_operateur());
+	enregistre_operateurs_physiques(this->usine_operateur());
 
 	/* primitive types */
 

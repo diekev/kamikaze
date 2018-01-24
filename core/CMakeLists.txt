@@ -70,10 +70,12 @@ add_library(kmk_core STATIC
 	graphs/graph_dumper.h
 	graphs/graph_tools.h
 	graphs/object_graph.h
-	graphs/object_nodes.h
 	graphs/scene_node.h
 
 	interne/tinyxml2.h
+
+	operateurs/operateurs_physiques.h
+	operateurs/operateurs_standards.h
 
 	camera.cc
 	context.cc
@@ -89,10 +91,12 @@ add_library(kmk_core STATIC
 	graphs/depsgraph.cc
 	graphs/graph_dumper.cc
 	graphs/object_graph.cc
-	graphs/object_nodes.cc
 	graphs/scene_node.cc
 
 	interne/tinyxml2.cc
+
+	operateurs/operateurs_physiques.cc
+	operateurs/operateurs_standards.cc
 
 	${SHADERS}
 	${STYLES}
