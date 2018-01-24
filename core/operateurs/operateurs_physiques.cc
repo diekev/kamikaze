@@ -144,19 +144,67 @@ struct Particule {
 };
 
 #if 0
+/**
+ * La classe GrilleParticule est une structure d'accélaration pour trouver des
+ * particules dans le voisinages d'une autre.
+ */
 class GrilleParticule {
 	std::vector<std::vector<Particule *>> m_donnees;
 	int m_res_x;
 	int m_res_y;
 	int m_res_z;
 
+	glm::vec3 m_min;
+	glm::vec3 m_max;
+	glm::vec3 m_taille_inverse;
+
 public:
 	GrilleParticule() = default;
 	~GrilleParticule() = default;
 
-	void ajoute_particule(Particule *particule);
+	void definie_limite(const glm::vec3 &min, const glm::vec3 &max)
+	{
+		m_min = min;
+		m_max = max;
 
-	std::vector<Particule *> particules_voisines(Particule *particule);
+		const auto taille = max - min;
+		m_taille_inverse = glm::vec3(1.0) / taille;
+
+		m_res_x = static_cast<int>(taille.x);
+		m_res_y = static_cast<int>(taille.y);
+		m_res_z = static_cast<int>(taille.z);
+
+		reinitialise();
+	}
+
+	void ajoute_particule(Particule *particule)
+	{
+		const auto index = calcule_index(particule);
+		m_donnees[index].push_back(particule);
+	}
+
+	const std::vector<Particule *> &particules_voisines(Particule *particule) const
+	{
+		const auto index = calcule_index(particule);
+		return m_donnees[index];
+	}
+
+	void reinitialise()
+	{
+		for (auto &donnees : m_donnees) {
+			donnees.clear();
+		}
+
+		m_donnees.resize(m_res_x * m_res_y * m_res_z);
+	}
+
+private:
+	size_t calcule_index(Particule *particule) const
+	{
+		const auto position = (particule->position + m_min) * m_taille_inverse;
+
+		return position.x + position.y * m_res_x + position.z * m_res_x * m_res_y;
+	}
 };
 #endif
 
