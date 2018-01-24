@@ -35,20 +35,21 @@
 
 #include "ui/paramfactory.h"
 
-Object::Object()
+Object::Object(const Context &contexte)
+	: m_graph(contexte)
 {
 	add_input("Parent");
 	add_output("Child");
 
-	add_prop("Position", property_type::prop_vec3);
+	add_prop("position", "Position", property_type::prop_vec3);
 	set_prop_min_max(-10.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3(0.0f, 0.0f, 0.0f));
 
-	add_prop("Rotation", property_type::prop_vec3);
+	add_prop("rotation", "Rotation", property_type::prop_vec3);
 	set_prop_min_max(0.0f, 360.0f);
 	set_prop_default_value_vec3(glm::vec3(0.0f, 0.0f, 0.0f));
 
-	add_prop("Size", property_type::prop_vec3);
+	add_prop("size", "Size", property_type::prop_vec3);
 	set_prop_min_max(0.0f, 10.0f);
 	set_prop_default_value_vec3(glm::vec3(1.0f, 1.0f, 1.0f));
 
@@ -75,10 +76,15 @@ const glm::mat4 &Object::matrix() const
 	return m_matrix;
 }
 
-void Object::addNode(Node *node)
+void Object::ajoute_noeud(Noeud *noeud)
 {
-	m_graph.add(node);
-	m_graph.active_node(node);
+	m_graph.ajoute(noeud);
+	m_graph.noeud_actif(noeud);
+
+	/* À FAIRE : quand on ouvre un fichier de sauvegarde, il y a un crash quand
+	 * on clique dans l'éditeur de graphe. Ceci n'est sans doute pas la bonne
+	 * correction. */
+	m_graph.ajoute_selection(noeud);
 }
 
 Graph *Object::graph()
@@ -93,9 +99,9 @@ const Graph *Object::graph() const
 
 void Object::updateMatrix()
 {
-	const auto m_pos = eval_vec3("Position");
-	const auto m_rotation = eval_vec3("Rotation");
-	const auto m_scale = eval_vec3("Size");
+	const auto m_pos = eval_vec3("position");
+	const auto m_rotation = eval_vec3("rotation");
+	const auto m_scale = eval_vec3("size");
 
 	m_matrix = glm::mat4(1.0f);
 	m_matrix = glm::translate(m_matrix, m_pos);

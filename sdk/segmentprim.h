@@ -24,4 +24,41 @@
 
 #pragma once
 
-float simplex_noise_3d(float x, float y, float z);
+#include "attribute.h"
+#include "geomlists.h"
+#include "primitive.h"
+
+class RenderBuffer;
+
+class SegmentPrim : public Primitive {
+	PointList m_points;
+	EdgeList m_edges;
+
+	RenderBuffer *m_renderbuffer;
+
+public:
+	SegmentPrim();
+	SegmentPrim(const SegmentPrim &other);
+	~SegmentPrim();
+
+	PointList *points();
+
+	const PointList *points() const;
+
+	EdgeList *edges();
+
+	const EdgeList *edges() const;
+
+	Primitive *copy() const override;
+
+	void render(const ViewerContext &context) override;
+
+	void prepareRenderData() override;
+
+	void computeBBox(glm::vec3 &min, glm::vec3 &max) override;
+
+	void loadShader();
+
+	static size_t id;
+	size_t typeID() const override;
+};

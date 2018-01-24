@@ -26,6 +26,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "attribute.h"
 #include "cube.h"
 #include "factory.h"
 
@@ -58,9 +59,12 @@ protected:
 	bool m_need_update = true;
 	bool m_need_data_update = true;
 
+	std::vector<Attribute *> m_attributes = {};
+
 public:
 	Primitive() = default;
-	virtual ~Primitive() = default;
+	Primitive(const Primitive &other);
+	virtual ~Primitive();
 
 	/**
 	 * @brief intersect Intersect a ray against this primitive AABB.
@@ -155,6 +159,52 @@ public:
 	 * @endcode
 	 */
 	virtual size_t typeID() const = 0;
+
+	/* *************************** Attributes ******************************* */
+
+	/**
+	 * @brief add_attribute Add an attribute to this primitive's attibute list.
+	 * @param attr The attribute to add.
+	 */
+	void add_attribute(Attribute *attr);
+
+	/**
+	 * @brief add_attribute Add an attribute to this primitive's attibute list.
+	 * @param name The name of the attribute to add.
+	 * @param type The type of the attribute to add.
+	 *
+	 * @return The newly added attribute. If there is already an attribute with
+	 *         the given name and type in this primitive's attibute list,  it is
+	 *         returned, and no new attribute is created.
+	 */
+	Attribute *add_attribute(const std::string &name, const AttributeType type, size_t size);
+
+	/**
+	 * @brief attribute Return an attribute from this primitive's attibute list.
+	 * @param name The name of the attribute to look up.
+	 * @param type The type of the attribute to look up.
+	 *
+	 * @return The attribute corresponding to the given name and type, nullptr
+	 *         if no such attribute exists.
+	 */
+	Attribute *attribute(const std::string &name, const AttributeType type);
+
+	/**
+	 * @brief remove_attribute Remove an attribute from this primitive's attibute list.
+	 * @param name The name of the attribute to remove.
+	 * @param type The type of the attribute to remove.
+	 */
+	void remove_attribute(const std::string &name, const AttributeType type);
+
+	/**
+	 * @brief has_attribute Return whether the given attribute exists in this
+	 *                      primitive's attibute list.
+	 * @param name The name of the attribute to check for.
+	 * @param type The type of the attribute to check for.
+	 *
+	 * @return True if such attribute exists, false otherwise.
+	 */
+	bool has_attribute(const std::string &name, const AttributeType type);
 };
 
 /* ********************************************** */
@@ -247,6 +297,20 @@ public:
 	void destroy(const std::vector<Primitive *> &prims);
 
 	/**
+	 * @brief copy_collection Copy the primitives from one collection to this.
+	 * @param coll The collection to copy the primitives from.
+	 */
+	void copy_collection(const PrimitiveCollection &coll);
+
+	/**
+	 * @brief merge_collection Merge the primitives from one collection into this
+	 *                         collection. The merged collection will be cleared.
+	 * @param coll The collection to merge the primitives from. It will be empty
+	 *             after the merge.
+	 */
+	void merge_collection(PrimitiveCollection &coll);
+
+	/**
 	 * @brief factory
 	 * @return Return a pointer to the factory used in this collection.
 	 * @todo Not nice, need a way to create valid temporary collections.
@@ -262,20 +326,6 @@ public:
 	void incref();
 
 	void decref();
-};
-
-/* ********************************************** */
-
-/**
- * @brief This class is used to gather and release the collections created
- *        inside of an object's node graph.
- */
-class PrimitiveCache {
-	std::vector<PrimitiveCollection *> m_collections;
-
-public:
-	void add(PrimitiveCollection *collection);
-	void clear();
 };
 
 /* ********************************************** */
@@ -306,7 +356,7 @@ public:
 	 * @brief primitive_iterator Construct the begin iterator.
 	 * @param collection The PrimitiveCollection to traverse.
 	 */
-	primitive_iterator(const PrimitiveCollection *collection);
+	explicit primitive_iterator(const PrimitiveCollection *collection);
 
 	/**
 	 * @brief primitive_iterator Construct the begin iterator.

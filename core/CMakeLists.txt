@@ -59,6 +59,7 @@ add_library(kmk_core STATIC
 	kamikaze_main.h
 	object.h
 	object_ops.h
+	sauvegarde.h
 	scene.h
 	task.h
 	undo.h
@@ -72,6 +73,8 @@ add_library(kmk_core STATIC
 	graphs/object_nodes.h
 	graphs/scene_node.h
 
+	interne/tinyxml2.h
+
 	camera.cc
 	context.cc
 	grid.cc
@@ -79,6 +82,7 @@ add_library(kmk_core STATIC
 	object.cc
 	object_ops.cc
 	task.cc
+	sauvegarde.cc
 	scene.cc
 	undo.cc
 
@@ -88,11 +92,14 @@ add_library(kmk_core STATIC
 	graphs/object_nodes.cc
 	graphs/scene_node.cc
 
+	interne/tinyxml2.cc
+
 	${SHADERS}
 	${STYLES}
 )
 
 target_include_directories(kmk_core PUBLIC "${INC_SYS}")
+target_link_libraries(kmk_core stdc++fs)
 
 install(
 	FILES ${SHADERS}
