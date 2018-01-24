@@ -164,6 +164,11 @@ OperateurGravite::OperateurGravite(Noeud *noeud, const Context &contexte)
 	set_prop_default_value_float(0.01f);
 	set_prop_tooltip("Le rayon des particules.");
 
+	add_prop("masse", "Masse", property_type::prop_float);
+	set_prop_min_max(0.0f, 100.0f);
+	set_prop_default_value_float(1.0f);
+	set_prop_tooltip("La masse des particules.");
+
 	add_prop("élasticité", "Élasticité", property_type::prop_float);
 	set_prop_min_max(0.0f, 1.0f);
 	set_prop_default_value_float(1.0f);
@@ -188,6 +193,8 @@ void OperateurGravite::execute_algorithme(const Context &, double)
 	const auto temps_par_image = 1.0f / 24.0f;
 	const auto elasticite = eval_float("élasticité");
 	const auto rayon = eval_float("rayon");
+	const auto masse = eval_float("masse");
+	const auto masse_inverse = 1.0f / masse;
 
 	for (Primitive *prim : primitive_iterator(m_collection, PrimPoints::id)) {
 		auto nuage_points = static_cast<PrimPoints *>(prim);
@@ -197,7 +204,11 @@ void OperateurGravite::execute_algorithme(const Context &, double)
 		auto attr_vel = nuage_points->add_attribute("velocité", ATTR_TYPE_VEC3, nombre_points);
 
 		for (auto i = 0ul; i < nombre_points; ++i) {
-			const auto acceleration = m_gravite;
+			/* f = m * a */
+			const auto force = masse * m_gravite;
+
+			/* a = f / m */
+			const auto acceleration = force * masse_inverse;
 
 			/* velocite = acceleration * temp_par_image + velocite */
 			const auto velocite = attr_vel->vec3(i) + acceleration * temps_par_image;
