@@ -31,9 +31,6 @@
 
 /* ************************************************************************** */
 
-static const char *NOM_GRAVITE = "Gravité";
-static const char *AIDE_GRAVITE = "Applique une force de gravité aux primitives d'entrées.";
-
 struct PlanPhysique {
 	glm::vec3 pos = glm::vec3{0.0f, 0.0f, 0.0f};
 	glm::vec3 nor = glm::vec3{0.0f, 1.0f, 0.0f};
@@ -58,21 +55,28 @@ static bool verifie_collision(const PlanPhysique &plan, const glm::vec3 &pos, co
 	return true;
 }
 
-class OperateurGravite : public Operateur {
+/* ************************************************************************** */
+
+/**
+ * La classe OperateurPhysique représente la classe de base pour tous les
+ * opérateur faisant des simulations de physique.
+ */
+class OperateurPhysique : public Operateur {
+protected:
 	glm::vec3 m_gravite = glm::vec3{0.0f, -9.80665f, 0.0f};
 	PrimitiveCollection *m_collection_original = nullptr;
 	PrimitiveCollection *m_derniere_collection = nullptr;
 	int m_image_debut = 0;
 
 public:
-	OperateurGravite(Noeud *noeud, const Context &contexte)
+	OperateurPhysique(Noeud *noeud, const Context &contexte)
 		: Operateur(noeud, contexte)
 	{
 		entrees(1);
 		sorties(1);
 	}
 
-	~OperateurGravite()
+	virtual ~OperateurPhysique()
 	{
 		delete m_collection_original;
 		delete m_derniere_collection;
@@ -86,11 +90,6 @@ public:
 	const char *nom_sortie(size_t /*index*/) override
 	{
 		return "Sortie";
-	}
-
-	const char *nom() override
-	{
-		return NOM_GRAVITE;
 	}
 
 	void execute(const Context &contexte, double temps) override
@@ -113,7 +112,33 @@ public:
 		m_derniere_collection = m_collection->copy();
 	}
 
-	void execute_algorithme(const Context &/*contexte*/, double /*temps*/)
+	virtual void execute_algorithme(const Context &contexte, double temps) = 0;
+};
+
+/* ************************************************************************** */
+
+static const char *NOM_GRAVITE = "Gravité";
+static const char *AIDE_GRAVITE = "Applique une force de gravité aux primitives d'entrées.";
+
+class OperateurGravite final : public OperateurPhysique {
+	glm::vec3 m_gravite = glm::vec3{0.0f, -9.80665f, 0.0f};
+	PrimitiveCollection *m_collection_original = nullptr;
+	PrimitiveCollection *m_derniere_collection = nullptr;
+	int m_image_debut = 0;
+
+public:
+	OperateurGravite(Noeud *noeud, const Context &contexte)
+		: OperateurPhysique(noeud, contexte)
+	{}
+
+	~OperateurGravite() = default;
+
+	const char *nom() override
+	{
+		return NOM_GRAVITE;
+	}
+
+	void execute_algorithme(const Context &/*contexte*/, double /*temps*/) override
 	{
 		/* À FAIRE : passe le temps par image en paramètre. */
 		const auto temps_par_image = 1.0f / 24.0f;
