@@ -243,102 +243,116 @@ class OperateurMasseRessort final : public OperateurPhysique {
 	std::vector<MasseRessort *> m_racines;
 
 public:
-	OperateurMasseRessort(Noeud *noeud, const Context &contexte)
-		: OperateurPhysique(noeud, contexte)
-	{}
+	OperateurMasseRessort(Noeud *noeud, const Context &contexte);
 
-	~OperateurMasseRessort()
-	{
-		supprime_donnees();
-	}
+	~OperateurMasseRessort();
 
-	const char *nom() override
-	{
-		return NOM_MASSE_RESSORT;
-	}
+	const char *nom() override;
 
-	void supprime_donnees()
-	{
-		for (auto &masse_ressort : m_masses_ressorts) {
-			delete masse_ressort;
-		}
+	void supprime_donnees();
 
-		m_masses_ressorts.clear();
-		m_racines.clear();
-	}
+	bool initialise_donnees() override;
 
-	bool initialise_donnees() override
-	{
-		supprime_donnees();
+	void execute_algorithme(const Context &contexte, double temps) override;
 
-		auto iterateur_courbes = primitive_iterator(m_collection, SegmentPrim::id);
-
-		if (iterateur_courbes.get() == nullptr) {
-			ajoute_avertissement("Il n'y a pas de primitive à segments en entrée !");
-			return false;
-		}
-
-		auto primitive_courbes = static_cast<SegmentPrim *>(iterateur_courbes.get());
-
-		const auto liste_points = primitive_courbes->points();
-		const auto nombre_courbes = primitive_courbes->nombre_courbes();
-		const auto points_par_courbes = primitive_courbes->points_par_courbe();
-
-		m_masses_ressorts.reserve(nombre_courbes * points_par_courbes);
-		m_racines.reserve(nombre_courbes);
-
-		MasseRessort *dernier = nullptr;
-
-		for (size_t i = 0, index = 0; i < nombre_courbes; ++i) {
-			for (size_t j = 0; j < points_par_courbes; ++j, ++index) {
-				auto masse_ressort = new MasseRessort;
-				masse_ressort->position_repos = (*liste_points)[index];
-				masse_ressort->position = masse_ressort->position_repos;
-
-				m_masses_ressorts.push_back(masse_ressort);
-
-				if (j == 0) {
-					m_racines.push_back(masse_ressort);
-				}
-				else {
-					masse_ressort->precedent = dernier;
-					dernier->suivant = masse_ressort;
-				}
-
-				dernier = masse_ressort;
-			}
-		}
-
-		return true;
-	}
-
-	void execute_algorithme(const Context &/*contexte*/, double /*temps*/) override
-	{
-		DonneesSysteme donnees;
-		donnees.gravite = m_gravite;
-		donnees.amortissement = 1.0f;
-		donnees.masse = 5.0f;
-		donnees.masse_inverse = 1.0f / donnees.masse;
-		donnees.rigidite = 10.0f;
-		donnees.temps_par_image = 1.0f / 24.0f;
-
-		for (auto &racine : m_racines) {
-			resoud_masse_ressort(racine->suivant, donnees);
-		}
-	}
-
-	void synchronise_donnees()
-	{
-		auto iterateur_courbes = primitive_iterator(m_collection, SegmentPrim::id);
-
-		auto primitive_courbes = static_cast<SegmentPrim *>(iterateur_courbes.get());
-		auto liste_points = primitive_courbes->points();
-
-		for (size_t i = 0; i < m_masses_ressorts.size(); ++i) {
-			(*liste_points)[i] = m_masses_ressorts[i]->position;
-		}
-	}
+	void synchronise_donnees();
 };
+
+OperateurMasseRessort::OperateurMasseRessort(Noeud *noeud, const Context &contexte)
+	: OperateurPhysique(noeud, contexte)
+{}
+
+OperateurMasseRessort::~OperateurMasseRessort()
+{
+	supprime_donnees();
+}
+
+const char *OperateurMasseRessort::nom()
+{
+	return NOM_MASSE_RESSORT;
+}
+
+void OperateurMasseRessort::supprime_donnees()
+{
+	for (auto &masse_ressort : m_masses_ressorts) {
+		delete masse_ressort;
+	}
+
+	m_masses_ressorts.clear();
+	m_racines.clear();
+}
+
+bool OperateurMasseRessort::initialise_donnees()
+{
+	supprime_donnees();
+
+	auto iterateur_courbes = primitive_iterator(m_collection, SegmentPrim::id);
+
+	if (iterateur_courbes.get() == nullptr) {
+		ajoute_avertissement("Il n'y a pas de primitive à segments en entrée !");
+		return false;
+	}
+
+	auto primitive_courbes = static_cast<SegmentPrim *>(iterateur_courbes.get());
+
+	const auto liste_points = primitive_courbes->points();
+	const auto nombre_courbes = primitive_courbes->nombre_courbes();
+	const auto points_par_courbes = primitive_courbes->points_par_courbe();
+
+	m_masses_ressorts.reserve(nombre_courbes * points_par_courbes);
+	m_racines.reserve(nombre_courbes);
+
+	MasseRessort *dernier = nullptr;
+
+	for (size_t i = 0, index = 0; i < nombre_courbes; ++i) {
+		for (size_t j = 0; j < points_par_courbes; ++j, ++index) {
+			auto masse_ressort = new MasseRessort;
+			masse_ressort->position_repos = (*liste_points)[index];
+			masse_ressort->position = masse_ressort->position_repos;
+
+			m_masses_ressorts.push_back(masse_ressort);
+
+			if (j == 0) {
+				m_racines.push_back(masse_ressort);
+			}
+			else {
+				masse_ressort->precedent = dernier;
+				dernier->suivant = masse_ressort;
+			}
+
+			dernier = masse_ressort;
+		}
+	}
+
+	return true;
+}
+
+void OperateurMasseRessort::execute_algorithme(const Context &/*contexte*/, double /*temps*/)
+{
+	DonneesSysteme donnees;
+	donnees.gravite = m_gravite;
+	donnees.amortissement = 1.0f;
+	donnees.masse = 5.0f;
+	donnees.masse_inverse = 1.0f / donnees.masse;
+	donnees.rigidite = 10.0f;
+	donnees.temps_par_image = 1.0f / 24.0f;
+
+	for (auto &racine : m_racines) {
+		resoud_masse_ressort(racine->suivant, donnees);
+	}
+}
+
+void OperateurMasseRessort::synchronise_donnees()
+{
+	auto iterateur_courbes = primitive_iterator(m_collection, SegmentPrim::id);
+
+	auto primitive_courbes = static_cast<SegmentPrim *>(iterateur_courbes.get());
+	auto liste_points = primitive_courbes->points();
+
+	for (size_t i = 0; i < m_masses_ressorts.size(); ++i) {
+		(*liste_points)[i] = m_masses_ressorts[i]->position;
+	}
+}
 
 /* ************************************************************************** */
 
