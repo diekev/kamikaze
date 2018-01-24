@@ -26,6 +26,7 @@
 
 #include <kamikaze/operateur.h>
 #include <kamikaze/prim_points.h>
+#include <kamikaze/segmentprim.h>
 
 #include <kamikaze/outils/mathématiques.h>
 
@@ -100,6 +101,10 @@ public:
 
 			delete m_collection_original;
 			m_collection_original = m_collection->copy();
+
+			if (!initialise_donnees()) {
+				return;
+			}
 		}
 		else {
 			m_collection = m_derniere_collection->copy();
@@ -113,6 +118,8 @@ public:
 	}
 
 	virtual void execute_algorithme(const Context &contexte, double temps) = 0;
+
+	virtual bool initialise_donnees() = 0;
 };
 
 /* ************************************************************************** */
@@ -136,6 +143,11 @@ public:
 	const char *nom() override
 	{
 		return NOM_GRAVITE;
+	}
+
+	bool initialise_donnees() override
+	{
+		return true;
 	}
 
 	void execute_algorithme(const Context &/*contexte*/, double /*temps*/) override
@@ -172,6 +184,118 @@ public:
 
 /* ************************************************************************** */
 
+static const char *NOM_MASSE_RESSORT = "Masse-Ressort";
+static const char *AIDE_MASSE_RESSORT = "Résoud un système de masse-ressort depuis des courbes.";
+
+struct MasseRessort {
+	MasseRessort *precedent = nullptr;
+	MasseRessort *suivant = nullptr;
+
+	glm::vec3 position_repos = glm::vec3(0.0);
+	glm::vec3 position_courante = glm::vec3(0.0);
+	glm::vec3 velocite = glm::vec3(0.0);
+	glm::vec3 accelaration = glm::vec3(0.0);
+
+	MasseRessort() = default;
+};
+
+struct DonneesSysteme {
+	float masse = 0.0f;
+	float rigidite = 0.0f;
+	float amortissement = 0.0f;
+	float temps_par_image = 0.0f;
+
+	DonneesSysteme() = default;
+};
+
+static void resoud_masse_ressort(MasseRessort *racine, const DonneesSysteme &donnees)
+{
+
+}
+
+class OperateurMasseRessort : public OperateurPhysique {
+	std::vector<MasseRessort *> m_masses_ressorts;
+	std::vector<MasseRessort *> m_racines;
+
+public:
+	OperateurMasseRessort(Noeud *noeud, const Context &contexte)
+		: OperateurPhysique(noeud, contexte)
+	{}
+
+	~OperateurMasseRessort()
+	{
+		supprime_donnees();
+	}
+
+	const char *nom() override
+	{
+		return NOM_MASSE_RESSORT;
+	}
+
+	void supprime_donnees()
+	{
+		for (auto &masse_ressort : m_masses_ressorts) {
+			delete masse_ressort;
+		}
+
+		m_masses_ressorts.clear();
+		m_racines.clear();
+	}
+
+	bool initialise_donnees() override
+	{
+		supprime_donnees();
+
+		auto iterateur_courbes = primitive_iterator(m_collection, SegmentPrim::id);
+
+		if (iterateur_courbes.get() == nullptr) {
+			ajoute_avertissement("Il n'y a pas de primitive à segments en entrée !");
+			return false;
+		}
+
+		auto primitive_courbes = static_cast<SegmentPrim *>(iterateur_courbes.get());
+
+		const auto liste_points = primitive_courbes->points();
+		const auto nombre_courbes = primitive_courbes->nombre_courbes();
+		const auto points_par_courbes = primitive_courbes->points_par_courbe();
+
+		m_masses_ressorts.reserve(nombre_courbes * points_par_courbes);
+		m_racines.reserve(nombre_courbes);
+
+		MasseRessort *dernier = nullptr;
+
+		for (size_t i = 0, index = 0; i < nombre_courbes; ++i) {
+			for (size_t j = 0; j < points_par_courbes; ++j, ++index) {
+				auto masse_ressort = new MasseRessort;
+				masse_ressort->position_repos = (*liste_points)[index];
+
+				m_masses_ressorts.push_back(masse_ressort);
+
+				if (j == 0) {
+					m_racines.push_back(masse_ressort);
+				}
+				else {
+					masse_ressort->precedent = dernier;
+					dernier->suivant = masse_ressort;
+				}
+
+				dernier = masse_ressort;
+			}
+		}
+
+		return true;
+	}
+
+	void execute_algorithme(const Context &contexte, double temps) override
+	{
+		for (auto &racine : m_racines) {
+
+		}
+	}
+};
+
+/* ************************************************************************** */
+
 void enregistre_operateurs_physiques(UsineOperateur *usine)
 {
 	const auto categorie = "Physique";
@@ -181,5 +305,12 @@ void enregistre_operateurs_physiques(UsineOperateur *usine)
 				cree_description<OperateurGravite>(
 					NOM_GRAVITE,
 					AIDE_GRAVITE,
+					categorie));
+
+	usine->enregistre_type(
+				NOM_MASSE_RESSORT,
+				cree_description<OperateurMasseRessort>(
+					NOM_MASSE_RESSORT,
+					AIDE_MASSE_RESSORT,
 					categorie));
 }

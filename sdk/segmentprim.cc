@@ -120,6 +120,26 @@ const EdgeList *SegmentPrim::edges() const
 	return &m_edges;
 }
 
+size_t SegmentPrim::nombre_courbes() const
+{
+	m_nombre_courbes;
+}
+
+void SegmentPrim::nombre_courbes(size_t nombre)
+{
+	m_nombre_courbes = nombre;
+}
+
+size_t SegmentPrim::points_par_courbe() const
+{
+	return m_points_par_courbe;
+}
+
+void SegmentPrim::points_par_courbe(size_t nombre)
+{
+	m_points_par_courbe = nombre;
+}
+
 Primitive *SegmentPrim::copy() const
 {
 	auto prim = new SegmentPrim(*this);

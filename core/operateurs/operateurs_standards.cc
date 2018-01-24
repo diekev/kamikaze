@@ -1855,6 +1855,8 @@ public:
 		const auto direction = eval_enum("direction");
 
 		auto segment_prim = static_cast<SegmentPrim *>(m_collection->build("SegmentPrim"));
+		segment_prim->points_par_courbe(segment_number + 1);
+
 		auto output_edges = segment_prim->edges();
 		auto output_points = segment_prim->points();
 
@@ -1873,6 +1875,7 @@ public:
 				}
 			}
 
+			segment_prim->nombre_courbes(input_points->size());
 			total_points = input_points->size() * (segment_number + 1);
 
 			output_edges->reserve(input_points->size() * segment_number);
@@ -1916,6 +1919,7 @@ public:
 			const auto nombre_courbes = eval_int("nombre_courbes");
 			const auto nombre_polys = triangles.size();
 
+			segment_prim->nombre_courbes(nombre_polys * nombre_courbes);
 			output_edges->reserve((nombre_courbes * segment_number) * nombre_polys);
 			output_points->reserve(total_points);
 

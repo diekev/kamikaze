@@ -36,6 +36,9 @@ class SegmentPrim : public Primitive {
 
 	RenderBuffer *m_renderbuffer;
 
+	size_t m_nombre_courbes = 0;
+	size_t m_points_par_courbe = 0;
+
 public:
 	SegmentPrim();
 	SegmentPrim(const SegmentPrim &other);
@@ -48,6 +51,14 @@ public:
 	EdgeList *edges();
 
 	const EdgeList *edges() const;
+
+	size_t nombre_courbes() const;
+
+	void nombre_courbes(size_t nombre);
+
+	size_t points_par_courbe() const;
+
+	void points_par_courbe(size_t nombre);
 
 	Primitive *copy() const override;
 
