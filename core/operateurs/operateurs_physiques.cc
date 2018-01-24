@@ -238,7 +238,7 @@ static void resoud_masse_ressort(MasseRessort *masse_ressort, const DonneesSyste
 	}
 }
 
-class OperateurMasseRessort : public OperateurPhysique {
+class OperateurMasseRessort final : public OperateurPhysique {
 	std::vector<MasseRessort *> m_masses_ressorts;
 	std::vector<MasseRessort *> m_racines;
 
