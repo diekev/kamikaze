@@ -24,7 +24,7 @@
 
 #include "graph_dumper.h"
 
-#include <girafeenfeu/systeme_fichier/file.h>
+#include <numero7/systeme_fichier/file.h>
 
 #include <iomanip>
 #include <sstream>
@@ -121,7 +121,7 @@ inline static std::string output_id(const PriseSortie *sortie, int index, bool q
 	return ss.str();
 }
 
-inline void dump_node(systeme_fichier::File &file, Noeud *noeud)
+inline void dump_node(numero7::systeme_fichier::File &file, Noeud *noeud)
 {
 	constexpr auto shape = "box";
 	constexpr auto style = "filled,rounded";
@@ -190,7 +190,7 @@ inline void dump_node(systeme_fichier::File &file, Noeud *noeud)
 	file.print("\n");
 }
 
-inline void dump_link(systeme_fichier::File &file, const PriseSortie *de, const PriseEntree *a)
+inline void dump_link(numero7::systeme_fichier::File &file, const PriseSortie *de, const PriseEntree *a)
 {
 	float penwidth = 2.0f;
 
@@ -208,7 +208,7 @@ inline void dump_link(systeme_fichier::File &file, const PriseSortie *de, const 
 	file.print("\n");
 }
 
-inline void dump_node_links(systeme_fichier::File &file, const Noeud *noeud)
+inline void dump_node_links(numero7::systeme_fichier::File &file, const Noeud *noeud)
 {
 	for (const auto &entree : noeud->entrees()) {
 		if (entree->lien) {
@@ -223,7 +223,7 @@ GraphDumper::GraphDumper(Graph *graph)
 
 void GraphDumper::operator()(const std::experimental::filesystem::path &path)
 {
-	systeme_fichier::File file(path, "w");
+	numero7::systeme_fichier::File file(path, "w");
 
 	if (!file) {
 		return;
@@ -298,7 +298,7 @@ kmkz_inline std::string output_id(const DepsOutputSocket */*socket*/, bool quote
 	return ss.str();
 }
 
-kmkz_inline void dump_node(systeme_fichier::File &file, DepsNode *node)
+kmkz_inline void dump_node(numero7::systeme_fichier::File &file, DepsNode *node)
 {
 	constexpr auto shape = "box";
 	constexpr auto style = "filled,rounded";
@@ -354,7 +354,7 @@ kmkz_inline void dump_node(systeme_fichier::File &file, DepsNode *node)
 	file.print("\n");
 }
 
-kmkz_inline void dump_link(systeme_fichier::File &file,
+kmkz_inline void dump_link(numero7::systeme_fichier::File &file,
                            const DepsOutputSocket *from,
                            const DepsInputSocket *to)
 {
@@ -374,7 +374,7 @@ kmkz_inline void dump_link(systeme_fichier::File &file,
 	file.print("\n");
 }
 
-kmkz_inline void dump_node_links(systeme_fichier::File &file, const DepsNode *node)
+kmkz_inline void dump_node_links(numero7::systeme_fichier::File &file, const DepsNode *node)
 {
 	for (const auto &output : node->input()->links) {
 		dump_link(file, output, node->input());
@@ -387,7 +387,7 @@ DepsGraphDumper::DepsGraphDumper(Depsgraph *graph)
 
 void DepsGraphDumper::operator()(const std::experimental::filesystem::path &path)
 {
-	systeme_fichier::File file(path, "w");
+	numero7::systeme_fichier::File file(path, "w");
 
 	if (!file) {
 		return;

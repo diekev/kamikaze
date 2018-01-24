@@ -70,8 +70,8 @@ public:
 };
 
 class RenderBuffer {
-	ego::BufferObject::Ptr m_buffer_data = nullptr;
-	ego::Program m_program;
+	numero7::ego::BufferObject::Ptr m_buffer_data = nullptr;
+	numero7::ego::Program m_program;
 	size_t m_elements = 0;
 
 	DrawParams m_params;
@@ -126,7 +126,7 @@ public:
 
 	void render(const ViewerContext &context);
 
-	ego::Program *program();
+	numero7::ego::Program *program();
 
 private:
 	void init();

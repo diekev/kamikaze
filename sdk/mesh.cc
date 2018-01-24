@@ -41,8 +41,8 @@ static RenderBuffer *create_surface_buffer()
 {
 	RenderBuffer *renderbuffer = new RenderBuffer;
 
-	renderbuffer->set_shader_source(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/object.vert"));
-	renderbuffer->set_shader_source(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/object.frag"));
+	renderbuffer->set_shader_source(numero7::ego::VERTEX_SHADER, numero7::ego::util::str_from_file("shaders/object.vert"));
+	renderbuffer->set_shader_source(numero7::ego::FRAGMENT_SHADER, numero7::ego::util::str_from_file("shaders/object.frag"));
 	renderbuffer->finalize_shader();
 
 	ProgramParams params;
@@ -56,7 +56,7 @@ static RenderBuffer *create_surface_buffer()
 	params.add_uniform("color");
 	params.add_uniform("has_vcolors");
 
-	ego::Program *program = renderbuffer->program();
+	numero7::ego::Program *program = renderbuffer->program();
 	program->uniform("color", 0.0f, 0.0f, 0.0f);
 
 	renderbuffer->set_shader_params(params);
@@ -155,7 +155,7 @@ void Mesh::render(const ViewerContext &context)
 
 		m_renderbuffer->set_draw_params(draw_params);
 
-		ego::Program *program = m_renderbuffer->program();
+		numero7::ego::Program *program = m_renderbuffer->program();
 		program->enable();
 		program->uniform("color", 0.0f, 0.0f, 0.0f);
 		program->disable();
@@ -170,7 +170,7 @@ void Mesh::render(const ViewerContext &context)
 
 		m_renderbuffer->set_draw_params(draw_params);
 
-		ego::Program *program = m_renderbuffer->program();
+		numero7::ego::Program *program = m_renderbuffer->program();
 		program->enable();
 		program->uniform("color", 1.0f, 1.0f, 1.0f);
 		program->disable();

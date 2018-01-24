@@ -40,8 +40,8 @@ static RenderBuffer *create_point_buffer()
 {
 	RenderBuffer *renderbuffer = new RenderBuffer;
 
-	renderbuffer->set_shader_source(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/flat_shader.vert"));
-	renderbuffer->set_shader_source(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/flat_shader.frag"));
+	renderbuffer->set_shader_source(numero7::ego::VERTEX_SHADER, numero7::ego::util::str_from_file("shaders/flat_shader.vert"));
+	renderbuffer->set_shader_source(numero7::ego::FRAGMENT_SHADER, numero7::ego::util::str_from_file("shaders/flat_shader.frag"));
 	renderbuffer->finalize_shader();
 
 	ProgramParams params;
@@ -55,7 +55,7 @@ static RenderBuffer *create_point_buffer()
 
 	renderbuffer->set_shader_params(params);
 
-	ego::Program *program = renderbuffer->program();
+	numero7::ego::Program *program = renderbuffer->program();
 	program->uniform("color", 0.0f, 0.0f, 0.0f);
 
 	DrawParams draw_params;

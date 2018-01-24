@@ -90,6 +90,8 @@ private:
 
 	void closeEvent(QCloseEvent *) override;
 
+	void ouvre_fichier_implementation(const std::string &chemin_projet);
+
 private Q_SLOTS:
 	/* Undo & commands */
 	void undo() const;

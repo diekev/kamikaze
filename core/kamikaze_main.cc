@@ -24,7 +24,7 @@
 
 #include "kamikaze_main.h"
 
-#include <girafeenfeu/systeme_fichier/utilitaires.h>
+#include <numero7/systeme_fichier/utilitaires.h>
 
 #include <kamikaze/mesh.h>
 #include <kamikaze/primitive.h>
@@ -37,14 +37,16 @@
 #include "scene.h"
 
 namespace fs = std::experimental::filesystem;
-namespace sf = systeme_fichier;
+namespace sf = numero7::systeme_fichier;
 
-static std::vector<sf::shared_library> load_plugins(const fs::path &path)
+namespace detail {
+
+static std::vector<sf::shared_library> charge_greffons(const fs::path &chemin)
 {
 	std::vector<sf::shared_library> plugins;
 
 	std::error_code ec;
-	for (const auto &entry : fs::directory_iterator(path)) {
+	for (const auto &entry : fs::directory_iterator(chemin)) {
 		if (!sf::est_bibilotheque(entry)) {
 			continue;
 		}
@@ -52,7 +54,7 @@ static std::vector<sf::shared_library> load_plugins(const fs::path &path)
 		sf::shared_library lib(entry, ec);
 
 		if (!lib) {
-			std::cerr << "Invalid library object: " << entry.path() << '\n';
+			std::cerr << "Bibliothèque invalide : " << entry.path() << '\n';
 			std::cerr << dlerror() << '\n';
 			continue;
 		}
@@ -63,33 +65,35 @@ static std::vector<sf::shared_library> load_plugins(const fs::path &path)
 	return plugins;
 }
 
+}  /* namespace detail */
+
 Main::Main()
     : m_primitive_factory(new PrimitiveFactory)
 	, m_usine_operateur(new UsineOperateur)
     , m_scene(new Scene)
 {}
 
-void Main::loadPlugins()
+void Main::charge_greffons()
 {
 	if (std::experimental::filesystem::exists("plugins")) {
-		m_plugins = load_plugins("plugins");
+		m_greffons = detail::charge_greffons("plugins");
 	}
 
 	std::error_code ec;
-	for (auto &plugin : m_plugins) {
-		if (!plugin) {
+	for (auto &greffon : m_greffons) {
+		if (!greffon) {
 			std::cerr << "Invalid library object\n";
 			continue;
 		}
 
-		auto symbol = plugin("new_kamikaze_prims", ec);
+		auto symbol = greffon("new_kamikaze_prims", ec);
 		auto register_figures = sf::dso_function<void(PrimitiveFactory *)>(symbol);
 
 		if (register_figures) {
 			register_figures(this->primitive_factory());
 		}
 
-		symbol = plugin("nouvel_operateur_kamikaze", ec);
+		symbol = greffon("nouvel_operateur_kamikaze", ec);
 		auto enregistre_operateur = sf::dso_function<void(UsineOperateur *)>(symbol);
 
 		if (enregistre_operateur) {
@@ -146,4 +150,9 @@ bool Main::projet_ouvert() const
 void Main::projet_ouvert(bool ouinon)
 {
 	m_projet_ouvert = ouinon;
+}
+
+const std::vector<numero7::systeme_fichier::shared_library> &Main::greffons() const
+{
+	return m_greffons;
 }

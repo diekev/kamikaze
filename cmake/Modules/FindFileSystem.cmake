@@ -18,7 +18,7 @@ endif()
 
 set(_filesystem_SEARCH_DIRS
 	${FILESYSTEM_ROOT_DIR}
-	/opt/lib/girafeenfeu
+	/opt/lib/numero7
 )
 
 find_path(FILESYSTEM_INCLUDE_DIR
@@ -27,7 +27,7 @@ find_path(FILESYSTEM_INCLUDE_DIR
 	HINTS
 		${_filesystem_SEARCH_DIRS}
 	PATH_SUFFIXES
-	    include/girafeenfeu
+	    include/numero7
 )
 
 find_library(FILESYSTEM_LIBRARY

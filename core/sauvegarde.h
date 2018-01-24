@@ -27,6 +27,7 @@
 #include <experimental/filesystem>
 
 class Context;
+class Main;
 class Scene;
 
 namespace filesystem = std::experimental::filesystem;
@@ -39,9 +40,10 @@ enum erreur_fichier {
 	NON_TROUVE,
 	CORROMPU,
 	INCONNU,
+	GREFFON_MANQUANT,
 };
 
-erreur_fichier sauvegarde_projet(const filesystem::path &chemin, const Scene *scene);
-erreur_fichier ouvre_projet(const filesystem::path &chemin, const Context &contexte);
+erreur_fichier sauvegarde_projet(const filesystem::path &chemin, const Main &main, const Scene *scene);
+erreur_fichier ouvre_projet(const filesystem::path &chemin, const Main &main, const Context &contexte);
 
 }
