@@ -120,6 +120,8 @@ public:
 	virtual void execute_algorithme(const Context &contexte, double temps) = 0;
 
 	virtual bool initialise_donnees() = 0;
+
+	virtual void synchronise_donnees() = 0;
 };
 
 /* ************************************************************************** */
@@ -180,6 +182,8 @@ public:
 			}
 		}
 	}
+
+	void synchronise_donnees() override {}
 };
 
 /* ************************************************************************** */
@@ -290,6 +294,18 @@ public:
 	{
 		for (auto &racine : m_racines) {
 
+		}
+	}
+
+	void synchronise_donnees()
+	{
+		auto iterateur_courbes = primitive_iterator(m_collection, SegmentPrim::id);
+
+		auto primitive_courbes = static_cast<SegmentPrim *>(iterateur_courbes.get());
+		auto liste_points = primitive_courbes->points();
+
+		for (size_t i = 0; i < m_masses_ressorts.size(); ++i) {
+			(*liste_points)[i] = m_masses_ressorts[i]->position_courante;
 		}
 	}
 };
