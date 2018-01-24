@@ -223,7 +223,15 @@ void OperateurGravite::execute_algorithme(const Context &, double)
 
 			/* Vérifie l'existence d'une collision avec le plan global. */
 			if (verifie_collision(plan_global, pos, velocite, rayon)) {
-				attr_vel->vec3(i, -elasticite * velocite);
+				/* Trouve le normal de la vélocité au point de collision. */
+				auto nv = glm::dot(plan_global.nor, velocite) * plan_global.nor;
+
+				/* Trouve la tangente de la vélocité. */
+				auto tv = velocite - nv;
+
+				/* Le normal de la vélocité est multiplité par le coefficient
+				 * d'élasticité. */
+				attr_vel->vec3(i, -elasticite * nv + tv);
 			}
 		}
 	}
