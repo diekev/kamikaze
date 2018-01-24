@@ -12,19 +12,42 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
+ * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * The Original Code is Copyright (C) 2015 Kévin Dietrich.
+ * The Original Code is Copyright (C) 2017 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
+ *
  */
 
 #pragma once
 
-enum {
-	EMPTY = 0,
-	FLUID = 1,
-	SOLID = 2,
-};
+#include <glm/glm.hpp>
+
+class Attribute;
+class PointList;
+class PolygonList;
+
+inline glm::vec3 normale_triangle(
+		const glm::vec3 &v0,
+		const glm::vec3 &v1,
+		const glm::vec3 &v2)
+{
+	const auto n0 = v0 - v1;
+	const auto n1 = v2 - v1;
+
+	return glm::cross(n1, n0);
+}
+
+void calcule_normales(
+		const PointList &points,
+		const PolygonList &polygones,
+		Attribute &normales,
+		bool flip);
+
+void calcule_boite_delimitation(
+		const PointList &points,
+		glm::vec3 &min,
+		glm::vec3 &max);

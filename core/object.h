@@ -31,25 +31,33 @@
 
 class EvaluationContext;
 class Node;
+class Noeud;
 class PrimitiveCollection;
 
 class Object : public SceneNode, public Transformable {
 	PrimitiveCollection *m_collection = nullptr;
 
-	Graph m_graph{};
+	glm::mat4 m_matrix = glm::mat4(0.0f);
+	glm::mat4 m_inv_matrix = glm::mat4(0.0f);
+
+	Graph m_graph;
 
 	Object *m_parent = nullptr;
 	std::vector<Object *> m_children;
 
 public:
-	Object();
+	explicit Object(const Context &contexte);
 	~Object() = default;
 
 	PrimitiveCollection *collection() const;
 	void collection(PrimitiveCollection *coll);
 
-	/* Nodes */
-	void addNode(Node *node);
+	/* Return the object's matrix. */
+	void matrix(const glm::mat4 &m);
+	const glm::mat4 &matrix() const;
+
+	/* Noeuds. */
+	void ajoute_noeud(Noeud *noeud);
 
 	Graph *graph();
 	const Graph *graph() const;

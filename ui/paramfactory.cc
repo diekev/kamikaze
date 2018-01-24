@@ -57,8 +57,8 @@ void enum_param(ParamCallback &cb, const char *name, int *ptr, const EnumPropert
 	auto param = new EnumParam;
 	param->valuePtr(ptr);
 
-	for (const auto &item : prop.m_props) {
-		param->addItem(item.name.c_str());
+	for (const EnumPair &item : prop.m_props) {
+		param->addItem(item.name.c_str(), QVariant(item.value));
 	}
 
 	param->setCurrentIndex(default_value);
@@ -118,6 +118,19 @@ void output_file_param(ParamCallback &cb, const char *name, std::string *ptr)
 	auto param = new FileParam(false);
 	param->valuePtr(ptr);
 	param->setValue(ptr->c_str());
+
+	cb.addWidget(param, name);
+}
+
+void list_selection_param(ParamCallback &cb, const char *name, const EnumProperty &prop, std::string *ptr)
+{
+	auto param = new ListParam();
+	param->valuePtr(ptr);
+	param->setValue(ptr->c_str());
+
+	for (const EnumPair &item : prop.m_props) {
+		param->addField(item.name.c_str());
+	}
 
 	cb.addWidget(param, name);
 }

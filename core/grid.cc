@@ -34,8 +34,8 @@ static RenderBuffer *create_buffer(const glm::vec4 &color, float line_size)
 {
 	RenderBuffer *buffer = new RenderBuffer;
 
-	buffer->set_shader_source(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/flat_shader.vert"));
-	buffer->set_shader_source(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/flat_shader.frag"));
+	buffer->set_shader_source(numero7::ego::VERTEX_SHADER, numero7::ego::util::str_from_file("shaders/flat_shader.vert"));
+	buffer->set_shader_source(numero7::ego::FRAGMENT_SHADER, numero7::ego::util::str_from_file("shaders/flat_shader.frag"));
 	buffer->finalize_shader();
 
 	ProgramParams params;
@@ -52,7 +52,7 @@ static RenderBuffer *create_buffer(const glm::vec4 &color, float line_size)
 
 	buffer->set_draw_params(draw_params);
 
-	ego::Program *program = buffer->program();
+	numero7::ego::Program *program = buffer->program();
 	program->enable();
 	program->uniform("color", color.r, color.g, color.b, color.a);
 	program->disable();

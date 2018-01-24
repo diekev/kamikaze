@@ -73,6 +73,59 @@ const glm::vec3 &PointList::operator[](size_t i) const
 	return m_points[i];
 }
 
+/* ************************************************************************** */
+
+void EdgeList::push_back(const glm::uvec2 &edge)
+{
+	m_edge.push_back(edge);
+}
+
+void EdgeList::push_back(glm::uvec2 &&edge)
+{
+	m_edge.push_back(edge);
+}
+
+void EdgeList::reserve(size_t n)
+{
+	m_edge.reserve(n);
+}
+
+void EdgeList::resize(size_t n)
+{
+	m_edge.resize(n);
+}
+
+size_t EdgeList::size() const
+{
+	return m_edge.size();
+}
+
+size_t EdgeList::byte_size() const
+{
+	return m_edge.size() * sizeof(glm::uvec2);
+}
+
+const void *EdgeList::data() const
+{
+	if (m_edge.empty()) {
+		return nullptr;
+	}
+
+	return (&m_edge[0][0]);
+}
+
+glm::uvec2 &EdgeList::operator[](size_t i)
+{
+	return m_edge[i];
+}
+
+const glm::uvec2 &EdgeList::operator[](size_t i) const
+{
+	return m_edge[i];
+}
+
+/* ************************************************************************** */
+
 void PolygonList::push_back(const glm::uvec4 &poly)
 {
 	m_polys.push_back(poly);

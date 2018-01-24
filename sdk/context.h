@@ -31,6 +31,8 @@
 class MainWindow;
 class NodeFactory;
 class Scene;
+class UsineOperateur;
+class WidgetBase;
 
 enum {
 	TIME_DIR_FORWARD = 0,
@@ -45,6 +47,15 @@ struct EvaluationContext {
 	bool animation;
 
 	char time_direction;
+};
+
+struct Context {
+	EvaluationContext *eval_ctx;
+	Scene *scene;
+	PrimitiveFactory *primitive_factory;
+	UsineOperateur *usine_operateur;
+	MainWindow *main_window;
+	WidgetBase *active_widget;
 };
 
 class ViewerContext {
