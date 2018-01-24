@@ -29,6 +29,8 @@
 #include <GL/glew.h>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "outils/géométrie.h"
+
 #include "context.h"
 #include "renderbuffer.h"
 
@@ -38,8 +40,8 @@ static RenderBuffer *create_point_buffer()
 {
 	RenderBuffer *renderbuffer = new RenderBuffer;
 
-	renderbuffer->set_shader_source(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/flat_shader.vert"));
-	renderbuffer->set_shader_source(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/flat_shader.frag"));
+	renderbuffer->set_shader_source(numero7::ego::VERTEX_SHADER, numero7::ego::util::str_from_file("shaders/flat_shader.vert"));
+	renderbuffer->set_shader_source(numero7::ego::FRAGMENT_SHADER, numero7::ego::util::str_from_file("shaders/flat_shader.frag"));
 	renderbuffer->finalize_shader();
 
 	ProgramParams params;
@@ -53,7 +55,7 @@ static RenderBuffer *create_point_buffer()
 
 	renderbuffer->set_shader_params(params);
 
-	ego::Program *program = renderbuffer->program();
+	numero7::ego::Program *program = renderbuffer->program();
 	program->uniform("color", 0.0f, 0.0f, 0.0f, 1.0f);
 
 	DrawParams draw_params;
@@ -73,12 +75,21 @@ PrimPoints::PrimPoints()
     : m_renderbuffer(nullptr)
 {}
 
+PrimPoints::PrimPoints(const PrimPoints &other)
+    : Primitive(other)
+    , m_renderbuffer(nullptr)
+{
+	/* Copy points. */
+	auto points = other.points();
+	m_points.resize(points->size());
+
+	for (auto i = 0ul; i < points->size(); ++i) {
+		m_points[i] = (*points)[i];
+	}
+}
+
 PrimPoints::~PrimPoints()
 {
-	for (auto &attr : m_attributes) {
-		delete attr;
-	}
-
 	free_renderbuffer(m_renderbuffer);
 }
 
@@ -92,59 +103,11 @@ const PointList *PrimPoints::points() const
 	return &m_points;
 }
 
-Attribute *PrimPoints::attribute(const std::string &name, AttributeType type)
-{
-	auto iter = std::find_if(m_attributes.begin(), m_attributes.end(),
-	                         [&](Attribute *attr)
-	{
-		return (attr->type() == type) && (attr->name() == name);
-	});
-
-	if (iter == m_attributes.end()) {
-		return nullptr;
-	}
-
-	return *iter;
-}
-
-void PrimPoints::addAttribute(Attribute *attr)
-{
-	if (attribute(attr->name(), attr->type()) == nullptr) {
-		m_attributes.push_back(attr);
-	}
-}
-
-Attribute *PrimPoints::addAttribute(const std::string &name, AttributeType type, size_t size)
-{
-	auto attr = attribute(name, type);
-
-	if (attr == nullptr) {
-		attr = new Attribute(name, type, size);
-		m_attributes.push_back(attr);
-	}
-
-	return attr;
-}
-
 Primitive *PrimPoints::copy() const
 {
-	auto prim = new PrimPoints;
-
-	auto points = prim->points();
-	points->resize(this->points()->size());
-
-	for (size_t i = 0, e = points->size(); i < e; ++i) {
-		(*points)[i] = m_points[i];
-	}
-
-	/* XXX - TODO */
-	prim->pos() = this->pos();
-	prim->scale() = this->scale();
-	prim->rotation() = this->rotation();
-	prim->drawBBox(this->drawBBox());
-	prim->matrix(this->matrix());
-
+	auto prim = new PrimPoints(*this);
 	prim->tagUpdate();
+
 	return prim;
 }
 
@@ -192,30 +155,7 @@ void PrimPoints::prepareRenderData()
 
 void PrimPoints::computeBBox(glm::vec3 &min, glm::vec3 &max)
 {
-	for (size_t i = 0, ie = this->points()->size(); i < ie; ++i) {
-		auto vert = m_points[i];
-
-		if (vert.x < m_min.x) {
-			m_min.x = vert.x;
-		}
-		else if (vert.x > m_max.x) {
-			m_max.x = vert.x;
-		}
-
-		if (vert.y < m_min.y) {
-			m_min.y = vert.y;
-		}
-		else if (vert.y > m_max.y) {
-			m_max.y = vert.y;
-		}
-
-		if (vert.z < m_min.z) {
-			m_min.z = vert.z;
-		}
-		else if (vert.z > m_max.z) {
-			m_max.z = vert.z;
-		}
-	}
+	calcule_boite_delimitation(m_points, m_min, m_max);
 
 	min = m_min;
 	max = m_max;

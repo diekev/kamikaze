@@ -24,34 +24,37 @@
 
 #include "kamikaze_main.h"
 
-#include <kamikaze/nodes.h>
+#include <numero7/systeme_fichier/utilitaires.h>
+
 #include <kamikaze/mesh.h>
 #include <kamikaze/primitive.h>
 #include <kamikaze/prim_points.h>
-
-#include <utils/filesystem.h>
+#include <kamikaze/segmentprim.h>
 
 #include <dlfcn.h>
 
 #include "graphs/object_nodes.h"
 #include "scene.h"
 
-namespace fs = filesystem;
+namespace fs = std::experimental::filesystem;
+namespace sf = numero7::systeme_fichier;
 
-static std::vector<fs::shared_library> load_plugins(const fs::path &path)
+namespace detail {
+
+static std::vector<sf::shared_library> charge_greffons(const fs::path &chemin)
 {
-	std::vector<fs::shared_library> plugins;
+	std::vector<sf::shared_library> plugins;
 
 	std::error_code ec;
-	for (const auto &entry : fs::directory_iterator(path)) {
-		if (!fs::is_library(entry)) {
+	for (const auto &entry : fs::directory_iterator(chemin)) {
+		if (!sf::est_bibilotheque(entry)) {
 			continue;
 		}
 
-		fs::shared_library lib(entry, ec);
+		sf::shared_library lib(entry, ec);
 
 		if (!lib) {
-			std::cerr << "Invalid library object: " << entry.path_() << '\n';
+			std::cerr << "Bibliothèque invalide : " << entry.path() << '\n';
 			std::cerr << dlerror() << '\n';
 			continue;
 		}
@@ -62,42 +65,46 @@ static std::vector<fs::shared_library> load_plugins(const fs::path &path)
 	return plugins;
 }
 
+}  /* namespace detail */
+
 Main::Main()
     : m_primitive_factory(new PrimitiveFactory)
-    , m_node_factory(new NodeFactory)
+	, m_usine_operateur(new UsineOperateur)
     , m_scene(new Scene)
 {}
 
-void Main::loadPlugins()
+void Main::charge_greffons()
 {
-	m_plugins = load_plugins("plugins");
+	if (std::experimental::filesystem::exists("plugins")) {
+		m_greffons = detail::charge_greffons("plugins");
+	}
 
 	std::error_code ec;
-	for (auto &plugin : m_plugins) {
-		if (!plugin) {
+	for (auto &greffon : m_greffons) {
+		if (!greffon) {
 			std::cerr << "Invalid library object\n";
 			continue;
 		}
 
-		auto symbol = plugin("new_kamikaze_prims", ec);
-		auto register_figures = fs::dso_function<void(PrimitiveFactory *)>(symbol);
+		auto symbol = greffon("new_kamikaze_prims", ec);
+		auto register_figures = sf::dso_function<void(PrimitiveFactory *)>(symbol);
 
 		if (register_figures) {
 			register_figures(this->primitive_factory());
 		}
 
-		symbol = plugin("new_kamikaze_node", ec);
-		auto register_node = fs::dso_function<void(NodeFactory *)>(symbol);
+		symbol = greffon("nouvel_operateur_kamikaze", ec);
+		auto enregistre_operateur = sf::dso_function<void(UsineOperateur *)>(symbol);
 
-		if (register_node) {
-			register_node(this->node_factory());
+		if (enregistre_operateur) {
+			enregistre_operateur(this->usine_operateur());
 		}
 	}
 }
 
 void Main::initialize()
 {
-	register_builtin_nodes(this->node_factory());
+	enregistre_operateurs_integres(this->usine_operateur());
 
 	/* primitive types */
 
@@ -106,6 +113,7 @@ void Main::initialize()
 
 		Mesh::id = REGISTER_PRIMITIVE("Mesh", Mesh);
 		PrimPoints::id = REGISTER_PRIMITIVE("PrimPoints", PrimPoints);
+		SegmentPrim::id = REGISTER_PRIMITIVE("SegmentPrim", SegmentPrim);
 	}
 }
 
@@ -114,12 +122,37 @@ PrimitiveFactory *Main::primitive_factory() const
 	return m_primitive_factory.get();
 }
 
-NodeFactory *Main::node_factory() const
+UsineOperateur *Main::usine_operateur() const
 {
-	return m_node_factory.get();
+	return m_usine_operateur.get();
 }
 
 Scene *Main::scene() const
 {
 	return m_scene.get();
+}
+
+std::string Main::chemin_projet() const
+{
+	return m_chemin_projet;
+}
+
+void Main::chemin_projet(const std::string &chemin)
+{
+	m_chemin_projet = chemin;
+}
+
+bool Main::projet_ouvert() const
+{
+	return m_projet_ouvert;
+}
+
+void Main::projet_ouvert(bool ouinon)
+{
+	m_projet_ouvert = ouinon;
+}
+
+const std::vector<numero7::systeme_fichier::shared_library> &Main::greffons() const
+{
+	return m_greffons;
 }

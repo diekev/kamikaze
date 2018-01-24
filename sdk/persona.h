@@ -24,9 +24,8 @@
 
 #pragma once
 
-#include "any.h"
-
 #include <algorithm>
+#include <experimental/any>
 #include <glm/glm.hpp>
 #include <iostream>
 #include <string>
@@ -41,6 +40,7 @@ enum class property_type {
 	prop_string,
 	prop_input_file,
 	prop_output_file,
+	prop_list,
 };
 
 struct EnumPair {
@@ -63,11 +63,12 @@ struct EnumProperty {
 
 struct Property {
 	std::string name;
+	std::string ui_name;
 	std::string tooltip;
 	property_type type;
 
-	any data;
-	any default_val;
+	std::experimental::any data;
+	std::experimental::any default_val;
 
 	EnumProperty enum_items;
 
@@ -85,7 +86,7 @@ class Persona {
 public:
 	virtual ~Persona() = default;
 
-	void add_prop(std::string name, property_type type);
+	void add_prop(std::string name, std::string ui_name, property_type type);
 
 	void set_prop_visible(const std::string &prop_name, bool visible);
 
@@ -106,6 +107,7 @@ public:
 	void set_prop_min_max(const float min, const float max);
 
 	void set_prop_enum_values(const EnumProperty &enum_prop);
+	void set_prop_enum_values(const std::string &prop_name, const EnumProperty &enum_prop);
 
 	void set_prop_default_value_int(int value);
 
@@ -120,6 +122,12 @@ public:
 	void set_prop_tooltip(std::string tooltip);
 
 	std::vector<Property> &props();
+
+	void valeur_propriete_bool(const std::string &prop_name, bool valeur);
+	void valeur_propriete_int(const std::string &prop_name, int valeur);
+	void valeur_propriete_float(const std::string &prop_name, float valeur);
+	void valeur_propriete_vec3(const std::string &prop_name, const glm::vec3 &valeur);
+	void valeur_propriete_string(const std::string &prop_name, const std::string &valeur);
 
 private:
 	inline Property *find_property(const std::string &prop_name)

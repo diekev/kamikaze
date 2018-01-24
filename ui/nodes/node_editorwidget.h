@@ -71,6 +71,7 @@ class QtNodeEditor : public WidgetBase {
 	bool m_context_menu_enabled;
 	bool m_menu_zoom_enabled;
 	bool m_menu_collapse_expand_enabled;
+	bool m_mouse_down = false;
 
 	/* Cached informations */
 	QtConnection *m_hover_connection;
@@ -144,7 +145,6 @@ public:
 		m_add_node_menu = menu;
 	}
 
-
 	void offsetNodes(QtNode *node);
 
 	void gatherParents(QtNode *node, std::vector<QtNode *> &parents, const QPointF &center_pos, QPointF &min_pos, float &min_dist);
@@ -175,9 +175,6 @@ private:
 
 	/* Called when an object node is selected. */
 	void setActiveObject(ObjectNodeItem *node);
-
-	/* Called when a node is removed. */
-	void removeNodeEx(QtNode *node);
 
 	/* Called when nodes are connected. */
 	void nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to, bool notify);

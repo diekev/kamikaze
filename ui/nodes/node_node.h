@@ -25,7 +25,7 @@
 #include "node_constants.h"
 #include "node_port.h"
 
-class Node;
+class Noeud;
 
 static constexpr auto NODE_ACTION_BASE = 1;
 static constexpr auto NODE_ACTION_TARGET = 2;
@@ -53,7 +53,7 @@ public:
 	QtNode represents a Node-class which is visualised in a QGraphicsScene.
 	***************************************************************************/
 class QtNode : public QGraphicsPathItem {
-	Node *m_data;
+	Noeud *m_data;
 
 	bool m_auto_size = true;
 	qreal m_icon_size;
@@ -88,9 +88,9 @@ public:
 
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
-	void setNode(Node *node);
+	void pointeur_noeud(Noeud *noeud);
 
-	Node *getNode() const;
+	Noeud *pointeur_noeud() const;
 
 	/* Set the editor; this is called(by the editor) as soon as a node is added
 	 * to the scene. Do not use this(only for internal use) */

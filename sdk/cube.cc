@@ -34,8 +34,8 @@
 Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
     : m_buffer(new RenderBuffer)
 {
-	m_buffer->set_shader_source(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/flat_shader.vert"));
-	m_buffer->set_shader_source(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/flat_shader.frag"));
+	m_buffer->set_shader_source(numero7::ego::VERTEX_SHADER, numero7::ego::util::str_from_file("shaders/flat_shader.vert"));
+	m_buffer->set_shader_source(numero7::ego::FRAGMENT_SHADER, numero7::ego::util::str_from_file("shaders/flat_shader.frag"));
 	m_buffer->finalize_shader();
 
 	ProgramParams params;
@@ -51,7 +51,7 @@ Cube::Cube(const glm::vec3 &min, const glm::vec3 &max)
 
 	m_buffer->set_draw_params(draw_params);
 
-	ego::Program *program = m_buffer->program();
+	numero7::ego::Program *program = m_buffer->program();
 	program->enable();
 	program->uniform("color", 1.0f, 1.0f, 1.0f, 1.0f);
 	program->disable();
