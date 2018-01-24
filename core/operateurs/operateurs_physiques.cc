@@ -310,7 +310,22 @@ public:
 
 OperateurMasseRessort::OperateurMasseRessort(Noeud *noeud, const Context &contexte)
 	: OperateurPhysique(noeud, contexte)
-{}
+{
+	add_prop("masse", "Masse", property_type::prop_float);
+	set_prop_min_max(0.0f, 100.0f);
+	set_prop_default_value_float(5.0f);
+	set_prop_tooltip("La masse des particules.");
+
+	add_prop("amortissement", "Amortissement", property_type::prop_float);
+	set_prop_min_max(0.0f, 100.0f);
+	set_prop_default_value_float(1.0f);
+	set_prop_tooltip("Le coefficient d'amortissement des masses-ressorts.");
+
+	add_prop("rigidité", "Rigidité", property_type::prop_float);
+	set_prop_min_max(0.0f, 100.0f);
+	set_prop_default_value_float(10.0f);
+	set_prop_tooltip("Le coefficient de résistance des ressorts.");
+}
 
 OperateurMasseRessort::~OperateurMasseRessort()
 {
@@ -381,10 +396,10 @@ void OperateurMasseRessort::execute_algorithme(const Context &/*contexte*/, doub
 {
 	DonneesSysteme donnees;
 	donnees.gravite = m_gravite;
-	donnees.amortissement = 1.0f;
-	donnees.masse = 5.0f;
+	donnees.amortissement = eval_float("amortissement");
+	donnees.masse = eval_float("masse");
 	donnees.masse_inverse = 1.0f / donnees.masse;
-	donnees.rigidite = 10.0f;
+	donnees.rigidite = eval_float("rigidité");
 	donnees.temps_par_image = 1.0f / 24.0f;
 
 	for (auto &racine : m_racines) {
