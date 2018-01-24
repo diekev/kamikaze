@@ -39,12 +39,12 @@ struct PlanPhysique {
 
 PlanPhysique plan_global;
 
-static bool verifie_collision(const PlanPhysique &plan, const glm::vec3 &pos, const glm::vec3 &vel)
+static bool verifie_collision(const PlanPhysique &plan, const glm::vec3 &pos, const glm::vec3 &vel, const float rayon)
 {
 	const auto &XPdotN = glm::dot(pos - plan.pos, plan.nor);
 
 	/* Est-on à une distance epsilon du plan ? */
-	if (XPdotN >= std::numeric_limits<float>::epsilon()) {
+	if (XPdotN >= rayon + std::numeric_limits<float>::epsilon()) {
 		return false;
 	}
 
@@ -70,54 +70,15 @@ protected:
 	int m_image_debut = 0;
 
 public:
-	OperateurPhysique(Noeud *noeud, const Context &contexte)
-		: Operateur(noeud, contexte)
-	{
-		entrees(1);
-		sorties(1);
-	}
+	OperateurPhysique(Noeud *noeud, const Context &contexte);
 
-	virtual ~OperateurPhysique()
-	{
-		delete m_collection_original;
-		delete m_derniere_collection;
-	}
+	virtual ~OperateurPhysique();
 
-	const char *nom_entree(size_t /*index*/) override
-	{
-		return "Entrée";
-	}
+	const char *nom_entree(size_t /*index*/) override;
 
-	const char *nom_sortie(size_t /*index*/) override
-	{
-		return "Sortie";
-	}
+	const char *nom_sortie(size_t /*index*/) override;
 
-	void execute(const Context &contexte, double temps) override
-	{
-		if (temps == m_image_debut) {
-			m_collection->free_all();
-			entree(0)->requiers_collection(m_collection, contexte, temps);
-
-			delete m_collection_original;
-			m_collection_original = m_collection->copy();
-
-			if (!initialise_donnees()) {
-				return;
-			}
-		}
-		else {
-			m_collection = m_derniere_collection->copy();
-		}
-
-		execute_algorithme(contexte, temps);
-
-		synchronise_donnees();
-
-		/* Sauvegarde la collection */
-		delete m_derniere_collection;
-		m_derniere_collection = m_collection->copy();
-	}
+	void execute(const Context &contexte, double temps) override;
 
 	virtual void execute_algorithme(const Context &contexte, double temps) = 0;
 
@@ -126,6 +87,55 @@ public:
 	virtual void synchronise_donnees() = 0;
 };
 
+OperateurPhysique::OperateurPhysique(Noeud *noeud, const Context &contexte)
+	: Operateur(noeud, contexte)
+{
+	entrees(1);
+	sorties(1);
+}
+
+OperateurPhysique::~OperateurPhysique()
+{
+	delete m_collection_original;
+	delete m_derniere_collection;
+}
+
+const char *OperateurPhysique::nom_entree(size_t)
+{
+	return "Entrée";
+}
+
+const char *OperateurPhysique::nom_sortie(size_t)
+{
+	return "Sortie";
+}
+
+void OperateurPhysique::execute(const Context &contexte, double temps)
+{
+	if (temps == m_image_debut) {
+		m_collection->free_all();
+		entree(0)->requiers_collection(m_collection, contexte, temps);
+
+		delete m_collection_original;
+		m_collection_original = m_collection->copy();
+
+		if (!initialise_donnees()) {
+			return;
+		}
+	}
+	else {
+		m_collection = m_derniere_collection->copy();
+	}
+
+	execute_algorithme(contexte, temps);
+
+	synchronise_donnees();
+
+	/* Sauvegarde la collection */
+	delete m_derniere_collection;
+	m_derniere_collection = m_collection->copy();
+}
+
 /* ************************************************************************** */
 
 static const char *NOM_GRAVITE = "Gravité";
@@ -133,66 +143,84 @@ static const char *AIDE_GRAVITE = "Applique une force de gravité aux primitives
 
 class OperateurGravite final : public OperateurPhysique {
 public:
-	OperateurGravite(Noeud *noeud, const Context &contexte)
-		: OperateurPhysique(noeud, contexte)
-	{
-		add_prop("élasticité", "Élasticité", property_type::prop_float);
-		set_prop_min_max(0.0f, 1.0f);
-		set_prop_default_value_float(1.0f);
-		set_prop_tooltip("Coefficient déterminant la perte d'énergie lors d'une collision.\n"
-						 "Une valeur de zéro indique que la particle perd toute son énergie et s'arrête,\n"
-						 "alors qu'une valeur de un indique que la particle garde toute son énergie et ne s'arrête jamais.");
-	}
+	OperateurGravite(Noeud *noeud, const Context &contexte);
 
 	~OperateurGravite() = default;
 
-	const char *nom() override
-	{
-		return NOM_GRAVITE;
-	}
+	const char *nom() override;
 
-	bool initialise_donnees() override
-	{
-		return true;
-	}
+	bool initialise_donnees() override;
 
-	void execute_algorithme(const Context &/*contexte*/, double /*temps*/) override
-	{
-		/* À FAIRE : passe le temps par image en paramètre. */
-		const auto temps_par_image = 1.0f / 24.0f;
-		const auto elasticite = eval_float("élasticité");
+	void execute_algorithme(const Context &/*contexte*/, double /*temps*/) override;
 
-		for (Primitive *prim : primitive_iterator(m_collection, PrimPoints::id)) {
-			auto nuage_points = static_cast<PrimPoints *>(prim);
-			auto points = nuage_points->points();
-			auto nombre_points = points->size();
+	void synchronise_donnees() override;
+};
 
-			auto attr_vel = nuage_points->add_attribute("velocité", ATTR_TYPE_VEC3, nombre_points);
+OperateurGravite::OperateurGravite(Noeud *noeud, const Context &contexte)
+	: OperateurPhysique(noeud, contexte)
+{
+	add_prop("rayon", "Rayon", property_type::prop_float);
+	set_prop_min_max(0.0f, 1.0f);
+	set_prop_default_value_float(0.01f);
+	set_prop_tooltip("Le rayon des particules.");
 
-			for (auto i = 0ul; i < nombre_points; ++i) {
-				const auto acceleration = m_gravite;
+	add_prop("élasticité", "Élasticité", property_type::prop_float);
+	set_prop_min_max(0.0f, 1.0f);
+	set_prop_default_value_float(1.0f);
+	set_prop_tooltip("Coefficient déterminant la perte d'énergie lors d'une collision.\n"
+					 "Une valeur de zéro indique que la particle perd toute son énergie et s'arrête,\n"
+					 "alors qu'une valeur de un indique que la particle garde toute son énergie et ne s'arrête jamais.");
+}
 
-				/* velocite = acceleration * temp_par_image + velocite */
-				const auto velocite = attr_vel->vec3(i) + acceleration * temps_par_image;
-				attr_vel->vec3(i, velocite);
+const char *OperateurGravite::nom()
+{
+	return NOM_GRAVITE;
+}
 
-				/* position = velocite * temps_par_image + position */
-				auto &point = (*points)[i];
-				point += velocite * temps_par_image;
+bool OperateurGravite::initialise_donnees()
+{
+	return true;
+}
 
-				/* Calcul la position en espace objet. */
-				const auto pos = nuage_points->matrix() * point;
+void OperateurGravite::execute_algorithme(const Context &, double)
+{
+	/* À FAIRE : passe le temps par image en paramètre. */
+	const auto temps_par_image = 1.0f / 24.0f;
+	const auto elasticite = eval_float("élasticité");
+	const auto rayon = eval_float("rayon");
 
-				/* Vérifie l'existence d'une collision avec le plan global. */
-				if (verifie_collision(plan_global, pos, velocite)) {
-					attr_vel->vec3(i, -elasticite * velocite);
-				}
+	for (Primitive *prim : primitive_iterator(m_collection, PrimPoints::id)) {
+		auto nuage_points = static_cast<PrimPoints *>(prim);
+		auto points = nuage_points->points();
+		auto nombre_points = points->size();
+
+		auto attr_vel = nuage_points->add_attribute("velocité", ATTR_TYPE_VEC3, nombre_points);
+
+		for (auto i = 0ul; i < nombre_points; ++i) {
+			const auto acceleration = m_gravite;
+
+			/* velocite = acceleration * temp_par_image + velocite */
+			const auto velocite = attr_vel->vec3(i) + acceleration * temps_par_image;
+			attr_vel->vec3(i, velocite);
+
+			/* position = velocite * temps_par_image + position */
+			auto &point = (*points)[i];
+			point += velocite * temps_par_image;
+
+			/* Calcul la position en espace objet. */
+			const auto pos = nuage_points->matrix() * point;
+
+			/* Vérifie l'existence d'une collision avec le plan global. */
+			if (verifie_collision(plan_global, pos, velocite, rayon)) {
+				attr_vel->vec3(i, -elasticite * velocite);
 			}
 		}
 	}
+}
 
-	void synchronise_donnees() override {}
-};
+void OperateurGravite::synchronise_donnees()
+{
+}
 
 /* ************************************************************************** */
 
