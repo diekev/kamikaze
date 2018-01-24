@@ -26,7 +26,7 @@
 
 #include <QString>
 
-#include <kamikaze/util_render.h>
+#include <kamikaze/outils/rendu.h>
 
 #include "context.h"
 #include "object.h"
@@ -108,6 +108,9 @@ public:
 
 	void current_node(SceneNode *node);
 	SceneNode *root_node();
+
+	void supprime_tout();
+
 private:
 	bool ensureUniqueName(std::string &name) const;
 };

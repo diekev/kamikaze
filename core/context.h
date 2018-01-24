@@ -24,12 +24,13 @@
 
 #pragma once
 
-#include <kamikaze/nodes.h>
+#include <kamikaze/context.h>
 #include <kamikaze/primitive.h>
 
 class EvaluationContext;
 class MainWindow;
 class Scene;
+class UsineOperateur;
 class WidgetBase;
 
 /* - 0x000000ff Category.
@@ -133,15 +134,6 @@ std::basic_ostream<char_type> &operator<<(std::basic_ostream<char_type> &os, eve
 
 	return os;
 }
-
-struct Context {
-	EvaluationContext *eval_ctx;
-	Scene *scene;
-	PrimitiveFactory *primitive_factory;
-	NodeFactory *node_factory;
-	MainWindow *main_window;
-	WidgetBase *active_widget;
-};
 
 class ContextListener {
 protected:

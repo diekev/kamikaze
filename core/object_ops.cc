@@ -25,7 +25,8 @@
 #include "object_ops.h"
 
 #include <kamikaze/context.h>
-#include <kamikaze/nodes.h>
+#include <kamikaze/noeud.h>
+#include <kamikaze/operateur.h>
 #include <kamikaze/primitive.h>
 
 #include "graphs/object_graph.h"
@@ -40,7 +41,7 @@ void AddObjectCmd::execute(const Context &context)
 {
 	m_scene = context.scene;
 
-	m_object = new SceneNode;
+	m_object = new SceneNode(context);
 	m_object->name(m_name.c_str());
 
 	assert(m_scene != nullptr);
@@ -72,8 +73,15 @@ void AddNodeCmd::execute(const Context &context)
 
 	assert(m_object != nullptr);
 
-	auto node = (*context.node_factory)(m_name);
-	m_object->addNode(node);
+	auto noeud = new Noeud();
+	noeud->nom(m_name);
+
+	auto operateur = (*context.usine_operateur)(m_name, noeud, context);
+	static_cast<void>(operateur);
+
+	noeud->synchronise_donnees();
+
+	m_object->ajoute_noeud(noeud);
 
 	m_scene->notify_listeners(event_type::node | event_type::added);
 }
@@ -95,18 +103,22 @@ void AddPresetObjectCmd::execute(const Context &context)
 	/* TODO: context of creation. */
 	auto scene = context.scene;
 
-	auto scene_node = new SceneNode;
-	scene_node->name(m_name);
+	m_object = new SceneNode(context);
+	m_object->name(m_name);
 
-	auto node = (*context.node_factory)(m_name);
-	node->xpos(-300);
-	node->ypos(-100);
+	auto noeud = new Noeud();
+	noeud->posx(-300);
+	noeud->posy(-100);
 
-	scene_node->addNode(node);
+	(*context.usine_operateur)(m_name, noeud, context);
 
-	auto graph = scene_node->graph();
-	graph->add_to_selection(node);
-	graph->connect(node->output(0), graph->output()->input(0));
+	noeud->synchronise_donnees();
+
+	m_object->ajoute_noeud(noeud);
+
+	auto graph = m_object->graph();
+	graph->ajoute_selection(noeud);
+	graph->connecte(noeud->sortie(0), graph->sortie()->entree(0));
 
 	scene->add_node(scene_node);
 	scene->evalObjectDag(context, scene_node);

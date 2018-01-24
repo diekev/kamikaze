@@ -29,7 +29,8 @@
 #include <QScrollArea>
 
 #include <kamikaze/context.h>
-#include <kamikaze/nodes.h>
+#include <kamikaze/noeud.h>
+#include <kamikaze/operateur.h>
 
 #include "paramcallback.h"
 #include "paramfactory.h"
@@ -91,19 +92,20 @@ void PropertiesEditor::update_state(event_type event)
 		if (is_elem(event_action, event_type::selected, event_type::processed)) {
 			auto scene_node = scene->active_node();
 			auto graph = scene_node->graph();
-			auto node = graph->active_node();
+			auto noeud = graph->noeud_actif();
 
-			if (!node) {
+			if (noeud == nullptr) {
 				return;
 			}
 
-			dag_path = scene_node->get_dag_path() + node->name() + "/";
+			dag_path = scene_node->get_dag_path() + noeud->nom() + "/";
 
-			persona = node;
-			warnings = node->warnings();
+			auto operateur = noeud->operateur();
+			persona = operateur;
+			warnings = operateur->avertissements();
 
 			/* Only update/evaluate the graph if the node is connected. */
-			set_context = node->isLinked();
+			set_context = noeud->est_connecte();
 		}
 		else if (is_elem(event_action, event_type::removed)) {
 			m_callback.clear();
@@ -134,6 +136,12 @@ void PropertiesEditor::evalObjectGraph()
 {
 	this->set_active();
 	auto scene = m_context->scene;
+	auto scene_node = scene->active_node();
+	auto object = static_cast<Object *>(scene_node);
+	auto graph = object->graph();
+	auto noeud = graph->noeud_actif();
+
+	signifie_sale_aval(noeud);
 
 	if (scene->current_node() == scene->root_node()) {
 		std::cerr << "Trying to evaluate the graph of the root node\n!";
@@ -148,6 +156,7 @@ void PropertiesEditor::evalObjectGraph()
 
 void PropertiesEditor::tagObjectUpdate()
 {
+	std::cerr << __func__ << "\n";
 	this->set_active();
 	m_context->scene->tagObjectUpdate();
 }
@@ -165,13 +174,13 @@ void PropertiesEditor::updateProperties()
 
 	if (m_context->eval_ctx->edit_mode) {
 		auto graph = scene_node->graph();
-		auto node = graph->active_node();
+		auto noeud = graph->noeud_actif();
 
-		if (node == nullptr) {
+		if (noeud == nullptr) {
 			return;
 		}
 
-		persona = node;
+		persona = noeud->operateur();
 	}
 	else {
 		persona = scene_node;
@@ -195,57 +204,57 @@ void PropertiesEditor::drawProperties(Persona *persona, bool set_context)
 			case property_type::prop_bool:
 				bool_param(m_callback,
 				           prop.ui_name.c_str(),
-				           any_cast<bool>(&prop.data),
-				           any_cast<bool>(prop.data));
+						   std::experimental::any_cast<bool>(&prop.data),
+						   std::experimental::any_cast<bool>(prop.data));
 				break;
 			case property_type::prop_float:
 				float_param(m_callback,
 				            prop.ui_name.c_str(),
-				            any_cast<float>(&prop.data),
+							std::experimental::any_cast<float>(&prop.data),
 				            prop.min, prop.max,
-				            any_cast<float>(prop.data));
+							std::experimental::any_cast<float>(prop.data));
 				break;
 			case property_type::prop_int:
 				int_param(m_callback,
 				          prop.ui_name.c_str(),
-				          any_cast<int>(&prop.data),
+						  std::experimental::any_cast<int>(&prop.data),
 				          prop.min, prop.max,
-				          any_cast<int>(prop.data));
+						  std::experimental::any_cast<int>(prop.data));
 				break;
 			case property_type::prop_enum:
 				enum_param(m_callback,
 				           prop.ui_name.c_str(),
-				           any_cast<int>(&prop.data),
+						   std::experimental::any_cast<int>(&prop.data),
 				           prop.enum_items,
-				           any_cast<int>(prop.data));
+						   std::experimental::any_cast<int>(prop.data));
 				break;
 			case property_type::prop_vec3:
 				xyz_param(m_callback,
 				          prop.ui_name.c_str(),
-				          &(any_cast<glm::vec3>(&prop.data)->x),
+						  &(std::experimental::any_cast<glm::vec3>(&prop.data)->x),
 				          prop.min, prop.max);
 				break;
 			case property_type::prop_input_file:
 				input_file_param(m_callback,
 				                 prop.ui_name.c_str(),
-				                 any_cast<std::string>(&prop.data));
+								 std::experimental::any_cast<std::string>(&prop.data));
 				break;
 			case property_type::prop_output_file:
 				output_file_param(m_callback,
 				                  prop.ui_name.c_str(),
-				                  any_cast<std::string>(&prop.data));
+								  std::experimental::any_cast<std::string>(&prop.data));
 				break;
 			case property_type::prop_string:
 				string_param(m_callback,
 				             prop.ui_name.c_str(),
-				             any_cast<std::string>(&prop.data),
-				             any_cast<std::string>(prop.data).c_str());
+							 std::experimental::any_cast<std::string>(&prop.data),
+							 std::experimental::any_cast<std::string>(prop.data).c_str());
 				break;
 			case property_type::prop_list:
 				list_selection_param(m_callback,
 				                     prop.ui_name.c_str(),
 				                     prop.enum_items,
-				                     any_cast<std::string>(&prop.data));
+									 std::experimental::any_cast<std::string>(&prop.data));
 				break;
 		}
 

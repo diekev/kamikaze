@@ -24,19 +24,23 @@
 
 #pragma once
 
-#include <kamikaze/nodes.h>
+#include <kamikaze/operateur.h>
 #include <kamikaze/primitive.h>
 
-#include <utils/filesystem.h>
+#include <numero7/systeme_fichier/shared_library.h>
 
 #include "scene.h"
 
 class Main final {
-	std::vector<filesystem::shared_library> m_plugins;
+	std::vector<numero7::systeme_fichier::shared_library> m_greffons;
 
 	std::unique_ptr<PrimitiveFactory> m_primitive_factory;
-	std::unique_ptr<NodeFactory> m_node_factory;
+	std::unique_ptr<UsineOperateur> m_usine_operateur;
 	std::unique_ptr<Scene> m_scene;
+
+	std::string m_chemin_projet{};
+
+	bool m_projet_ouvert = false;
 
 public:
 	Main();
@@ -46,9 +50,19 @@ public:
 	Main &operator=(const Main &other) = delete;
 
 	void initialize();
-	void loadPlugins();
+	void charge_greffons();
 
 	PrimitiveFactory *primitive_factory() const;
-	NodeFactory *node_factory() const;
+	UsineOperateur *usine_operateur() const;
 	Scene *scene() const;
+
+	std::string chemin_projet() const;
+
+	void chemin_projet(const std::string &chemin);
+
+	bool projet_ouvert() const;
+
+	void projet_ouvert(bool ouinon);
+
+	const std::vector<numero7::systeme_fichier::shared_library> &greffons() const;
 };

@@ -26,9 +26,8 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <kamikaze/nodes.h>
 #include <kamikaze/primitive.h>
-#include <kamikaze/util_string.h>
+#include <kamikaze/outils/chaîne_caractère.h>
 
 Scene::Scene()
     : m_root(new SceneNode)
@@ -178,6 +177,15 @@ void Scene::unset_flags(int flag)
 bool Scene::has_flags(int flag)
 {
 	return (m_flags & flag) != 0;
+}
+
+void Scene::supprime_tout()
+{
+	for (const auto &node : m_nodes) {
+		m_depsgraph.remove_node(node.get());
+	}
+
+	m_nodes.clear();
 }
 
 int Scene::startFrame() const

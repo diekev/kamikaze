@@ -35,7 +35,8 @@
 
 #include "ui/paramfactory.h"
 
-SceneNode::SceneNode()
+SceneNode::SceneNode(const Context &contexte)
+	: m_graph(contexte)
 {
 	add_prop("position", "Position", property_type::prop_vec3);
 	set_prop_min_max(-10.0f, 10.0f);
@@ -79,10 +80,15 @@ const glm::mat4 &SceneNode::matrix() const
 	return m_matrix;
 }
 
-void SceneNode::addNode(Node *node)
+void SceneNode::ajoute_noeud(Noeud *noeud)
 {
-	m_graph.add(node);
-	m_graph.active_node(node);
+	m_graph.ajoute(noeud);
+	m_graph.noeud_actif(noeud);
+
+	/* À FAIRE : quand on ouvre un fichier de sauvegarde, il y a un crash quand
+	 * on clique dans l'éditeur de graphe. Ceci n'est sans doute pas la bonne
+	 * correction. */
+	m_graph.ajoute_selection(noeud);
 }
 
 Graph *SceneNode::graph()

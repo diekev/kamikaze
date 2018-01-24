@@ -28,8 +28,8 @@
 
 #include "graphs/object_graph.h"
 
+class Noeud;
 class PrimitiveCollection;
-class Node;
 
 enum {
 	SNODE_OL_EXPANDED = (1 << 0),  /* Is it expanded in the outliner? */
@@ -41,7 +41,7 @@ class SceneNode : public Persona {
 	glm::mat4 m_matrix = glm::mat4(0.0f);
 	glm::mat4 m_inv_matrix = glm::mat4(0.0f);
 
-	Graph m_graph{};
+	Graph m_graph;
 
 	SceneNode *m_parent = nullptr;
 	std::vector<SceneNode *> m_children;
@@ -53,8 +53,8 @@ class SceneNode : public Persona {
 	float m_ypos = 0.0f;
 
 public:
-	SceneNode();
-	~SceneNode();
+	explicit SceneNode(const Context &contexte);
+	~SceneNode() = default;
 
 	PrimitiveCollection *collection() const;
 	void collection(PrimitiveCollection *coll);
@@ -63,8 +63,8 @@ public:
 	void matrix(const glm::mat4 &m);
 	const glm::mat4 &matrix() const;
 
-	/* Nodes */
-	void addNode(Node *node);
+	/* Noeuds. */
+	void ajoute_noeud(Noeud *noeud);
 
 	Graph *graph();
 	const Graph *graph() const;

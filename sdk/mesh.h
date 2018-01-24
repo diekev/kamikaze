@@ -77,9 +77,6 @@ public:
 
 	static size_t id;
 	size_t typeID() const override;
-
-private:
-	void computeNormals();
 };
 
 template <typename CharT, typename CharTraits>
