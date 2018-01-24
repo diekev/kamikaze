@@ -171,10 +171,7 @@ class OperateurGravite final : public OperateurPhysique {
 public:
 	OperateurGravite(Noeud *noeud, const Context &contexte);
 
-	~OperateurGravite()
-	{
-		supprime_donnees();
-	}
+	~OperateurGravite();
 
 	const char *nom() override;
 
@@ -206,6 +203,11 @@ OperateurGravite::OperateurGravite(Noeud *noeud, const Context &contexte)
 	set_prop_tooltip("Coefficient déterminant la perte d'énergie lors d'une collision.\n"
 					 "Une valeur de zéro indique que la particle perd toute son énergie et s'arrête,\n"
 					 "alors qu'une valeur de un indique que la particle garde toute son énergie et ne s'arrête jamais.");
+}
+
+OperateurGravite::~OperateurGravite()
+{
+	supprime_donnees();
 }
 
 const char *OperateurGravite::nom()
