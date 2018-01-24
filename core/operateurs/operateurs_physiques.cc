@@ -135,7 +135,14 @@ class OperateurGravite final : public OperateurPhysique {
 public:
 	OperateurGravite(Noeud *noeud, const Context &contexte)
 		: OperateurPhysique(noeud, contexte)
-	{}
+	{
+		add_prop("élasticité", "Élasticité", property_type::prop_float);
+		set_prop_min_max(0.0f, 1.0f);
+		set_prop_default_value_float(1.0f);
+		set_prop_tooltip("Coefficient déterminant la perte d'énergie lors d'une collision.\n"
+						 "Une valeur de zéro indique que la particle perd toute son énergie et s'arrête,\n"
+						 "alors qu'une valeur de un indique que la particle garde toute son énergie et ne s'arrête jamais.");
+	}
 
 	~OperateurGravite() = default;
 
@@ -153,7 +160,7 @@ public:
 	{
 		/* À FAIRE : passe le temps par image en paramètre. */
 		const auto temps_par_image = 1.0f / 24.0f;
-		const auto gravite = m_gravite * temps_par_image;
+		const auto elasticite = eval_float("élasticité");
 
 		for (Primitive *prim : primitive_iterator(m_collection, PrimPoints::id)) {
 			auto nuage_points = static_cast<PrimPoints *>(prim);
@@ -163,18 +170,22 @@ public:
 			auto attr_vel = nuage_points->add_attribute("velocité", ATTR_TYPE_VEC3, nombre_points);
 
 			for (auto i = 0ul; i < nombre_points; ++i) {
-				auto &point = (*points)[i];
-				const auto velocite = attr_vel->vec3(i) + gravite;
+				const auto acceleration = m_gravite;
+
+				/* velocite = acceleration * temp_par_image + velocite */
+				const auto velocite = attr_vel->vec3(i) + acceleration * temps_par_image;
 				attr_vel->vec3(i, velocite);
 
-				point += velocite;
+				/* position = velocite * temps_par_image + position */
+				auto &point = (*points)[i];
+				point += velocite * temps_par_image;
 
 				/* Calcul la position en espace objet. */
 				const auto pos = nuage_points->matrix() * point;
 
 				/* Vérifie l'existence d'une collision avec le plan global. */
 				if (verifie_collision(plan_global, pos, velocite)) {
-					attr_vel->vec3(i, -velocite);
+					attr_vel->vec3(i, -elasticite * velocite);
 				}
 			}
 		}
