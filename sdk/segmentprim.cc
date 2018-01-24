@@ -122,7 +122,7 @@ const EdgeList *SegmentPrim::edges() const
 
 size_t SegmentPrim::nombre_courbes() const
 {
-	m_nombre_courbes;
+	return m_nombre_courbes;
 }
 
 void SegmentPrim::nombre_courbes(size_t nombre)

@@ -1855,6 +1855,7 @@ public:
 		const auto direction = eval_enum("direction");
 
 		auto segment_prim = static_cast<SegmentPrim *>(m_collection->build("SegmentPrim"));
+		segment_prim->nombre_courbes(0);
 		segment_prim->points_par_courbe(segment_number + 1);
 
 		auto output_edges = segment_prim->edges();
