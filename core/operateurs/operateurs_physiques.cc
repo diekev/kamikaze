@@ -130,11 +130,6 @@ static const char *NOM_GRAVITE = "Gravité";
 static const char *AIDE_GRAVITE = "Applique une force de gravité aux primitives d'entrées.";
 
 class OperateurGravite final : public OperateurPhysique {
-	glm::vec3 m_gravite = glm::vec3{0.0f, -9.80665f, 0.0f};
-	PrimitiveCollection *m_collection_original = nullptr;
-	PrimitiveCollection *m_derniere_collection = nullptr;
-	int m_image_debut = 0;
-
 public:
 	OperateurGravite(Noeud *noeud, const Context &contexte)
 		: OperateurPhysique(noeud, contexte)
