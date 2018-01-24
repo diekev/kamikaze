@@ -26,7 +26,7 @@
 
 #include <QString>
 
-#include <kamikaze/util_render.h>
+#include <kamikaze/outils/rendu.h>
 
 #include "context.h"
 #include "object.h"
@@ -103,6 +103,8 @@ public:
 	void set_flags(int flag);
 	void unset_flags(int flag);
 	bool has_flags(int flag);
+
+	void supprime_tout();
 
 private:
 	bool ensureUniqueName(std::string &name) const;

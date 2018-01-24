@@ -104,9 +104,9 @@ void EnumParam::valuePtr(int *ptr)
 	m_value_ptr = ptr;
 }
 
-void EnumParam::updateValuePtr(int value)
+void EnumParam::updateValuePtr(int /*value*/)
 {
-	*m_value_ptr = value;
+	*m_value_ptr = this->currentData().toInt();
 	Q_EMIT(paramChanged());
 }
 
@@ -116,7 +116,7 @@ StringParam::StringParam(QWidget *parent)
     : QLineEdit(parent)
     , m_value_ptr(nullptr)
 {
-	connect(this, SIGNAL(textChanged(const QString &)), this, SLOT(updateValuePtr(const QString &)));
+	connect(this, SIGNAL(returnPressed()), this, SLOT(updateValuePtr()));
 }
 
 void StringParam::valuePtr(std::string *ptr)
@@ -124,9 +124,9 @@ void StringParam::valuePtr(std::string *ptr)
 	m_value_ptr = ptr;
 }
 
-void StringParam::updateValuePtr(const QString &value)
+void StringParam::updateValuePtr()
 {
-	*m_value_ptr = value.toStdString();
+	*m_value_ptr = this->text().toStdString();
 	Q_EMIT(paramChanged());
 }
 
@@ -166,6 +166,25 @@ void FileParam::valuePtr(std::string *ptr)
 }
 
 void FileParam::updateValuePtr(const QString &value)
+{
+	*m_value_ptr = value.toStdString();
+	Q_EMIT(paramChanged());
+}
+
+/* ********************************** */
+
+ListParam::ListParam(QWidget *parent)
+    : ListSelector(parent)
+{
+	connect(this, SIGNAL(textChanged(const QString &)), this, SLOT(updateValuePtr(const QString &)));
+}
+
+void ListParam::valuePtr(std::string *ptr)
+{
+	m_value_ptr = ptr;
+}
+
+void ListParam::updateValuePtr(const QString &value)
 {
 	*m_value_ptr = value.toStdString();
 	Q_EMIT(paramChanged());

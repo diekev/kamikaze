@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include <kamikaze/nodes.h>
+#include <kamikaze/context.h>
 #include <kamikaze/primitive.h>
 
 #include "undo.h"
@@ -91,6 +91,49 @@ constexpr auto get_action(event_type etype)
 constexpr auto get_category(event_type etype)
 {
 	return etype & 0x000000ff;
+}
+
+template <typename char_type>
+std::basic_ostream<char_type> &operator<<(std::basic_ostream<char_type> &os, event_type event)
+{
+	switch (get_category(event)) {
+		case event_type::object:
+			os << "object, ";
+			break;
+		case event_type::node:
+			os << "node, ";
+			break;
+		case event_type::time:
+			os << "time, ";
+			break;
+		default:
+			break;
+	}
+
+	switch (get_action(event)) {
+		case event_type::added:
+			os << "added";
+			break;
+		case event_type::modified:
+			os << "modified";
+			break;
+		case event_type::parented:
+			os << "parented";
+			break;
+		case event_type::removed:
+			os << "removed";
+			break;
+		case event_type::selected:
+			os << "selected";
+			break;
+		case event_type::processed:
+			os << "processed";
+			break;
+		default:
+			break;
+	}
+
+	return os;
 }
 
 struct Context {

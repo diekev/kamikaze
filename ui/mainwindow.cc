@@ -25,17 +25,20 @@
 #include "mainwindow.h"
 
 #include <kamikaze/primitive.h>
-#include <kamikaze/nodes.h>
 
 #include <QDockWidget>
+#include <QMessageBox>
+#include <QFileDialog>
 #include <QMenuBar>
 #include <QProgressBar>
 #include <QStatusBar>
+#include <QSettings>
 #include <QToolBar>
 
 #include "core/graphs/graph_dumper.h"
 #include "core/kamikaze_main.h"
 #include "core/object.h"
+#include "core/sauvegarde.h"
 
 #include "node_editorwidget.h"
 #include "outliner_widget.h"
@@ -46,6 +49,7 @@
 
 /* Declare KeyData as metatype so we can use it in QVariant. */
 Q_DECLARE_METATYPE(KeyData)
+static constexpr auto MAX_FICHIER_RECENT = 10;
 
 MainWindow::MainWindow(Main *main, QWidget *parent)
     : QMainWindow(parent)
@@ -53,6 +57,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
     , m_command_factory(new CommandFactory)
 {
 	generateEditMenu();
+	genere_menu_fichier();
 	generateObjectMenu();
 	generateNodeMenu();
 	generateWindowMenu();
@@ -69,8 +74,8 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	m_eval_context.animation = false;
 	m_context.eval_ctx = &m_eval_context;
 	m_context.scene = m_main->scene();
-	m_context.node_factory = m_main->node_factory();
 	m_context.primitive_factory = m_main->primitive_factory();
+	m_context.usine_operateur = m_main->usine_operateur();
 	m_context.main_window = this;
 	m_context.active_widget = nullptr;
 	m_context.command_factory = m_command_factory;
@@ -88,6 +93,8 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	register_view3d_commands(m_command_factory);
 
 	KeyEventHandler::init_key_mappings();
+
+	charge_reglages();
 }
 
 MainWindow::~MainWindow()
@@ -154,19 +161,24 @@ void MainWindow::generateDebugMenu()
 
 void MainWindow::generateNodeMenu()
 {
-	m_add_nodes_menu = menuBar()->addMenu("Add Node");
+	REGISTER_COMMAND(m_command_factory, "add node", AddNodeCmd);
 
-	auto categories = m_main->node_factory()->categories();
-	std::sort(categories.begin(), categories.end());
+	m_add_nodes_menu = menuBar()->addMenu("Ajoute Noeud");
 
-	for (const auto &category : categories) {
-		auto sub_menu = m_add_nodes_menu->addMenu(category.c_str());
+	auto categories = m_main->usine_operateur()->categories();
 
-		auto keys = m_main->node_factory()->keys(category);
-		std::sort(keys.begin(), keys.end());
+	for (const auto &categorie : categories) {
+		auto menu = m_add_nodes_menu->addMenu(categorie.c_str());
 
-		for (const auto &key : keys) {
-			auto action = sub_menu->addAction(key.c_str());
+		auto cles = m_main->usine_operateur()->cles(categorie);
+		std::sort(cles.begin(), cles.end(),
+				  [](const DescOperateur &desc1, const DescOperateur &desc2)
+		{
+			return desc1.nom < desc2.nom;
+		});
+
+		for (const auto &description : cles) {
+			auto action = menu->addAction(description.nom.c_str());
 			action->setData(QVariant::fromValue(KeyData(0, 0, "add node")));
 
 			connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
@@ -214,20 +226,49 @@ void MainWindow::generateEditMenu()
 	connect(action, SIGNAL(triggered()), this, SLOT(redo()));
 }
 
+void MainWindow::genere_menu_fichier()
+{
+	auto menu_fichier = menuBar()->addMenu("Fichier");
+
+	QAction *action;
+
+	action = menu_fichier->addAction("Ouvrir");
+	connect(action, SIGNAL(triggered()), this, SLOT(ouvre_fichier()));
+
+	auto sous_menu = menu_fichier->addMenu("Projets récents...");
+
+	m_actions_menu_recent.resize(MAX_FICHIER_RECENT);
+
+	for (auto &action_menu_recent : m_actions_menu_recent) {
+		action_menu_recent = new QAction(this);
+		action_menu_recent->setVisible(false);
+		sous_menu->addAction(action_menu_recent);
+		connect(action_menu_recent, SIGNAL(triggered()), this, SLOT(ouvre_fichier_recent()));
+	}
+
+	menu_fichier->addSeparator();
+
+	action = menu_fichier->addAction("Sauvegarder");
+	connect(action, SIGNAL(triggered()), this, SLOT(sauve_fichier()));
+
+	action = menu_fichier->addAction("Sauvegarder sous...");
+	connect(action, SIGNAL(triggered()), this, SLOT(sauve_fichier_sous()));
+}
+
 void MainWindow::generatePresetMenu()
 {
 	m_tool_bar = new QToolBar();
 	addToolBar(Qt::TopToolBarArea, m_tool_bar);
 
 	UIButData props[] = {
-	    { 0, "Grid", "icons/icon_grid.png" },
-	    { 0, "Box", "icons/icon_box.png" },
-	    { 0, "Circle", "icons/icon_circle.png" },
-	    { 0, "IcoSphere", "icons/icon_icosphere.png" },
-	    { 0, "Tube", "icons/icon_tube.png" },
-	    { 0, "Cone", "icons/icon_cone.png" },
-	    { 0, "Torus", "icons/icon_torus.png" },
-	    { 0, "Point Cloud", "icons/icon_point_cloud_cube.png" },
+		{ 0, "Création grille", "icons/icon_grid.png" },
+		{ 0, "Création boîte", "icons/icon_box.png" },
+		{ 0, "Création cercle", "icons/icon_circle.png" },
+		{ 0, "Création icosphère", "icons/icon_icosphere.png" },
+		{ 0, "Création tube", "icons/icon_tube.png" },
+		{ 0, "Création cone", "icons/icon_cone.png" },
+		{ 0, "Création torus", "icons/icon_torus.png" },
+		{ 0, "Création nuage point", "icons/icon_point_cloud_cube.png" },
 	};
 
 	for (const auto &prop : props) {
@@ -250,6 +291,132 @@ void MainWindow::handleCommand()
 	const auto &key_data = qvariant_cast<KeyData>(action->data());
 
 	KeyEventHandler::call_command(m_context, key_data, name);
+}
+
+void MainWindow::ouvre_fichier()
+{
+	const auto nom_fichier = QFileDialog::getOpenFileName(this);
+
+	if (nom_fichier.isEmpty()) {
+		return;
+	}
+
+	const auto &chemin_projet = nom_fichier.toStdString();
+	ouvre_fichier_implementation(chemin_projet);
+}
+
+void MainWindow::ouvre_fichier_recent()
+{
+	auto action = qobject_cast<QAction *>(sender());
+
+	if (action == nullptr) {
+		return;
+	}
+
+	auto chemin_projet = action->data().toString().toStdString();
+	ouvre_fichier_implementation(chemin_projet);
+}
+
+void MainWindow::ouvre_fichier_implementation(const std::string &chemin_projet)
+{
+	const auto erreur = kamikaze::ouvre_projet(chemin_projet, *m_main, m_context);
+
+	if (erreur != kamikaze::erreur_fichier::AUCUNE_ERREUR) {
+		QMessageBox boite_message;
+
+		switch (erreur) {
+			case kamikaze::erreur_fichier::CORROMPU:
+				boite_message.critical(nullptr, "Error", "Le fichier est corrompu !");
+				break;
+			case kamikaze::erreur_fichier::NON_OUVERT:
+				boite_message.critical(nullptr, "Error", "Le fichier n'est pas ouvert !");
+				break;
+			case kamikaze::erreur_fichier::NON_TROUVE:
+				boite_message.critical(nullptr, "Error", "Le fichier n'a pas été trouvé !");
+				break;
+			case kamikaze::erreur_fichier::INCONNU:
+				boite_message.critical(nullptr, "Error", "Erreur inconnu !");
+				break;
+			case kamikaze::erreur_fichier::GREFFON_MANQUANT:
+				boite_message.critical(nullptr, "Error",
+									   "Le fichier ne pas être ouvert car il"
+									   " y a un greffon manquant !");
+				break;
+		}
+
+		boite_message.setFixedSize(500, 200);
+		return;
+	}
+
+	m_main->chemin_projet(chemin_projet);
+	m_main->projet_ouvert(true);
+
+	ajoute_fichier_recent(chemin_projet.c_str(), true);
+	setWindowTitle(chemin_projet.c_str());
+}
+
+void MainWindow::ajoute_fichier_recent(const QString &name, bool update_menu)
+{
+	auto index = std::find(m_fichiers_recent.begin(), m_fichiers_recent.end(), name);
+
+	if (index != m_fichiers_recent.end()) {
+		std::rotate(m_fichiers_recent.begin(), index, index + 1);
+	}
+	else {
+		m_fichiers_recent.insert(m_fichiers_recent.begin(), name);
+
+		if (m_fichiers_recent.size() > MAX_FICHIER_RECENT) {
+			m_fichiers_recent.resize(MAX_FICHIER_RECENT);
+		}
+	}
+
+	if (update_menu) {
+		mis_a_jour_menu_fichier_recent();
+	}
+}
+
+void MainWindow::mis_a_jour_menu_fichier_recent()
+{
+	if (m_fichiers_recent.empty()) {
+		return;
+	}
+
+	//ui->m_no_recent_act->setVisible(false);
+
+	for (int i(0); i < m_fichiers_recent.size();  ++i) {
+		auto filename = m_fichiers_recent[i];
+		auto name = QFileInfo(filename).fileName();
+
+		m_actions_menu_recent[i]->setText(name);
+		m_actions_menu_recent[i]->setData(filename);
+		m_actions_menu_recent[i]->setVisible(true);
+	}
+}
+
+void MainWindow::sauve_fichier()
+{
+	if (m_main->projet_ouvert()) {
+		kamikaze::sauvegarde_projet(m_main->chemin_projet(), *m_main, m_context.scene);
+	}
+	else {
+		sauve_fichier_sous();
+	}
+}
+
+void MainWindow::sauve_fichier_sous()
+{
+	const auto nom_fichier = QFileDialog::getSaveFileName(this);
+
+	if (nom_fichier.isEmpty()) {
+		return;
+	}
+
+	const auto &chemin_projet = nom_fichier.toStdString();
+
+	m_main->chemin_projet(chemin_projet);
+	m_main->projet_ouvert(true);
+
+	kamikaze::sauvegarde_projet(chemin_projet, *m_main, m_context.scene);
 }
 
 void MainWindow::addTimeLineWidget()
@@ -400,4 +567,36 @@ void MainWindow::dumpGraph()
 			std::cerr << "Cannot create graph image from dot\n";
 		}
 	}
+}
+
+void MainWindow::closeEvent(QCloseEvent *)
+{
+	ecrit_reglages();
+}
+
+void MainWindow::ecrit_reglages() const
+{
+	QSettings settings;
+	QStringList recent;
+
+	for (const auto &recent_file : m_fichiers_recent) {
+		recent.push_front(recent_file);
+	}
+
+	settings.setValue("projet_récents", recent);
+}
+
+void MainWindow::charge_reglages()
+{
+	QSettings settings;
+
+	const auto &recent_files = settings.value("projet_récents").toStringList();
+
+	for (const auto &file : recent_files) {
+		if (QFile(file).exists()) {
+			ajoute_fichier_recent(file, false);
+		}
+	}
+
+	mis_a_jour_menu_fichier_recent();
 }

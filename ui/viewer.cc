@@ -366,8 +366,15 @@ ViewerWidget::ViewerWidget(QWidget *parent)
 	m_main_layout->addLayout(vert_layout);
 }
 
-void ViewerWidget::update_state(event_type /*event*/)
+void ViewerWidget::update_state(event_type event)
 {
+	if (get_category(event) == event_type::node) {
+		/* Ignore all events from edit mode stuff. */
+		if (m_context->eval_ctx->edit_mode) {
+			return;
+		}
+	}
+
 	m_viewer->set_context(m_context);
 	m_viewer->update();
 }

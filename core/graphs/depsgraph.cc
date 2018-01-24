@@ -29,7 +29,9 @@
 #include <iostream>
 
 #include <kamikaze/context.h>
-#include <kamikaze/nodes.h>
+#include <kamikaze/operateur.h>
+
+#include <tbb/tick_count.h>
 
 #include "graph_dumper.h"
 #include "graph_tools.h"
@@ -86,8 +88,8 @@ void DepsObjectNode::process(const Context & /*context*/, TaskNotifier */*notifi
 {
 	/* The graph should already have been updated. */
 	auto graph = m_object->graph();
-	auto output_node = graph->output();
-	m_object->collection(output_node->collection());
+	auto noeud_sortie = graph->sortie();
+	m_object->collection(noeud_sortie->operateur()->collection());
 }
 
 Object *DepsObjectNode::object()
@@ -111,75 +113,31 @@ ObjectGraphDepsNode::ObjectGraphDepsNode(Graph *graph)
     : m_graph(graph)
 {}
 
-void ObjectGraphDepsNode::pre_process()
+void ObjectGraphDepsNode::process(const Context &context, TaskNotifier */*notifier*/)
 {
-	m_graph->clear_cache();
-}
+	auto noeud_sortie = m_graph->sortie();
 
-void ObjectGraphDepsNode::process(const Context &context, TaskNotifier *notifier)
-{
-	auto output_node = m_graph->output();
+	/* À FAIRE : NOTIFIE PROGRESSION. */
 
-	if (!output_node->isLinked()) {
-		output_node->input(0)->collection = nullptr;
-
-		/* Make sure the node's collection is updated, otherwise can crash. */
-		output_node->process();
-		return;
-	}
-
-	m_graph->build();
-
-	/* XXX */
-	for (const auto &node : m_graph->nodes()) {
-		for (OutputSocket *output : node->outputs()) {
-			output->collection = nullptr;
-		}
-	}
-
-	auto stack = m_graph->finished_stack();
-
-	const auto size = static_cast<float>(stack.size());
-	auto index = 0;
-
+#if 0
 	if (notifier) {
 		notifier->signalProgressUpdate(0.0f);
 	}
+#endif
 
-	for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter) {
-		Node *node = *iter;
-		PrimitiveCollection *collection = nullptr;
+	execute_operateur(noeud_sortie->operateur(), context, context.scene->currentFrame());
 
-		if (node->inputs().empty()) {
-			collection = new PrimitiveCollection(context.primitive_factory);
-		}
-		else {
-			collection = node->getInputCollection(0ul);
-		}
+#if 0
+	if (notifier) {
+		const float progress = (++index / size) * 100.0f;
+		notifier->signalProgressUpdate(progress);
 
-		node->collection(collection);
-
-		/* Make sure warnings are cleared before processing. */
-		node->clear_warnings();
-
-		if (node->collection()) {
-			node->process();
-		}
-
-		if (!node->outputs().empty()) {
-			node->setOutputCollection(0ul, node->collection());
-		}
-
-		if (notifier) {
-			const float progress = (++index / size) * 100.0f;
-			notifier->signalProgressUpdate(progress);
-
-			/* To refresh the UI in case new warnings appear. */
-			if (context.eval_ctx->edit_mode && node == m_graph->active_node()) {
-				notifier->signalNodeProcessed();
-			}
+		/* To refresh the UI in case new warnings appear. */
+		if (context.eval_ctx->edit_mode && node == m_graph->active_node()) {
+			notifier->signalNodeProcessed();
 		}
 	}
+#endif
 }
 
 Graph *ObjectGraphDepsNode::graph()
@@ -260,14 +218,12 @@ void Depsgraph::disconnect(SceneNode *from, SceneNode *to)
 
 DepsNode *Depsgraph::find_node(SceneNode *scene_node, bool graph)
 {
-	DepsNode *node = nullptr;
-
 	/* TODO: find a better way for this. */
 	auto object = static_cast<Object *>(scene_node);
 	auto iter = m_object_graph_map.find(object->graph());
 	assert(iter != m_object_graph_map.end());
 
-	node = iter->second;
+	auto node = iter->second;
 
 	assert(node != nullptr);
 
@@ -324,6 +280,11 @@ void Depsgraph::create_node(SceneNode *scene_node)
 
 	/* Object depends on its graph. */
 	connect(graph_node->output(), node->input());
+
+	/* À FAIRE : trouver une meilleur solution pour faire dépendre les objets
+	 * sur le temps de sorte que seuls ceux qui sont dynamiques dépendent du
+	 * temps. */
+	connect(m_time_node->output(), graph_node->input());
 
 	m_need_update = true;
 }
