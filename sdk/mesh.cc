@@ -29,9 +29,11 @@
 #include <GL/glew.h>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "outils/géométrie.h"
+#include "outils/parallélisme.h"
+
 #include "context.h"
 #include "renderbuffer.h"
-#include "util_parallel.h"
 
 /* ************************************************************************** */
 
@@ -39,8 +41,8 @@ static RenderBuffer *create_surface_buffer()
 {
 	RenderBuffer *renderbuffer = new RenderBuffer;
 
-	renderbuffer->set_shader_source(ego::VERTEX_SHADER, ego::util::str_from_file("shaders/object.vert"));
-	renderbuffer->set_shader_source(ego::FRAGMENT_SHADER, ego::util::str_from_file("shaders/object.frag"));
+	renderbuffer->set_shader_source(numero7::ego::VERTEX_SHADER, numero7::ego::util::str_from_file("shaders/object.vert"));
+	renderbuffer->set_shader_source(numero7::ego::FRAGMENT_SHADER, numero7::ego::util::str_from_file("shaders/object.frag"));
 	renderbuffer->finalize_shader();
 
 	ProgramParams params;
@@ -51,7 +53,11 @@ static RenderBuffer *create_surface_buffer()
 	params.add_uniform("MVP");
 	params.add_uniform("N");
 	params.add_uniform("for_outline");
+	params.add_uniform("color");
 	params.add_uniform("has_vcolors");
+
+	numero7::ego::Program *program = renderbuffer->program();
+	program->uniform("color", 0.0f, 0.0f, 0.0f);
 
 	renderbuffer->set_shader_params(params);
 
@@ -72,6 +78,7 @@ Mesh::Mesh()
 
 Mesh::Mesh(const Mesh &other)
     : Primitive(other)
+    , m_renderbuffer(nullptr)
 {
 	/* Copy points. */
 	auto points = other.points();
@@ -140,7 +147,36 @@ size_t Mesh::typeID() const
 
 void Mesh::render(const ViewerContext &context)
 {
-	m_renderbuffer->render(context);
+	/* Render vertices. */
+	{
+		DrawParams draw_params;
+		draw_params.set_draw_type(GL_POINTS);
+		draw_params.set_point_size(2.0f);
+
+		m_renderbuffer->set_draw_params(draw_params);
+
+		numero7::ego::Program *program = m_renderbuffer->program();
+		program->enable();
+		program->uniform("color", 0.0f, 0.0f, 0.0f);
+		program->disable();
+
+		m_renderbuffer->render(context);
+	}
+
+	/* Render surface. */
+	{
+		DrawParams draw_params;
+		draw_params.set_draw_type(GL_TRIANGLES);
+
+		m_renderbuffer->set_draw_params(draw_params);
+
+		numero7::ego::Program *program = m_renderbuffer->program();
+		program->enable();
+		program->uniform("color", 1.0f, 1.0f, 1.0f);
+		program->disable();
+
+		m_renderbuffer->render(context);
+	}
 }
 
 void Mesh::prepareRenderData()
@@ -151,12 +187,6 @@ void Mesh::prepareRenderData()
 
 	if (!m_renderbuffer) {
 		m_renderbuffer = create_surface_buffer();
-	}
-
-	auto normals = this->attribute("normal", ATTR_TYPE_VEC3);
-
-	if (normals->size() != this->points()->size()) {
-		computeNormals();
 	}
 
 	for (size_t i = 0, ie = this->points()->size(); i < ie; ++i) {
@@ -191,7 +221,20 @@ void Mesh::prepareRenderData()
 	                                  indices.size() * sizeof(GLuint),
 	                                  indices.size());
 
-	m_renderbuffer->set_normal_buffer("normal", normals->data(), normals->byte_size());
+	auto normals = this->attribute("normal", ATTR_TYPE_VEC3);
+
+	if (normals != nullptr) {
+		if (normals->size() != this->points()->size()) {
+			auto normals = this->attribute("normal", ATTR_TYPE_VEC3);
+			normals->resize(this->points()->size());
+
+			auto polys = this->polys();
+
+			calcule_normales(m_point_list, *polys, *normals, false);
+		}
+
+		m_renderbuffer->set_normal_buffer("normal", normals->data(), normals->byte_size());
+	}
 
 	auto colors = this->attribute("color", ATTR_TYPE_VEC3);
 
@@ -204,74 +247,9 @@ void Mesh::prepareRenderData()
 
 void Mesh::computeBBox(glm::vec3 &min, glm::vec3 &max)
 {
-	for (size_t i = 0, ie = m_point_list.size(); i < ie; ++i) {
-		const auto &vert = m_point_list[i];
-
-		if (vert.x < m_min.x) {
-			m_min.x = vert.x;
-		}
-		else if (vert.x > m_max.x) {
-			m_max.x = vert.x;
-		}
-
-		if (vert.y < m_min.y) {
-			m_min.y = vert.y;
-		}
-		else if (vert.y > m_max.y) {
-			m_max.y = vert.y;
-		}
-
-		if (vert.z < m_min.z) {
-			m_min.z = vert.z;
-		}
-		else if (vert.z > m_max.z) {
-			m_max.z = vert.z;
-		}
-	}
+	calcule_boite_delimitation(m_point_list, m_min, m_max);
 
 	min = m_min;
 	max = m_max;
 	m_dimensions = m_max - m_min;
-}
-
-static inline glm::vec3 get_normal(const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2)
-{
-	const auto n0 = v0 - v1;
-	const auto n1 = v2 - v1;
-
-	return glm::cross(n1, n0);
-}
-
-void Mesh::computeNormals()
-{
-	auto normals = this->attribute("normal", ATTR_TYPE_VEC3);
-	normals->resize(this->points()->size());
-
-	auto polys = this->polys();
-
-	parallel_for(tbb::blocked_range<size_t>(0, polys->size()),
-	             [&](const tbb::blocked_range<size_t> &r)
-	{
-		for (auto i = r.begin(), ie = r.end(); i < ie ; ++i) {
-			const auto &quad = (*polys)[i];
-
-			const auto v0 = m_point_list[quad[0]];
-			const auto v1 = m_point_list[quad[1]];
-			const auto v2 = m_point_list[quad[2]];
-
-			const auto normal = get_normal(v0, v1, v2);
-
-			normals->vec3(quad[0], normals->vec3(quad[0]) + normal);
-			normals->vec3(quad[1], normals->vec3(quad[1]) + normal);
-			normals->vec3(quad[2], normals->vec3(quad[2]) + normal);
-
-			if (quad[3] != INVALID_INDEX) {
-				normals->vec3(quad[3], normals->vec3(quad[3]) + normal);
-			}
-		}
-	});
-
-	for (size_t i = 0, ie = this->points()->size(); i < ie ; ++i) {
-		normals->vec3(i, -glm::normalize(normals->vec3(i)));
-	}
 }

@@ -21,7 +21,7 @@
 
 # ------------------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.8)
 
 # ------------------------------------------------------------------------------
 
@@ -37,8 +37,11 @@ set(CMAKE_BUILD_TYPE_INIT "Release")
 
 # ------------------------------------------------------------------------------
 
-add_compile_options(-std=c++14)
-add_compile_options(-fuse-ld=gold)
+set(CMAKE_CXX_STANDARD 17)
+
+add_compile_options(-fconcepts)
+
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -g -Og -Wno-error=unused-function -Wextra -Wno-ignored-qualifiers -Wno-unused-parameter -Wno-unknown-pragmas -Wno-missing-field-initializers -Wno-sign-compare -Wno-type-limits -Wmissing-format-attribute -fno-common -Wundef -Wno-delete-non-virtual-dtor -Wno-div-by-zero  -Wstrict-aliasing=2 -Wsizeof-pointer-memaccess -Wformat=2 -Wno-format-nonliteral -Wno-format-y2k -fstrict-overflow -Wstrict-overflow=2 -Wwrite-strings -Wformat-extra-args -Wlogical-op -Wnonnull -fno-omit-frame-pointer -Wno-error=unused-result -Wno-error=clobbered -fstack-protector-all --param=ssp-buffer-size=4 -Werror -Wno-maybe-uninitialized -Wmissing-include-dirs -Wdate-time -Wuninitialized -Winit-self -Wtype-limits -fno-nonansi-builtins -Warray-bounds -Wno-error=unused-local-typedefs -fdiagnostics-color=always -fsanitize=address -fuse-ld=gold")
 
 add_definitions(-DQT_NO_KEYWORDS)
 add_definitions(-DGLM_FORCE_RADIANS)
@@ -46,7 +49,6 @@ add_definitions(-DGLM_FORCE_RADIANS)
 # ------------------------------------------------------------------------------
 
 find_package(Ego REQUIRED)
-set(EGO_LIBRARIES /opt/lib/ego/lib/libego.a)
 
 # ------------------------------------------------------------------------------
 
@@ -54,41 +56,51 @@ set(INC_SYS
 	${EGO_INCLUDE_DIRS}
 )
 
+set(ENTETES_OUTILS
+	outils/chaîne_caractère.h
+	outils/géométrie.h
+	outils/interpolation.h
+	outils/mathématiques.h
+	outils/parallélisme.h
+	outils/rendu.h
+)
+
 set(HEADERS
-	any.h
 	attribute.h
+	bruit.h
 	context.h
 	cube.h
 	factory.h
 	geomlists.h
 	mesh.h
-	nodes.h
-	noise.h
+	noeud.h
+	operateur.h
 	persona.h
 	prim_points.h
 	primitive.h
 	renderbuffer.h
-	utils_glm.h
-	util_parallel.h
-	util_render.h
-	util_string.h
+	segmentprim.h
 )
 
 add_library(kamikaze SHARED
-	any.cc 
+	outils/géométrie.cc
+
 	attribute.cc
+	bruit.cc
 	context.cc
 	cube.cc
 	geomlists.cc
-	nodes.cc
-	noise.cc
+	noeud.cc
 	mesh.cc
+	operateur.cc
 	persona.cc
 	prim_points.cc
 	primitive.cc
 	renderbuffer.cc
+	segmentprim.cc
 
 	${HEADERS}
+	${ENTETES_OUTILS}
 )
 
 target_include_directories(kamikaze PUBLIC "${INC_SYS}")
@@ -105,4 +117,9 @@ install(TARGETS kamikaze LIBRARY DESTINATION lib)
 install(
 	FILES ${HEADERS}
 	DESTINATION include/kamikaze
+)
+
+install(
+	FILES ${ENTETES_OUTILS}
+	DESTINATION include/kamikaze/outils
 )

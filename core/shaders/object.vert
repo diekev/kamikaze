@@ -8,6 +8,8 @@ uniform mat4 matrix;
 uniform mat4 MVP;
 uniform mat3 N;
 uniform bool has_vcolors;
+
+uniform vec3 color;
 smooth out vec3 nor;
 smooth out vec3 col;
 
@@ -21,6 +23,6 @@ void main()
 		col = vertex_color;
 	}
 	else {
-		col = vec3(1.0);
+		col = color;
 	}
 }

@@ -24,12 +24,17 @@
 
 #include "object_nodes.h"
 
+#include <kamikaze/bruit.h>
+#include <kamikaze/context.h>
 #include <kamikaze/mesh.h>
-#include <kamikaze/noise.h>
 #include <kamikaze/primitive.h>
 #include <kamikaze/prim_points.h>
-#include <kamikaze/util_parallel.h>
-#include <kamikaze/utils_glm.h>
+#include <kamikaze/segmentprim.h>
+
+#include <kamikaze/outils/géométrie.h>
+#include <kamikaze/outils/interpolation.h>
+#include <kamikaze/outils/mathématiques.h>
+#include <kamikaze/outils/parallélisme.h>
 
 #include <random>
 #include <sstream>
@@ -38,459 +43,558 @@
 
 /* ************************************************************************** */
 
-OutputNode::OutputNode(const std::string &name)
-    : Node(name)
+static const char *NOM_SORTIE = "Sortie";
+static const char *AIDE_SORTIE = "Créer un noeud de sortie.";
+
+OperateurSortie::OperateurSortie(Noeud *noeud, const Context &contexte)
+	: Operateur(noeud, contexte)
 {
-	addInput("Primitive");
+	entrees(1);
 }
 
-PrimitiveCollection *OutputNode::collection() const
+const char *OperateurSortie::nom_entree(size_t)
 {
-	return m_collection;
+	return "Entrée";
 }
 
-void OutputNode::process()
+const char *OperateurSortie::nom()
 {
-	m_collection = getInputCollection("Primitive");
+	return NOM_SORTIE;
+}
+
+void OperateurSortie::execute(const Context &contexte, double temps)
+{
+	m_collection->free_all();
+	entree(0)->requiers_collection(m_collection, contexte, temps);
 }
 
 /* ************************************************************************** */
 
-TransformNode::TransformNode()
-    : Node("Transform")
-{
-	addInput("Prim");
-	addOutput("Prim");
+static const char *NOM_CREATION_BOITE = "Création boîte";
+static const char *AIDE_CREATION_BOITE = "Créer une boîte.";
 
-	EnumProperty xform_enum_prop;
-	xform_enum_prop.insert("Pre Transform", 0);
-	xform_enum_prop.insert("Post Transform", 1);
+class OperateurCreationBoite final : public Operateur {
+public:
+	OperateurCreationBoite(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		sorties(1);
 
-	add_prop("Transform Order", property_type::prop_enum);
-	set_prop_enum_values(xform_enum_prop);
+		add_prop("size", "Size", property_type::prop_vec3);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
 
-	EnumProperty rot_enum_prop;
-	rot_enum_prop.insert("X Y Z", 0);
-	rot_enum_prop.insert("X Z Y", 1);
-	rot_enum_prop.insert("Y X Z", 2);
-	rot_enum_prop.insert("Y Z X", 3);
-	rot_enum_prop.insert("Z X Y", 4);
-	rot_enum_prop.insert("Z Y X", 5);
+		add_prop("center", "Center", property_type::prop_vec3);
+		set_prop_min_max(-10.0f, 10.0f);
+		set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
 
-	add_prop("Rotation Order", property_type::prop_enum);
-	set_prop_enum_values(rot_enum_prop);
+		add_prop("uniform_scale", "Uniform Scale", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(1.0f);
+	}
 
-	add_prop("Translate", property_type::prop_vec3);
-	set_prop_min_max(-10.0f, 10.0f);
-	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
+	const char *nom_sortie(size_t /*index*/)
+	{
+		return "Sortie";
+	}
 
-	add_prop("Rotate", property_type::prop_vec3);
-	set_prop_min_max(0.0f, 360.0f);
-	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
+	const char *nom() override
+	{
+		return NOM_CREATION_BOITE;
+	}
 
-	add_prop("Scale", property_type::prop_vec3);
-	set_prop_min_max(0.0f, 10.0f);
-	set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
+	void execute(const Context &/*contexte*/, double /*temps*/)
+	{
+		m_collection->free_all();
 
-	add_prop("Pivot", property_type::prop_vec3);
-	set_prop_min_max(-10.0f, 10.0f);
-	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
+		auto prim = m_collection->build("Mesh");
+		auto mesh = static_cast<Mesh *>(prim);
 
-	add_prop("Uniform Scale", property_type::prop_float);
-	set_prop_min_max(0.0f, 1000.0f);
-	set_prop_default_value_float(1.0f);
+		PointList *points = mesh->points();
+		points->reserve(8);
 
-	add_prop("Invert Transformation", property_type::prop_bool);
-}
+		const auto dimension = eval_vec3("size");
+		const auto center = eval_vec3("center");
+		const auto uniform_scale = eval_float("uniform_scale");
 
-void TransformNode::process()
-{
-	const auto translate = eval_vec3("Translate");
-	const auto rotate = eval_vec3("Rotate");
-	const auto scale = eval_vec3("Scale");
-	const auto pivot = eval_vec3("Pivot");
-	const auto uniform_scale = eval_float("Uniform Scale");
-	const auto transform_type = eval_int("Transform Order");
-	const auto rot_order = eval_int("Rotation Order");
+		/* todo: expose this to the UI */
+		const auto &x_div = 2;
+		const auto &y_div = 2;
+		const auto &z_div = 2;
 
-	/* determine the rotatation order */
-	int rot_ord[6][3] = {
-	    { 0, 1, 2 }, // X Y Z
-	    { 0, 2, 1 }, // X Z Y
-	    { 1, 0, 2 }, // Y X Z
-	    { 1, 2, 0 }, // Y Z X
-	    { 2, 0, 1 }, // Z X Y
-	    { 2, 1, 0 }, // Z Y X
-	};
+		auto vec = glm::vec3{ 0.0f, 0.0f, 0.0f };
 
-	glm::vec3 axis[3] = {
-	    glm::vec3(1.0f, 0.0f, 0.0f),
-	    glm::vec3(0.0f, 1.0f, 0.0f),
-	    glm::vec3(0.0f, 0.0f, 1.0f),
-	};
+		const auto size = dimension * uniform_scale;
 
-	const auto X = rot_ord[rot_order][0];
-	const auto Y = rot_ord[rot_order][1];
-	const auto Z = rot_ord[rot_order][2];
+		const auto &start_x = -(size.x / 2.0f) + center.x;
+		const auto &start_y = -(size.y / 2.0f) + center.y;
+		const auto &start_z = -(size.z / 2.0f) + center.z;
 
-	for (auto &prim : primitive_iterator(this->m_collection)) {
-		auto matrix = glm::mat4(1.0f);
+		const auto &x_increment = size.x / (x_div - 1);
+		const auto &y_increment = size.y / (y_div - 1);
+		const auto &z_increment = size.z / (z_div - 1);
 
-		switch (transform_type) {
-			case 0: /* Pre Transform */
-				matrix = pre_translate(matrix, pivot);
-				matrix = pre_rotate(matrix, glm::radians(rotate[X]), axis[X]);
-				matrix = pre_rotate(matrix, glm::radians(rotate[Y]), axis[Y]);
-				matrix = pre_rotate(matrix, glm::radians(rotate[Z]), axis[Z]);
-				matrix = pre_scale(matrix, scale * uniform_scale);
-				matrix = pre_translate(matrix, -pivot);
-				matrix = pre_translate(matrix, translate);
-				matrix = matrix * prim->matrix();
-				break;
-			case 1: /* Post Transform */
-				matrix = post_translate(matrix, pivot);
-				matrix = post_rotate(matrix, glm::radians(rotate[X]), axis[X]);
-				matrix = post_rotate(matrix, glm::radians(rotate[Y]), axis[Y]);
-				matrix = post_rotate(matrix, glm::radians(rotate[Z]), axis[Z]);
-				matrix = post_scale(matrix, scale * uniform_scale);
-				matrix = post_translate(matrix, -pivot);
-				matrix = post_translate(matrix, translate);
-				matrix = prim->matrix() * matrix;
-				break;
+		for (auto x = 0; x < x_div; ++x) {
+			vec[0] = start_x + x * x_increment;
+
+			for (auto y = 0; y < y_div; ++y) {
+				vec[1] = start_y + y * y_increment;
+
+				for (auto z = 0; z < z_div; ++z) {
+					vec[2] = start_z + z * z_increment;
+
+					points->push_back(vec);
+				}
+			}
 		}
 
-		prim->matrix(matrix);
+		PolygonList *polys = mesh->polys();
+		polys->resize(6);
+		polys->push_back(glm::uvec4(1, 3, 2, 0));
+		polys->push_back(glm::uvec4(3, 7, 6, 2));
+		polys->push_back(glm::uvec4(7, 5, 4, 6));
+		polys->push_back(glm::uvec4(5, 1, 0, 4));
+		polys->push_back(glm::uvec4(0, 2, 6, 4));
+		polys->push_back(glm::uvec4(5, 7, 3, 1));
+
+		mesh->tagUpdate();
 	}
-}
+};
 
 /* ************************************************************************** */
 
-CreateBoxNode::CreateBoxNode()
-    : Node("Box")
-{
-	addOutput("Prim");
+static const char *NOM_TRANSFORMATION = "Transformation";
+static const char *AIDE_TRANSFORMATION = "Transformer les matrices des primitives d'entrées.";
 
-	add_prop("Size", property_type::prop_vec3);
-	set_prop_min_max(0.0f, 10.0f);
-	set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
+class OperateurTransformation : public Operateur {
+public:
+	OperateurTransformation(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		entrees(1);
+		sorties(1);
 
-	add_prop("Center", property_type::prop_vec3);
-	set_prop_min_max(-10.0f, 10.0f);
-	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
+		EnumProperty xform_enum_prop;
+		xform_enum_prop.insert("Pre Transform", 0);
+		xform_enum_prop.insert("Post Transform", 1);
 
-	add_prop("Uniform Scale", property_type::prop_float);
-	set_prop_min_max(0.0f, 10.0f);
-	set_prop_default_value_float(1.0f);
-}
+		add_prop("xform_order", "Transform Order", property_type::prop_enum);
+		set_prop_enum_values(xform_enum_prop);
 
-void CreateBoxNode::process()
-{
-	auto prim = m_collection->build("Mesh");
-	auto mesh = static_cast<Mesh *>(prim);
+		EnumProperty rot_enum_prop;
+		rot_enum_prop.insert("X Y Z", 0);
+		rot_enum_prop.insert("X Z Y", 1);
+		rot_enum_prop.insert("Y X Z", 2);
+		rot_enum_prop.insert("Y Z X", 3);
+		rot_enum_prop.insert("Z X Y", 4);
+		rot_enum_prop.insert("Z Y X", 5);
 
-	PointList *points = mesh->points();
-	points->reserve(8);
+		add_prop("rot_order", "Rotation Order", property_type::prop_enum);
+		set_prop_enum_values(rot_enum_prop);
 
-	const auto dimension = eval_vec3("Size");
-	const auto center = eval_vec3("Center");
-	const auto uniform_scale = eval_float("Uniform Scale");
+		add_prop("translate", "Translate", property_type::prop_vec3);
+		set_prop_min_max(-10.0f, 10.0f);
+		set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
 
-	/* todo: expose this to the UI */
-	const auto &x_div = 2;
-	const auto &y_div = 2;
-	const auto &z_div = 2;
+		add_prop("rotate", "Rotate", property_type::prop_vec3);
+		set_prop_min_max(0.0f, 360.0f);
+		set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
 
-	auto vec = glm::vec3{ 0.0f, 0.0f, 0.0f };
+		add_prop("scale", "Scale", property_type::prop_vec3);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
 
-	const auto size = dimension * uniform_scale;
+		add_prop("pivot", "Pivot", property_type::prop_vec3);
+		set_prop_min_max(-10.0f, 10.0f);
+		set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
 
-	const auto &start_x = -(size.x / 2.0f) + center.x;
-	const auto &start_y = -(size.y / 2.0f) + center.y;
-	const auto &start_z = -(size.z / 2.0f) + center.z;
+		add_prop("uniform_scale", "Uniform Scale", property_type::prop_float);
+		set_prop_min_max(0.0f, 1000.0f);
+		set_prop_default_value_float(1.0f);
 
-	const auto &x_increment = size.x / (x_div - 1);
-	const auto &y_increment = size.y / (y_div - 1);
-	const auto &z_increment = size.z / (z_div - 1);
+		add_prop("invert_xform", "Invert Transformation", property_type::prop_bool);
+	}
 
-	for (auto x = 0; x < x_div; ++x) {
-		vec[0] = start_x + x * x_increment;
+	const char *nom_entree(size_t /*index*/)
+	{
+		return "Entrée";
+	}
 
-		for (auto y = 0; y < y_div; ++y) {
-			vec[1] = start_y + y * y_increment;
+	const char *nom_sortie(size_t /*index*/)
+	{
+		return "Sortie";
+	}
 
-			for (auto z = 0; z < z_div; ++z) {
-				vec[2] = start_z + z * z_increment;
+	const char *nom() override
+	{
+		return NOM_TRANSFORMATION;
+	}
+
+	void execute(const Context &contexte, double temps)
+	{
+		entree(0)->requiers_collection(m_collection, contexte, temps);
+
+		const auto translate = eval_vec3("translate");
+		const auto rotate = eval_vec3("rotate");
+		const auto scale = eval_vec3("scale");
+		const auto pivot = eval_vec3("pivot");
+		const auto uniform_scale = eval_float("uniform_scale");
+		const auto transform_type = eval_int("xform_order");
+		const auto rot_order = eval_int("rot_order");
+
+		/* determine the rotatation order */
+		int rot_ord[6][3] = {
+			{ 0, 1, 2 }, // X Y Z
+			{ 0, 2, 1 }, // X Z Y
+			{ 1, 0, 2 }, // Y X Z
+			{ 1, 2, 0 }, // Y Z X
+			{ 2, 0, 1 }, // Z X Y
+			{ 2, 1, 0 }, // Z Y X
+		};
+
+		glm::vec3 axis[3] = {
+			glm::vec3(1.0f, 0.0f, 0.0f),
+			glm::vec3(0.0f, 1.0f, 0.0f),
+			glm::vec3(0.0f, 0.0f, 1.0f),
+		};
+
+		const auto X = rot_ord[rot_order][0];
+		const auto Y = rot_ord[rot_order][1];
+		const auto Z = rot_ord[rot_order][2];
+
+		for (auto &prim : primitive_iterator(this->m_collection)) {
+			auto matrix = glm::mat4(1.0f);
+
+			switch (transform_type) {
+				case 0: /* Pre Transform */
+					matrix = pre_translate(matrix, pivot);
+					matrix = pre_rotate(matrix, glm::radians(rotate[X]), axis[X]);
+					matrix = pre_rotate(matrix, glm::radians(rotate[Y]), axis[Y]);
+					matrix = pre_rotate(matrix, glm::radians(rotate[Z]), axis[Z]);
+					matrix = pre_scale(matrix, scale * uniform_scale);
+					matrix = pre_translate(matrix, -pivot);
+					matrix = pre_translate(matrix, translate);
+					matrix = matrix * prim->matrix();
+					break;
+				case 1: /* Post Transform */
+					matrix = post_translate(matrix, pivot);
+					matrix = post_rotate(matrix, glm::radians(rotate[X]), axis[X]);
+					matrix = post_rotate(matrix, glm::radians(rotate[Y]), axis[Y]);
+					matrix = post_rotate(matrix, glm::radians(rotate[Z]), axis[Z]);
+					matrix = post_scale(matrix, scale * uniform_scale);
+					matrix = post_translate(matrix, -pivot);
+					matrix = post_translate(matrix, translate);
+					matrix = prim->matrix() * matrix;
+					break;
+			}
+
+			prim->matrix(matrix);
+		}
+	}
+};
+
+/* ************************************************************************** */
+
+static const char *NOM_CREATION_TORUS = "Création torus";
+static const char *AIDE_CREATION_TORUS = "Créer un torus.";
+
+class OperateurCreationTorus : public Operateur {
+public:
+	OperateurCreationTorus(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		sorties(1);
+
+		add_prop("center", "Center", property_type::prop_vec3);
+		set_prop_min_max(-10.0f, 10.0f);
+		set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
+
+		add_prop("major_radius", "Major Radius", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(1.0f);
+
+		add_prop("minor_radius", "Minor Radius", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(0.25f);
+
+		add_prop("major_segment", "Major Segment", property_type::prop_int);
+		set_prop_min_max(4, 100);
+		set_prop_default_value_int(48);
+
+		add_prop("minor_segment", "Minor Segment", property_type::prop_int);
+		set_prop_min_max(4, 100);
+		set_prop_default_value_int(24);
+
+		add_prop("uniform_scale", "Uniform Scale", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(1.0f);
+	}
+
+	const char *nom_sortie(size_t /*index*/)
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_CREATION_TORUS;
+	}
+
+	void execute(const Context &/*contexte*/, double /*temps*/)
+	{
+		m_collection->free_all();
+
+		auto prim = m_collection->build("Mesh");
+		auto mesh = static_cast<Mesh *>(prim);
+
+		const auto center = eval_vec3("center");
+		const auto uniform_scale = eval_float("uniform_scale");
+
+		const auto major_radius = eval_float("major_radius") * uniform_scale;
+		const auto minor_radius = eval_float("minor_radius") * uniform_scale;
+		const auto major_segment = eval_int("major_segment");
+		const auto minor_segment = eval_int("minor_segment");
+
+		PointList *points = mesh->points();
+		PolygonList *polys = mesh->polys();
+
+		constexpr auto tau = static_cast<float>(M_PI) * 2.0f;
+
+		const auto vertical_angle_stride = tau / static_cast<float>(major_segment);
+		const auto horizontal_angle_stride = tau / static_cast<float>(minor_segment);
+
+		int f1 = 0, f2, f3, f4;
+		const auto tot_verts = major_segment * minor_segment;
+
+		points->reserve(tot_verts);
+
+		for (int i = 0; i < major_segment; ++i) {
+			auto theta = vertical_angle_stride * i;
+
+			for (int j = 0; j < minor_segment; ++j) {
+				auto phi = horizontal_angle_stride * j;
+
+				auto x = glm::cos(theta) * (major_radius + minor_radius * glm::cos(phi));
+				auto y = minor_radius * glm::sin(phi);
+				auto z = glm::sin(theta) * (major_radius + minor_radius * glm::cos(phi));
+
+				points->push_back(glm::vec3(x, y, z) + center);
+
+				if (j + 1 == minor_segment) {
+					f2 = i * minor_segment;
+					f3 = f1 + minor_segment;
+					f4 = f2 + minor_segment;
+				}
+				else {
+					f2 = f1 + 1;
+					f3 = f1 + minor_segment;
+					f4 = f3 + 1;
+				}
+
+				if (f2 >= tot_verts) {
+					f2 -= tot_verts;
+				}
+				if (f3 >= tot_verts) {
+					f3 -= tot_verts;
+				}
+				if (f4 >= tot_verts) {
+					f4 -= tot_verts;
+				}
+
+				if (f2 > 0) {
+					polys->push_back(glm::uvec4(f1, f3, f4, f2));
+				}
+				else {
+					polys->push_back(glm::uvec4(f2, f1, f3, f4));
+				}
+
+				++f1;
+			}
+		}
+
+		mesh->tagUpdate();
+	}
+};
+
+/* ************************************************************************** */
+
+static const char *NOM_CREATION_GRILLE = "Création grille";
+static const char *AIDE_CREATION_GRILLE = "Créer une grille.";
+
+class OperateurCreationGrille : public Operateur {
+public:
+	OperateurCreationGrille(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		sorties(1);
+
+		add_prop("center", "Center", property_type::prop_vec3);
+		set_prop_min_max(-10.0f, 10.0f);
+		set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
+
+		add_prop("size", "Size", property_type::prop_vec3);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
+
+		add_prop("rows", "Rows", property_type::prop_int);
+		set_prop_min_max(2, 100);
+		set_prop_default_value_int(2);
+
+		add_prop("columns", "Columns", property_type::prop_int);
+		set_prop_min_max(2, 100);
+		set_prop_default_value_int(2);
+	}
+
+	const char *nom_sortie(size_t /*index*/)
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_CREATION_GRILLE;
+	}
+
+	void execute(const Context &/*contexte*/, double /*temps*/)
+	{
+		m_collection->free_all();
+
+		auto prim = m_collection->build("Mesh");
+		auto mesh = static_cast<Mesh *>(prim);
+
+		const auto size = eval_vec3("size");
+		const auto center = eval_vec3("center");
+
+		const auto rows = eval_int("rows");
+		const auto columns = eval_int("columns");
+
+		const auto totpoints = rows * columns;
+
+		auto points = mesh->points();
+		points->reserve(totpoints);
+
+		auto vec = glm::vec3{ 0.0f, center.y, 0.0f };
+
+		const auto &x_increment = size.x / (rows - 1);
+		const auto &y_increment = size.y / (columns - 1);
+		const auto &start_x = -(size.x / 2.0f) + center.x;
+		const auto &start_y = -(size.y / 2.0f) + center.z;
+
+		for (auto y = 0; y < columns; ++y) {
+			vec[2] = start_y + y * y_increment;
+
+			for (auto x = 0; x < rows; ++x) {
+				vec[0] = start_x + x * x_increment;
 
 				points->push_back(vec);
 			}
 		}
-	}
 
-	PolygonList *polys = mesh->polys();
-	polys->resize(6);
-	polys->push_back(glm::uvec4(1, 3, 2, 0));
-	polys->push_back(glm::uvec4(3, 7, 6, 2));
-	polys->push_back(glm::uvec4(7, 5, 4, 6));
-	polys->push_back(glm::uvec4(5, 1, 0, 4));
-	polys->push_back(glm::uvec4(0, 2, 6, 4));
-	polys->push_back(glm::uvec4(5, 7, 3, 1));
+		PolygonList *polys = mesh->polys();
 
-	mesh->tagUpdate();
-}
+		auto quad = glm::uvec4{ 0, 0, 0, 0 };
 
-/* ************************************************************************** */
+		/* make a copy for the lambda */
+		const auto xtot = rows;
 
-CreateTorusNode::CreateTorusNode()
-    : Node("Torus")
-{
-	addOutput("Prim");
+		auto index = [&xtot](const int x, const int y)
+		{
+			return x + y * xtot;
+		};
 
-	add_prop("Center", property_type::prop_vec3);
-	set_prop_min_max(-10.0f, 10.0f);
-	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
+		for (auto y = 1; y < columns; ++y) {
+			for (auto x = 1; x < rows; ++x) {
+				quad[0] = index(x - 1, y - 1);
+				quad[1] = index(x,     y - 1);
+				quad[2] = index(x,     y    );
+				quad[3] = index(x - 1, y    );
 
-	add_prop("Major Radius", property_type::prop_float);
-	set_prop_min_max(0.0f, 10.0f);
-	set_prop_default_value_float(1.0f);
-
-	add_prop("Minor Radius", property_type::prop_float);
-	set_prop_min_max(0.0f, 10.0f);
-	set_prop_default_value_float(0.25f);
-
-	add_prop("Major Segment", property_type::prop_int);
-	set_prop_min_max(4, 100);
-	set_prop_default_value_int(48);
-
-	add_prop("Minor Segment", property_type::prop_int);
-	set_prop_min_max(4, 100);
-	set_prop_default_value_int(24);
-
-	add_prop("Uniform Scale", property_type::prop_float);
-	set_prop_min_max(0.0f, 10.0f);
-	set_prop_default_value_float(1.0f);
-}
-
-void CreateTorusNode::process()
-{
-	auto prim = m_collection->build("Mesh");
-	auto mesh = static_cast<Mesh *>(prim);
-
-	const auto center = eval_vec3("Center");
-	const auto uniform_scale = eval_float("Uniform Scale");
-
-	const auto major_radius = eval_float("Major Radius") * uniform_scale;
-	const auto minor_radius = eval_float("Minor Radius") * uniform_scale;
-	const auto major_segment = eval_int("Major Segment");
-	const auto minor_segment = eval_int("Minor Segment");
-
-	PointList *points = mesh->points();
-	PolygonList *polys = mesh->polys();
-
-	constexpr auto tau = static_cast<float>(M_PI) * 2.0f;
-
-	const auto vertical_angle_stride = tau / static_cast<float>(major_segment);
-	const auto horizontal_angle_stride = tau / static_cast<float>(minor_segment);
-
-	int f1 = 0, f2, f3, f4;
-	const auto tot_verts = major_segment * minor_segment;
-
-	points->reserve(tot_verts);
-
-	for (int i = 0; i < major_segment; ++i) {
-		auto theta = vertical_angle_stride * i;
-
-		for (int j = 0; j < minor_segment; ++j) {
-			auto phi = horizontal_angle_stride * j;
-
-			auto x = glm::cos(theta) * (major_radius + minor_radius * glm::cos(phi));
-			auto y = minor_radius * glm::sin(phi);
-			auto z = glm::sin(theta) * (major_radius + minor_radius * glm::cos(phi));
-
-			points->push_back(glm::vec3(x, y, z) + center);
-
-			if (j + 1 == minor_segment) {
-				f2 = i * minor_segment;
-				f3 = f1 + minor_segment;
-				f4 = f2 + minor_segment;
+				polys->push_back(quad);
 			}
-			else {
-				f2 = f1 + 1;
-				f3 = f1 + minor_segment;
-				f4 = f3 + 1;
-			}
-
-			if (f2 >= tot_verts) {
-				f2 -= tot_verts;
-			}
-			if (f3 >= tot_verts) {
-				f3 -= tot_verts;
-			}
-			if (f4 >= tot_verts) {
-				f4 -= tot_verts;
-			}
-
-			if (f2 > 0) {
-				polys->push_back(glm::uvec4(f1, f3, f4, f2));
-			}
-			else {
-				polys->push_back(glm::uvec4(f2, f1, f3, f4));
-			}
-
-			++f1;
 		}
-	}
 
-	mesh->tagUpdate();
-}
+		mesh->tagUpdate();
+	}
+};
 
 /* ************************************************************************** */
 
-CreateGridNode::CreateGridNode()
-    : Node("Grid")
-{
-	addOutput("Prim");
+static const char *NOM_CREATION_CERCLE = "Création cercle";
+static const char *AIDE_CREATION_CERCLE = "Créer un cercle.";
 
-	add_prop("Center", property_type::prop_vec3);
-	set_prop_min_max(-10.0f, 10.0f);
-	set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
+class OperateurCreationCercle : public Operateur {
+public:
+	OperateurCreationCercle(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		sorties(1);
 
-	add_prop("Size", property_type::prop_vec3);
-	set_prop_min_max(0.0f, 10.0f);
-	set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
+		add_prop("vertices", "Vertices", property_type::prop_int);
+		set_prop_min_max(3, 500);
+		set_prop_default_value_int(32);
 
-	add_prop("Rows", property_type::prop_int);
-	set_prop_min_max(2, 100);
-	set_prop_default_value_int(2);
+		add_prop("radius", "Radius", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(1.0f);
+	}
 
-	add_prop("Columns", property_type::prop_int);
-	set_prop_min_max(2, 100);
-	set_prop_default_value_int(2);
-}
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
 
-void CreateGridNode::process()
-{
-	auto prim = m_collection->build("Mesh");
-	auto mesh = static_cast<Mesh *>(prim);
+	const char *nom() override
+	{
+		return NOM_CREATION_CERCLE;
+	}
 
-	const auto size = eval_vec3("Size");
-	const auto center = eval_vec3("Center");
+	void execute(const Context &contexte, double /*temps*/)
+	{
+		if (m_collection == nullptr) {
+			m_collection = new PrimitiveCollection(contexte.primitive_factory);
+		}
 
-	const auto rows = eval_int("Rows");
-	const auto columns = eval_int("Columns");
+		auto prim = m_collection->build("Mesh");
+		auto mesh = static_cast<Mesh *>(prim);
 
-	const auto totpoints = rows * columns;
+		const auto segs = eval_int("vertices");
+		const auto dia = eval_float("radius");
 
-	auto points = mesh->points();
-	points->reserve(totpoints);
+		const auto phid = 2.0f * static_cast<float>(M_PI) / segs;
+		auto phi = 0.0f;
 
-	auto vec = glm::vec3{ 0.0f, center.y, 0.0f };
+		PointList *points = mesh->points();
+		points->reserve(segs + 1);
 
-	const auto &x_increment = size.x / (rows - 1);
-	const auto &y_increment = size.y / (columns - 1);
-	const auto &start_x = -(size.x / 2.0f) + center.x;
-	const auto &start_y = -(size.y / 2.0f) + center.z;
+		glm::vec3 vec(0.0f, 0.0f, 0.0f);
 
-	for (auto y = 0; y < columns; ++y) {
-		vec[2] = start_y + y * y_increment;
+		points->push_back(vec);
 
-		for (auto x = 0; x < rows; ++x) {
-			vec[0] = start_x + x * x_increment;
+		for (int a = 0; a < segs; ++a, phi += phid) {
+			/* Going this way ends up with normal(s) upward */
+			vec[0] = -dia * std::sin(phi);
+			vec[2] = dia * std::cos(phi);
 
 			points->push_back(vec);
 		}
-	}
 
-	PolygonList *polys = mesh->polys();
+		PolygonList *polys = mesh->polys();
 
-	auto quad = glm::uvec4{ 0, 0, 0, 0 };
+		auto index = points->size() - 1;
+		glm::uvec4 poly(0, 0, 0, INVALID_INDEX);
 
-	/* make a copy for the lambda */
-	const auto xtot = rows;
+		for (auto i = 1ul; i < points->size(); ++i) {
+			poly[1] = index;
+			poly[2] = i;
 
-	auto index = [&xtot](const int x, const int y)
-	{
-		return x + y * xtot;
-	};
+			polys->push_back(poly);
 
-	for (auto y = 1; y < columns; ++y) {
-		for (auto x = 1; x < rows; ++x) {
-			quad[0] = index(x - 1, y - 1);
-			quad[1] = index(x,     y - 1);
-			quad[2] = index(x,     y    );
-			quad[3] = index(x - 1, y    );
-
-			polys->push_back(quad);
+			index = i;
 		}
+
+		mesh->tagUpdate();
 	}
-
-	mesh->tagUpdate();
-}
-
-/* ************************************************************************** */
-
-class CreateCircleNode : public Node {
-public:
-	CreateCircleNode();
-
-	void process() override;
 };
-
-CreateCircleNode::CreateCircleNode()
-    : Node("Circle")
-{
-	addOutput("Primitive");
-
-	add_prop("Vertices", property_type::prop_int);
-	set_prop_min_max(3, 500);
-	set_prop_default_value_int(32);
-
-	add_prop("Radius", property_type::prop_float);
-	set_prop_min_max(0.0f, 10.0f);
-	set_prop_default_value_float(1.0f);
-}
-
-void CreateCircleNode::process()
-{
-	auto prim = m_collection->build("Mesh");
-	auto mesh = static_cast<Mesh *>(prim);
-
-	const auto segs = eval_int("Vertices");
-	const auto dia = eval_float("Radius");
-
-	const auto phid = 2.0f * static_cast<float>(M_PI) / segs;
-	auto phi = 0.0f;
-
-	PointList *points = mesh->points();
-	points->reserve(segs + 1);
-
-	glm::vec3 vec(0.0f, 0.0f, 0.0f);
-
-	points->push_back(vec);
-
-	for (int a = 0; a < segs; ++a, phi += phid) {
-		/* Going this way ends up with normal(s) upward */
-		vec[0] = -dia * std::sin(phi);
-		vec[2] = dia * std::cos(phi);
-
-		points->push_back(vec);
-	}
-
-	PolygonList *polys = mesh->polys();
-
-	auto index = points->size() - 1;
-	glm::uvec4 poly(0, 0, 0, INVALID_INDEX);
-
-	for (auto i = 1ul; i < points->size(); ++i) {
-		poly[1] = index;
-		poly[2] = i;
-
-		polys->push_back(poly);
-
-		index = i;
-	}
-
-	mesh->tagUpdate();
-}
 
 /* ************************************************************************** */
 
@@ -563,90 +667,112 @@ static void create_cylinder(PointList *points, PolygonList *polys, int segs, flo
 	polys->push_back(glm::uvec4{ v1, v2, firstv2, firstv1 });
 }
 
-class CreateTubeNode : public Node {
+static const char *NOM_CREATION_TUBE = "Création tube";
+static const char *AIDE_CREATION_TUBE = "Créer un tube.";
+
+class OperateurCreationTube : public Operateur {
 public:
-	CreateTubeNode();
+	OperateurCreationTube(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		sorties(1);
 
-	void process() override;
+		add_prop("vertices", "Vertices", property_type::prop_int);
+		set_prop_min_max(3, 500);
+		set_prop_default_value_int(32);
+
+		add_prop("radius", "Radius", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(1.0f);
+
+		add_prop("depth", "Depth", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(1.0f);
+	}
+
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_CREATION_TUBE;
+	}
+
+	void execute(const Context &/*contexte*/, double /*temps*/)
+	{
+		m_collection->free_all();
+
+		auto prim = m_collection->build("Mesh");
+		auto mesh = static_cast<Mesh *>(prim);
+
+		const auto segs = eval_int("vertices");
+		const auto dia = eval_float("radius");
+		const auto depth = eval_float("depth");
+
+		create_cylinder(mesh->points(), mesh->polys(), segs, dia, dia, depth);
+
+		mesh->tagUpdate();
+	}
 };
-
-CreateTubeNode::CreateTubeNode()
-    : Node("Tube")
-{
-	addOutput("Primitive");
-
-	add_prop("Vertices", property_type::prop_int);
-	set_prop_min_max(3, 500);
-	set_prop_default_value_int(32);
-
-	add_prop("Radius", property_type::prop_float);
-	set_prop_min_max(0.0f, 10.0f);
-	set_prop_default_value_float(1.0f);
-
-	add_prop("Depth", property_type::prop_float);
-	set_prop_min_max(0.0f, 10.0f);
-	set_prop_default_value_float(1.0f);
-}
-
-void CreateTubeNode::process()
-{
-	auto prim = m_collection->build("Mesh");
-	auto mesh = static_cast<Mesh *>(prim);
-
-	const auto segs = eval_int("Vertices");
-	const auto dia = eval_float("Radius");
-	const auto depth = eval_float("Depth");
-
-	create_cylinder(mesh->points(), mesh->polys(), segs, dia, dia, depth);
-
-	mesh->tagUpdate();
-}
 
 /* ************************************************************************** */
 
-class CreateConeNode : public Node {
+static const char *NOM_CREATION_CONE = "Création cone";
+static const char *AIDE_CREATION_CONE = "Créer un cone.";
+
+class OperateurCreationCone : public Operateur {
 public:
-	CreateConeNode();
+	OperateurCreationCone(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		sorties(1);
 
-	void process() override;
+		add_prop("vertices", "Vertices", property_type::prop_int);
+		set_prop_min_max(3, 500);
+		set_prop_default_value_int(32);
+
+		add_prop("minor_radius", "Minor Radius", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(0.0f);
+
+		add_prop("major_radius", "Major Radius", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(1.0f);
+
+		add_prop("depth", "Depth", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(1.0f);
+	}
+
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_CREATION_CONE;
+	}
+
+	void execute(const Context &/*contexte*/, double /*temps*/)
+	{
+		m_collection->free_all();
+
+		auto prim = m_collection->build("Mesh");
+		auto mesh = static_cast<Mesh *>(prim);
+
+		const auto segs = eval_int("vertices");
+		const auto dia1 = eval_float("major_radius");
+		const auto dia2 = eval_float("minor_radius");
+		const auto depth = eval_float("depth");
+
+		create_cylinder(mesh->points(), mesh->polys(), segs, dia1, dia2, depth);
+
+		mesh->tagUpdate();
+	}
 };
-
-CreateConeNode::CreateConeNode()
-    : Node("Cone")
-{
-	addOutput("Primitive");
-
-	add_prop("Vertices", property_type::prop_int);
-	set_prop_min_max(3, 500);
-	set_prop_default_value_int(32);
-
-	add_prop("Minor Radius", property_type::prop_float);
-	set_prop_min_max(0.0f, 10.0f);
-	set_prop_default_value_float(0.0f);
-
-	add_prop("Major Radius", property_type::prop_float);
-	set_prop_min_max(0.0f, 10.0f);
-	set_prop_default_value_float(1.0f);
-
-	add_prop("Depth", property_type::prop_float);
-	set_prop_min_max(0.0f, 10.0f);
-	set_prop_default_value_float(1.0f);
-}
-
-void CreateConeNode::process()
-{
-	auto prim = m_collection->build("Mesh");
-	auto mesh = static_cast<Mesh *>(prim);
-
-	const auto segs = eval_int("Vertices");
-	const auto dia1 = eval_float("Major Radius");
-	const auto dia2 = eval_float("Minor Radius");
-	const auto depth = eval_float("Depth");
-
-	create_cylinder(mesh->points(), mesh->polys(), segs, dia1, dia2, depth);
-
-	mesh->tagUpdate();
-}
 
 /* ************************************************************************** */
 
@@ -688,84 +814,107 @@ static const short icoface[20][3] = {
 	{10, 9, 11}
 };
 
-class CreateIcoSphereNode : public Node {
+static const char *NOM_CREATION_ICOSPHERE = "Création icosphère";
+static const char *AIDE_CREATION_ICOSPHERE = "Crées une icosphère.";
+
+class OperateurCreationIcoSphere : public Operateur {
 public:
-	CreateIcoSphereNode();
+	OperateurCreationIcoSphere(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		sorties(1);
 
-	void process() override;
+		add_prop("radius", "Radius", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(1.0f);
+	}
+
+	const char *nom() override
+	{
+		return NOM_CREATION_ICOSPHERE;
+	}
+
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
+
+	void execute(const Context &contexte, double /*temps*/)
+	{
+		m_collection->free_all();
+
+		auto prim = m_collection->build("Mesh");
+		auto mesh = static_cast<Mesh *>(prim);
+
+		const auto dia = eval_float("radius");
+		const auto dia_div = dia / 200.0f;
+
+		PointList *points = mesh->points();
+		points->reserve(12);
+
+		glm::vec3 vec(0.0f, 0.0f, 0.0f);
+
+		for (int a = 0; a < 12; a++) {
+			vec[0] = dia_div * icovert[a][0];
+			vec[1] = dia_div * icovert[a][2];
+			vec[2] = dia_div * icovert[a][1];
+
+			points->push_back(vec);
+		}
+
+		PolygonList *polys = mesh->polys();
+		polys->reserve(20);
+
+		glm::uvec4 poly(0, 0, 0, INVALID_INDEX);
+
+		for (auto i = 0; i < 20; ++i) {
+			poly[0] = icoface[i][0];
+			poly[1] = icoface[i][1];
+			poly[2] = icoface[i][2];
+
+			polys->push_back(poly);
+		}
+
+		mesh->tagUpdate();
+	}
 };
-
-CreateIcoSphereNode::CreateIcoSphereNode()
-    : Node("IcoSphere")
-{
-	addOutput("Primitive");
-
-	add_prop("Radius", property_type::prop_float);
-	set_prop_min_max(0.0f, 10.0f);
-	set_prop_default_value_float(1.0f);
-}
-
-void CreateIcoSphereNode::process()
-{
-	auto prim = m_collection->build("Mesh");
-	auto mesh = static_cast<Mesh *>(prim);
-
-	const auto dia = eval_float("Radius");
-	const auto dia_div = dia / 200.0f;
-
-	PointList *points = mesh->points();
-	points->reserve(12);
-
-	glm::vec3 vec(0.0f, 0.0f, 0.0f);
-
-	for (int a = 0; a < 12; a++) {
-		vec[0] = dia_div * icovert[a][0];
-		vec[1] = dia_div * icovert[a][2];
-		vec[2] = dia_div * icovert[a][1];
-
-		points->push_back(vec);
-	}
-
-	PolygonList *polys = mesh->polys();
-	polys->reserve(20);
-
-	glm::uvec4 poly(0, 0, 0, INVALID_INDEX);
-
-	for (auto i = 0; i < 20; ++i) {
-		poly[0] = icoface[i][0];
-		poly[1] = icoface[i][1];
-		poly[2] = icoface[i][2];
-
-		polys->push_back(poly);
-	}
-
-	mesh->tagUpdate();
-}
 
 /* ************************************************************************** */
 
-static inline glm::vec3 get_normal(const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2)
-{
-	const auto n0 = v0 - v1;
-	const auto n1 = v2 - v1;
+static const char *NOM_NORMAL = "Normal";
+static const char *AIDE_NORMAL = "Éditer les normales.";
 
-	return glm::cross(n1, n0);
-}
-
-class NormalNode : public Node {
+class OperateurNormal : public Operateur {
 public:
-	NormalNode()
-	    : Node("Normal")
+	OperateurNormal(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
 	{
-		addInput("input");
-		addOutput("output");
+		entrees(1);
+		sorties(1);
 
-		add_prop("Flip", property_type::prop_bool);
+		add_prop("flip", "Flip", property_type::prop_bool);
 	}
 
-	void process() override
+	const char *nom_entree(size_t /*index*/) override
 	{
-		const auto flip = eval_bool("Flip");
+		return "Entrée";
+	}
+
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_NORMAL;
+	}
+
+	void execute(const Context &contexte, double temps) override
+	{
+		entree(0)->requiers_collection(m_collection, contexte, temps);
+
+		const auto flip = eval_bool("flip");
 
 		for (auto &prim : primitive_iterator(this->m_collection, Mesh::id)) {
 			auto mesh = static_cast<Mesh *>(prim);
@@ -780,86 +929,154 @@ public:
 				normals->vec3(i, glm::vec3(0.0f));
 			}
 
-			parallel_for(tbb::blocked_range<size_t>(0, polys->size()),
-			             [&](const tbb::blocked_range<size_t> &r)
-			{
-				for (auto i = r.begin(), ie = r.end(); i < ie ; ++i) {
-					const auto &quad = (*polys)[i];
-
-					const auto v0 = (*points)[quad[0]];
-					const auto v1 = (*points)[quad[1]];
-					const auto v2 = (*points)[quad[2]];
-
-					const auto normal = get_normal(v0, v1, v2);
-
-					normals->vec3(quad[0], normals->vec3(quad[0]) + normal);
-					normals->vec3(quad[1], normals->vec3(quad[1]) + normal);
-					normals->vec3(quad[2], normals->vec3(quad[2]) + normal);
-
-					if (quad[3] != INVALID_INDEX) {
-						normals->vec3(quad[3], normals->vec3(quad[3]) + normal);
-					}
-				}
-			});
-
-			if (flip) {
-				for (size_t i = 0, ie = points->size(); i < ie ; ++i) {
-					normals->vec3(i, -glm::normalize(normals->vec3(i)));
-				}
-			}
+			calcule_normales(*points, *polys, *normals, flip);
 		}
 	}
 };
 
 /* ************************************************************************** */
 
-class NoiseNode : public Node {
-public:
-	NoiseNode()
-	    : Node("Noise")
-	{
-		addInput("input");
-		addOutput("output");
+static const char *NOM_BRUIT = "Bruit";
+static const char *AIDE_BRUIT = "Ajouter du bruit.";
 
-		add_prop("Octaves", property_type::prop_int);
+enum {
+	DIRECTION_X = 0,
+	DIRECTION_Y = 1,
+	DIRECTION_Z = 2,
+	DIRECTION_TOUTE = 3,
+	DIRECTION_NORMALE = 4,
+};
+
+enum {
+	BRUIT_SIMPLEX = 0,
+	BRUIT_PERLIN = 1,
+	BRUIT_FLUX = 2,
+};
+
+class OperateurBruit : public Operateur {
+	BruitPerlin3D m_bruit_perlin;
+	BruitFlux3D m_bruit_flux;
+
+public:
+	OperateurBruit(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		entrees(1);
+		sorties(1);
+
+		EnumProperty prop_enum_bruit;
+		prop_enum_bruit.insert("Simplex", BRUIT_SIMPLEX);
+		prop_enum_bruit.insert("Perlin", BRUIT_PERLIN);
+		prop_enum_bruit.insert("Flux", BRUIT_FLUX);
+
+		add_prop("bruit", "Bruit", property_type::prop_enum);
+		set_prop_enum_values(prop_enum_bruit);
+
+		EnumProperty prop_enum;
+		prop_enum.insert("X", DIRECTION_X);
+		prop_enum.insert("Y", DIRECTION_Y);
+		prop_enum.insert("Z", DIRECTION_Z);
+		prop_enum.insert("Toute", DIRECTION_TOUTE);
+		prop_enum.insert("Normale", DIRECTION_NORMALE);
+
+		add_prop("direction", "Direction", property_type::prop_enum);
+		set_prop_enum_values(prop_enum);
+
+		add_prop("taille", "Taille", property_type::prop_float);
+		set_prop_min_max(0.0f, 20.0f);
+		set_prop_default_value_float(1.0f);
+
+		add_prop("octaves", "Octaves", property_type::prop_int);
 		set_prop_min_max(1, 10);
 		set_prop_default_value_int(1);
 
-		add_prop("Frequency", property_type::prop_float);
+		add_prop("frequency", "Frequency", property_type::prop_float);
 		set_prop_min_max(0.0f, 1.0f);
 		set_prop_default_value_float(1.0f);
 
-		add_prop("Amplitude", property_type::prop_float);
+		add_prop("amplitude", "Amplitude", property_type::prop_float);
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_default_value_float(1.0f);
 
-		add_prop("Persistence", property_type::prop_float);
+		add_prop("persistence", "Persistence", property_type::prop_float);
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_default_value_float(1.0f);
 
-		add_prop("Lacunarity", property_type::prop_float);
+		add_prop("lacunarity", "Lacunarity", property_type::prop_float);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_default_value_float(2.0f);
+
+		add_prop("temps", "Temps", property_type::prop_float);
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_default_value_float(2.0f);
 	}
 
-	void process() override
+	bool update_properties() override
 	{
-		const auto octaves = eval_int("Octaves");
-		const auto lacunarity = eval_float("Lacunarity");
-		const auto persistence = eval_float("Persistence");
-		const auto ofrequency = eval_float("Frequency");
-		const auto oamplitude = eval_float("Amplitude");
+		const auto bruit = eval_enum("bruit");
+
+		set_prop_visible("temps", bruit == BRUIT_FLUX);
+
+		return true;
+	}
+
+	const char *nom_entree(size_t /*index*/) override
+	{
+		return "Entrée";
+	}
+
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_BRUIT;
+	}
+
+	void execute(const Context &contexte, double temps) override
+	{
+		entree(0)->requiers_collection(m_collection, contexte, temps);
+
+		const auto taille = eval_float("taille");
+		const auto taille_inverse = (taille > 0.0f) ? 1.0f / taille : 0.0f;
+		const auto octaves = eval_int("octaves");
+		const auto lacunarity = eval_float("lacunarity");
+		const auto persistence = eval_float("persistence");
+		const auto ofrequency = eval_float("frequency");
+		const auto oamplitude = eval_float("amplitude");
+		const auto direction = eval_enum("direction");
+		const auto bruit = eval_enum("bruit");
+
+		if (bruit == BRUIT_FLUX) {
+			const auto temps_bruit = eval_float("temps");
+			m_bruit_flux.change_temps(temps_bruit);
+		}
 
 		for (auto prim : primitive_iterator(this->m_collection)) {
 			PointList *points;
 
+			Attribute *normales = nullptr;
+
 			if (prim->typeID() == Mesh::id) {
 				auto mesh = static_cast<Mesh *>(prim);
 				points = mesh->points();
+				normales = mesh->attribute("normal", ATTR_TYPE_VEC3);
+
+				if (direction == DIRECTION_NORMALE && (normales == nullptr || normales->size() == 0)) {
+					this->ajoute_avertissement("Absence de normales pour calculer le bruit !");
+					continue;
+				}
 			}
 			else if (prim->typeID() == PrimPoints::id) {
 				auto prim_points = static_cast<PrimPoints *>(prim);
 				points = prim_points->points();
+
+				if (direction == DIRECTION_NORMALE) {
+					this->ajoute_avertissement("On ne peut calculer le bruit suivant la normale sur un nuage de points !");
+					continue;
+				}
 			}
 			else {
 				continue;
@@ -867,30 +1084,63 @@ public:
 
 			for (size_t i = 0, e = points->size(); i < e; ++i) {
 				auto &point = (*points)[i];
-				const auto x = point.x;
-				const auto y = point.x;
-				const auto z = point.x;
-				auto output = 0.0f;
+				const auto x = point.x * taille_inverse;
+				const auto y = point.y * taille_inverse;
+				const auto z = point.z * taille_inverse;
+				auto valeur = 0.0f;
+
+				auto frequency = ofrequency;
+				auto amplitude = oamplitude;
 
 				for (size_t j = 0; j < octaves; ++j) {
-					auto frequency = ofrequency;
-					auto amplitude = oamplitude;
-
-					output += (amplitude * simplex_noise_3d(x * frequency, y * frequency, z * frequency));
+					if (bruit == BRUIT_SIMPLEX) {
+						valeur += (amplitude * bruit_simplex_3d(x * frequency, y * frequency, z * frequency));
+					}
+					else if (bruit == BRUIT_PERLIN) {
+						valeur += (amplitude * m_bruit_perlin(x * frequency, y * frequency, z * frequency));
+					}
+					else {
+						valeur += (amplitude * m_bruit_flux(x * frequency, y * frequency, z * frequency));
+					}
 
 					frequency *= lacunarity;
 					amplitude *= persistence;
 				}
 
-				point.x += output;
-				point.y += output;
-				point.z += output;
+				switch (direction) {
+					case DIRECTION_X:
+						point.x += valeur;
+						break;
+					case DIRECTION_Y:
+						point.y += valeur;
+						break;
+					case DIRECTION_Z:
+						point.z += valeur;
+						break;
+					default:
+					case DIRECTION_TOUTE:
+						point.x += valeur;
+						point.y += valeur;
+						point.z += valeur;
+						break;
+					case DIRECTION_NORMALE:
+					{
+						const auto normale = normales->vec3(i);
+						point.x += valeur * normale.x;
+						point.y += valeur * normale.y;
+						point.z += valeur * normale.z;
+						break;
+					}
+				}
 			}
 		}
 	}
 };
 
 /* ************************************************************************** */
+
+static const char *NOM_COULEUR = "Couleur";
+static const char *AIDE_COULEUR = "Ajouter de la couleur.";
 
 enum {
 	COLOR_NODE_VERTEX    = 0,
@@ -902,58 +1152,75 @@ enum {
 	COLOR_NODE_RANDOM = 1,
 };
 
-class ColorNode : public Node {
+class OperateurCouleur : public Operateur {
 public:
-	ColorNode()
-	    : Node("Color")
+	OperateurCouleur(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
 	{
-		addInput("input");
-		addOutput("output");
+		entrees(1);
+		sorties(1);
 
 		EnumProperty scope_enum_prop;
 		scope_enum_prop.insert("Vertex", COLOR_NODE_VERTEX);
 		scope_enum_prop.insert("Primitive", COLOR_NODE_PRIMITIVE);
 
-		add_prop("Scope", property_type::prop_enum);
+		add_prop("scope", "Scope", property_type::prop_enum);
 		set_prop_enum_values(scope_enum_prop);
 
 		EnumProperty color_enum_prop;
 		color_enum_prop.insert("Unique", COLOR_NODE_UNIQUE);
 		color_enum_prop.insert("Random", COLOR_NODE_RANDOM);
 
-		add_prop("Fill Method", property_type::prop_enum);
+		add_prop("fill_method", "Fill Method", property_type::prop_enum);
 		set_prop_enum_values(color_enum_prop);
 
-		add_prop("Color", property_type::prop_vec3);
+		add_prop("color", "Color", property_type::prop_vec3);
 		set_prop_min_max(0.0f, 1.0f);
 		set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
 
-		add_prop("Seed", property_type::prop_int);
+		add_prop("seed", "Seed", property_type::prop_int);
 		set_prop_min_max(1, 100000);
 		set_prop_default_value_int(1);
 	}
 
+	const char *nom_entree(size_t /*index*/) override
+	{
+		return "Entrée";
+	}
+
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_COULEUR;
+	}
+
 	bool update_properties() override
 	{
-		auto method = eval_int("Fill Method");
+		auto method = eval_int("fill_method");
 
 		if (method == COLOR_NODE_UNIQUE) {
-			set_prop_visible("Color", true);
-			set_prop_visible("Seed", false);
+			set_prop_visible("color", true);
+			set_prop_visible("seed", false);
 		}
 		else if (method == COLOR_NODE_RANDOM) {
-			set_prop_visible("Seed", true);
-			set_prop_visible("Color", false);
+			set_prop_visible("seed", true);
+			set_prop_visible("color", false);
 		}
 
 		return true;
 	}
 
-	void process() override
+	void execute(const Context &contexte, double temps) override
 	{
-		const auto &method = eval_int("Fill Method");
-		const auto &scope = eval_int("Scope");
-		const auto &seed = eval_int("Seed");
+		entree(0)->requiers_collection(m_collection, contexte, temps);
+
+		const auto &method = eval_int("fill_method");
+		const auto &scope = eval_int("scope");
+		const auto &seed = eval_int("seed");
 
 		std::mt19937 rng(19937 + seed);
 		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
@@ -974,7 +1241,7 @@ public:
 			}
 
 			if (method == COLOR_NODE_UNIQUE) {
-				const auto &color = eval_vec3("Color");
+				const auto &color = eval_vec3("color");
 
 				for (size_t i = 0, e = colors->size(); i < e; ++i) {
 					colors->vec3(i, color);
@@ -1000,19 +1267,42 @@ public:
 
 /* ************************************************************************** */
 
-class CollectionMergeNode : public Node {
+static const char *NOM_FUSION_COLLECTION = "Fusion collections";
+static const char *AIDE_FUSION_COLLECTION = "Fusionner des collections.";
+
+class OperateurFusionCollection : public Operateur {
 public:
-	CollectionMergeNode()
-	    : Node("Merge Collection")
+	OperateurFusionCollection(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
 	{
-		addInput("input1");
-		addInput("input2");
-		addOutput("output");
+		entrees(2);
+		sorties(1);
 	}
 
-	void process() override
+	const char *nom_entree(size_t index) override
 	{
-		auto collection2 = this->getInputCollection("input2");
+		if (index == 0) {
+			return "Entrée 1";
+		}
+
+		return "Entrée 2";
+	}
+
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_FUSION_COLLECTION;
+	}
+
+	void execute(const Context &contexte, double temps) override
+	{
+		entree(0)->requiers_collection(m_collection, contexte, temps);
+
+		auto collection2 = this->entree(1)->requiers_collection(nullptr, contexte, temps);
 
 		if (collection2 == nullptr) {
 			return;
@@ -1024,38 +1314,53 @@ public:
 
 /* ************************************************************************** */
 
-class CreatePointCloudNode : public Node {
-public:
-	CreatePointCloudNode()
-	    : Node("Point Cloud")
-	{
-		addOutput("Primitive");
+static const char *NOM_CREATION_NUAGE_POINT = "Création nuage point";
+static const char *AIDE_CREATION_NUAGE_POINT = "Création d'un nuage de point.";
 
-		add_prop("Points Count", property_type::prop_int);
+class OperateurCreationNuagePoint : public Operateur {
+public:
+	OperateurCreationNuagePoint(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		sorties(1);
+
+		add_prop("points_count", "Points Count", property_type::prop_int);
 		set_prop_min_max(1, 100000);
 		set_prop_default_value_int(1000);
 
-		add_prop("BBox Min", property_type::prop_vec3);
+		add_prop("bbox_min", "BBox Min", property_type::prop_vec3);
 		set_prop_min_max(-10.0f, 10.0f);
 		set_prop_default_value_vec3(glm::vec3{-1.0f, -1.0f, -1.0f});
 
-		add_prop("BBox Max", property_type::prop_vec3);
+		add_prop("bbox_max", "BBox Max", property_type::prop_vec3);
 		set_prop_min_max(-10.0f, 10.0f);
 		set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
 	}
 
-	void process() override
+	const char *nom_sortie(size_t /*index*/) override
 	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_CREATION_NUAGE_POINT;
+	}
+
+	void execute(const Context &contexte, double /*temps*/) override
+	{
+		m_collection->free_all();
+
 		auto prim = m_collection->build("PrimPoints");
 		auto points = static_cast<PrimPoints *>(prim);
 
-		const auto &point_count = eval_int("Points Count");
+		const auto &point_count = eval_int("points_count");
 
 		auto point_list = points->points();
 		point_list->resize(point_count);
 
-		const auto &bbox_min = eval_vec3("BBox Min");
-		const auto &bbox_max = eval_vec3("BBox Max");
+		const auto &bbox_min = eval_vec3("bbox_min");
+		const auto &bbox_max = eval_vec3("bbox_max");
 
 		std::uniform_real_distribution<float> dist_x(bbox_min[0], bbox_max[0]);
 		std::uniform_real_distribution<float> dist_y(bbox_min[1], bbox_max[1]);
@@ -1075,15 +1380,18 @@ public:
 
 /* ************************************************************************** */
 
-class CreateAttributeNode : public Node {
-public:
-	CreateAttributeNode()
-	    : Node("Attribute Create")
-	{
-		addInput("input");
-		addOutput("output");
+static const char *NOM_CREATION_ATTRIBUT = "Création attribut";
+static const char *AIDE_CREATION_ATTRIBUT = "Création d'un attribut.";
 
-		add_prop("Name", property_type::prop_string);
+class OperateurCreationAttribut : public Operateur {
+public:
+	OperateurCreationAttribut(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		entrees(1);
+		sorties(1);
+
+		add_prop("attribute_name", "Name", property_type::prop_string);
 		set_prop_tooltip("Name of the attribute to create.");
 
 		EnumProperty type_enum;
@@ -1097,21 +1405,38 @@ public:
 		type_enum.insert("3x3 Matrix", ATTR_TYPE_MAT3);
 		type_enum.insert("4x4 Matrix", ATTR_TYPE_MAT4);
 
-		add_prop("Attribute Type", property_type::prop_enum);
+		add_prop("attribute_type", "Attribute Type", property_type::prop_enum);
 		set_prop_enum_values(type_enum);
 	}
 
-	void process() override
+	const char *nom_entree(size_t /*index*/) override
 	{
-		auto name = eval_string("Name");
-		auto attribute_type = static_cast<AttributeType>(eval_enum("Attribute Type"));
+		return "Entrée";
+	}
+
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_CREATION_ATTRIBUT;
+	}
+
+	void execute(const Context &contexte, double temps) override
+	{
+		entree(0)->requiers_collection(m_collection, contexte, temps);
+
+		auto name = eval_string("attribute_name");
+		auto attribute_type = static_cast<AttributeType>(eval_enum("attribute_type"));
 
 		for (Primitive *prim : primitive_iterator(m_collection)) {
 			if (prim->has_attribute(name, attribute_type)) {
 				std::stringstream ss;
 				ss << prim->name() << " already has an attribute named " << name;
 
-				this->add_warning(ss.str());
+				this->ajoute_avertissement(ss.str());
 				continue;
 			}
 
@@ -1139,15 +1464,18 @@ public:
 
 /* ************************************************************************** */
 
-class DeleteAttributeNode : public Node {
-public:
-	DeleteAttributeNode()
-	    : Node("Attribute Delete")
-	{
-		addInput("input");
-		addOutput("output");
+static const char *NOM_SUPPRESSION_ATTRIBUT = "Suppression attribut";
+static const char *AIDE_SUPPRESSION_ATTRIBUT = "Suppression d'un attribut.";
 
-		add_prop("Name", property_type::prop_string);
+class OperateurSuppressionAttribut : public Operateur {
+public:
+	OperateurSuppressionAttribut(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		entrees(1);
+		sorties(1);
+
+		add_prop("attribute_name", "Name", property_type::prop_string);
 		set_prop_tooltip("Name of the attribute to delete.");
 
 		EnumProperty type_enum;
@@ -1161,14 +1489,31 @@ public:
 		type_enum.insert("3x3 Matrix", ATTR_TYPE_MAT3);
 		type_enum.insert("4x4 Matrix", ATTR_TYPE_MAT4);
 
-		add_prop("Attribute Type", property_type::prop_enum);
+		add_prop("attribute_type", "Attribute Type", property_type::prop_enum);
 		set_prop_enum_values(type_enum);
 	}
 
-	void process() override
+	const char *nom_entree(size_t /*index*/) override
 	{
-		auto name = eval_string("Name");
-		auto attribute_type = static_cast<AttributeType>(eval_enum("Attribute Type"));
+		return "Entrée";
+	}
+
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_SUPPRESSION_ATTRIBUT;
+	}
+
+	void execute(const Context &contexte, double temps) override
+	{
+		entree(0)->requiers_collection(m_collection, contexte, temps);
+
+		auto name = eval_string("attribute_name");
+		auto attribute_type = static_cast<AttributeType>(eval_enum("attribute_type"));
 
 		for (Primitive *prim : primitive_iterator(m_collection)) {
 			if (!prim->has_attribute(name, attribute_type)) {
@@ -1182,6 +1527,9 @@ public:
 
 /* ************************************************************************** */
 
+static const char *NOM_RANDOMISATION_ATTRIBUT = "Randomisation attribut";
+static const char *AIDE_RANDOMISATION_ATTRIBUT = "Randomisation d'un attribut.";
+
 enum {
 	DIST_CONSTANT = 0,
 	DIST_UNIFORM,
@@ -1192,15 +1540,15 @@ enum {
 	DIST_DISCRETE,
 };
 
-class RandomiseAttributeNode : public Node {
+class OperateurRandomisationAttribut : public Operateur {
 public:
-	RandomiseAttributeNode()
-	    : Node("Attribute Randomise")
+	OperateurRandomisationAttribut(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
 	{
-		addInput("input");
-		addOutput("output");
+		entrees(1);
+		sorties(1);
 
-		add_prop("Name", property_type::prop_string);
+		add_prop("attribute_name", "Name", property_type::prop_string);
 		set_prop_tooltip("Name of the attribute to randomise.");
 
 		EnumProperty type_enum;
@@ -1214,7 +1562,7 @@ public:
 		type_enum.insert("3x3 Matrix", ATTR_TYPE_MAT3);
 		type_enum.insert("4x4 Matrix", ATTR_TYPE_MAT4);
 
-		add_prop("Attribute Type", property_type::prop_enum);
+		add_prop("attribute_type", "Attribute Type", property_type::prop_enum);
 		set_prop_enum_values(type_enum);
 
 		EnumProperty dist_enum;
@@ -1222,56 +1570,73 @@ public:
 		dist_enum.insert("Uniform", DIST_UNIFORM);
 		dist_enum.insert("Gaussian", DIST_GAUSSIAN);
 
-		add_prop("Distribution", property_type::prop_enum);
+		add_prop("distribution", "Distribution", property_type::prop_enum);
 		set_prop_enum_values(dist_enum);
 
 		/* Constant Value */
-		add_prop("Value", property_type::prop_float);
+		add_prop("value", "Value", property_type::prop_float);
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_default_value_float(1.0f);
 
 		/* Min/Max Value */
-		add_prop("Min Value", property_type::prop_float);
+		add_prop("min_value", "Min Value", property_type::prop_float);
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_default_value_float(0.0f);
 
-		add_prop("Max Value", property_type::prop_float);
+		add_prop("max_value", "Max Value", property_type::prop_float);
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_default_value_float(1.0f);
 
 		/* Gaussian Distribution */
-		add_prop("Mean", property_type::prop_float);
+		add_prop("mean", "Mean", property_type::prop_float);
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_default_value_float(0.0f);
 
-		add_prop("Standard Deviation", property_type::prop_float);
+		add_prop("stddev", "Standard Deviation", property_type::prop_float);
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_default_value_float(1.0f);
 	}
 
+	const char *nom_entree(size_t /*index*/) override
+	{
+		return "Entrée";
+	}
+
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_RANDOMISATION_ATTRIBUT;
+	}
+
 	bool update_properties() override
 	{
-		const auto distribution = eval_enum("Distribution");
+		const auto distribution = eval_enum("distribution");
 
-		set_prop_visible("Value", distribution == DIST_CONSTANT);
-		set_prop_visible("Min Value", distribution == DIST_UNIFORM);
-		set_prop_visible("Max Value", distribution == DIST_UNIFORM);
-		set_prop_visible("Mean", distribution == DIST_GAUSSIAN);
-		set_prop_visible("Standard Deviation", distribution == DIST_GAUSSIAN);
+		set_prop_visible("value", distribution == DIST_CONSTANT);
+		set_prop_visible("min_value", distribution == DIST_UNIFORM);
+		set_prop_visible("max_value", distribution == DIST_UNIFORM);
+		set_prop_visible("mean", distribution == DIST_GAUSSIAN);
+		set_prop_visible("stddev", distribution == DIST_GAUSSIAN);
 
 		return true;
 	}
 
-	void process() override
+	void execute(const Context &contexte, double temps) override
 	{
-		auto name = eval_string("Name");
-		auto attribute_type = static_cast<AttributeType>(eval_enum("Attribute Type"));
-		auto distribution = eval_enum("Distribution");
-		auto value = eval_float("Value");
-		auto min_value = eval_float("Min Value");
-		auto max_value = eval_float("Max Value");
-		auto mean = eval_float("Mean");
-		auto stddev = eval_float("Standard Deviation");
+		entree(0)->requiers_collection(m_collection, contexte, temps);
+
+		auto name = eval_string("attribute_name");
+		auto attribute_type = static_cast<AttributeType>(eval_enum("attribute_type"));
+		auto distribution = eval_enum("distribution");
+		auto value = eval_float("value");
+		auto min_value = eval_float("min_value");
+		auto max_value = eval_float("max_value");
+		auto mean = eval_float("mean");
+		auto stddev = eval_float("stddev");
 
 		std::mt19937 rng(19993754);
 
@@ -1279,7 +1644,7 @@ public:
 			std::stringstream ss;
 			ss << "Only 3D Vector attributes are supported for now!";
 
-			this->add_warning(ss.str());
+			this->ajoute_avertissement(ss.str());
 			return;
 		}
 
@@ -1291,7 +1656,7 @@ public:
 				ss << prim->name() << " does not have an attribute named \"" << name
 				   << "\" of type " << static_cast<int>(attribute_type);
 
-				this->add_warning(ss.str());
+				this->ajoute_avertissement(ss.str());
 				continue;
 			}
 
@@ -1331,23 +1696,780 @@ public:
 
 /* ************************************************************************** */
 
-void register_builtin_nodes(NodeFactory *factory)
-{
-	REGISTER_NODE("Geometry", "Box", CreateBoxNode);
-	REGISTER_NODE("Geometry", "Grid", CreateGridNode);
-	REGISTER_NODE("Geometry", "Torus", CreateTorusNode);
-	REGISTER_NODE("Geometry", "Transform", TransformNode);
-	REGISTER_NODE("Geometry", "Circle", CreateCircleNode);
-	REGISTER_NODE("Geometry", "Tube", CreateTubeNode);
-	REGISTER_NODE("Geometry", "IcoSphere", CreateIcoSphereNode);
-	REGISTER_NODE("Geometry", "Cone", CreateConeNode);
-	REGISTER_NODE("Geometry", "Noise", NoiseNode);
-	REGISTER_NODE("Geometry", "Normal", NormalNode);
-	REGISTER_NODE("Geometry", "Color", ColorNode);
-	REGISTER_NODE("Geometry", "Merge Collection", CollectionMergeNode);
-	REGISTER_NODE("Geometry", "Point Cloud", CreatePointCloudNode);
+struct Triangle {
+	glm::vec3 v0, v1, v2;
+};
 
-	REGISTER_NODE("Attribute", "Attribute Create", CreateAttributeNode);
-	REGISTER_NODE("Attribute", "Attribute Delete", DeleteAttributeNode);
-	REGISTER_NODE("Attribute", "Attribute Randomise", RandomiseAttributeNode);
+std::vector<Triangle> convertis_maillage_triangles(const Mesh *maillage_entree)
+{
+	std::vector<Triangle> triangles;
+	const auto points = maillage_entree->points();
+	const auto polygones = maillage_entree->polys();
+
+	/* Convertis le maillage en triangles. */
+	auto nombre_triangles = 0ul;
+
+	for (auto i = 0ul; i < polygones->size(); ++i) {
+		const auto polygone = (*polygones)[i];
+
+		nombre_triangles += ((polygone[3] == INVALID_INDEX) ? 1 : 2);
+	}
+
+	triangles.reserve(nombre_triangles);
+
+	for (auto i = 0ul; i < polygones->size(); ++i) {
+		const auto polygone = (*polygones)[i];
+
+		Triangle triangle;
+		triangle.v0 = (*points)[polygone[0]];
+		triangle.v1 = (*points)[polygone[1]];
+		triangle.v2 = (*points)[polygone[2]];
+
+		triangles.push_back(triangle);
+
+		if (polygone[3] != INVALID_INDEX) {
+			Triangle triangle2;
+			triangle2.v0 = (*points)[polygone[0]];
+			triangle2.v1 = (*points)[polygone[2]];
+			triangle2.v2 = (*points)[polygone[3]];
+
+			triangles.push_back(triangle2);
+		}
+	}
+
+	return triangles;
+}
+
+static const char *NOM_CREATION_SEGMENTS = "Création courbes";
+static const char *AIDE_CREATION_SEGMENTS = "Création de courbes.";
+
+enum {
+	CREER_COURBES_VERTS = 0,
+	CREER_COURBES_POLYS = 1,
+};
+
+enum {
+	DIRECTION_COURBE_NORMALE       = 0,
+	DIRECTION_COURBE_PERSONNALISEE = 1,
+};
+
+class OperateurCreationCourbes : public Operateur {
+public:
+	OperateurCreationCourbes(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		entrees(1);
+		sorties(1);
+
+		/* méthode */
+		EnumProperty prop_enum;
+		prop_enum.insert("Vertices", CREER_COURBES_VERTS);
+		prop_enum.insert("Polygones", CREER_COURBES_POLYS);
+
+		add_prop("méthode", "Méthode", property_type::prop_enum);
+		set_prop_enum_values(prop_enum);
+		set_prop_default_value_int(0);
+
+		/* graine */
+		add_prop("graine", "Graine", property_type::prop_int);
+		set_prop_min_max(1, 100000);
+		set_prop_default_value_int(1);
+
+		/* nombre courbes */
+		add_prop("nombre_courbes", "Nombre Courbes", property_type::prop_int);
+		set_prop_min_max(1, 1000);
+		set_prop_default_value_int(100);
+		set_prop_tooltip("Nombre de courbes par polygone.");
+
+		add_prop("segments", "Segments", property_type::prop_int);
+		set_prop_default_value_int(1);
+		set_prop_min_max(1, 10);
+		set_prop_tooltip("Nombre de segments dans chaque courbe.");
+
+		add_prop("taille", "Taille", property_type::prop_float);
+		set_prop_default_value_float(1);
+		set_prop_min_max(0.0f, 10.0f);
+		set_prop_tooltip("Taille de chaque segment.");
+
+		/* direction */
+		EnumProperty enum_direcion;
+		enum_direcion.insert("Normale", DIRECTION_COURBE_NORMALE);
+		enum_direcion.insert("Personnalisée", DIRECTION_COURBE_PERSONNALISEE);
+
+		add_prop("direction", "Direction", property_type::prop_enum);
+		set_prop_enum_values(enum_direcion);
+		set_prop_default_value_int(0);
+
+		add_prop("normale", "Normale", property_type::prop_vec3);
+		set_prop_default_value_vec3(glm::vec3{0.0f, 1.0f, 0.0f});
+		set_prop_min_max(-1.0f, 1.0f);
+		set_prop_tooltip("Direction de la courbe.");
+	}
+
+	bool update_properties() override
+	{
+		auto methode = eval_enum("méthode");
+
+		set_prop_visible("graine", methode == CREER_COURBES_POLYS);
+		set_prop_visible("nombre_courbes", methode == CREER_COURBES_POLYS);
+
+		const auto direction = eval_enum("direction");
+		set_prop_visible("normale", direction == DIRECTION_COURBE_PERSONNALISEE);
+
+		return true;
+	}
+
+	const char *nom_entree(size_t /*index*/) override
+	{
+		return "Entrée";
+	}
+
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_CREATION_SEGMENTS;
+	}
+
+	void execute(const Context &contexte, double temps) override
+	{
+		entree(0)->requiers_collection(m_collection, contexte, temps);
+
+		auto iter = primitive_iterator(m_collection, Mesh::id);
+
+		if (iter.get() == nullptr) {
+			this->ajoute_avertissement("No input mesh found!");
+			return;
+		}
+
+		const auto input_mesh = static_cast<Mesh *>(iter.get());
+		const auto input_points = input_mesh->points();
+
+		const auto segment_number = eval_int("segments");
+		const auto segment_normal = eval_vec3("normale");
+		const auto segment_size = eval_float("taille");
+		const auto methode = eval_enum("méthode");
+		const auto direction = eval_enum("direction");
+
+		auto segment_prim = static_cast<SegmentPrim *>(m_collection->build("SegmentPrim"));
+		auto output_edges = segment_prim->edges();
+		auto output_points = segment_prim->points();
+
+		auto num_points = 0ul;
+		auto total_points = 0ul;
+
+		if (methode == CREER_COURBES_VERTS) {
+			Attribute *normales = nullptr;
+
+			if (direction == DIRECTION_COURBE_NORMALE) {
+				normales = input_mesh->attribute("normal", ATTR_TYPE_VEC3);
+
+				if (normales == nullptr || normales->size() == 0) {
+					this->ajoute_avertissement("Il n'y a pas de données de normales sur les vertex d'entrées !");
+					return;
+				}
+			}
+
+			total_points = input_points->size() * (segment_number + 1);
+
+			output_edges->reserve(input_points->size() * segment_number);
+			output_points->reserve(total_points);
+			auto head = 0;
+			glm::vec3 normale;
+
+			for (size_t i = 0; i < input_points->size(); ++i) {
+				auto point = (*input_points)[i];
+
+				switch (direction) {
+					default:
+					case DIRECTION_COURBE_NORMALE:
+					{
+						normale = normales->vec3(i);
+						break;
+					}
+					case DIRECTION_COURBE_PERSONNALISEE:
+					{
+						normale = segment_normal;
+						break;
+					}
+				}
+
+				output_points->push_back(point);
+				++num_points;
+
+				for (int j = 0; j < segment_number; ++j, ++num_points) {
+					point += (segment_size * normale);
+					output_points->push_back(point);
+
+					output_edges->push_back(glm::uvec2{head, ++head});
+				}
+
+				++head;
+			}
+		}
+		else if (methode == CREER_COURBES_POLYS) {
+			auto triangles = convertis_maillage_triangles(input_mesh);
+
+			const auto nombre_courbes = eval_int("nombre_courbes");
+			const auto nombre_polys = triangles.size();
+
+			output_edges->reserve((nombre_courbes * segment_number) * nombre_polys);
+			output_points->reserve(total_points);
+
+			total_points = nombre_polys * nombre_courbes * (segment_number + 1);
+
+			const auto graine = eval_int("graine");
+
+			std::mt19937 rng(19937 + graine);
+			std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+			auto head = 0;
+
+			glm::vec3 normale;
+
+			for (const Triangle &triangle : triangles) {
+				const auto v0 = triangle.v0;
+				const auto v1 = triangle.v1;
+				const auto v2 = triangle.v2;
+
+				const auto e0 = v1 - v0;
+				const auto e1 = v2 - v0;
+
+				switch (direction) {
+					default:
+					case DIRECTION_COURBE_NORMALE:
+					{
+						/* Calcul la normale du polygone. */
+						normale = glm::normalize(normale_triangle(v0, v1, v2));
+						break;
+					}
+					case DIRECTION_COURBE_PERSONNALISEE:
+					{
+						normale = segment_normal;
+						break;
+					}
+				}
+
+				for (size_t j = 0; j < nombre_courbes; ++j) {
+					/* Génère des coordonnées barycentriques aléatoires. */
+					auto r = dist(rng);
+					auto s = dist(rng);
+
+					if (r + s >= 1.0f) {
+						r = 1.0f - r;
+						s = 1.0f - s;
+					}
+
+					auto pos = v0 + r * e0 + s * e1;
+
+					output_points->push_back(pos);
+					++num_points;
+
+					for (int k = 0; k < segment_number; ++k, ++num_points) {
+						pos += (segment_size * normale);
+						output_points->push_back(pos);
+
+						output_edges->push_back(glm::uvec2{head, ++head});
+					}
+
+					++head;
+				}
+			}
+		}
+
+		if (num_points != total_points) {
+			std::stringstream ss;
+
+			if (num_points < total_points) {
+				ss << "Overallocation of points, allocated: " << total_points
+				   << ", final total: " << num_points;
+			}
+			else if (num_points > total_points) {
+				ss << "Underallocation of points, allocated: " << total_points
+				   << ", final total: " << num_points;
+			}
+
+			this->ajoute_avertissement(ss.str());
+		}
+	}
+};
+
+/* ************************************************************************** */
+
+static const char *NOM_GRAVITE = "Gravité";
+static const char *AIDE_GRAVITE = "Applique une force de gravité aux primitives d'entrées.";
+
+struct PlanPhysique {
+	glm::vec3 pos = glm::vec3{0.0f, 0.0f, 0.0f};
+	glm::vec3 nor = glm::vec3{0.0f, 1.0f, 0.0f};
+};
+
+PlanPhysique plan_global;
+
+static bool verifie_collision(const PlanPhysique &plan, const glm::vec3 &pos, const glm::vec3 &vel)
+{
+	const auto &XPdotN = glm::dot(pos - plan.pos, plan.nor);
+
+	/* Est-on à une distance epsilon du plan ? */
+	if (XPdotN >= std::numeric_limits<float>::epsilon()) {
+		return false;
+	}
+
+	/* Va-t-on vers le plan ? */
+	if (glm::dot(plan.nor, vel) >= 0.0f) {
+		return false;
+	}
+
+	return true;
+}
+
+class OperateurGravite : public Operateur {
+	glm::vec3 m_gravite = glm::vec3{0.0f, -9.80665f, 0.0f};
+	PrimitiveCollection *m_collection_original = nullptr;
+	PrimitiveCollection *m_derniere_collection = nullptr;
+	int m_image_debut = 0;
+
+public:
+	OperateurGravite(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		entrees(1);
+		sorties(1);
+	}
+
+	~OperateurGravite()
+	{
+		delete m_collection_original;
+		delete m_derniere_collection;
+	}
+
+	const char *nom_entree(size_t /*index*/) override
+	{
+		return "Entrée";
+	}
+
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_GRAVITE;
+	}
+
+	void execute(const Context &contexte, double temps) override
+	{
+		if (temps == m_image_debut) {
+			m_collection->free_all();
+			entree(0)->requiers_collection(m_collection, contexte, temps);
+
+			delete m_collection_original;
+			m_collection_original = m_collection->copy();
+		}
+		else {
+			m_collection = m_derniere_collection->copy();
+		}
+
+		execute_algorithme(contexte, temps);
+
+		/* Sauvegarde la collection */
+		delete m_derniere_collection;
+		m_derniere_collection = m_collection->copy();
+	}
+
+	void execute_algorithme(const Context &/*contexte*/, double /*temps*/)
+	{
+		/* À FAIRE : passe le temps par image en paramètre. */
+		const auto temps_par_image = 1.0f / 24.0f;
+		const auto gravite = m_gravite * temps_par_image;
+
+		for (Primitive *prim : primitive_iterator(m_collection, PrimPoints::id)) {
+			auto nuage_points = static_cast<PrimPoints *>(prim);
+			auto points = nuage_points->points();
+			auto nombre_points = points->size();
+
+			auto attr_vel = nuage_points->add_attribute("velocité", ATTR_TYPE_VEC3, nombre_points);
+
+			for (auto i = 0ul; i < nombre_points; ++i) {
+				auto &point = (*points)[i];
+				const auto velocite = attr_vel->vec3(i) + gravite;
+				attr_vel->vec3(i, velocite);
+
+				point += velocite;
+
+				/* Calcul la position en espace objet. */
+				const auto pos = nuage_points->matrix() * point;
+
+				/* Vérifie l'existence d'une collision avec le plan global. */
+				if (verifie_collision(plan_global, pos, velocite)) {
+					attr_vel->vec3(i, -velocite);
+				}
+			}
+		}
+	}
+};
+
+/* ************************************************************************** */
+
+static const char *NOM_TAMPON = "Tampon";
+static const char *AIDE_TAMPON = "Met la collection d'entrée dans un tampon pour ne plus la recalculer.";
+
+class OperateurTampon : public Operateur {
+	PrimitiveCollection *m_collecion_tampon = nullptr;
+
+public:
+	OperateurTampon(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		entrees(1);
+		sorties(1);
+
+		m_collecion_tampon = new PrimitiveCollection(contexte.primitive_factory);
+	}
+
+	~OperateurTampon()
+	{
+		delete m_collecion_tampon;
+	}
+
+	const char *nom_entree(size_t /*index*/) override
+	{
+		return "Entrée";
+	}
+
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_TAMPON;
+	}
+
+	void execute(const Context &contexte, double temps) override
+	{
+		/* À FAIRE : généraliser à tous les noeuds + meilleur solution. */
+		m_collection->free_all();
+
+		if (this->besoin_execution()) {
+			m_collecion_tampon->free_all();
+			entree(0)->requiers_collection(m_collecion_tampon, contexte, temps);
+		}
+
+		auto collection_temporaire = m_collecion_tampon->copy();
+		m_collection->merge_collection(*collection_temporaire);
+		delete collection_temporaire;
+	}
+};
+
+/* ************************************************************************** */
+
+static const char *NOM_COMMUTATEUR = "Commutateur";
+static const char *AIDE_COMMUTATEUR = "Change la direction de l'évaluation du"
+									  "graphe en fonction de la prise choisie.";
+
+class OperateurCommutateur : public Operateur {
+public:
+	OperateurCommutateur(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		entrees(2);
+		sorties(1);
+
+		add_prop("prise", "Prise", property_type::prop_int);
+		set_prop_tooltip("L'index de la prise à évaluer");
+		set_prop_default_value_int(0);
+		set_prop_min_max(0, 1);
+	}
+
+	const char *nom_entree(size_t index) override
+	{
+		if (index == 0) {
+			return "Entrée 0";
+		}
+
+		return "Entrée 1";
+	}
+
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_COMMUTATEUR;
+	}
+
+	void execute(const Context &contexte, double temps) override
+	{
+		const auto prise = eval_int("prise");
+		entree(prise)->requiers_collection(m_collection, contexte, temps);
+	}
+};
+
+/* ************************************************************************** */
+
+static const char *NOM_DISPERSION_POINTS = "Dispersion Points";
+static const char *AIDE_DISPERSION_POINTS = "Disperse des points sur une surface.";
+
+class OperateurDispersionPoints : public Operateur {
+public:
+	OperateurDispersionPoints(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		entrees(1);
+		sorties(1);
+
+		/* graine */
+		add_prop("graine", "Graine", property_type::prop_int);
+		set_prop_min_max(1, 100000);
+		set_prop_default_value_int(1);
+
+		/* nombre courbes */
+		add_prop("nombre_points_polys", "Nombre Points Par Polygones", property_type::prop_int);
+		set_prop_min_max(1, 1000);
+		set_prop_default_value_int(100);
+		set_prop_tooltip("Nombre de points par polygone.");
+	}
+
+	const char *nom_entree(size_t /*index*/) override
+	{
+		return "Entrée";
+	}
+
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		return NOM_DISPERSION_POINTS;
+	}
+
+	void execute(const Context &contexte, double temps) override
+	{
+		entree(0)->requiers_collection(m_collection, contexte, temps);
+
+		auto iter = primitive_iterator(m_collection, Mesh::id);
+
+		if (iter.get() == nullptr) {
+			this->ajoute_avertissement("Il n'y a pas de mesh dans la collecion d'entrée !");
+			return;
+		}
+
+		const auto maillage_entree = static_cast<Mesh *>(iter.get());
+
+		auto triangles = convertis_maillage_triangles(maillage_entree);
+
+		auto nuage_points = static_cast<PrimPoints *>(m_collection->build("PrimPoints"));
+		auto points_sorties = nuage_points->points();
+
+		const auto nombre_points_polys = eval_int("nombre_points_polys");
+		const auto nombre_points = triangles.size() * nombre_points_polys;
+
+		points_sorties->reserve(nombre_points);
+
+		const auto graine = eval_int("graine");
+
+		std::mt19937 rng(19937 + graine);
+		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+		for (const Triangle &triangle : triangles) {
+			const auto v0 = triangle.v0;
+			const auto v1 = triangle.v1;
+			const auto v2 = triangle.v2;
+
+			const auto e0 = v1 - v0;
+			const auto e1 = v2 - v0;
+
+			for (size_t j = 0; j < nombre_points_polys; ++j) {
+				/* Génère des coordonnées barycentriques aléatoires. */
+				auto r = dist(rng);
+				auto s = dist(rng);
+
+				if (r + s >= 1.0f) {
+					r = 1.0f - r;
+					s = 1.0f - s;
+				}
+
+				auto pos = v0 + r * e0 + s * e1;
+
+				points_sorties->push_back(pos);
+			}
+		}
+	}
+};
+
+/* ************************************************************************** */
+#if 0
+static const char *NOM_ = "";
+static const char *AIDE_ = "";
+
+class OperateurModele : public Operateur {
+public:
+	OperateurModele(Noeud *noeud, const Context &contexte)
+		: Operateur(noeud, contexte)
+	{
+		entrees(1);
+		sorties(1);
+	}
+
+	const char *nom_entree(size_t /*index*/) override
+	{
+		return "Entrée";
+	}
+
+	const char *nom_sortie(size_t /*index*/) override
+	{
+		return "Sortie";
+	}
+
+	const char *nom() override
+	{
+		retrun NOM_;
+	}
+
+	void execute(const Context &contexte, double temps) override
+	{
+		entree(0)->requiers_collection(m_collection, contexte, temps);
+	}
+};
+#endif
+
+/* ************************************************************************** */
+
+void enregistre_operateurs_integres(UsineOperateur *usine)
+{
+	/* Opérateurs géométrie. */
+
+	auto categorie = "Géométrie";
+
+	usine->enregistre_type(NOM_CREATION_BOITE,
+						   cree_description<OperateurCreationBoite>(NOM_CREATION_BOITE,
+																	AIDE_CREATION_BOITE,
+																	categorie));
+
+	usine->enregistre_type(NOM_CREATION_TORUS,
+						   cree_description<OperateurCreationTorus>(NOM_CREATION_TORUS,
+																	AIDE_CREATION_TORUS,
+																	categorie));
+
+	usine->enregistre_type(NOM_CREATION_CERCLE,
+						   cree_description<OperateurCreationCercle>(NOM_CREATION_CERCLE,
+																	 AIDE_CREATION_CERCLE,
+																	 categorie));
+
+	usine->enregistre_type(NOM_CREATION_GRILLE,
+						   cree_description<OperateurCreationGrille>(NOM_CREATION_GRILLE,
+																	 AIDE_CREATION_GRILLE,
+																	 categorie));
+
+	usine->enregistre_type(NOM_CREATION_TUBE,
+						   cree_description<OperateurCreationTube>(NOM_CREATION_TUBE,
+																   AIDE_CREATION_TUBE,
+																   categorie));
+
+	usine->enregistre_type(NOM_CREATION_CONE,
+						   cree_description<OperateurCreationCone>(NOM_CREATION_CONE,
+																   AIDE_CREATION_CONE,
+																   categorie));
+
+	usine->enregistre_type(NOM_CREATION_ICOSPHERE,
+						   cree_description<OperateurCreationIcoSphere>(NOM_CREATION_ICOSPHERE,
+																		AIDE_CREATION_ICOSPHERE,
+																		categorie));
+
+	usine->enregistre_type(NOM_TRANSFORMATION,
+						   cree_description<OperateurTransformation>(NOM_TRANSFORMATION,
+																	 AIDE_TRANSFORMATION,
+																	 categorie));
+
+	usine->enregistre_type(NOM_NORMAL,
+						   cree_description<OperateurNormal>(NOM_NORMAL,
+															 AIDE_NORMAL,
+															 categorie));
+
+	usine->enregistre_type(NOM_BRUIT,
+						   cree_description<OperateurBruit>(NOM_BRUIT,
+															AIDE_BRUIT,
+															categorie));
+
+	usine->enregistre_type(NOM_COULEUR,
+						   cree_description<OperateurCouleur>(NOM_COULEUR,
+															  AIDE_COULEUR,
+															  categorie));
+
+	usine->enregistre_type(NOM_FUSION_COLLECTION,
+						   cree_description<OperateurFusionCollection>(NOM_FUSION_COLLECTION,
+																	   AIDE_FUSION_COLLECTION,
+																	   categorie));
+
+	usine->enregistre_type(NOM_CREATION_NUAGE_POINT,
+						   cree_description<OperateurCreationNuagePoint>(NOM_CREATION_NUAGE_POINT,
+																		 AIDE_CREATION_NUAGE_POINT,
+																		 categorie));
+
+	usine->enregistre_type(NOM_CREATION_SEGMENTS,
+						   cree_description<OperateurCreationCourbes>(NOM_CREATION_SEGMENTS,
+																	   AIDE_CREATION_SEGMENTS,
+																	   categorie));
+
+	usine->enregistre_type(NOM_DISPERSION_POINTS,
+						   cree_description<OperateurDispersionPoints>(NOM_DISPERSION_POINTS,
+																	   AIDE_DISPERSION_POINTS,
+																	   categorie));
+
+	/* Opérateurs attributs. */
+
+	categorie = "Attributs";
+
+	usine->enregistre_type(NOM_CREATION_ATTRIBUT,
+						   cree_description<OperateurCreationAttribut>(NOM_CREATION_ATTRIBUT,
+																	   AIDE_CREATION_ATTRIBUT,
+																	   categorie));
+
+	usine->enregistre_type(NOM_SUPPRESSION_ATTRIBUT,
+						   cree_description<OperateurSuppressionAttribut>(NOM_SUPPRESSION_ATTRIBUT,
+																		  AIDE_SUPPRESSION_ATTRIBUT,
+																		  categorie));
+
+	usine->enregistre_type(NOM_RANDOMISATION_ATTRIBUT,
+						   cree_description<OperateurRandomisationAttribut>(NOM_RANDOMISATION_ATTRIBUT,
+																			AIDE_RANDOMISATION_ATTRIBUT,
+																			categorie));
+
+	/* Opérateurs physiques. */
+
+	categorie = "Physique";
+
+	usine->enregistre_type(NOM_GRAVITE,
+						   cree_description<OperateurGravite>(NOM_GRAVITE,
+															  AIDE_GRAVITE,
+															  categorie));
+
+	/* Opérateurs autres. */
+
+	categorie = "Autre";
+
+	usine->enregistre_type(NOM_SORTIE,
+						   cree_description<OperateurSortie>(NOM_SORTIE,
+															 AIDE_SORTIE,
+															 categorie));
+
+	usine->enregistre_type(NOM_TAMPON,
+						   cree_description<OperateurTampon>(NOM_TAMPON,
+															 AIDE_TAMPON,
+															 categorie));
+
+	usine->enregistre_type(NOM_COMMUTATEUR,
+						   cree_description<OperateurCommutateur>(NOM_COMMUTATEUR,
+																  AIDE_COMMUTATEUR,
+																  categorie));
 }

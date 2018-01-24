@@ -23,7 +23,7 @@ set(_kamikaze_SEARCH_DIRS
 
 find_path(KAMIKAZE_INCLUDE_DIR
 	NAMES
-		kamikaze/nodes.h
+	    kamikaze/noeud.h
 	HINTS
 		${_kamikaze_SEARCH_DIRS}
 	PATH_SUFFIXES

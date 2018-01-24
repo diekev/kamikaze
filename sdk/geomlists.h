@@ -50,6 +50,33 @@ public:
 	const glm::vec3 &operator[](size_t i) const;
 };
 
+/* ************************************************************************** */
+
+class EdgeList {
+	std::vector<glm::uvec2> m_edge{};
+
+public:
+	EdgeList() = default;
+
+	void push_back(const glm::uvec2 &edge);
+	void push_back(glm::uvec2 &&edge);
+
+	void reserve(size_t n);
+
+	void resize(size_t n);
+
+	size_t size() const;
+
+	size_t byte_size() const;
+
+	const void *data() const;
+
+	glm::uvec2 &operator[](size_t i);
+	const glm::uvec2 &operator[](size_t i) const;
+};
+
+/* ************************************************************************** */
+
 /**
  * @brief INVALID_INDEX Marker used to indicate that a polygon is a triangle,
  *                      e.g. poly[3] = INVALID_INDEX.

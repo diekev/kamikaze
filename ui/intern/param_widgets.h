@@ -176,3 +176,24 @@ private Q_SLOTS:
 Q_SIGNALS:
 	void paramChanged();
 };
+
+/* ********************************** */
+
+class ListParam final : public ListSelector {
+	Q_OBJECT
+
+	std::string *m_value_ptr;
+
+public:
+	explicit ListParam(QWidget *parent = nullptr);
+
+	~ListParam() = default;
+
+	void valuePtr(std::string *ptr);
+
+private Q_SLOTS:
+	void updateValuePtr(const QString &value);
+
+Q_SIGNALS:
+	void paramChanged();
+};

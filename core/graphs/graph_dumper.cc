@@ -24,6 +24,9 @@
 
 #include "graph_dumper.h"
 
+#include <numero7/systeme_fichier/file.h>
+
+#include <iomanip>
 #include <sstream>
 
 #include "depsgraph.h"
@@ -37,11 +40,11 @@ static constexpr auto fontsize = 20.0f;
 static constexpr auto node_label_size = 14.0f;
 static constexpr auto color_value = "gold1";
 
-inline static std::string node_id(const Node *node, bool quoted = true)
+inline static std::string node_id(const Noeud *noeud, bool quoted = true)
 {
 	std::stringstream ss;
 
-	ss << "node_" << node;
+	ss << "node_" << noeud;
 
 	if (quoted) {
 		std::stringstream ssq;
@@ -52,11 +55,11 @@ inline static std::string node_id(const Node *node, bool quoted = true)
 	return ss.str();
 }
 
-inline int get_input_index(const InputSocket *socket)
+inline int get_input_index(const PriseEntree *prise)
 {
 	auto i = 0;
-	for (const auto &input : socket->parent->inputs()) {
-		if (input->name == socket->name) {
+	for (const auto &entree : prise->parent->entrees()) {
+		if (entree->nom == prise->nom) {
 			return i;
 		}
 
@@ -66,11 +69,11 @@ inline int get_input_index(const InputSocket *socket)
 	return -1;
 }
 
-inline int get_output_index(const OutputSocket *socket)
+inline int get_output_index(const PriseSortie *prise)
 {
 	auto i = 0;
-	for (const auto &output : socket->parent->outputs()) {
-		if (output->name == socket->name) {
+	for (const auto &sortie : prise->parent->sorties()) {
+		if (sortie->nom == prise->nom) {
 			return i;
 		}
 
@@ -80,15 +83,15 @@ inline int get_output_index(const OutputSocket *socket)
 	return -1;
 }
 
-inline static std::string input_id(const InputSocket *socket, int index, bool quoted = true)
+inline static std::string input_id(const PriseEntree *prise, int index, bool quoted = true)
 {
 	if (index == -1) {
-		index = get_input_index(socket);
+		index = get_input_index(prise);
 	}
 
 	std::stringstream ss;
 
-	ss << "I" << socket->name << "_" << index;
+	ss << "I" << prise->nom << "_" << index;
 
 	if (quoted) {
 		std::stringstream ssq;
@@ -99,15 +102,15 @@ inline static std::string input_id(const InputSocket *socket, int index, bool qu
 	return ss.str();
 }
 
-inline static std::string output_id(const OutputSocket *socket, int index, bool quoted = true)
+inline static std::string output_id(const PriseSortie *sortie, int index, bool quoted = true)
 {
 	if (index == -1) {
-		index = get_output_index(socket);
+		index = get_output_index(sortie);
 	}
 
 	std::stringstream ss;
 
-	ss << "O" << socket->name << "_" << index;
+	ss << "O" << sortie->nom << "_" << index;
 
 	if (quoted) {
 		std::stringstream ssq;
@@ -118,7 +121,7 @@ inline static std::string output_id(const OutputSocket *socket, int index, bool 
 	return ss.str();
 }
 
-inline void dump_node(filesystem::File &file, Node *node)
+inline void dump_node(numero7::systeme_fichier::File &file, Noeud *noeud)
 {
 	constexpr auto shape = "box";
 	constexpr auto style = "filled,rounded";
@@ -126,22 +129,22 @@ inline void dump_node(filesystem::File &file, Node *node)
 	constexpr auto fillcolor = "gainsboro";
 	auto penwidth = 1.0f;
 
-	file.print("// %s\n", node->name().c_str());
-	file.print("%s", node_id(node).c_str());
+	file.print("// %s\n", noeud->nom().c_str());
+	file.print("%s", node_id(noeud).c_str());
 	file.print("[");
 
 	file.print("label=<<TABLE BORDER=\"0\" CELLBORDER=\"0\" CELLSPACING=\"0\" CELLPADDING=\"4\">");
-	file.print("<TR><TD COLSPAN=\"2\">%s</TD></TR>", node->name().c_str());
+	file.print("<TR><TD COLSPAN=\"2\">%s</TD></TR>", noeud->nom().c_str());
 
-	const auto numin = node->inputs().size();
-	const auto numout = node->outputs().size();
+	const auto numin = noeud->entrees().size();
+	const auto numout = noeud->sorties().size();
 
 	for (size_t i = 0; (i < numin) || (i < numout); ++i) {
 		file.print("<TR>");
 
 		if (i < numin) {
-			const auto &input = node->input(i);
-			const auto &name_in = input->name;
+			const auto &input = noeud->entree(i);
+			const auto &name_in = input->nom;
 
 			file.print("<TD");
 			file.print(" PORT=%s", input_id(input, i).c_str());
@@ -156,8 +159,8 @@ inline void dump_node(filesystem::File &file, Node *node)
 		}
 
 		if (i < numout) {
-			const auto &output = node->output(i);
-			const auto &name_out = output->name;
+			const auto &output = noeud->sortie(i);
+			const auto &name_out = output->nom;
 
 			file.print("<TD");
 			file.print(" PORT=%s", output_id(output, i).c_str());
@@ -187,29 +190,29 @@ inline void dump_node(filesystem::File &file, Node *node)
 	file.print("\n");
 }
 
-inline void dump_link(filesystem::File &file, const OutputSocket *from, const InputSocket *to)
+inline void dump_link(numero7::systeme_fichier::File &file, const PriseSortie *de, const PriseEntree *a)
 {
 	float penwidth = 2.0f;
 
 	file.print("%s:%s -> %s:%s",
-	           node_id(from->parent).c_str(), output_id(from, -1).c_str(),
-	           node_id(to->parent).c_str(), input_id(to, -1).c_str());
+			   node_id(de->parent).c_str(), output_id(de, -1).c_str(),
+			   node_id(a->parent).c_str(), input_id(a, -1).c_str());
 
 	file.print("[");
 
 	/* Note: without label an id seem necessary to avoid bugs in graphviz/dot */
-	file.print("id=\"VAL%s:%s\"", node_id(to->parent, false).c_str(), input_id(to, -1, false).c_str());
+	file.print("id=\"VAL%s:%s\"", node_id(a->parent, false).c_str(), input_id(a, -1, false).c_str());
 	file.print(",penwidth=\"%f\"", penwidth);
 
 	file.print("];\n");
 	file.print("\n");
 }
 
-inline void dump_node_links(filesystem::File &file, const Node *node)
+inline void dump_node_links(numero7::systeme_fichier::File &file, const Noeud *noeud)
 {
-	for (const auto &input : node->inputs()) {
-		if (input->link) {
-			dump_link(file, input->link, input);
+	for (const auto &entree : noeud->entrees()) {
+		if (entree->lien) {
+			dump_link(file, entree->lien, entree);
 		}
 	}
 }
@@ -218,9 +221,9 @@ GraphDumper::GraphDumper(Graph *graph)
     : m_graph(graph)
 {}
 
-void GraphDumper::operator()(const filesystem::path &path)
+void GraphDumper::operator()(const std::experimental::filesystem::path &path)
 {
-	filesystem::File file(path, "w");
+	numero7::systeme_fichier::File file(path, "w");
 
 	if (!file) {
 		return;
@@ -235,12 +238,12 @@ void GraphDumper::operator()(const filesystem::path &path)
 	file.print("label=\"Object Graph\"");
 	file.print("]\n");
 
-	for (const auto &node : m_graph->nodes()) {
-		dump_node(file, node.get());
+	for (const auto &noeud : m_graph->noeuds()) {
+		dump_node(file, noeud.get());
 	}
 
-	for (const auto &node : m_graph->nodes()) {
-		dump_node_links(file, node.get());
+	for (const auto &noeud : m_graph->noeuds()) {
+		dump_node_links(file, noeud.get());
 	}
 
 	file.print("}\n");
@@ -295,7 +298,7 @@ kmkz_inline std::string output_id(const DepsOutputSocket */*socket*/, bool quote
 	return ss.str();
 }
 
-kmkz_inline void dump_node(filesystem::File &file, DepsNode *node)
+kmkz_inline void dump_node(numero7::systeme_fichier::File &file, DepsNode *node)
 {
 	constexpr auto shape = "box";
 	constexpr auto style = "filled,rounded";
@@ -351,7 +354,7 @@ kmkz_inline void dump_node(filesystem::File &file, DepsNode *node)
 	file.print("\n");
 }
 
-kmkz_inline void dump_link(filesystem::File &file,
+kmkz_inline void dump_link(numero7::systeme_fichier::File &file,
                            const DepsOutputSocket *from,
                            const DepsInputSocket *to)
 {
@@ -371,7 +374,7 @@ kmkz_inline void dump_link(filesystem::File &file,
 	file.print("\n");
 }
 
-kmkz_inline void dump_node_links(filesystem::File &file, const DepsNode *node)
+kmkz_inline void dump_node_links(numero7::systeme_fichier::File &file, const DepsNode *node)
 {
 	for (const auto &output : node->input()->links) {
 		dump_link(file, output, node->input());
@@ -382,9 +385,9 @@ DepsGraphDumper::DepsGraphDumper(Depsgraph *graph)
     : m_graph(graph)
 {}
 
-void DepsGraphDumper::operator()(const filesystem::path &path)
+void DepsGraphDumper::operator()(const std::experimental::filesystem::path &path)
 {
-	filesystem::File file(path, "w");
+	numero7::systeme_fichier::File file(path, "w");
 
 	if (!file) {
 		return;
