@@ -36,9 +36,10 @@
 #include "graph_dumper.h"
 #include "graph_tools.h"
 
+#include "operateurs/operateurs_standards.h"
+
 #include "object.h"
 #include "object_graph.h"
-#include "object_nodes.h"
 #include "scene.h"
 #include "task.h"
 

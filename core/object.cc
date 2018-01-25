@@ -28,7 +28,7 @@
 #include <kamikaze/context.h>
 #include <kamikaze/primitive.h>
 
-#include "graphs/object_nodes.h"
+#include "operateurs/operateurs_standards.h"
 
 #include "scene.h"
 #include "task.h"

@@ -253,6 +253,10 @@ void RenderBuffer::render(const ViewerContext &context)
 	m_program.enable();
 	m_buffer_data->bind();
 
+	if (m_has_texture) {
+		m_texture->bind();
+	}
+
 	glUniformMatrix4fv(m_program("matrix"), 1, GL_FALSE, glm::value_ptr(context.matrix()));
 	glUniformMatrix4fv(m_program("MVP"), 1, GL_FALSE, glm::value_ptr(context.MVP()));
 
@@ -277,6 +281,10 @@ void RenderBuffer::render(const ViewerContext &context)
 
 	numero7::ego::util::GPU_check_errors("Error rendering buffer\n");
 
+	if (m_has_texture) {
+		m_texture->unbind();
+	}
+
 	m_buffer_data->unbind();
 	m_program.disable();
 
@@ -291,6 +299,16 @@ void RenderBuffer::render(const ViewerContext &context)
 numero7::ego::Program *RenderBuffer::program()
 {
 	return &m_program;
+}
+
+numero7::ego::Texture3D *RenderBuffer::add_texture_3D()
+{
+	if (!m_texture.get()) {
+		m_has_texture = true;
+		m_texture.reset(new numero7::ego::Texture3D(0));
+	}
+
+	return m_texture.get();
 }
 
 /* ************************************************************************** */

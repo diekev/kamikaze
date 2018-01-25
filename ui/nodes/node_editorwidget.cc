@@ -42,7 +42,7 @@
 
 #include "object.h"
 #include "graphs/object_graph.h"
-#include "graphs/object_nodes.h"
+#include "operateurs/operateurs_standards.h"
 
 static constexpr auto NODE_ACTION_DELETE = "Delete selected items";
 static constexpr auto NODE_ACTION_CENTER = "Center";

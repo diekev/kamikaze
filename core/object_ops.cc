@@ -30,7 +30,7 @@
 #include <kamikaze/primitive.h>
 
 #include "graphs/object_graph.h"
-#include "graphs/object_nodes.h"
+#include "operateurs/operateurs_standards.h"
 
 #include "object.h"
 #include "scene.h"
