@@ -1449,42 +1449,42 @@ void QtNodeEditor::sendNotification() const
 }
 
 struct NodeData {
-	Node *node = nullptr;
+	Noeud *node = nullptr;
 	int level = 0;
 };
 
 static inline auto is_linked(const NodeData *data)
 {
 	auto node = data->node;
-	return node->isLinked();
+	return node->est_connecte();
 }
 
-static inline auto is_linked(InputSocket *socket)
+static inline auto is_linked(PriseEntree *prise)
 {
-	return socket->link != nullptr;
+	return prise->lien != nullptr;
 }
 
 static inline auto get_input(const NodeData *data, size_t index)
 {
 	auto node = data->node;
-	return node->input(index);
+	return node->entree(index);
 }
 
-static inline auto get_link_parent(InputSocket *socket)
+static inline auto get_link_parent(PriseEntree *prise)
 {
-	return socket->link->parent;
+	return prise->lien->parent;
 }
 
 static inline auto num_inputs(const NodeData *data)
 {
 	auto node = data->node;
-	return node->inputs().size();
+	return node->entrees().size();
 }
 
 static inline auto is_zero_out_degree(const NodeData *data)
 {
 	auto node = data->node;
-	return node->outputs().size() == 0;
+	return node->sorties().size() == 0;
 }
 
 static inline auto get_degree(const NodeData *data)
@@ -1492,8 +1492,8 @@ static inline auto get_degree(const NodeData *data)
 	auto node = data->node;
 	auto degree = 0;
 
-	for (OutputSocket *socket : node->outputs()) {
-		degree += socket->links.size();
+	for (PriseSortie *socket : node->sorties()) {
+		degree += socket->liens.size();
 	}
 
 	return degree;
@@ -1514,13 +1514,13 @@ void QtNodeEditor::auto_layout() const
 		auto object = static_cast<Object *>(scene->active_node());
 		auto graph = object->graph();
 
-		const auto &m_nodes = graph->nodes();
+		const auto &m_nodes = graph->noeuds();
 
 		/* Init data. */
 		std::vector<NodeData *> nodes(m_nodes.size());
 
 		std::transform(m_nodes.begin(), m_nodes.end(), nodes.begin(),
-		               [](const std::unique_ptr<Node> &node) -> NodeData*
+					   [](const std::unique_ptr<Noeud> &node) -> NodeData*
 		{
 			auto data = new NodeData;
 			data->node = node.get();
@@ -1542,8 +1542,8 @@ void QtNodeEditor::auto_layout() const
 			NodeData *data = *iter;
 			auto node = data->node;
 
-			node->xpos(xpos);
-			node->ypos(ypos);
+			node->posx(xpos);
+			node->posy(ypos);
 			xpos += offset;
 		}
 	}
