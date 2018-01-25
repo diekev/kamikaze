@@ -52,6 +52,7 @@ set(LIBS
 	${TBB_LIBRARIES}
 
 	${EGO_LIBRARIES}
+	${KANGAO_LIBRARIES}
 )
 
 add_compile_options(-fPIC)

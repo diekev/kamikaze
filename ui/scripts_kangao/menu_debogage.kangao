@@ -1,0 +1,4 @@
+menu "Débogage" {
+    action(valeur="Dessine Graphe Objet"; attache="dessine_graphe_objet")
+	action(valeur="Dessine Graphe Dépendance"; attache="dessine_graphe_dependance")
+}

@@ -28,10 +28,17 @@ set(INC_SYS
 	${EGO_INCLUDE_DIRS}
 	${FILESYSTEM_INCLUDE_DIRS}
 	${KAMIKAZE_INCLUDE_DIRS}
+	${KANGAO_INCLUDE_DIRS}
 	${QT5_CORE_INCLUDE_DIRS}
 	${QT5_GUI_INCLUDE_DIRS}
 	${QT5_OPENGL_INCLUDE_DIRS}
 	${QT5_WIDGETS_INCLUDE_DIRS}
+)
+
+set(FICHIERS_KANGAO
+	scripts_kangao/menu_debogage.kangao
+	scripts_kangao/menu_fichier.kangao
+	scripts_kangao/menu_objet.kangao
 )
 
 add_compile_options(-fPIC)
@@ -93,6 +100,13 @@ add_library(kmk_ui STATIC
 	nodes/node_editorwidget.cc
 	nodes/node_node.cc
 	nodes/node_port.cc
+
+	${FICHIERS_KANGAO}
 )
 
 target_include_directories(kmk_ui PUBLIC "${INC_SYS}")
+
+install(
+	FILES ${FICHIERS_KANGAO}
+	DESTINATION interface
+)

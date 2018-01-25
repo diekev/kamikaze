@@ -33,6 +33,7 @@
 
 class Main;
 class QProgressBar;
+class RepondantCommande;
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -61,6 +62,8 @@ class MainWindow : public QMainWindow {
 
 	std::vector<QAction *> m_actions_menu_recent;
 	std::vector<QString> m_fichiers_recent = {};
+
+	RepondantCommande *m_repondant_commande;
 
 public:
 	explicit MainWindow(Main *main, QWidget *parent = nullptr);

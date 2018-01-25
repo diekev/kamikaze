@@ -24,7 +24,12 @@
 
 #include "mainwindow.h"
 
+#include <fstream>
+
 #include <kamikaze/primitive.h>
+
+#include <kangao/kangao.h>
+#include <kangao/repondant_bouton.h>
 
 #include <QDockWidget>
 #include <QMessageBox>
@@ -48,20 +53,57 @@
 #include "utils_ui.h"
 #include "viewer.h"
 
+static const char *chemins_scripts[] = {
+	"interface/menu_fichier.kangao",
+	"interface/menu_objet.kangao",
+	"interface/menu_debogage.kangao",
+};
+
 static constexpr auto MAX_FICHIER_RECENT = 10;
+
+class RepondantCommande : public kangao::RepondantBouton {
+	Context *m_contexte = nullptr;
+	CommandFactory *m_usine_commandes = nullptr;
+	CommandManager *m_gestionnaire_commandes = nullptr;
+
+public:
+	RepondantCommande(
+			Context *contexte,
+			CommandFactory *usine_commande,
+			CommandManager *gestionnaire)
+		: m_contexte(contexte)
+		, m_usine_commandes(usine_commande)
+		, m_gestionnaire_commandes(gestionnaire)
+	{}
+
+	void repond_clique(const std::string &identifiant, const std::string &metadonnee)
+	{
+		std::cerr << "Répond clique : " << identifiant << ", " << metadonnee << '\n';
+
+		/* Get command, and give it the name of the UI button which will be used to
+		 * look up keys in the various creation factories if need be. This could and
+		 * should be handled better. */
+		auto cmd = (*m_usine_commandes)(identifiant);
+		cmd->setName(metadonnee);
+
+		/* Execute the command in the current context, the manager will push the
+		* command on the undo stack. */
+		m_gestionnaire_commandes->execute(cmd, *m_contexte);
+	}
+};
 
 MainWindow::MainWindow(Main *main, QWidget *parent)
     : QMainWindow(parent)
     , m_main(main)
     , m_command_manager(new CommandManager)
     , m_command_factory(new CommandFactory)
+	, m_repondant_commande(new RepondantCommande(&m_context, m_command_factory, m_command_manager))
 {
 	genere_menu_fichier();
-	generateObjectMenu();
 	generateNodeMenu();
 	generateWindowMenu();
 	generatePresetMenu();
-	generateDebugMenu();
+//	generateDebugMenu();
 
 	m_progress_bar = new QProgressBar(this);
 	statusBar()->addWidget(m_progress_bar);
@@ -88,10 +130,13 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	setCentralWidget(nullptr);
 
 	charge_reglages();
+
+	REGISTER_COMMAND(m_command_factory, "ajouter_objet", AddObjectCmd);
 }
 
 MainWindow::~MainWindow()
 {
+	delete m_repondant_commande;
 	delete m_command_manager;
 	delete m_command_factory;
 }
@@ -127,17 +172,6 @@ void MainWindow::redo() const
 {
 	/* TODO: figure out how to update everything properly */
 	m_command_manager->redo();
-}
-
-void MainWindow::generateObjectMenu()
-{
-	REGISTER_COMMAND(m_command_factory, "add object", AddObjectCmd);
-
-	m_add_object_menu = menuBar()->addMenu("Add Object");
-	auto action = m_add_object_menu->addAction("Empty Object");
-	action->setData(QVariant::fromValue(QString("add object")));
-
-	connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
 }
 
 void MainWindow::generateDebugMenu()
@@ -226,6 +260,7 @@ void MainWindow::generateEditMenu()
 
 void MainWindow::genere_menu_fichier()
 {
+#if 0
 	auto menu_fichier = menuBar()->addMenu("Fichier");
 
 	QAction *action;
@@ -251,6 +286,28 @@ void MainWindow::genere_menu_fichier()
 
 	action = menu_fichier->addAction("Sauvegarder sous...");
 	connect(action, SIGNAL(triggered()), this, SLOT(sauve_fichier_sous()));
+#else
+	kangao::DonneesInterface donnees;
+	donnees.manipulable = nullptr;
+	donnees.conteneur = nullptr;
+	donnees.repondant_bouton = m_repondant_commande;
+
+	for (const auto &chemin : chemins_scripts) {
+		std::ifstream entree;
+		entree.open(chemin);
+
+		std::string texte_entree;
+		std::string temp;
+
+		while (std::getline(entree, temp)) {
+			texte_entree += temp;
+		}
+
+		auto menu = kangao::compile_menu(donnees, texte_entree.c_str());
+
+		menuBar()->addMenu(menu);
+	}
+#endif
 }
 
 void MainWindow::generatePresetMenu()
@@ -385,6 +442,8 @@ void MainWindow::ajoute_fichier_recent(const QString &name, bool update_menu)
 
 void MainWindow::mis_a_jour_menu_fichier_recent()
 {
+	/* À FAIRE */
+#if 0
 	if (m_fichiers_recent.empty()) {
 		return;
 	}
@@ -399,6 +458,7 @@ void MainWindow::mis_a_jour_menu_fichier_recent()
 		m_actions_menu_recent[i]->setData(filename);
 		m_actions_menu_recent[i]->setVisible(true);
 	}
+#endif
 }
 
 void MainWindow::sauve_fichier()

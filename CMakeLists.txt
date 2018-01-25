@@ -51,6 +51,7 @@ add_definitions(-DGLM_FORCE_RADIANS)
 find_package(Ego REQUIRED)
 find_package(FileSystem REQUIRED)
 find_package(Kamikaze REQUIRED)
+find_package(Kangao REQUIRED)
 find_package(TestUnitaire REQUIRED)
 
 find_package(Qt5Core REQUIRED)

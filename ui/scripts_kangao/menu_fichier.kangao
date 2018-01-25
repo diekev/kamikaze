@@ -1,0 +1,11 @@
+menu "Fichier" {
+    action(valeur="Ouvrir"; attache="ouvrir_fichier")
+
+    menu "Projets Récents" {
+	}
+
+    séparateur
+
+    action(valeur="Sauvegarder"; attache="sauvegarder")
+	action(valeur="Sauvegarder sous..."; attache="sauvegarder_sous")
+}
