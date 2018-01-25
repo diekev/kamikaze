@@ -164,14 +164,17 @@ void MainWindow::nodeProcessed()
 
 void MainWindow::generateNodeMenu()
 {
-	m_add_nodes_menu = menuBar()->addMenu("Ajoute Noeud");
-
 	auto categories = m_main->usine_operateur()->categories();
 
+	std::stringstream ss;
+
+	ss << "menu \"Ajoute Noeud\" {\n";
+
 	for (const auto &categorie : categories) {
-		auto menu = m_add_nodes_menu->addMenu(categorie.c_str());
+		ss << "\tmenu \"" << categorie << "\" {\n";
 
 		auto cles = m_main->usine_operateur()->cles(categorie);
+
 		std::sort(cles.begin(), cles.end(),
 				  [](const DescOperateur &desc1, const DescOperateur &desc2)
 		{
@@ -179,12 +182,21 @@ void MainWindow::generateNodeMenu()
 		});
 
 		for (const auto &description : cles) {
-			auto action = menu->addAction(description.nom.c_str());
-			action->setData(QVariant::fromValue(QString("add node")));
-
-			//connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
+			ss << "\t\taction(valeur=\"" << description.nom << "\"; attache=\"ajouter_noeud\"; métadonnée=\"" << description.nom << "\")\n";
 		}
+
+		ss << "\t}\n";
 	}
+
+	ss << "}";
+
+	kangao::DonneesInterface donnees;
+	donnees.manipulable = nullptr;
+	donnees.conteneur = nullptr;
+	donnees.repondant_bouton = m_repondant_commande;
+
+	m_add_nodes_menu = kangao::compile_menu(donnees, ss.str().c_str());
+	menuBar()->addMenu(m_add_nodes_menu);
 }
 
 void MainWindow::generateWindowMenu()

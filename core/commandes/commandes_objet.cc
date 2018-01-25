@@ -155,6 +155,6 @@ void AddPresetObjectCmd::redo()
 void enregistre_commandes_objet(CommandFactory *usine)
 {
 	REGISTER_COMMAND(usine, "ajouter_objet", AddObjectCmd);
-	REGISTER_COMMAND(usine, "add node", AddNodeCmd);
+	REGISTER_COMMAND(usine, "ajouter_noeud", AddNodeCmd);
 	REGISTER_COMMAND(usine, "add preset", AddPresetObjectCmd);
 }
