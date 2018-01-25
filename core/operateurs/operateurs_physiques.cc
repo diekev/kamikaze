@@ -94,6 +94,11 @@ OperateurPhysique::OperateurPhysique(Noeud *noeud, const Context &contexte)
 {
 	entrees(1);
 	sorties(1);
+
+	add_prop("début", "Début", property_type::prop_int);
+	set_prop_min_max(0, 250);
+	set_prop_default_value_int(0);
+	set_prop_tooltip("Le temps en image auquel la simulation démarre.");
 }
 
 OperateurPhysique::~OperateurPhysique()
@@ -114,9 +119,20 @@ const char *OperateurPhysique::nom_sortie(size_t)
 
 void OperateurPhysique::execute(const Context &contexte, double temps)
 {
-	if (temps == m_image_debut) {
+	const auto image_debut = eval_int("début");
+
+	if (image_debut != m_image_debut) {
+		m_image_debut = image_debut;
+		m_collection->free_all();
+	}
+
+	if (temps <= m_image_debut) {
 		m_collection->free_all();
 		entree(0)->requiers_collection(m_collection, contexte, temps);
+
+		if (temps < m_image_debut) {
+			return;
+		}
 
 		delete m_collection_original;
 		m_collection_original = m_collection->copy();
