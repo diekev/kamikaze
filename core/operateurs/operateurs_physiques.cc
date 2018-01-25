@@ -69,6 +69,8 @@ protected:
 	PrimitiveCollection *m_derniere_collection = nullptr;
 	int m_image_debut = 0;
 
+	double m_dernier_temps = 0;
+
 public:
 	OperateurPhysique(Noeud *noeud, const Context &contexte);
 
@@ -127,13 +129,17 @@ void OperateurPhysique::execute(const Context &contexte, double temps)
 		m_collection = m_derniere_collection->copy();
 	}
 
-	execute_algorithme(contexte, temps);
-
-	synchronise_donnees();
+	/* N'éxecute que si le temps à avancer. */
+	if (m_dernier_temps + 1.0 == temps) {
+		execute_algorithme(contexte, temps);
+		synchronise_donnees();
+	}
 
 	/* Sauvegarde la collection */
 	delete m_derniere_collection;
 	m_derniere_collection = m_collection->copy();
+
+	m_dernier_temps = temps;
 }
 
 /* ************************************************************************** */
