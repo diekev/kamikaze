@@ -43,7 +43,6 @@
 #include "core/graphs/graph_dumper.h"
 #include "core/kamikaze_main.h"
 #include "core/object.h"
-#include "core/object_ops.h"
 #include "core/sauvegarde.h"
 
 #include "node_editorwidget.h"
@@ -62,16 +61,19 @@ static const char *chemins_scripts[] = {
 static constexpr auto MAX_FICHIER_RECENT = 10;
 
 class RepondantCommande : public kangao::RepondantBouton {
+	Main *m_main = nullptr;
 	Context *m_contexte = nullptr;
 	CommandFactory *m_usine_commandes = nullptr;
 	CommandManager *m_gestionnaire_commandes = nullptr;
 
 public:
 	RepondantCommande(
+			Main *main,
 			Context *contexte,
 			CommandFactory *usine_commande,
 			CommandManager *gestionnaire)
-		: m_contexte(contexte)
+		: m_main(main)
+		, m_contexte(contexte)
 		, m_usine_commandes(usine_commande)
 		, m_gestionnaire_commandes(gestionnaire)
 	{}
@@ -88,7 +90,7 @@ public:
 
 		/* Execute the command in the current context, the manager will push the
 		* command on the undo stack. */
-		m_gestionnaire_commandes->execute(cmd, *m_contexte);
+		m_gestionnaire_commandes->execute(m_main, cmd, *m_contexte);
 	}
 };
 
@@ -97,13 +99,12 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
     , m_main(main)
     , m_command_manager(new CommandManager)
     , m_command_factory(new CommandFactory)
-	, m_repondant_commande(new RepondantCommande(&m_context, m_command_factory, m_command_manager))
+	, m_repondant_commande(new RepondantCommande(main, &m_context, m_command_factory, m_command_manager))
 {
 	genere_menu_fichier();
 	generateNodeMenu();
 	generateWindowMenu();
 	generatePresetMenu();
-//	generateDebugMenu();
 
 	m_progress_bar = new QProgressBar(this);
 	statusBar()->addWidget(m_progress_bar);
@@ -130,8 +131,6 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 	setCentralWidget(nullptr);
 
 	charge_reglages();
-
-	REGISTER_COMMAND(m_command_factory, "ajouter_objet", AddObjectCmd);
 }
 
 MainWindow::~MainWindow()
@@ -174,27 +173,8 @@ void MainWindow::redo() const
 	m_command_manager->redo();
 }
 
-void MainWindow::generateDebugMenu()
-{
-	m_add_object_menu = menuBar()->addMenu("Debug");
-
-	QAction *action;
-
-	action = m_add_object_menu->addAction("Dump Dependency Graph");
-	action->setData(QVariant::fromValue(QString("dump_dependency_graph")));
-
-	connect(action, SIGNAL(triggered()), this, SLOT(dumpGraph()));
-
-	action = m_add_object_menu->addAction("Dump Object Graph");
-	action->setData(QVariant::fromValue(QString("dump_object_graph")));
-
-	connect(action, SIGNAL(triggered()), this, SLOT(dumpGraph()));
-}
-
 void MainWindow::generateNodeMenu()
 {
-	REGISTER_COMMAND(m_command_factory, "add node", AddNodeCmd);
-
 	m_add_nodes_menu = menuBar()->addMenu("Ajoute Noeud");
 
 	auto categories = m_main->usine_operateur()->categories();
@@ -213,7 +193,7 @@ void MainWindow::generateNodeMenu()
 			auto action = menu->addAction(description.nom.c_str());
 			action->setData(QVariant::fromValue(QString("add node")));
 
-			connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
+			//connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
 		}
 	}
 }
@@ -312,8 +292,6 @@ void MainWindow::genere_menu_fichier()
 
 void MainWindow::generatePresetMenu()
 {
-	REGISTER_COMMAND(m_command_factory, "add preset", AddPresetObjectCmd);
-
 	m_tool_bar = new QToolBar();
 	addToolBar(Qt::TopToolBarArea, m_tool_bar);
 
@@ -332,42 +310,8 @@ void MainWindow::generatePresetMenu()
 		auto action = m_tool_bar->addAction(QIcon(prop.icon_path), prop.name);
 		action->setData(QVariant::fromValue(QString("add preset")));
 
-		connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
+		//connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
 	}
-}
-
-void MainWindow::handleCommand()
-{
-	auto action = qobject_cast<QAction *>(sender());
-
-	if (!action) {
-		return;
-	}
-
-	const auto &name = action->text().toStdString();
-	const auto &data = action->data().toString().toStdString();
-
-	/* Get command, and give it the name of the UI button which will be used to
-	 * look up keys in the various creation factories if need be. This could and
-	 * should be handled better. */
-	auto cmd = (*m_command_factory)(data);
-	cmd->setName(name);
-
-	/* Execute the command in the current context, the manager will push the
-	* command on the undo stack. */
-	m_command_manager->execute(cmd, m_context);
-}
-
-void MainWindow::ouvre_fichier()
-{
-	const auto nom_fichier = QFileDialog::getOpenFileName(this);
-
-	if (nom_fichier.isEmpty()) {
-		return;
-	}
-
-	const auto &chemin_projet = nom_fichier.toStdString();
-	ouvre_fichier_implementation(chemin_projet);
 }
 
 void MainWindow::ouvre_fichier_recent()
@@ -459,32 +403,6 @@ void MainWindow::mis_a_jour_menu_fichier_recent()
 		m_actions_menu_recent[i]->setVisible(true);
 	}
 #endif
-}
-
-void MainWindow::sauve_fichier()
-{
-	if (m_main->projet_ouvert()) {
-		kamikaze::sauvegarde_projet(m_main->chemin_projet(), *m_main, m_context.scene);
-	}
-	else {
-		sauve_fichier_sous();
-	}
-}
-
-void MainWindow::sauve_fichier_sous()
-{
-	const auto nom_fichier = QFileDialog::getSaveFileName(this);
-
-	if (nom_fichier.isEmpty()) {
-		return;
-	}
-
-	const auto &chemin_projet = nom_fichier.toStdString();
-
-	m_main->chemin_projet(chemin_projet);
-	m_main->projet_ouvert(true);
-
-	kamikaze::sauvegarde_projet(chemin_projet, *m_main, m_context.scene);
 }
 
 void MainWindow::addTimeLineWidget()
@@ -600,43 +518,6 @@ void MainWindow::addPropertiesWidget()
 	addDockWidget(Qt::RightDockWidgetArea, dock);
 }
 
-void MainWindow::dumpGraph()
-{
-	auto action = qobject_cast<QAction *>(sender());
-
-	if (!action) {
-		return;
-	}
-
-	auto data = action->data().toString();
-	auto scene = m_context.scene;
-
-	if (data == "dump_object_graph") {
-		auto scene_node = scene->active_node();
-
-		if (!scene_node) {
-			return;
-		}
-
-		auto object = static_cast<Object *>(scene_node);
-
-		GraphDumper gd(object->graph());
-		gd("/tmp/object_graph.gv");
-
-		if (system("dot /tmp/object_graph.gv -Tpng -o object_graph.png") == -1) {
-			std::cerr << "Cannot create graph image from dot\n";
-		}
-	}
-	else if (data == "dump_dependency_graph") {
-		DepsGraphDumper gd(scene->depsgraph());
-		gd("/tmp/depsgraph.gv");
-
-		if (system("dot /tmp/depsgraph.gv -Tpng -o depsgraph.png") == -1) {
-			std::cerr << "Cannot create graph image from dot\n";
-		}
-	}
-}
-
 void MainWindow::closeEvent(QCloseEvent *)
 {
 	ecrit_reglages();
@@ -667,4 +548,19 @@ void MainWindow::charge_reglages()
 	}
 
 	mis_a_jour_menu_fichier_recent();
+}
+
+std::string MainWindow::requiers_dialogue(int type)
+{
+	if (type == FICHIER_OUVERTURE) {
+		const auto chemin = QFileDialog::getOpenFileName(this);
+		return chemin.toStdString();
+	}
+
+	if (type == FICHIER_SAUVEGARDE) {
+		const auto chemin = QFileDialog::getSaveFileName(this);
+		return chemin.toStdString();
+	}
+
+	return "";
 }

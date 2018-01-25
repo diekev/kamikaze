@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software  Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
- * The Original Code is Copyright (C) 2016 Kévin Dietrich.
+ * The Original Code is Copyright (C) 2018 Kévin Dietrich.
  * All rights reserved.
  *
  * ***** END GPL LICENSE BLOCK *****
@@ -24,42 +24,6 @@
 
 #pragma once
 
-#include <kamikaze/factory.h>
+#include "undo.h"
 
-#include <stack>
-#include <unordered_map>
-
-class Context;
-class Main;
-class ParamCallback;
-
-class Command {
-protected:
-	std::string m_name;
-
-public:
-	virtual ~Command() = default;
-
-	virtual void execute(Main *main, const Context &context) = 0;
-	virtual void undo() = 0;
-	virtual void redo() = 0;
-
-	void setName(const std::string &name);
-};
-
-class CommandManager final {
-	std::stack<Command *> m_undo_commands;
-	std::stack<Command *> m_redo_commands;
-
-public:
-	~CommandManager();
-
-	void execute(Main *main, Command *command, const Context &context);
-	void undo();
-	void redo();
-};
-
-using CommandFactory = Factory<Command>;
-
-#define REGISTER_COMMAND(factory, name, type) \
-	REGISTER_TYPE(factory, name, Command, type)
+void enregistre_commandes_projet(CommandFactory *usine);

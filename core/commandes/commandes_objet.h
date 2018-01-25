@@ -26,6 +26,8 @@
 
 #include "undo.h"
 
+void enregistre_commandes_objet(CommandFactory *usine);
+
 class Object;
 class Scene;
 class SolverFactory;
@@ -38,7 +40,7 @@ public:
 	AddObjectCmd() = default;
 	~AddObjectCmd() = default;
 
-	void execute(const Context &context) override;
+	void execute(Main *main, const Context &context) override;
 	void undo() override;
 	void redo() override;
 };
@@ -51,7 +53,7 @@ public:
 	AddNodeCmd() = default;
 	~AddNodeCmd() = default;
 
-	void execute(const Context &context) override;
+	void execute(Main *main, const Context &context) override;
 	void undo() override;
 	void redo() override;
 };
@@ -64,7 +66,7 @@ public:
 	AddPresetObjectCmd() = default;
 	~AddPresetObjectCmd() = default;
 
-	void execute(const Context &context) override;
+	void execute(Main *main, const Context &context) override;
 	void undo() override;
 	void redo() override;
 };

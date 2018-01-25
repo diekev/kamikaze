@@ -22,7 +22,7 @@
  *
  */
 
-#include "object_ops.h"
+#include "commandes_objet.h"
 
 #include <kamikaze/context.h>
 #include <kamikaze/noeud.h>
@@ -37,7 +37,7 @@
 
 /* *************************** add object command *************************** */
 
-void AddObjectCmd::execute(const Context &context)
+void AddObjectCmd::execute(Main *main, const Context &context)
 {
 	m_scene = context.scene;
 
@@ -60,7 +60,7 @@ void AddObjectCmd::redo()
 
 /* **************************** add node command **************************** */
 
-void AddNodeCmd::execute(const Context &context)
+void AddNodeCmd::execute(Main *main, const Context &context)
 {
 	m_scene = context.scene;
 	auto scene_node = m_scene->active_node();
@@ -98,7 +98,7 @@ void AddNodeCmd::redo()
 
 /* **************************** add torus command **************************** */
 
-void AddPresetObjectCmd::execute(const Context &context)
+void AddPresetObjectCmd::execute(Main *main, const Context &context)
 {
 	m_scene = context.scene;
 
@@ -150,4 +150,11 @@ void AddPresetObjectCmd::undo()
 void AddPresetObjectCmd::redo()
 {
 	/* TODO */
+}
+
+void enregistre_commandes_objet(CommandFactory *usine)
+{
+	REGISTER_COMMAND(usine, "ajouter_objet", AddObjectCmd);
+	REGISTER_COMMAND(usine, "add node", AddNodeCmd);
+	REGISTER_COMMAND(usine, "add preset", AddPresetObjectCmd);
 }

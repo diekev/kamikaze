@@ -37,9 +37,9 @@ CommandManager::~CommandManager()
 	release_stack_memory(m_redo_commands);
 }
 
-void CommandManager::execute(Command *command, const Context &context)
+void CommandManager::execute(Main *main, Command *command, const Context &context)
 {
-	command->execute(context);
+	command->execute(main, context);
 	m_undo_commands.push(command);
 }
 

@@ -38,6 +38,8 @@
 
 #include "scene.h"
 
+#include "ui/mainwindow.h"
+
 namespace fs = std::experimental::filesystem;
 namespace sf = numero7::systeme_fichier;
 
@@ -74,6 +76,11 @@ Main::Main()
 	, m_usine_operateur(new UsineOperateur)
     , m_scene(new Scene)
 {}
+
+void Main::fenetre_principale(MainWindow *fenetre)
+{
+	m_fenetre_principale = fenetre;
+}
 
 void Main::charge_greffons()
 {
@@ -158,4 +165,9 @@ void Main::projet_ouvert(bool ouinon)
 const std::vector<numero7::systeme_fichier::shared_library> &Main::greffons() const
 {
 	return m_greffons;
+}
+
+std::string Main::requiers_dialogue(int type)
+{
+	return ""; //m_fenetre_principale->requiers_dialogue(type);
 }

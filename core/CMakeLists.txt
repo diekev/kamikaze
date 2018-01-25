@@ -58,13 +58,16 @@ add_library(kmk_core STATIC
 	grid.h
 	kamikaze_main.h
 	object.h
-	object_ops.h
 	sauvegarde.h
 	scene.h
 	task.h
 	undo.h
 
 	${task_notifier_moc}
+
+	commandes/commandes_graphes.h
+	commandes/commandes_objet.h
+	commandes/commandes_projet.h
 
 	graphs/depsgraph.h
 	graphs/graph_dumper.h
@@ -82,11 +85,14 @@ add_library(kmk_core STATIC
 	grid.cc
 	kamikaze_main.cc
 	object.cc
-	object_ops.cc
 	task.cc
 	sauvegarde.cc
 	scene.cc
 	undo.cc
+
+	commandes/commandes_graphes.cc
+	commandes/commandes_objet.cc
+	commandes/commandes_projet.cc
 
 	graphs/depsgraph.cc
 	graphs/graph_dumper.cc

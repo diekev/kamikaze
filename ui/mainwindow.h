@@ -69,6 +69,8 @@ public:
 	explicit MainWindow(Main *main, QWidget *parent = nullptr);
 	~MainWindow();
 
+	std::string requiers_dialogue(int type);
+
 public Q_SLOTS:
 	/* Progress Bar */
 	void taskStarted();
@@ -80,10 +82,8 @@ private:
 	void genere_menu_fichier();
 	void generateWindowMenu();
 	void generateEditMenu();
-	void generateObjectMenu();
 	void generateNodeMenu();
 	void generatePresetMenu();
-	void generateDebugMenu();
 
 	void ajoute_fichier_recent(const QString &name, bool update_menu);
 	void mis_a_jour_menu_fichier_recent();
@@ -99,12 +99,8 @@ private Q_SLOTS:
 	/* Undo & commands */
 	void undo() const;
 	void redo() const;
-	void handleCommand();
 
-	void ouvre_fichier();
 	void ouvre_fichier_recent();
-	void sauve_fichier();
-	void sauve_fichier_sous();
 
 	void addTimeLineWidget();
 	void addGraphEditorWidget();
@@ -112,6 +108,4 @@ private Q_SLOTS:
 	void addGLViewerWidget();
 	void addOutlinerWidget();
 	void addPropertiesWidget();
-
-	void dumpGraph();
 };

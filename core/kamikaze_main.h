@@ -31,6 +31,13 @@
 
 #include "scene.h"
 
+enum {
+	FICHIER_OUVERTURE,
+	FICHIER_SAUVEGARDE,
+};
+
+class MainWindow;
+
 class Main final {
 	std::vector<numero7::systeme_fichier::shared_library> m_greffons;
 
@@ -42,12 +49,16 @@ class Main final {
 
 	bool m_projet_ouvert = false;
 
+	MainWindow *m_fenetre_principale = nullptr;
+
 public:
 	Main();
 
 	/* Disallow copy. */
 	Main(const Main &other) = delete;
 	Main &operator=(const Main &other) = delete;
+
+	void fenetre_principale(MainWindow *fenetre);
 
 	void initialize();
 	void charge_greffons();
@@ -65,4 +76,6 @@ public:
 	void projet_ouvert(bool ouinon);
 
 	const std::vector<numero7::systeme_fichier::shared_library> &greffons() const;
+
+	std::string requiers_dialogue(int type);
 };
