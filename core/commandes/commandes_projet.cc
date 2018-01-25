@@ -133,9 +133,39 @@ public:
 
 /* ************************************************************************** */
 
+class CommandeDefaire final : public Command {
+public:
+	void execute(Main */*main*/, const Context &/*context*/) override
+	{
+		/* À FAIRE */
+	//	main->gestionnaire_commande()->undo();
+	}
+
+	void undo() override {}
+	void redo() override {}
+};
+
+/* ************************************************************************** */
+
+class CommandeRefaire final : public Command {
+public:
+	void execute(Main */*main*/, const Context &/*context*/) override
+	{
+		/* À FAIRE */
+	//	main->gestionnaire_commande()->redo();
+	}
+
+	void undo() override {}
+	void redo() override {}
+};
+
+/* ************************************************************************** */
+
 void enregistre_commandes_projet(CommandFactory *usine)
 {
 	REGISTER_COMMAND(usine, "ouvrir_fichier", CommandeOuvrir);
 	REGISTER_COMMAND(usine, "sauvegarder", CommandeSauvegarder);
 	REGISTER_COMMAND(usine, "sauvegarder_sous", CommandeSauvegarderSous);
+	REGISTER_COMMAND(usine, "défaire", CommandeDefaire);
+	REGISTER_COMMAND(usine, "refaire", CommandeRefaire);
 }

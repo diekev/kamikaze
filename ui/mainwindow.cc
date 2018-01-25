@@ -54,6 +54,7 @@
 
 static const char *chemins_scripts[] = {
 	"interface/menu_fichier.kangao",
+//	"interface/menu_edition.kangao",
 	"interface/menu_objet.kangao",
 	"interface/menu_debogage.kangao",
 };
@@ -161,18 +162,6 @@ void MainWindow::nodeProcessed()
 	m_context.scene->notify_listeners(event_type::node | event_type::processed);
 }
 
-void MainWindow::undo() const
-{
-	/* TODO: figure out how to update everything properly */
-	m_command_manager->undo();
-}
-
-void MainWindow::redo() const
-{
-	/* TODO: figure out how to update everything properly */
-	m_command_manager->redo();
-}
-
 void MainWindow::generateNodeMenu()
 {
 	m_add_nodes_menu = menuBar()->addMenu("Ajoute Noeud");
@@ -223,19 +212,6 @@ void MainWindow::generateWindowMenu()
 	action = m_add_window_menu->addAction("Time Line");
 	action->setToolTip("Add a Time Line");
 	connect(action, SIGNAL(triggered()), this, SLOT(addTimeLineWidget()));
-}
-
-void MainWindow::generateEditMenu()
-{
-	m_edit_menu = menuBar()->addMenu("Edit");
-
-	QAction *action;
-
-	action = m_edit_menu->addAction("Undo");
-	connect(action, SIGNAL(triggered()), this, SLOT(undo()));
-
-	action = m_edit_menu->addAction("Redo");
-	connect(action, SIGNAL(triggered()), this, SLOT(redo()));
 }
 
 void MainWindow::genere_menu_fichier()

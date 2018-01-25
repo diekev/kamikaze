@@ -81,7 +81,6 @@ public Q_SLOTS:
 private:
 	void genere_menu_fichier();
 	void generateWindowMenu();
-	void generateEditMenu();
 	void generateNodeMenu();
 	void generatePresetMenu();
 
@@ -96,10 +95,6 @@ private:
 	void ouvre_fichier_implementation(const std::string &chemin_projet);
 
 private Q_SLOTS:
-	/* Undo & commands */
-	void undo() const;
-	void redo() const;
-
 	void ouvre_fichier_recent();
 
 	void addTimeLineWidget();

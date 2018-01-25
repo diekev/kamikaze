@@ -37,6 +37,7 @@ set(INC_SYS
 
 set(FICHIERS_KANGAO
 	scripts_kangao/menu_debogage.kangao
+	scripts_kangao/menu_edition.kangao
 	scripts_kangao/menu_fichier.kangao
 	scripts_kangao/menu_objet.kangao
 )
