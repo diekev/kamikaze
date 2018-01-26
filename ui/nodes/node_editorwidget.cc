@@ -988,22 +988,6 @@ void QtNodeEditor::showContextMenu(const QPoint &pos)
 	m_context_menu->popup(pos);
 }
 
-QAction *QtNodeEditor::getActionFromContextMenu(const QString &actionText)
-{
-	if (!m_context_menu) {
-		return nullptr;
-	}
-
-	const auto &actions = m_context_menu->actions();
-	for (auto &action : actions) {
-		if (action->text() == actionText) {
-			return action;
-		}
-	}
-
-	return nullptr;
-}
-
 void QtNodeEditor::update_state(event_type event)
 {
 	if (event == static_cast<event_type>(-1)) {

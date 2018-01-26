@@ -190,5 +190,4 @@ protected:
 	bool isAlreadySelected(QtConnection *connection);
 
 	void showContextMenu(const QPoint &pos);
-	QAction *getActionFromContextMenu(const QString &actionText);
 };
