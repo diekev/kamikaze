@@ -68,3 +68,8 @@ void CommandManager::refait()
 {
 	undo_redo_ex(m_redo_commands, m_undo_commands, true);
 }
+
+bool Commande::evalue_predicat(Main *main, const Context &context, const std::string &metadonnee)
+{
+	return true;
+}

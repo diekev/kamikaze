@@ -48,10 +48,11 @@
 
 /* ************************************************************************** */
 
-QtNodeEditor::QtNodeEditor(QWidget *parent)
+QtNodeEditor::QtNodeEditor(kangao::RepondantBouton *repondant, QWidget *parent)
     : WidgetBase(parent)
     , m_view(new NodeView(this))
     , m_graphics_scene(new QtNodeGraphicsScene())
+	, m_gestionnaire(new kangao::GestionnaireInterface)
 {
 	m_main_layout->addWidget(m_view);
 
@@ -74,7 +75,7 @@ QtNodeEditor::QtNodeEditor(QWidget *parent)
 	kangao::DonneesInterface donnees;
 	donnees.manipulable = nullptr;
 	donnees.conteneur = nullptr;
-	donnees.repondant_bouton = nullptr;
+	donnees.repondant_bouton = repondant;
 
 	std::ifstream entree;
 	entree.open("interface/menu_editeur_noeud.kangao");
@@ -86,13 +87,14 @@ QtNodeEditor::QtNodeEditor(QWidget *parent)
 		texte_entree += temp;
 	}
 
-	m_context_menu = kangao::compile_menu(donnees, texte_entree.c_str());
+	m_context_menu = m_gestionnaire->compile_menu(donnees, texte_entree.c_str());
 
 	setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
 QtNodeEditor::~QtNodeEditor()
 {
+	delete m_gestionnaire;
 	delete m_context_menu;
 	delete m_graphics_scene;
 }
@@ -978,8 +980,9 @@ void QtNodeEditor::showContextMenu(const QPoint &pos)
 	if (!m_context_menu) {
 		return;
 	}
+	std::cerr << __func__ << '\n';
 
-	/* À FAIRE : désactive les actions selon leurs prédicats. */
+	m_gestionnaire->ajourne_menu("Éditeur Noeud");
 
 	m_context_menu->popup(pos);
 }

@@ -132,6 +132,25 @@ class CommandeGrapheSupprimeSelection final : public Commande {
 		graphe->enleve_selection(nullptr);
 	}
 
+	bool evalue_predicat(Main */*main*/, const Context &context, const std::string &/*metadonnee*/) override
+	{
+		auto scene = context.scene;
+		auto objet = static_cast<Object *>(scene->active_node());
+
+		if (objet == nullptr) {
+			return false;
+		}
+
+		/* Un objet est sélectionné, mais nous ne sommes pas en mode édition. */
+		if (context.eval_ctx->edit_mode == false) {
+			return true;
+		}
+
+		auto graphe = objet->graph();
+
+		return !graphe->selection_vide();
+	}
+
 	void defait() override {}
 	void refait() override {}
 };

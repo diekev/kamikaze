@@ -37,6 +37,8 @@ class Commande {
 public:
 	virtual ~Commande() = default;
 
+	virtual bool evalue_predicat(Main *main, const Context &context, const std::string &metadonnee);
+
 	virtual void execute(Main *main, const Context &context, const std::string &metadonnee) = 0;
 	virtual void defait() = 0;
 	virtual void refait() = 0;

@@ -36,6 +36,13 @@ class QtNode;
 class QtNodeGraphicsScene;
 class QtPort;
 
+namespace kangao {
+
+class GestionnaireInterface;
+class RepondantBouton;
+
+}  /* namespace kangao */
+
 class NodeView : public QGraphicsView {
 public:
 	explicit NodeView(QWidget *parent = nullptr);
@@ -72,8 +79,10 @@ class QtNodeEditor : public WidgetBase {
 	QVector<QtNode *> m_selected_nodes;
 	QVector<QtConnection *> m_selected_connections;
 
+	kangao::GestionnaireInterface *m_gestionnaire;
+
 public:
-	explicit QtNodeEditor(QWidget *parent = nullptr);
+	explicit QtNodeEditor(kangao::RepondantBouton *repondant, QWidget *parent = nullptr);
 	virtual ~QtNodeEditor();
 
 	/* If true, a context menu is displayed when the right mousebutton is

@@ -71,4 +71,6 @@ public:
 	void zoom(float valeur);
 
 	float zoom() const;
+
+	bool selection_vide() const;
 };

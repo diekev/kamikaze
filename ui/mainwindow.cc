@@ -74,7 +74,7 @@ public:
 		, m_contexte(contexte)
 	{}
 
-	void repond_clique(const std::string &identifiant, const std::string &metadonnee)
+	void repond_clique(const std::string &identifiant, const std::string &metadonnee) override
 	{
 		std::cerr << "Répond clique : " << identifiant << ", " << metadonnee << '\n';
 
@@ -86,6 +86,13 @@ public:
 		/* Execute the command in the current context, the manager will push the
 		* command on the undo stack. */
 		m_main->gestionnaire_commande()->execute(m_main, commande, *m_contexte, metadonnee);
+	}
+
+	bool evalue_predicat(const std::string &identifiant, const std::string &metadonnee) override
+	{
+		std::cerr << "Évalue prédicat : " << identifiant << ", " << metadonnee << '\n';
+		auto commande = (*m_main->usine_commandes())(identifiant);
+		return commande->evalue_predicat(m_main, *m_contexte, metadonnee);
 	}
 };
 
@@ -388,7 +395,7 @@ void MainWindow::addGraphEditorWidget()
 	auto dock = new QDockWidget("Graph Editor", this);
 	dock->setAttribute(Qt::WA_DeleteOnClose);
 
-	QtNodeEditor *graph_editor = new QtNodeEditor(dock);
+	QtNodeEditor *graph_editor = new QtNodeEditor(m_repondant_commande, dock);
 	graph_editor->listens(&m_context);
 	graph_editor->setAddNodeMenu(m_add_nodes_menu);
 	/* XXX - graph editor needs to be able to draw the scene from the scratch. */
@@ -451,7 +458,7 @@ void MainWindow::addGraphOutlinerWidget()
 	auto graph_dock = new QDockWidget("Graph Editor", this);
 	graph_dock->setAttribute(Qt::WA_DeleteOnClose);
 
-	QtNodeEditor *graph_editor = new QtNodeEditor(graph_dock);
+	QtNodeEditor *graph_editor = new QtNodeEditor(m_repondant_commande, graph_dock);
 	graph_editor->listens(&m_context);
 	graph_editor->setAddNodeMenu(m_add_nodes_menu);
 

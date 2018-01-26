@@ -163,3 +163,8 @@ float Graph::zoom() const
 {
 	return m_zoom;
 }
+
+bool Graph::selection_vide() const
+{
+	return m_noeuds_selectiones.empty();
+}
