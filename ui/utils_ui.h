@@ -27,12 +27,6 @@
 class QLayout;
 class QListWidget;
 
-struct UIButData {
-	const int value;
-	const char *name;
-	const char *icon_path;
-};
-
 /**
  * @brief disable the item at the given index in the list.
  */

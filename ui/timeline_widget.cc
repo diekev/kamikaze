@@ -34,13 +34,10 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QSlider>
-#include <QPushButton>
 #include <QSpinBox>
 #include <QTimer>
 
 #include "core/scene.h"
-
-#include "utils_ui.h"
 
 TimeLineWidget::TimeLineWidget(kangao::RepondantBouton *repondant, QWidget *parent)
     : WidgetBase(parent)
