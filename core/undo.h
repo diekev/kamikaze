@@ -33,33 +33,28 @@ class Context;
 class Main;
 class ParamCallback;
 
-class Command {
-protected:
-	std::string m_name;
-
+class Commande {
 public:
-	virtual ~Command() = default;
+	virtual ~Commande() = default;
 
-	virtual void execute(Main *main, const Context &context) = 0;
-	virtual void undo() = 0;
-	virtual void redo() = 0;
-
-	void setName(const std::string &name);
+	virtual void execute(Main *main, const Context &context, const std::string &metadonnee) = 0;
+	virtual void defait() = 0;
+	virtual void refait() = 0;
 };
 
 class CommandManager final {
-	std::stack<Command *> m_undo_commands;
-	std::stack<Command *> m_redo_commands;
+	std::stack<Commande *> m_undo_commands;
+	std::stack<Commande *> m_redo_commands;
 
 public:
 	~CommandManager();
 
-	void execute(Main *main, Command *command, const Context &context);
-	void undo();
-	void redo();
+	void execute(Main *main, Commande *command, const Context &context, const std::string &metadonnee);
+	void defait();
+	void refait();
 };
 
-using CommandFactory = Factory<Command>;
+using CommandFactory = Factory<Commande>;
 
-#define REGISTER_COMMAND(factory, name, type) \
-	REGISTER_TYPE(factory, name, Command, type)
+#define ENREGISTRE_COMMANDE(factory, name, type) \
+	REGISTER_TYPE(factory, name, Commande, type)

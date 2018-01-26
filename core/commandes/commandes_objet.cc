@@ -37,30 +37,30 @@
 
 /* *************************** add object command *************************** */
 
-void AddObjectCmd::execute(Main *main, const Context &context)
+void AddObjectCmd::execute(Main */*main*/, const Context &context, const std::string &metadonnee)
 {
 	m_scene = context.scene;
 
 	m_object = new Object(context);
-	m_object->name(m_name.c_str());
+	m_object->name(metadonnee);
 
 	assert(m_scene != nullptr);
 	m_scene->addObject(m_object);
 }
 
-void AddObjectCmd::undo()
+void AddObjectCmd::defait()
 {
 	/* TODO */
 }
 
-void AddObjectCmd::redo()
+void AddObjectCmd::refait()
 {
 	/* TODO */
 }
 
 /* **************************** add node command **************************** */
 
-void AddNodeCmd::execute(Main *main, const Context &context)
+void AddNodeCmd::execute(Main */*main*/, const Context &context, const std::string &metadonnee)
 {
 	m_scene = context.scene;
 	auto scene_node = m_scene->active_node();
@@ -74,9 +74,9 @@ void AddNodeCmd::execute(Main *main, const Context &context)
 	assert(m_object != nullptr);
 
 	auto noeud = new Noeud();
-	noeud->nom(m_name);
+	noeud->nom(metadonnee);
 
-	auto operateur = (*context.usine_operateur)(m_name, noeud, context);
+	auto operateur = (*context.usine_operateur)(metadonnee, noeud, context);
 	static_cast<void>(operateur);
 
 	noeud->synchronise_donnees();
@@ -86,19 +86,19 @@ void AddNodeCmd::execute(Main *main, const Context &context)
 	m_scene->notify_listeners(event_type::node | event_type::added);
 }
 
-void AddNodeCmd::undo()
+void AddNodeCmd::defait()
 {
 	/* TODO */
 }
 
-void AddNodeCmd::redo()
+void AddNodeCmd::refait()
 {
 	/* TODO */
 }
 
 /* **************************** add torus command **************************** */
 
-void AddPresetObjectCmd::execute(Main *main, const Context &context)
+void AddPresetObjectCmd::execute(Main */*main*/, const Context &context, const std::string &metadonnee)
 {
 	m_scene = context.scene;
 
@@ -114,7 +114,7 @@ void AddPresetObjectCmd::execute(Main *main, const Context &context)
 	}
 	else {
 		m_object = new Object(context);
-		m_object->name(m_name);
+		m_object->name(metadonnee);
 	}
 
 	assert(m_object != nullptr);
@@ -123,7 +123,7 @@ void AddPresetObjectCmd::execute(Main *main, const Context &context)
 	noeud->posx(-300);
 	noeud->posy(-100);
 
-	(*context.usine_operateur)(m_name, noeud, context);
+	(*context.usine_operateur)(metadonnee, noeud, context);
 
 	noeud->synchronise_donnees();
 
@@ -142,19 +142,19 @@ void AddPresetObjectCmd::execute(Main *main, const Context &context)
 	}
 }
 
-void AddPresetObjectCmd::undo()
+void AddPresetObjectCmd::defait()
 {
 	/* TODO */
 }
 
-void AddPresetObjectCmd::redo()
+void AddPresetObjectCmd::refait()
 {
 	/* TODO */
 }
 
 void enregistre_commandes_objet(CommandFactory *usine)
 {
-	REGISTER_COMMAND(usine, "ajouter_objet", AddObjectCmd);
-	REGISTER_COMMAND(usine, "ajouter_noeud", AddNodeCmd);
-	REGISTER_COMMAND(usine, "add preset", AddPresetObjectCmd);
+	ENREGISTRE_COMMANDE(usine, "ajouter_objet", AddObjectCmd);
+	ENREGISTRE_COMMANDE(usine, "ajouter_noeud", AddNodeCmd);
+	ENREGISTRE_COMMANDE(usine, "add preset", AddPresetObjectCmd);
 }

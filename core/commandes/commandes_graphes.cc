@@ -30,9 +30,9 @@
 
 /* ************************************************************************** */
 
-class CommandeDessineGrapheObjet final : public Command {
+class CommandeDessineGrapheObjet final : public Commande {
 public:
-	void execute(Main */*main*/, const Context &context) override
+	void execute(Main */*main*/, const Context &context, const std::string &/*metadonnee*/) override
 	{
 		auto scene = context.scene;
 		auto scene_node = scene->active_node();
@@ -51,15 +51,15 @@ public:
 		}
 	}
 
-	void undo() override {}
-	void redo() override {}
+	void defait() override {}
+	void refait() override {}
 };
 
 /* ************************************************************************** */
 
-class CommandeDessineGrapheDependance final : public Command {
+class CommandeDessineGrapheDependance final : public Commande {
 public:
-	void execute(Main */*main*/, const Context &context) override
+	void execute(Main */*main*/, const Context &context, const std::string &/*metadonnee*/) override
 	{
 		auto scene = context.scene;
 		DepsGraphDumper gd(scene->depsgraph());
@@ -70,14 +70,14 @@ public:
 		}
 	}
 
-	void undo() override {}
-	void redo() override {}
+	void defait() override {}
+	void refait() override {}
 };
 
 /* ************************************************************************** */
 
 void enregistre_commandes_graphes(CommandFactory *usine)
 {
-	REGISTER_COMMAND(usine, "dessine_graphe_objet", CommandeDessineGrapheObjet);
-	REGISTER_COMMAND(usine, "dessine_graphe_dependance", CommandeDessineGrapheDependance);
+	ENREGISTRE_COMMANDE(usine, "dessine_graphe_objet", CommandeDessineGrapheObjet);
+	ENREGISTRE_COMMANDE(usine, "dessine_graphe_dependance", CommandeDessineGrapheDependance);
 }

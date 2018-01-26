@@ -26,25 +26,20 @@
 
 #include "util/util_memory.h"
 
-void Command::setName(const std::string &name)
-{
-	m_name = name;
-}
-
 CommandManager::~CommandManager()
 {
 	release_stack_memory(m_undo_commands);
 	release_stack_memory(m_redo_commands);
 }
 
-void CommandManager::execute(Main *main, Command *command, const Context &context)
+void CommandManager::execute(Main *main, Commande *command, const Context &context, const std::string &metadonnee)
 {
-	command->execute(main, context);
+	command->execute(main, context, metadonnee);
 	m_undo_commands.push(command);
 }
 
-static void undo_redo_ex(std::stack<Command *> &pop_stack,
-                         std::stack<Command *> &push_stack,
+static void undo_redo_ex(std::stack<Commande *> &pop_stack,
+                         std::stack<Commande *> &push_stack,
                          bool redo)
 {
 	if (pop_stack.empty()) {
@@ -55,21 +50,21 @@ static void undo_redo_ex(std::stack<Command *> &pop_stack,
 	pop_stack.pop();
 
 	if (redo) {
-		command->redo();
+		command->refait();
 	}
 	else {
-		command->undo();
+		command->defait();
 	}
 
 	push_stack.push(command);
 }
 
-void CommandManager::undo()
+void CommandManager::defait()
 {
 	undo_redo_ex(m_undo_commands, m_redo_commands, false);
 }
 
-void CommandManager::redo()
+void CommandManager::refait()
 {
 	undo_redo_ex(m_redo_commands, m_undo_commands, true);
 }

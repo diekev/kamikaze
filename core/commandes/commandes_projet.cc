@@ -73,9 +73,9 @@ static void ouvre_fichier_implementation(Main *main, const Context &contexte, co
 #endif
 }
 
-class CommandeOuvrir final : public Command {
+class CommandeOuvrir final : public Commande {
 public:
-	void execute(Main *main, const Context &contexte) override
+	void execute(Main *main, const Context &contexte, const std::string &/*metadonnee*/) override
 	{
 		const auto chemin_projet = main->requiers_dialogue(FICHIER_OUVERTURE);
 
@@ -86,8 +86,8 @@ public:
 		ouvre_fichier_implementation(main, contexte, chemin_projet);
 	}
 
-	void undo() override {}
-	void redo() override {}
+	void defait() override {}
+	void refait() override {}
 };
 
 /* ************************************************************************** */
@@ -102,9 +102,9 @@ static void sauve_fichier_sous(Main *main, const Context &context)
 	kamikaze::sauvegarde_projet(chemin_projet, *main, context.scene);
 }
 
-class CommandeSauvegarder final : public Command {
+class CommandeSauvegarder final : public Commande {
 public:
-	void execute(Main *main, const Context &context) override
+	void execute(Main *main, const Context &context, const std::string &/*metadonnee*/) override
 	{
 		if (main->projet_ouvert()) {
 			kamikaze::sauvegarde_projet(main->chemin_projet(), *main, context.scene);
@@ -114,58 +114,58 @@ public:
 		}
 	}
 
-	void undo() override {}
-	void redo() override {}
+	void defait() override {}
+	void refait() override {}
 };
 
 /* ************************************************************************** */
 
-class CommandeSauvegarderSous final : public Command {
+class CommandeSauvegarderSous final : public Commande {
 public:
-	void execute(Main *main, const Context &context) override
+	void execute(Main *main, const Context &context, const std::string &/*metadonnee*/) override
 	{
 		sauve_fichier_sous(main, context);
 	}
 
-	void undo() override {}
-	void redo() override {}
+	void defait() override {}
+	void refait() override {}
 };
 
 /* ************************************************************************** */
 
-class CommandeDefaire final : public Command {
+class CommandeDefaire final : public Commande {
 public:
-	void execute(Main *main, const Context &/*context*/) override
+	void execute(Main *main, const Context &/*context*/, const std::string &/*metadonnee*/) override
 	{
 		/* À FAIRE */
-		main->gestionnaire_commande()->undo();
+		main->gestionnaire_commande()->defait();
 	}
 
-	void undo() override {}
-	void redo() override {}
+	void defait() override {}
+	void refait() override {}
 };
 
 /* ************************************************************************** */
 
-class CommandeRefaire final : public Command {
+class CommandeRefaire final : public Commande {
 public:
-	void execute(Main *main, const Context &/*context*/) override
+	void execute(Main *main, const Context &/*context*/, const std::string &/*metadonnee*/) override
 	{
 		/* À FAIRE */
-		main->gestionnaire_commande()->redo();
+		main->gestionnaire_commande()->refait();
 	}
 
-	void undo() override {}
-	void redo() override {}
+	void defait() override {}
+	void refait() override {}
 };
 
 /* ************************************************************************** */
 
 void enregistre_commandes_projet(CommandFactory *usine)
 {
-	REGISTER_COMMAND(usine, "ouvrir_fichier", CommandeOuvrir);
-	REGISTER_COMMAND(usine, "sauvegarder", CommandeSauvegarder);
-	REGISTER_COMMAND(usine, "sauvegarder_sous", CommandeSauvegarderSous);
-	REGISTER_COMMAND(usine, "défaire", CommandeDefaire);
-	REGISTER_COMMAND(usine, "refaire", CommandeRefaire);
+	ENREGISTRE_COMMANDE(usine, "ouvrir_fichier", CommandeOuvrir);
+	ENREGISTRE_COMMANDE(usine, "sauvegarder", CommandeSauvegarder);
+	ENREGISTRE_COMMANDE(usine, "sauvegarder_sous", CommandeSauvegarderSous);
+	ENREGISTRE_COMMANDE(usine, "défaire", CommandeDefaire);
+	ENREGISTRE_COMMANDE(usine, "refaire", CommandeRefaire);
 }

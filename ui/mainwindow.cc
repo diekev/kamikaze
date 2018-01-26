@@ -80,12 +80,11 @@ public:
 		/* Get command, and give it the name of the UI button which will be used to
 		 * look up keys in the various creation factories if need be. This could and
 		 * should be handled better. */
-		auto cmd = (*m_main->usine_commandes())(identifiant);
-		cmd->setName(metadonnee);
+		auto commande = (*m_main->usine_commandes())(identifiant);
 
 		/* Execute the command in the current context, the manager will push the
 		* command on the undo stack. */
-		m_main->gestionnaire_commande()->execute(m_main, cmd, *m_contexte);
+		m_main->gestionnaire_commande()->execute(m_main, commande, *m_contexte, metadonnee);
 	}
 };
 

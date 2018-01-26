@@ -32,7 +32,7 @@ class Object;
 class Scene;
 class SolverFactory;
 
-class AddObjectCmd : public Command {
+class AddObjectCmd : public Commande {
 	Object *m_object = nullptr;
 	Scene *m_scene = nullptr;
 
@@ -40,12 +40,12 @@ public:
 	AddObjectCmd() = default;
 	~AddObjectCmd() = default;
 
-	void execute(Main *main, const Context &context) override;
-	void undo() override;
-	void redo() override;
+	void execute(Main *main, const Context &context, const std::string &metadonnee) override;
+	void defait() override;
+	void refait() override;
 };
 
-class AddNodeCmd : public Command {
+class AddNodeCmd : public Commande {
 	Object *m_object = nullptr;
 	Scene *m_scene = nullptr;
 
@@ -53,12 +53,12 @@ public:
 	AddNodeCmd() = default;
 	~AddNodeCmd() = default;
 
-	void execute(Main *main, const Context &context) override;
-	void undo() override;
-	void redo() override;
+	void execute(Main *main, const Context &context, const std::string &metadonnee) override;
+	void defait() override;
+	void refait() override;
 };
 
-class AddPresetObjectCmd : public Command {
+class AddPresetObjectCmd : public Commande {
 	Object *m_object = nullptr;
 	Scene *m_scene = nullptr;
 
@@ -66,7 +66,7 @@ public:
 	AddPresetObjectCmd() = default;
 	~AddPresetObjectCmd() = default;
 
-	void execute(Main *main, const Context &context) override;
-	void undo() override;
-	void redo() override;
+	void execute(Main *main, const Context &context, const std::string &metadonnee) override;
+	void defait() override;
+	void refait() override;
 };
