@@ -74,21 +74,12 @@ public:
 
 	void repond_clique(const std::string &identifiant, const std::string &metadonnee) override
 	{
-		std::cerr << "Répond clique : " << identifiant << ", " << metadonnee << '\n';
-
-		/* Get command, and give it the name of the UI button which will be used to
-		 * look up keys in the various creation factories if need be. This could and
-		 * should be handled better. */
 		auto commande = (*m_main->usine_commandes())(identifiant);
-
-		/* Execute the command in the current context, the manager will push the
-		* command on the undo stack. */
 		m_main->gestionnaire_commande()->execute(m_main, commande, *m_contexte, metadonnee);
 	}
 
 	bool evalue_predicat(const std::string &identifiant, const std::string &metadonnee) override
 	{
-		std::cerr << "Évalue prédicat : " << identifiant << ", " << metadonnee << '\n';
 		auto commande = (*m_main->usine_commandes())(identifiant);
 		return commande->evalue_predicat(m_main, *m_contexte, metadonnee);
 	}
@@ -179,7 +170,9 @@ void MainWindow::generateNodeMenu()
 		});
 
 		for (const auto &description : cles) {
-			ss << "\t\taction(valeur=\"" << description.nom << "\"; attache=\"ajouter_noeud\"; métadonnée=\"" << description.nom << "\")\n";
+			ss << "\t\taction(valeur=\"" << description.nom
+			   << "\"; attache=\"ajouter_noeud\"; métadonnée=\""
+			   << description.nom << "\")\n";
 		}
 
 		ss << "\t}\n";
