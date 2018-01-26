@@ -29,8 +29,6 @@
 #include <kamikaze/context.h>
 #include "core/context.h"
 
-#include "core/undo.h"
-
 class Main;
 class QProgressBar;
 class RepondantCommande;
@@ -43,8 +41,6 @@ class MainWindow : public QMainWindow {
 	Main *m_main;
 
 	QTimer *m_timer;
-	CommandManager *m_command_manager;
-	CommandFactory *m_command_factory;
 
 	bool m_has_glwindow;
 

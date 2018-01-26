@@ -29,6 +29,7 @@
 
 #include <numero7/systeme_fichier/shared_library.h>
 
+#include "undo.h"
 #include "scene.h"
 
 enum {
@@ -51,8 +52,12 @@ class Main final {
 
 	MainWindow *m_fenetre_principale = nullptr;
 
+	CommandManager *m_gestionnaire_commandes = nullptr;
+	CommandFactory *m_usine_commandes = nullptr;
+
 public:
 	Main();
+	~Main();
 
 	/* Disallow copy. */
 	Main(const Main &other) = delete;
@@ -78,4 +83,8 @@ public:
 	const std::vector<numero7::systeme_fichier::shared_library> &greffons() const;
 
 	std::string requiers_dialogue(int type);
+
+	CommandManager *gestionnaire_commande() const;
+
+	CommandFactory *usine_commandes() const;
 };

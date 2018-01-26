@@ -33,6 +33,10 @@
 
 #include <dlfcn.h>
 
+#include "commandes/commandes_graphes.h"
+#include "commandes/commandes_objet.h"
+#include "commandes/commandes_projet.h"
+
 #include "operateurs/operateurs_physiques.h"
 #include "operateurs/operateurs_standards.h"
 
@@ -75,7 +79,15 @@ Main::Main()
     : m_primitive_factory(new PrimitiveFactory)
 	, m_usine_operateur(new UsineOperateur)
     , m_scene(new Scene)
+	, m_gestionnaire_commandes(new CommandManager)
+	, m_usine_commandes(new CommandFactory)
 {}
+
+Main::~Main()
+{
+	delete m_usine_commandes;
+	delete m_gestionnaire_commandes;
+}
 
 void Main::fenetre_principale(MainWindow *fenetre)
 {
@@ -113,6 +125,12 @@ void Main::charge_greffons()
 
 void Main::initialize()
 {
+	/* commandes */
+	enregistre_commandes_graphes(this->usine_commandes());
+	enregistre_commandes_objet(this->usine_commandes());
+	enregistre_commandes_projet(this->usine_commandes());
+
+	/* opérateurs */
 	enregistre_operateurs_integres(this->usine_operateur());
 	enregistre_operateurs_physiques(this->usine_operateur());
 
@@ -170,4 +188,14 @@ const std::vector<numero7::systeme_fichier::shared_library> &Main::greffons() co
 std::string Main::requiers_dialogue(int type)
 {
 	return ""; //m_fenetre_principale->requiers_dialogue(type);
+}
+
+CommandManager *Main::gestionnaire_commande() const
+{
+	return m_gestionnaire_commandes;
+}
+
+CommandFactory *Main::usine_commandes() const
+{
+	return m_usine_commandes;
 }

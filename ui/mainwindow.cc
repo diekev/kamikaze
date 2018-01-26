@@ -64,19 +64,13 @@ static constexpr auto MAX_FICHIER_RECENT = 10;
 class RepondantCommande : public kangao::RepondantBouton {
 	Main *m_main = nullptr;
 	Context *m_contexte = nullptr;
-	CommandFactory *m_usine_commandes = nullptr;
-	CommandManager *m_gestionnaire_commandes = nullptr;
 
 public:
 	RepondantCommande(
 			Main *main,
-			Context *contexte,
-			CommandFactory *usine_commande,
-			CommandManager *gestionnaire)
+			Context *contexte)
 		: m_main(main)
 		, m_contexte(contexte)
-		, m_usine_commandes(usine_commande)
-		, m_gestionnaire_commandes(gestionnaire)
 	{}
 
 	void repond_clique(const std::string &identifiant, const std::string &metadonnee)
@@ -86,21 +80,19 @@ public:
 		/* Get command, and give it the name of the UI button which will be used to
 		 * look up keys in the various creation factories if need be. This could and
 		 * should be handled better. */
-		auto cmd = (*m_usine_commandes)(identifiant);
+		auto cmd = (*m_main->usine_commandes())(identifiant);
 		cmd->setName(metadonnee);
 
 		/* Execute the command in the current context, the manager will push the
 		* command on the undo stack. */
-		m_gestionnaire_commandes->execute(m_main, cmd, *m_contexte);
+		m_main->gestionnaire_commande()->execute(m_main, cmd, *m_contexte);
 	}
 };
 
 MainWindow::MainWindow(Main *main, QWidget *parent)
     : QMainWindow(parent)
-    , m_main(main)
-    , m_command_manager(new CommandManager)
-    , m_command_factory(new CommandFactory)
-	, m_repondant_commande(new RepondantCommande(main, &m_context, m_command_factory, m_command_manager))
+	, m_main(main)
+	, m_repondant_commande(new RepondantCommande(main, &m_context))
 {
 	genere_menu_fichier();
 	generateNodeMenu();
@@ -137,8 +129,6 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 MainWindow::~MainWindow()
 {
 	delete m_repondant_commande;
-	delete m_command_manager;
-	delete m_command_factory;
 }
 
 void MainWindow::taskStarted()

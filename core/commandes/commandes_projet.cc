@@ -135,10 +135,10 @@ public:
 
 class CommandeDefaire final : public Command {
 public:
-	void execute(Main */*main*/, const Context &/*context*/) override
+	void execute(Main *main, const Context &/*context*/) override
 	{
 		/* À FAIRE */
-	//	main->gestionnaire_commande()->undo();
+		main->gestionnaire_commande()->undo();
 	}
 
 	void undo() override {}
@@ -149,10 +149,10 @@ public:
 
 class CommandeRefaire final : public Command {
 public:
-	void execute(Main */*main*/, const Context &/*context*/) override
+	void execute(Main *main, const Context &/*context*/) override
 	{
 		/* À FAIRE */
-	//	main->gestionnaire_commande()->redo();
+		main->gestionnaire_commande()->redo();
 	}
 
 	void undo() override {}
