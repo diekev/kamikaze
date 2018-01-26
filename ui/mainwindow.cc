@@ -24,21 +24,16 @@
 
 #include "mainwindow.h"
 
-#include <fstream>
-
 #include <kamikaze/primitive.h>
-
 #include <kangao/kangao.h>
 #include <kangao/repondant_bouton.h>
 
 #include <QDockWidget>
-#include <QMessageBox>
-#include <QFileDialog>
+#include <QFileInfo>
 #include <QMenuBar>
 #include <QProgressBar>
 #include <QStatusBar>
 #include <QSettings>
-#include <QToolBar>
 
 #include "core/graphs/graph_dumper.h"
 #include "core/kamikaze_main.h"
@@ -223,16 +218,7 @@ void MainWindow::genere_menu_fichier()
 	donnees.repondant_bouton = m_repondant_commande;
 
 	for (const auto &chemin : chemins_scripts) {
-		std::ifstream entree;
-		entree.open(chemin);
-
-		std::string texte_entree;
-		std::string temp;
-
-		while (std::getline(entree, temp)) {
-			texte_entree += temp;
-		}
-
+		const auto texte_entree = kangao::contenu_fichier(chemin);
 		auto menu = m_gestionnaire->compile_menu(donnees, texte_entree.c_str());
 
 		menuBar()->addMenu(menu);
@@ -245,20 +231,12 @@ void MainWindow::genere_menu_fichier()
 
 void MainWindow::generatePresetMenu()
 {
-	std::ifstream entree;
-	entree.open("interface/menu_prereglage.kangao");
-
-	std::string texte_entree;
-	std::string temp;
-
-	while (std::getline(entree, temp)) {
-		texte_entree += temp;
-	}
-
 	kangao::DonneesInterface donnees;
 	donnees.manipulable = nullptr;
 	donnees.conteneur = nullptr;
 	donnees.repondant_bouton = m_repondant_commande;
+
+	const auto texte_entree = kangao::contenu_fichier("interface/menu_prereglage.kangao");
 
 	m_tool_bar = m_gestionnaire->compile_barre_outils(donnees, texte_entree.c_str());
 	addToolBar(Qt::TopToolBarArea, m_tool_bar);

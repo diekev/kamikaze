@@ -30,7 +30,6 @@
 #include <QVBoxLayout>
 
 #include <iostream>
-#include <fstream>
 #include <kamikaze/context.h>
 #include <kamikaze/operateur.h>
 #include <kangao/kangao.h>
@@ -80,16 +79,7 @@ QtNodeEditor::QtNodeEditor(
 	donnees.conteneur = nullptr;
 	donnees.repondant_bouton = repondant;
 
-	std::ifstream entree;
-	entree.open("interface/menu_editeur_noeud.kangao");
-
-	std::string texte_entree;
-	std::string temp;
-
-	while (std::getline(entree, temp)) {
-		texte_entree += temp;
-	}
-
+	const auto texte_entree = kangao::contenu_fichier("interface/menu_editeur_noeud.kangao");
 	m_context_menu = m_gestionnaire->compile_menu(donnees, texte_entree.c_str());
 
 	setContextMenuPolicy(Qt::CustomContextMenu);
