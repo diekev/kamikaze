@@ -30,8 +30,10 @@
 #include <QVBoxLayout>
 
 #include <iostream>
+#include <fstream>
 #include <kamikaze/context.h>
 #include <kamikaze/operateur.h>
+#include <kangao/kangao.h>
 #include <sstream>
 
 #include "node_compound.h"
@@ -43,24 +45,6 @@
 #include "object.h"
 #include "graphs/object_graph.h"
 #include "operateurs/operateurs_standards.h"
-
-static constexpr auto NODE_ACTION_DELETE = "Delete selected items";
-static constexpr auto NODE_ACTION_CENTER = "Center";
-static constexpr auto NODE_ACTION_ZOOM = "Zoom (%)";
-static constexpr auto NODE_ACTION_ZOOM_10 = "10%";
-static constexpr auto NODE_ACTION_ZOOM_25 = "25%";
-static constexpr auto NODE_ACTION_ZOOM_50 = "50%";
-static constexpr auto NODE_ACTION_ZOOM_75 = "75%";
-static constexpr auto NODE_ACTION_ZOOM_90 = "90%";
-static constexpr auto NODE_ACTION_ZOOM_100 = "100%";
-static constexpr auto NODE_ACTION_ZOOM_150 = "150%";
-static constexpr auto NODE_ACTION_ZOOM_200 = "200%";
-static constexpr auto NODE_ACTION_ZOOM_250 = "250%";
-static constexpr auto NODE_ACTION_ZOOM_300 = "300%";
-static constexpr auto NODE_ACTION_COLLAPSE_ALL = "Collapse all nodes";
-static constexpr auto NODE_ACTION_EXPAND_ALL = "Expand all nodes";
-static constexpr auto NODE_ENTER_OBJECT = "Enter object";
-static constexpr auto NODE_EXIT_OBJECT = "Exit object";
 
 /* ************************************************************************** */
 
@@ -86,59 +70,30 @@ QtNodeEditor::QtNodeEditor(QWidget *parent)
 	m_active_connection = nullptr;
 	m_rubberband_selection = false;
 	m_context_menu_enabled = true;
-	m_context_menu = new QMenu(this);
-	m_context_menu->addAction(new QAction(NODE_ACTION_DELETE, this));
-	m_context_menu->addAction(new QAction(NODE_ACTION_CENTER, this));
-	m_zoom_sub_menu = m_context_menu->addMenu(NODE_ACTION_ZOOM);
-	QAction *action;
-	QActionGroup actionGroupZoom(m_zoom_sub_menu);
-	actionGroupZoom.setExclusive(true);
-	action = new QAction(NODE_ACTION_ZOOM_10, this);
-	action->setCheckable(true);
-	actionGroupZoom.addAction(action);
-	action = new QAction(NODE_ACTION_ZOOM_25, this);
-	action->setCheckable(true);
-	actionGroupZoom.addAction(action);
-	action = new QAction(NODE_ACTION_ZOOM_50, this);
-	action->setCheckable(true);
-	actionGroupZoom.addAction(action);
-	action = new QAction(NODE_ACTION_ZOOM_75, this);
-	action->setCheckable(true);
-	actionGroupZoom.addAction(action);
-	action = new QAction(NODE_ACTION_ZOOM_90, this);
-	action->setCheckable(true);
-	actionGroupZoom.addAction(action);
-	action = new QAction(NODE_ACTION_ZOOM_100, this);
-	action->setCheckable(true);
-	action->setChecked(true);
-	actionGroupZoom.addAction(action);
-	action = new QAction(NODE_ACTION_ZOOM_150, this);
-	action->setCheckable(true);
-	actionGroupZoom.addAction(action);
-	action = new QAction(NODE_ACTION_ZOOM_200, this);
-	action->setCheckable(true);
-	actionGroupZoom.addAction(action);
-	action = new QAction(NODE_ACTION_ZOOM_250, this);
-	action->setCheckable(true);
-	actionGroupZoom.addAction(action);
-	action = new QAction(NODE_ACTION_ZOOM_300, this);
-	action->setCheckable(true);
-	actionGroupZoom.addAction(action);
-	m_zoom_sub_menu->addActions(actionGroupZoom.actions());
 
-	m_context_menu->addAction(new QAction(NODE_ACTION_COLLAPSE_ALL, this));
-	m_context_menu->addAction(new QAction(NODE_ACTION_EXPAND_ALL, this));
-	m_context_menu->addAction(new QAction(NODE_ACTION_CENTER, this));
-	m_context_menu->addAction(new QAction(NODE_ENTER_OBJECT, this));
+	kangao::DonneesInterface donnees;
+	donnees.manipulable = nullptr;
+	donnees.conteneur = nullptr;
+	donnees.repondant_bouton = nullptr;
 
-	setMenuZoomEnabled(true);
-	setMenuCollapseExpandEnabled(true);
+	std::ifstream entree;
+	entree.open("interface/menu_editeur_noeud.kangao");
+
+	std::string texte_entree;
+	std::string temp;
+
+	while (std::getline(entree, temp)) {
+		texte_entree += temp;
+	}
+
+	m_context_menu = kangao::compile_menu(donnees, texte_entree.c_str());
+
 	setContextMenuPolicy(Qt::CustomContextMenu);
-	connect(m_context_menu, SIGNAL(triggered(QAction*)), this, SLOT(contextMenuItemSelected(QAction*)));
 }
 
 QtNodeEditor::~QtNodeEditor()
 {
+	delete m_context_menu;
 	delete m_graphics_scene;
 }
 
@@ -152,43 +107,6 @@ bool QtNodeEditor::isContextMenuEnabled()
 	return m_context_menu_enabled;
 }
 
-void QtNodeEditor::setMenuZoomEnabled(bool enabled)
-{
-	m_menu_zoom_enabled = enabled;
-
-	const auto &action = getActionFromContextMenu(NODE_ACTION_ZOOM);
-
-	if (action) {
-		action->setVisible(enabled);
-	}
-}
-
-bool QtNodeEditor::isMenuZoomEnabled()
-{
-	return m_menu_zoom_enabled;
-}
-
-void QtNodeEditor::setMenuCollapseExpandEnabled(bool enabled)
-{
-	m_menu_collapse_expand_enabled = enabled;
-
-	auto action = getActionFromContextMenu(NODE_ACTION_EXPAND_ALL);
-
-	if (action) {
-		action->setVisible(enabled);
-	}
-
-	action = getActionFromContextMenu(NODE_ACTION_COLLAPSE_ALL);
-
-	if (action) {
-		action->setVisible(enabled);
-	}
-}
-
-bool QtNodeEditor::isMenuCollapseExpandEnabled()
-{
-	return m_menu_collapse_expand_enabled;
-}
 
 QGraphicsItem *QtNodeEditor::itemAtExceptActiveConnection(const QPointF &pos)
 {
@@ -544,23 +462,11 @@ bool QtNodeEditor::mouseDoubleClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 	return true;
 }
 
-void QtNodeEditor::enterObjectNode(QAction *action)
+void QtNodeEditor::enterObjectNode(QAction */*action*/)
 {
-	m_editor_mode = EDITOR_MODE_OBJECT;
+	/* À FAIRE */
 	m_context->eval_ctx->edit_mode = true;
 	m_context->scene->notify_listeners(event_type::node | event_type::selected);
-
-	if (action) {
-		action->setText(NODE_EXIT_OBJECT);
-	}
-	else {
-		for (auto action : m_context_menu->actions()) {
-			if (action->text() == NODE_ENTER_OBJECT) {
-				action->setText(NODE_EXIT_OBJECT);
-				break;
-			}
-		}
-	}
 }
 
 bool QtNodeEditor::mouseMoveHandler(QGraphicsSceneMouseEvent *mouseEvent)
@@ -680,7 +586,7 @@ void QtNodeEditor::keyPressEvent(QKeyEvent *event)
 		removeAllSelelected();
 	}
 	else if (event->key() == Qt::Key_A) {
-		if (m_editor_mode == EDITOR_MODE_OBJECT) {
+		if (m_context->eval_ctx->edit_mode == true) {
 			m_add_node_menu->popup(QCursor::pos());
 		}
 	}
@@ -958,17 +864,6 @@ void QtNodeEditor::removeAllSelelected()
 	m_selected_nodes.clear();
 }
 
-void QtNodeEditor::center()
-{
-	const auto &items = m_graphics_scene->items();
-
-	for (const auto &item : items) {
-		if (is_node(item)) {
-			item->setPos(0, 0);
-		}
-	}
-}
-
 void QtNodeEditor::clear()
 {
 	m_graphics_scene->clear(); /* removes + deletes all items in the scene */
@@ -1084,25 +979,7 @@ void QtNodeEditor::showContextMenu(const QPoint &pos)
 		return;
 	}
 
-	const auto &actions = m_context_menu->actions();
-	const auto &nodesSelected = !m_selected_nodes.isEmpty();
-	const auto &itemsSelected = nodesSelected || !m_selected_connections.isEmpty();
-
-	QFont font;
-	/* Italic when no selected items available */
-	font.setItalic(!itemsSelected);
-
-	for (auto &action : actions) {
-		if (action->text() == NODE_ACTION_DELETE) {
-			action->setFont(font);
-			action->setEnabled(itemsSelected);
-		}
-
-		if (action->text() == NODE_ENTER_OBJECT) {
-			action->setFont(font);
-			action->setEnabled(nodesSelected);
-		}
-	}
+	/* À FAIRE : désactive les actions selon leurs prédicats. */
 
 	m_context_menu->popup(pos);
 }
@@ -1121,137 +998,6 @@ QAction *QtNodeEditor::getActionFromContextMenu(const QString &actionText)
 	}
 
 	return nullptr;
-}
-
-void QtNodeEditor::setZoomForAction(qreal zoom, QAction *action)
-{
-	setZoom(zoom);
-	resetZoomSubmenu();
-	action->setChecked(true);
-}
-
-void QtNodeEditor::resetZoomSubmenu()
-{
-	const auto &actions = m_zoom_sub_menu->actions();
-
-	for (auto &action : actions) {
-		action->setChecked(false);
-	}
-}
-
-void QtNodeEditor::contextMenuItemSelected(QAction *action)
-{
-	/* ---------------- Delete action ---------------- */
-	if (action->text() == NODE_ACTION_DELETE) {
-		/* Delete the selected nodes and connections from the scene */
-		removeAllSelelected();
-		return;
-	}
-
-	/* ---------------- Center action ---------------- */
-	if (action->text() == NODE_ACTION_CENTER) {
-		/* Center all nodes */
-		center();
-		return;
-	}
-
-	/* ---------------- Zoom action ---------------- */
-	if (action->text() == NODE_ACTION_ZOOM_10) {
-		setZoomForAction(0.1f, action);
-		return;
-	}
-
-	if (action->text() == NODE_ACTION_ZOOM_25) {
-		setZoomForAction(0.25f, action);
-		return;
-	}
-
-	if (action->text() == NODE_ACTION_ZOOM_50) {
-		setZoomForAction(0.5f, action);
-		return;
-	}
-
-	if (action->text() == NODE_ACTION_ZOOM_75) {
-		setZoomForAction(0.75f, action);
-		return;
-	}
-
-	if (action->text() == NODE_ACTION_ZOOM_90) {
-		setZoomForAction(0.9f, action);
-		return;
-	}
-
-	if (action->text() == NODE_ACTION_ZOOM_100) {
-		setZoomForAction(1.0f, action);
-		return;
-	}
-
-	if (action->text() == NODE_ACTION_ZOOM_150) {
-		setZoomForAction(1.5f, action);
-		return;
-	}
-
-	if (action->text() == NODE_ACTION_ZOOM_200) {
-		setZoomForAction(2.0f, action);
-		return;
-	}
-
-	if (action->text() == NODE_ACTION_ZOOM_250) {
-		setZoomForAction(2.5f, action);
-		return;
-	}
-
-	if (action->text() == NODE_ACTION_ZOOM_300) {
-		setZoomForAction(3.0f, action);
-		return;
-	}
-
-	/* ---------------- Collapse action ---------------- */
-	if (action->text() == NODE_ACTION_COLLAPSE_ALL) {
-		QtNode *node;
-		const auto &items = m_graphics_scene->items();
-
-		for (const auto &item : items) {
-			if (is_node(item) && item->isVisible()) {
-				node = static_cast<QtNode*>(item);
-				node->collapse();
-			}
-		}
-
-		return;
-	}
-
-	/* ---------------- Expand action ---------------- */
-	if (action->text() == NODE_ACTION_EXPAND_ALL) {
-		QtNode *node;
-		const auto &items = m_graphics_scene->items();
-
-		for (const auto &item : items) {
-			if (is_node(item) && item->isVisible()) {
-				node = static_cast<QtNode *>(item);
-				node->expand();
-			}
-		}
-
-		return;
-	}
-
-	/* ---------------- Enter object action ---------------- */
-	if (action->text() == NODE_ENTER_OBJECT) {
-		enterObjectNode(action);
-		return;
-	}
-
-	/* ---------------- Exit object action ---------------- */
-	if (action->text() == NODE_EXIT_OBJECT) {
-		m_editor_mode = EDITOR_MODE_SCENE;
-		m_context->eval_ctx->edit_mode = false;
-		m_context->scene->notify_listeners(event_type::object | event_type::selected);
-
-		action->setText(NODE_ENTER_OBJECT);
-
-		return;
-	}
 }
 
 void QtNodeEditor::update_state(event_type event)

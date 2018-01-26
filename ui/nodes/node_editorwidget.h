@@ -36,11 +36,6 @@ class QtNode;
 class QtNodeGraphicsScene;
 class QtPort;
 
-enum {
-	EDITOR_MODE_SCENE  = 0,
-	EDITOR_MODE_OBJECT = 1,
-};
-
 class NodeView : public QGraphicsView {
 public:
 	explicit NodeView(QWidget *parent = nullptr);
@@ -65,8 +60,6 @@ class QtNodeEditor : public WidgetBase {
 	QGraphicsRectItem *m_rubber_band;
 	QPointF m_last_mouse_position;
 
-	int m_editor_mode = EDITOR_MODE_SCENE;
-
 	bool m_rubberband_selection;
 	bool m_context_menu_enabled;
 	bool m_menu_zoom_enabled;
@@ -88,15 +81,6 @@ public:
 	void setContextMenuEnabled(bool enabled);
 	bool isContextMenuEnabled();
 
-	/* If true, the context menu is extended with an option to zoom in/out. */
-	void setMenuZoomEnabled(bool enabled);
-	bool isMenuZoomEnabled();
-
-	/* If true, the context menu is extended with an option to exand/collapse
-	 * all nodes. */
-	void setMenuCollapseExpandEnabled(bool enabled);
-	bool isMenuCollapseExpandEnabled();
-
 	/* Add a node to the scene (editor widget). */
 	void addNode(QtNode *node);
 
@@ -109,9 +93,6 @@ public:
 	/* Removes (and destroys) all selected nodes and connections from the scene
 	 * (editor widget). */
 	void removeAllSelelected();
-
-	/* Center all nodes */
-	void center();
 
 	/* Remove a connection from the scene (editor widget) and destroy it. */
 	void removeConnection(QtConnection *connection);
@@ -145,19 +126,11 @@ public:
 		m_add_node_menu = menu;
 	}
 
-	int editor_mode() const
-	{
-		return m_editor_mode;
-	}
-
 	void update_state(event_type event) override;
 
 	void sendNotification() const;
 
 public Q_SLOTS:
-	/* Activated when a contextmenu item is selected */
-	void contextMenuItemSelected(QAction *action);
-
 	/* Activated when a connection is set between two nodes. */
 	void connectionEstablished(QtConnection*);
 
@@ -205,7 +178,4 @@ protected:
 
 	void showContextMenu(const QPoint &pos);
 	QAction *getActionFromContextMenu(const QString &actionText);
-
-	void setZoomForAction(qreal zoom, QAction *action);
-	void resetZoomSubmenu();
 };

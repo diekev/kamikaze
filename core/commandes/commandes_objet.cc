@@ -152,9 +152,47 @@ void AddPresetObjectCmd::refait()
 	/* TODO */
 }
 
+/* ************************************************************************** */
+
+class CommandeEntreObjet : public Commande {
+public:
+	CommandeEntreObjet() = default;
+	~CommandeEntreObjet() = default;
+
+	void execute(Main */*main*/, const Context &context, const std::string &/*metadonnee*/) override
+	{
+		context.eval_ctx->edit_mode = true;
+		context.scene->notify_listeners(event_type::object | event_type::selected);
+	}
+
+	void defait() override {}
+	void refait() override {}
+};
+
+/* ************************************************************************** */
+
+class CommandeSorsObjet : public Commande {
+public:
+	CommandeSorsObjet() = default;
+	~CommandeSorsObjet() = default;
+
+	void execute(Main */*main*/, const Context &context, const std::string &/*metadonnee*/) override
+	{
+		context.eval_ctx->edit_mode = false;
+		context.scene->notify_listeners(event_type::object | event_type::selected);
+	}
+
+	void defait() override {}
+	void refait() override {}
+};
+
+/* ************************************************************************** */
+
 void enregistre_commandes_objet(CommandFactory *usine)
 {
 	ENREGISTRE_COMMANDE(usine, "ajouter_objet", AddObjectCmd);
 	ENREGISTRE_COMMANDE(usine, "ajouter_noeud", AddNodeCmd);
 	ENREGISTRE_COMMANDE(usine, "ajouter_prereglage", AddPresetObjectCmd);
+	ENREGISTRE_COMMANDE(usine, "objet.entre", CommandeEntreObjet);
+	ENREGISTRE_COMMANDE(usine, "objet.sors", CommandeSorsObjet);
 }

@@ -76,8 +76,118 @@ public:
 
 /* ************************************************************************** */
 
+class CommandeGrapheZoom final : public Commande {
+	void execute(Main */*main*/, const Context &context, const std::string &metadonnee) override
+	{
+		auto zoom = 1.0f;
+
+		if (metadonnee == "10%") {
+			zoom = 0.1f;
+		}
+		else if (metadonnee == "25%") {
+			zoom = 0.25f;
+		}
+		else if (metadonnee == "50%") {
+			zoom = 0.5f;
+		}
+		else if (metadonnee == "75%") {
+			zoom = 0.75f;
+		}
+		else if (metadonnee == "90%") {
+			zoom = 0.90f;
+		}
+		else if (metadonnee == "100%") {
+			zoom = 1.0f;
+		}
+		else if (metadonnee == "150%") {
+			zoom = 1.5f;
+		}
+		else if (metadonnee == "200%") {
+			zoom = 2.0f;
+		}
+		else if (metadonnee == "300%") {
+			zoom = 3.0f;
+		}
+
+		auto scene = context.scene;
+		auto objet = static_cast<Object *>(scene->active_node());
+		auto graphe = objet->graph();
+		graphe->zoom(zoom);
+	}
+
+	void defait() override {}
+	void refait() override {}
+};
+
+/* ************************************************************************** */
+
+class CommandeGrapheSupprimeSelection final : public Commande {
+	void execute(Main */*main*/, const Context &context, const std::string &/*metadonnee*/) override
+	{
+		/* À FAIRE */
+		auto scene = context.scene;
+		auto objet = static_cast<Object *>(scene->active_node());
+		auto graphe = objet->graph();
+
+		graphe->enleve_selection(nullptr);
+	}
+
+	void defait() override {}
+	void refait() override {}
+};
+
+/* ************************************************************************** */
+
+class CommandeGrapheCentre final : public Commande {
+	void execute(Main */*main*/, const Context &context, const std::string &/*metadonnee*/) override
+	{
+		auto scene = context.scene;
+		auto objet = static_cast<Object *>(scene->active_node());
+		auto graphe = objet->graph();
+
+		for (auto &noeud : graphe->noeuds()) {
+			noeud->posx(0);
+			noeud->posy(0);
+		}
+	}
+
+	void defait() override {}
+	void refait() override {}
+};
+
+/* ************************************************************************** */
+
+class CommandeGrapheBasculeExpansion final : public Commande {
+	void execute(Main */*main*/, const Context &context, const std::string &metadonnee) override
+	{
+		auto scene = context.scene;
+		auto objet = static_cast<Object *>(scene->active_node());
+		auto graphe = objet->graph();
+
+		for (auto &noeud : graphe->noeuds()) {
+			if (metadonnee == "contracte") {
+				noeud->enleve_drapeau(NOEUD_DILATE);
+				noeud->ajoute_drapeau(NOEUD_CONTRACTE);
+			}
+			else {
+				noeud->enleve_drapeau(NOEUD_CONTRACTE);
+				noeud->ajoute_drapeau(NOEUD_DILATE);
+			}
+		}
+	}
+
+	void defait() override {}
+	void refait() override {}
+};
+
+/* ************************************************************************** */
+
 void enregistre_commandes_graphes(CommandFactory *usine)
 {
 	ENREGISTRE_COMMANDE(usine, "dessine_graphe_objet", CommandeDessineGrapheObjet);
 	ENREGISTRE_COMMANDE(usine, "dessine_graphe_dependance", CommandeDessineGrapheDependance);
+	ENREGISTRE_COMMANDE(usine, "graphe.zoom", CommandeGrapheZoom);
+	ENREGISTRE_COMMANDE(usine, "graphe.supprime_selection", CommandeGrapheSupprimeSelection);
+	ENREGISTRE_COMMANDE(usine, "graphe.centre", CommandeGrapheCentre);
+	ENREGISTRE_COMMANDE(usine, "graphe.bascule_expansion", CommandeGrapheBasculeExpansion);
 }

@@ -1,0 +1,24 @@
+menu "Éditeur Noeud" {
+    action(valeur="Supprime seléction"; attache="graphe.supprime_selection")
+	action(valeur="Centre graphe"; attache="graphe.centre")
+
+    menu "Zoom" {
+	    action(valeur="Zoom 10%"; attache="graphe.zoom"; métadonnée="10%")
+		action(valeur="Zoom 25%"; attache="graphe.zoom"; métadonnée="25%")
+		action(valeur="Zoom 50%"; attache="graphe.zoom"; métadonnée="50%")
+		action(valeur="Zoom 75%"; attache="graphe.zoom"; métadonnée="75%")
+		action(valeur="Zoom 90%"; attache="graphe.zoom"; métadonnée="90%")
+		action(valeur="Zoom 100%"; attache="graphe.zoom"; métadonnée="100%")
+		action(valeur="Zoom 150%"; attache="graphe.zoom"; métadonnée="150%")
+		action(valeur="Zoom 200%"; attache="graphe.zoom"; métadonnée="200%")
+		action(valeur="Zoom 300%"; attache="graphe.zoom"; métadonnée="300%")
+	}
+
+    action(valeur="Contracte tous les noeuds"; attache="graphe.bascule_expansion"; métadonnée="contracte")
+	action(valeur="Dilate tous les noeuds"; attache="graphe.bascule_expansion"; métadonnée="dilate")
+
+    séparateur
+
+    action(valeur="Entre dans l'objet"; attache="objet.entre")
+	action(valeur="Sors de l'objet"; attache="objet.sors")
+}

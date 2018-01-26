@@ -153,3 +153,13 @@ void Graph::enleve_selection(Noeud *noeud)
 						  m_noeuds_selectiones.end(),
 						  noeud));
 }
+
+void Graph::zoom(float valeur)
+{
+	m_zoom = valeur;
+}
+
+float Graph::zoom() const
+{
+	return m_zoom;
+}

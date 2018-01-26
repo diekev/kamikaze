@@ -33,6 +33,8 @@ class Context;
 
 enum {
 	NOEUD_SELECTIONE = (1 << 0),
+	NOEUD_DILATE     = (1 << 1),
+	NOEUD_CONTRACTE  = (1 << 2),
 };
 
 class Graph {
@@ -42,6 +44,8 @@ class Graph {
 	Noeud *m_noeud_actif = nullptr;
 
 	bool m_besoin_actualisation;
+
+	float m_zoom;
 
 public:
 	explicit Graph(const Context &contexte);
@@ -63,4 +67,8 @@ public:
 	void ajoute_selection(Noeud *noeud);
 
 	void enleve_selection(Noeud *noeud);
+
+	void zoom(float valeur);
+
+	float zoom() const;
 };
