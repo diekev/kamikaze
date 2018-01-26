@@ -83,6 +83,7 @@ public:
 	const std::vector<numero7::systeme_fichier::shared_library> &greffons() const;
 
 	std::string requiers_dialogue(int type);
+	void affiche_erreur(const std::string &message);
 
 	CommandManager *gestionnaire_commande() const;
 

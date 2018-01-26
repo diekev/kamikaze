@@ -35,31 +35,25 @@ static void ouvre_fichier_implementation(Main *main, const Context &contexte, co
 	const auto erreur = kamikaze::ouvre_projet(chemin_projet, *main, contexte);
 
 	if (erreur != kamikaze::erreur_fichier::AUCUNE_ERREUR) {
-#if 0
-		QMessageBox boite_message;
-
 		switch (erreur) {
 			case kamikaze::erreur_fichier::CORROMPU:
-				boite_message.critical(nullptr, "Error", "Le fichier est corrompu !");
+				main->affiche_erreur("Le fichier est corrompu !");
 				break;
 			case kamikaze::erreur_fichier::NON_OUVERT:
-				boite_message.critical(nullptr, "Error", "Le fichier n'est pas ouvert !");
+				main->affiche_erreur("Le fichier n'est pas ouvert !");
 				break;
 			case kamikaze::erreur_fichier::NON_TROUVE:
-				boite_message.critical(nullptr, "Error", "Le fichier n'a pas été trouvé !");
+				main->affiche_erreur("Le fichier n'a pas été trouvé !");
 				break;
 			case kamikaze::erreur_fichier::INCONNU:
-				boite_message.critical(nullptr, "Error", "Erreur inconnu !");
+				main->affiche_erreur("Erreur inconnu !");
 				break;
 			case kamikaze::erreur_fichier::GREFFON_MANQUANT:
-				boite_message.critical(nullptr, "Error",
-									   "Le fichier ne pas être ouvert car il"
+				main->affiche_erreur("Le fichier ne pas être ouvert car il"
 									   " y a un greffon manquant !");
 				break;
 		}
 
-		boite_message.setFixedSize(500, 200);
-#endif
 		return;
 	}
 

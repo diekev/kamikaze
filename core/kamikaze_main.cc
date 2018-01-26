@@ -33,6 +33,9 @@
 
 #include <dlfcn.h>
 
+#include <QFileDialog>
+#include <QMessageBox>
+
 #include "commandes/commandes_graphes.h"
 #include "commandes/commandes_objet.h"
 #include "commandes/commandes_projet.h"
@@ -187,7 +190,26 @@ const std::vector<numero7::systeme_fichier::shared_library> &Main::greffons() co
 
 std::string Main::requiers_dialogue(int type)
 {
-	return ""; //m_fenetre_principale->requiers_dialogue(type);
+	/* À FAIRE : sort ça de la classe. */
+	if (type == FICHIER_OUVERTURE) {
+		const auto chemin = QFileDialog::getOpenFileName();
+		return chemin.toStdString();
+	}
+
+	if (type == FICHIER_SAUVEGARDE) {
+		const auto chemin = QFileDialog::getSaveFileName();
+		return chemin.toStdString();
+	}
+
+	return "";
+}
+
+void Main::affiche_erreur(const std::string &message)
+{
+	/* À FAIRE : sort ça de la classe. */
+	QMessageBox boite_message;
+	boite_message.critical(nullptr, "Error", message.c_str());
+	boite_message.setFixedSize(500, 200);
 }
 
 CommandManager *Main::gestionnaire_commande() const

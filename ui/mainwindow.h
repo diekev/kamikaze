@@ -65,8 +65,6 @@ public:
 	explicit MainWindow(Main *main, QWidget *parent = nullptr);
 	~MainWindow();
 
-	std::string requiers_dialogue(int type);
-
 public Q_SLOTS:
 	/* Progress Bar */
 	void taskStarted();

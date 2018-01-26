@@ -526,18 +526,3 @@ void MainWindow::charge_reglages()
 
 	mis_a_jour_menu_fichier_recent();
 }
-
-std::string MainWindow::requiers_dialogue(int type)
-{
-	if (type == FICHIER_OUVERTURE) {
-		const auto chemin = QFileDialog::getOpenFileName(this);
-		return chemin.toStdString();
-	}
-
-	if (type == FICHIER_SAUVEGARDE) {
-		const auto chemin = QFileDialog::getSaveFileName(this);
-		return chemin.toStdString();
-	}
-
-	return "";
-}
