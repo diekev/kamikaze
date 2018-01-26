@@ -980,7 +980,6 @@ void QtNodeEditor::showContextMenu(const QPoint &pos)
 	if (!m_context_menu) {
 		return;
 	}
-	std::cerr << __func__ << '\n';
 
 	m_gestionnaire->ajourne_menu("Éditeur Noeud");
 
