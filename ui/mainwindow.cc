@@ -300,7 +300,7 @@ void MainWindow::addGraphEditorWidget()
 	auto dock = new QDockWidget("Graph Editor", this);
 	dock->setAttribute(Qt::WA_DeleteOnClose);
 
-	QtNodeEditor *graph_editor = new QtNodeEditor(m_repondant_commande, dock);
+	QtNodeEditor *graph_editor = new QtNodeEditor(m_repondant_commande, m_gestionnaire, dock);
 	graph_editor->listens(&m_context);
 	graph_editor->setAddNodeMenu(m_add_nodes_menu);
 	/* XXX - graph editor needs to be able to draw the scene from the scratch. */
@@ -363,7 +363,7 @@ void MainWindow::addGraphOutlinerWidget()
 	auto graph_dock = new QDockWidget("Graph Editor", this);
 	graph_dock->setAttribute(Qt::WA_DeleteOnClose);
 
-	QtNodeEditor *graph_editor = new QtNodeEditor(m_repondant_commande, graph_dock);
+	QtNodeEditor *graph_editor = new QtNodeEditor(m_repondant_commande, m_gestionnaire, graph_dock);
 	graph_editor->listens(&m_context);
 	graph_editor->setAddNodeMenu(m_add_nodes_menu);
 

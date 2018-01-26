@@ -82,7 +82,11 @@ class QtNodeEditor : public WidgetBase {
 	kangao::GestionnaireInterface *m_gestionnaire;
 
 public:
-	explicit QtNodeEditor(kangao::RepondantBouton *repondant, QWidget *parent = nullptr);
+	explicit QtNodeEditor(
+			kangao::RepondantBouton *repondant,
+			kangao::GestionnaireInterface *gestionnaire,
+			QWidget *parent = nullptr);
+
 	virtual ~QtNodeEditor();
 
 	/* If true, a context menu is displayed when the right mousebutton is

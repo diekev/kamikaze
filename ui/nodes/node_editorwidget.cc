@@ -48,11 +48,14 @@
 
 /* ************************************************************************** */
 
-QtNodeEditor::QtNodeEditor(kangao::RepondantBouton *repondant, QWidget *parent)
+QtNodeEditor::QtNodeEditor(
+		kangao::RepondantBouton *repondant,
+		kangao::GestionnaireInterface *gestionnaire,
+		QWidget *parent)
     : WidgetBase(parent)
     , m_view(new NodeView(this))
     , m_graphics_scene(new QtNodeGraphicsScene())
-	, m_gestionnaire(new kangao::GestionnaireInterface)
+	, m_gestionnaire(gestionnaire)
 {
 	m_main_layout->addWidget(m_view);
 
@@ -94,7 +97,6 @@ QtNodeEditor::QtNodeEditor(kangao::RepondantBouton *repondant, QWidget *parent)
 
 QtNodeEditor::~QtNodeEditor()
 {
-	delete m_gestionnaire;
 	delete m_context_menu;
 	delete m_graphics_scene;
 }
