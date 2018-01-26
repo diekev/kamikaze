@@ -57,7 +57,6 @@ static const char *chemins_scripts[] = {
 //	"interface/menu_edition.kangao",
 	"interface/menu_objet.kangao",
 	"interface/menu_debogage.kangao",
-	"interface/menu_prereglage.kangao",
 };
 
 class RepondantCommande : public kangao::RepondantBouton {
@@ -246,11 +245,23 @@ void MainWindow::genere_menu_fichier()
 
 void MainWindow::generatePresetMenu()
 {
-	/* À FAIRE */
-#if 0
-	m_tool_bar = kangao::compile_barre_outils("interface/menu_prereglage.kangao");
+	std::ifstream entree;
+	entree.open("interface/menu_prereglage.kangao");
+
+	std::string texte_entree;
+	std::string temp;
+
+	while (std::getline(entree, temp)) {
+		texte_entree += temp;
+	}
+
+	kangao::DonneesInterface donnees;
+	donnees.manipulable = nullptr;
+	donnees.conteneur = nullptr;
+	donnees.repondant_bouton = m_repondant_commande;
+
+	m_tool_bar = m_gestionnaire->compile_barre_outils(donnees, texte_entree.c_str());
 	addToolBar(Qt::TopToolBarArea, m_tool_bar);
-#endif
 }
 
 void MainWindow::mis_a_jour_menu_fichier_recent()

@@ -1,4 +1,4 @@
-menu "Ajouter Préréglage" {
+barre_outils {
     action(valeur="Création grille"; attache="ajouter_prereglage"; métadonnée="Création grille"; icône="icons/icon_grid.png")
 	action(valeur="Création boîte"; attache="ajouter_prereglage"; métadonnée="Création boîte"; icône="icons/icon_box.png")
 	action(valeur="Création cercle"; attache="ajouter_prereglage"; métadonnée="Création cercle"; icône="icons/icon_circle.png")
