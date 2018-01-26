@@ -1,0 +1,24 @@
+disposition "ligne_temps" {
+    ligne {
+	    étiquette(valeur="0")
+		entier(valeur="0"; min="0"; max="250)
+		étiquette(valeur="250")
+	}
+	ligne {
+	    étiquette(valeur="0")
+
+        étirement
+
+        bouton(infobulle="Va à la première image"; attache="changement_temps"; métadonnée="va_image_debut"; icône="icons/icon_jump_first.png")
+		bouton(infobulle="Joue en arrière"; attache="changement_temps"; métadonnée="joue_en_arriere"; icône="icons/icon_play_backward.png")
+		bouton(infobulle="Recule d'une image"; attache="changement_temps"; métadonnée="pas_en_arriere"; icône="icons/icon_step_backward.png")
+		bouton(infobulle="Arrêt"; attache="changement_temps"; métadonnée="arrete_animation"; icône="icons/icon_stop.png")
+		bouton(infobulle="Avance d'une image"; attache="changement_temps"; métadonnée="pas_en_avant"; icône="icons/icon_step_forward.png")
+		bouton(infobulle="Joue en avant"; attache="changement_temps"; métadonnée="joue_en_avant"; icône="icons/icon_play_forward.png")
+		bouton(infobulle="Va à la dernière image"; attache="changement_temps"; métadonnée="va_image_fin"; icône="icons/icon_jump_last.png")
+
+        étirement
+
+        décimal(valeur="24.0"; infobulle="Cadence Image"; attache="cadence")
+	}
+}
