@@ -33,6 +33,12 @@ class Main;
 class QProgressBar;
 class RepondantCommande;
 
+namespace kangao {
+
+class GestionnaireInterface;
+
+}  /* namespace kangao */
+
 class MainWindow : public QMainWindow {
 	Q_OBJECT
 
@@ -56,10 +62,8 @@ class MainWindow : public QMainWindow {
 
 	QDockWidget *m_viewer_dock = nullptr;
 
-	std::vector<QAction *> m_actions_menu_recent;
-	std::vector<QString> m_fichiers_recent = {};
-
 	RepondantCommande *m_repondant_commande;
+	kangao::GestionnaireInterface *m_gestionnaire = nullptr;
 
 public:
 	explicit MainWindow(Main *main, QWidget *parent = nullptr);
@@ -78,23 +82,18 @@ private:
 	void generateNodeMenu();
 	void generatePresetMenu();
 
-	void ajoute_fichier_recent(const QString &name, bool update_menu);
-	void mis_a_jour_menu_fichier_recent();
-
 	void ecrit_reglages() const;
 	void charge_reglages();
 
 	void closeEvent(QCloseEvent *) override;
 
-	void ouvre_fichier_implementation(const std::string &chemin_projet);
-
 private Q_SLOTS:
-	void ouvre_fichier_recent();
-
 	void addTimeLineWidget();
 	void addGraphEditorWidget();
 	void addGraphOutlinerWidget();
 	void addGLViewerWidget();
 	void addOutlinerWidget();
 	void addPropertiesWidget();
+
+	void mis_a_jour_menu_fichier_recent();
 };

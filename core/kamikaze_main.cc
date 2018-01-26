@@ -50,6 +50,8 @@
 namespace fs = std::experimental::filesystem;
 namespace sf = numero7::systeme_fichier;
 
+static constexpr auto MAX_FICHIER_RECENT = 10;
+
 namespace detail {
 
 static std::vector<sf::shared_library> charge_greffons(const fs::path &chemin)
@@ -171,6 +173,28 @@ std::string Main::chemin_projet() const
 void Main::chemin_projet(const std::string &chemin)
 {
 	m_chemin_projet = chemin;
+	ajoute_fichier_recent(chemin);
+}
+
+void Main::ajoute_fichier_recent(const std::string &chemin)
+{
+	auto index = std::find(m_fichiers_recents.begin(), m_fichiers_recents.end(), chemin);
+
+	if (index != m_fichiers_recents.end()) {
+		std::rotate(m_fichiers_recents.begin(), index, index + 1);
+	}
+	else {
+		m_fichiers_recents.insert(m_fichiers_recents.begin(), chemin);
+
+		if (m_fichiers_recents.size() > MAX_FICHIER_RECENT) {
+			m_fichiers_recents.resize(MAX_FICHIER_RECENT);
+		}
+	}
+}
+
+const std::vector<std::string> &Main::fichiers_recents()
+{
+	return m_fichiers_recents;
 }
 
 bool Main::projet_ouvert() const

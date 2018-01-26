@@ -46,6 +46,7 @@ class Main final {
 	std::unique_ptr<UsineOperateur> m_usine_operateur;
 	std::unique_ptr<Scene> m_scene;
 
+	std::vector<std::string> m_fichiers_recents{};
 	std::string m_chemin_projet{};
 
 	bool m_projet_ouvert = false;
@@ -75,6 +76,9 @@ public:
 	std::string chemin_projet() const;
 
 	void chemin_projet(const std::string &chemin);
+
+	const std::vector<std::string> &fichiers_recents();
+	void ajoute_fichier_recent(const std::string &chemin);
 
 	bool projet_ouvert() const;
 

@@ -61,8 +61,6 @@ static void ouvre_fichier_implementation(Main *main, const Context &contexte, co
 	main->projet_ouvert(true);
 
 #if 0
-	ajoute_fichier_recent(chemin_projet.c_str(), true);
-
 	setWindowTitle(chemin_projet.c_str());
 #endif
 }
@@ -78,6 +76,19 @@ public:
 		}
 
 		ouvre_fichier_implementation(main, contexte, chemin_projet);
+	}
+
+	void defait() override {}
+	void refait() override {}
+};
+
+/* ************************************************************************** */
+
+class CommandeOuvrirRecent final : public Commande {
+public:
+	void execute(Main *main, const Context &contexte, const std::string &metadonnee) override
+	{
+		ouvre_fichier_implementation(main, contexte, metadonnee);
 	}
 
 	void defait() override {}
@@ -158,6 +169,7 @@ public:
 void enregistre_commandes_projet(CommandFactory *usine)
 {
 	ENREGISTRE_COMMANDE(usine, "ouvrir_fichier", CommandeOuvrir);
+	ENREGISTRE_COMMANDE(usine, "ouvrir_fichier_recent", CommandeOuvrirRecent);
 	ENREGISTRE_COMMANDE(usine, "sauvegarder", CommandeSauvegarder);
 	ENREGISTRE_COMMANDE(usine, "sauvegarder_sous", CommandeSauvegarderSous);
 	ENREGISTRE_COMMANDE(usine, "défaire", CommandeDefaire);

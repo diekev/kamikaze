@@ -60,8 +60,6 @@ static const char *chemins_scripts[] = {
 	"interface/menu_prereglage.kangao",
 };
 
-static constexpr auto MAX_FICHIER_RECENT = 10;
-
 class RepondantCommande : public kangao::RepondantBouton {
 	Main *m_main = nullptr;
 	Context *m_contexte = nullptr;
@@ -100,6 +98,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
     : QMainWindow(parent)
 	, m_main(main)
 	, m_repondant_commande(new RepondantCommande(main, &m_context))
+	, m_gestionnaire(new kangao::GestionnaireInterface)
 {
 	genere_menu_fichier();
 	generateNodeMenu();
@@ -135,6 +134,7 @@ MainWindow::MainWindow(Main *main, QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+	delete m_gestionnaire;
 	delete m_repondant_commande;
 }
 
@@ -192,7 +192,7 @@ void MainWindow::generateNodeMenu()
 	donnees.conteneur = nullptr;
 	donnees.repondant_bouton = m_repondant_commande;
 
-	m_add_nodes_menu = kangao::compile_menu(donnees, ss.str().c_str());
+	m_add_nodes_menu = m_gestionnaire->compile_menu(donnees, ss.str().c_str());
 	menuBar()->addMenu(m_add_nodes_menu);
 }
 
@@ -225,33 +225,6 @@ void MainWindow::generateWindowMenu()
 
 void MainWindow::genere_menu_fichier()
 {
-#if 0
-	auto menu_fichier = menuBar()->addMenu("Fichier");
-
-	QAction *action;
-
-	action = menu_fichier->addAction("Ouvrir");
-	connect(action, SIGNAL(triggered()), this, SLOT(ouvre_fichier()));
-
-	auto sous_menu = menu_fichier->addMenu("Projets récents...");
-
-	m_actions_menu_recent.resize(MAX_FICHIER_RECENT);
-
-	for (auto &action_menu_recent : m_actions_menu_recent) {
-		action_menu_recent = new QAction(this);
-		action_menu_recent->setVisible(false);
-		sous_menu->addAction(action_menu_recent);
-		connect(action_menu_recent, SIGNAL(triggered()), this, SLOT(ouvre_fichier_recent()));
-	}
-
-	menu_fichier->addSeparator();
-
-	action = menu_fichier->addAction("Sauvegarder");
-	connect(action, SIGNAL(triggered()), this, SLOT(sauve_fichier()));
-
-	action = menu_fichier->addAction("Sauvegarder sous...");
-	connect(action, SIGNAL(triggered()), this, SLOT(sauve_fichier_sous()));
-#else
 	kangao::DonneesInterface donnees;
 	donnees.manipulable = nullptr;
 	donnees.conteneur = nullptr;
@@ -268,11 +241,14 @@ void MainWindow::genere_menu_fichier()
 			texte_entree += temp;
 		}
 
-		auto menu = kangao::compile_menu(donnees, texte_entree.c_str());
+		auto menu = m_gestionnaire->compile_menu(donnees, texte_entree.c_str());
 
 		menuBar()->addMenu(menu);
 	}
-#endif
+
+	auto menu_fichiers_recents = m_gestionnaire->pointeur_menu("Projets Récents");
+	connect(menu_fichiers_recents, SIGNAL(aboutToShow()),
+			this, SLOT(mis_a_jour_menu_fichier_recent()));
 }
 
 void MainWindow::generatePresetMenu()
@@ -284,95 +260,24 @@ void MainWindow::generatePresetMenu()
 #endif
 }
 
-void MainWindow::ouvre_fichier_recent()
-{
-	auto action = qobject_cast<QAction *>(sender());
-
-	if (action == nullptr) {
-		return;
-	}
-
-	auto chemin_projet = action->data().toString().toStdString();
-	ouvre_fichier_implementation(chemin_projet);
-}
-
-void MainWindow::ouvre_fichier_implementation(const std::string &chemin_projet)
-{
-	const auto erreur = kamikaze::ouvre_projet(chemin_projet, *m_main, m_context);
-
-	if (erreur != kamikaze::erreur_fichier::AUCUNE_ERREUR) {
-		QMessageBox boite_message;
-
-		switch (erreur) {
-			case kamikaze::erreur_fichier::CORROMPU:
-				boite_message.critical(nullptr, "Error", "Le fichier est corrompu !");
-				break;
-			case kamikaze::erreur_fichier::NON_OUVERT:
-				boite_message.critical(nullptr, "Error", "Le fichier n'est pas ouvert !");
-				break;
-			case kamikaze::erreur_fichier::NON_TROUVE:
-				boite_message.critical(nullptr, "Error", "Le fichier n'a pas été trouvé !");
-				break;
-			case kamikaze::erreur_fichier::INCONNU:
-				boite_message.critical(nullptr, "Error", "Erreur inconnu !");
-				break;
-			case kamikaze::erreur_fichier::GREFFON_MANQUANT:
-				boite_message.critical(nullptr, "Error",
-									   "Le fichier ne pas être ouvert car il"
-									   " y a un greffon manquant !");
-				break;
-		}
-
-		boite_message.setFixedSize(500, 200);
-		return;
-	}
-
-	m_main->chemin_projet(chemin_projet);
-	m_main->projet_ouvert(true);
-
-	ajoute_fichier_recent(chemin_projet.c_str(), true);
-	setWindowTitle(chemin_projet.c_str());
-}
-
-void MainWindow::ajoute_fichier_recent(const QString &name, bool update_menu)
-{
-	auto index = std::find(m_fichiers_recent.begin(), m_fichiers_recent.end(), name);
-
-	if (index != m_fichiers_recent.end()) {
-		std::rotate(m_fichiers_recent.begin(), index, index + 1);
-	}
-	else {
-		m_fichiers_recent.insert(m_fichiers_recent.begin(), name);
-
-		if (m_fichiers_recent.size() > MAX_FICHIER_RECENT) {
-			m_fichiers_recent.resize(MAX_FICHIER_RECENT);
-		}
-	}
-
-	if (update_menu) {
-		mis_a_jour_menu_fichier_recent();
-	}
-}
-
 void MainWindow::mis_a_jour_menu_fichier_recent()
 {
-	/* À FAIRE */
-#if 0
-	if (m_fichiers_recent.empty()) {
-		return;
+	std::vector<kangao::DonneesAction> donnees_actions;
+
+	kangao::DonneesAction donnees;
+	donnees.attache = "ouvrir_fichier_recent";
+	donnees.repondant_bouton = m_repondant_commande;
+
+	for (const auto &fichier_recent : m_main->fichiers_recents()) {
+		auto name = QFileInfo(fichier_recent.c_str()).fileName();
+
+		donnees.nom = name.toStdString();
+		donnees.metadonnee = fichier_recent;
+
+		donnees_actions.push_back(donnees);
 	}
 
-	//ui->m_no_recent_act->setVisible(false);
-
-	for (int i(0); i < m_fichiers_recent.size();  ++i) {
-		auto filename = m_fichiers_recent[i];
-		auto name = QFileInfo(filename).fileName();
-
-		m_actions_menu_recent[i]->setText(name);
-		m_actions_menu_recent[i]->setData(filename);
-		m_actions_menu_recent[i]->setVisible(true);
-	}
-#endif
+	m_gestionnaire->recree_menu("Projets Récents", donnees_actions);
 }
 
 void MainWindow::addTimeLineWidget()
@@ -498,8 +403,8 @@ void MainWindow::ecrit_reglages() const
 	QSettings settings;
 	QStringList recent;
 
-	for (const auto &recent_file : m_fichiers_recent) {
-		recent.push_front(recent_file);
+	for (const auto &fichier_recent : m_main->fichiers_recents()) {
+		recent.push_front(fichier_recent.c_str());
 	}
 
 	settings.setValue("projet_récents", recent);
@@ -513,9 +418,7 @@ void MainWindow::charge_reglages()
 
 	for (const auto &file : recent_files) {
 		if (QFile(file).exists()) {
-			ajoute_fichier_recent(file, false);
+			m_main->ajoute_fichier_recent(file.toStdString());
 		}
 	}
-
-	mis_a_jour_menu_fichier_recent();
 }
