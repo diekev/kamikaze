@@ -68,6 +68,7 @@ add_library(kmk_core STATIC
 	commandes/commandes_graphes.h
 	commandes/commandes_objet.h
 	commandes/commandes_projet.h
+	commandes/commandes_scene.h
 
 	graphs/depsgraph.h
 	graphs/graph_dumper.h
@@ -93,6 +94,7 @@ add_library(kmk_core STATIC
 	commandes/commandes_graphes.cc
 	commandes/commandes_objet.cc
 	commandes/commandes_projet.cc
+	commandes/commandes_scene.cc
 
 	graphs/depsgraph.cc
 	graphs/graph_dumper.cc

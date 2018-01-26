@@ -35,6 +35,12 @@ class QSpinBox;
 class QVBoxLayout;
 class Scene;
 
+namespace kangao {
+
+class RepondantBouton;
+
+}  /* namespace kangao */
+
 class TimeLineWidget : public WidgetBase {
 	Q_OBJECT
 
@@ -51,7 +57,7 @@ class TimeLineWidget : public WidgetBase {
 	bool m_timer_has_started = false;
 
 public:
-	explicit TimeLineWidget(QWidget *parent = nullptr);
+	explicit TimeLineWidget(kangao::RepondantBouton *repondant, QWidget *parent = nullptr);
 
 	void update_state(event_type event) override;
 
@@ -60,15 +66,6 @@ private Q_SLOTS:
 	void setCurrentFrame(int value);
 	void setEndFrame(int value);
 	void setFPS(double value);
-
-	void goToStartFrame();
-	void goToEndFrame();
-
-	void playBackward();
-	void playForward();
-	void stopAnimation();
-	void stepBackward();
-	void stepForward();
 
 	void updateFrame() const;
 };

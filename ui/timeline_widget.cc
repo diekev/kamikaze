@@ -25,6 +25,8 @@
 #include "timeline_widget.h"
 
 #include <kamikaze/context.h>
+#include <kangao/kangao.h>
+#include <kangao/manipulable.h>
 
 #include <QDoubleSpinBox>
 #include <QFrame>
@@ -40,30 +42,7 @@
 
 #include "utils_ui.h"
 
-enum {
-	TC_FIRST_FRAME = 0,
-	TC_PLAY_BACKWARD,
-	TC_PLAY_BWD_FRAME,
-	TC_STOP,
-	TC_PLAY_FWD_FRAME,
-	TC_PLAY_FORWARD,
-	TC_LAST_FRAME,
-
-	/* Only add values above this line. */
-	TC_NUM_CONTROLS,
-};
-
-static UIButData transport_controls[TC_NUM_CONTROLS] = {
-    { TC_FIRST_FRAME,    "Jump To First Frame",     "icons/icon_jump_first.png" },
-    { TC_PLAY_BACKWARD,  "Play Backwards",          "icons/icon_play_backward.png" },
-    { TC_PLAY_BWD_FRAME, "Play Back One Frame",     "icons/icon_step_backward.png" }, // left arrow
-    { TC_STOP,           "Stop",                    "icons/icon_stop.png" }, // spacebar
-    { TC_PLAY_FWD_FRAME, "Play Forwards One Frame", "icons/icon_step_forward.png" }, // right arrow
-    { TC_PLAY_FORWARD,   "Play Forwards",           "icons/icon_play_forward.png" }, // spacebar
-    { TC_LAST_FRAME,     "Jump To Last Frame",      "icons/icon_jump_last.png" },
-};
-
-TimeLineWidget::TimeLineWidget(QWidget *parent)
+TimeLineWidget::TimeLineWidget(kangao::RepondantBouton *repondant, QWidget *parent)
     : WidgetBase(parent)
     , m_timer(new QTimer(this))
 {
@@ -114,41 +93,22 @@ TimeLineWidget::TimeLineWidget(QWidget *parent)
 	m_cur_frame->setToolTip("Current Frame");
 
 	m_tc_layout->addWidget(m_cur_frame);
-	m_tc_layout->addStretch();
 
 	/* ------------------------- transport controls ------------------------- */
 
-	for (const UIButData &transport_control : transport_controls) {
-		auto button = new QPushButton(m_frame);
-		button->setToolTip(transport_control.name);
-		button->setIcon(QIcon(transport_control.icon_path));
+	m_tc_layout->addStretch();
 
-		switch (transport_control.value) {
-			case TC_FIRST_FRAME:
-				connect(button, SIGNAL(clicked()), this, SLOT(goToStartFrame()));
-				break;
-			case TC_PLAY_BACKWARD:
-				connect(button, SIGNAL(clicked()), this, SLOT(playBackward()));
-				break;
-			case TC_PLAY_BWD_FRAME:
-				connect(button, SIGNAL(clicked()), this, SLOT(stepBackward()));
-				break;
-			case TC_STOP:
-				connect(button, SIGNAL(clicked()), this, SLOT(stopAnimation()));
-				break;
-			case TC_PLAY_FWD_FRAME:
-				connect(button, SIGNAL(clicked()), this, SLOT(stepForward()));
-				break;
-			case TC_PLAY_FORWARD:
-				connect(button, SIGNAL(clicked()), this, SLOT(playForward()));
-				break;
-			case TC_LAST_FRAME:
-				connect(button, SIGNAL(clicked()), this, SLOT(goToEndFrame()));
-				break;
-		}
+	kangao::Manipulable dummy;
 
-		m_tc_layout->addWidget(button);
-	}
+	kangao::DonneesInterface donnees;
+	donnees.conteneur = nullptr;
+	donnees.manipulable = &dummy;
+	donnees.repondant_bouton = repondant;
+
+	auto text_entree = kangao::contenu_fichier("interface/disposition_ligne_temps.kangao");
+	auto disp_controles = kangao::compile_interface(donnees, text_entree.c_str());
+
+	m_tc_layout->addLayout(disp_controles);
 
 	m_tc_layout->addStretch();
 
@@ -231,65 +191,6 @@ void TimeLineWidget::setFPS(double value)
 	this->set_active();
 	auto scene = m_context->scene;
 	scene->framesPerSecond(value);
-}
-
-void TimeLineWidget::goToStartFrame()
-{
-	this->set_active();
-	auto scene = m_context->scene;
-	scene->currentFrame(scene->startFrame());
-	scene->updateForNewFrame(*m_context);
-}
-
-void TimeLineWidget::goToEndFrame()
-{
-	this->set_active();
-	auto scene = m_context->scene;
-	scene->currentFrame(scene->endFrame());
-	scene->updateForNewFrame(*m_context);
-}
-
-void TimeLineWidget::playForward()
-{
-	this->set_active();
-	m_context->eval_ctx->animation = true;
-	m_context->eval_ctx->time_direction = TIME_DIR_FORWARD;
-	m_context->scene->notify_listeners(event_type::time | event_type::modified);
-}
-
-void TimeLineWidget::playBackward()
-{
-	this->set_active();
-	m_context->eval_ctx->animation = true;
-	m_context->eval_ctx->time_direction = TIME_DIR_BACKWARD;
-	m_context->scene->notify_listeners(event_type::time | event_type::modified);
-}
-
-void TimeLineWidget::stepForward()
-{
-	this->set_active();
-	m_context->eval_ctx->time_direction = TIME_DIR_FORWARD;
-
-	auto scene = m_context->scene;
-	scene->currentFrame(scene->currentFrame() + 1);
-	scene->updateForNewFrame(*m_context);
-}
-
-void TimeLineWidget::stepBackward()
-{
-	this->set_active();
-	m_context->eval_ctx->time_direction = TIME_DIR_BACKWARD;
-
-	auto scene = m_context->scene;
-	scene->currentFrame(scene->currentFrame() - 1);
-	scene->updateForNewFrame(*m_context);
-}
-
-void TimeLineWidget::stopAnimation()
-{
-	this->set_active();
-	m_context->eval_ctx->animation = false;
-	m_context->scene->notify_listeners(event_type::time | event_type::modified);
 }
 
 void TimeLineWidget::updateFrame() const

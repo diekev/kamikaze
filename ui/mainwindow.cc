@@ -267,7 +267,7 @@ void MainWindow::addTimeLineWidget()
 	auto dock = new QDockWidget("Time Line", this);
 	dock->setAttribute(Qt::WA_DeleteOnClose);
 
-	TimeLineWidget *time_line = new TimeLineWidget(dock);
+	auto time_line = new TimeLineWidget(m_repondant_commande, dock);
 	time_line->listens(&m_context);
 	time_line->update_state(event_type::time | event_type::modified);
 

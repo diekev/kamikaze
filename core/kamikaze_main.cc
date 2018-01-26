@@ -39,6 +39,7 @@
 #include "commandes/commandes_graphes.h"
 #include "commandes/commandes_objet.h"
 #include "commandes/commandes_projet.h"
+#include "commandes/commandes_scene.h"
 
 #include "operateurs/operateurs_physiques.h"
 #include "operateurs/operateurs_standards.h"
@@ -134,6 +135,7 @@ void Main::initialize()
 	enregistre_commandes_graphes(this->usine_commandes());
 	enregistre_commandes_objet(this->usine_commandes());
 	enregistre_commandes_projet(this->usine_commandes());
+	enregistre_commandes_scene(this->usine_commandes());
 
 	/* opérateurs */
 	enregistre_operateurs_integres(this->usine_operateur());
