@@ -57,6 +57,7 @@ static const char *chemins_scripts[] = {
 //	"interface/menu_edition.kangao",
 	"interface/menu_objet.kangao",
 	"interface/menu_debogage.kangao",
+	"interface/menu_prereglage.kangao",
 };
 
 static constexpr auto MAX_FICHIER_RECENT = 10;
@@ -269,26 +270,11 @@ void MainWindow::genere_menu_fichier()
 
 void MainWindow::generatePresetMenu()
 {
-	m_tool_bar = new QToolBar();
+	/* À FAIRE */
+#if 0
+	m_tool_bar = kangao::compile_barre_outils("interface/menu_prereglage.kangao");
 	addToolBar(Qt::TopToolBarArea, m_tool_bar);
-
-	UIButData props[] = {
-		{ 0, "Création grille", "icons/icon_grid.png" },
-		{ 0, "Création boîte", "icons/icon_box.png" },
-		{ 0, "Création cercle", "icons/icon_circle.png" },
-		{ 0, "Création icosphère", "icons/icon_icosphere.png" },
-		{ 0, "Création tube", "icons/icon_tube.png" },
-		{ 0, "Création cone", "icons/icon_cone.png" },
-		{ 0, "Création torus", "icons/icon_torus.png" },
-		{ 0, "Création nuage point", "icons/icon_point_cloud_cube.png" },
-	};
-
-	for (const auto &prop : props) {
-		auto action = m_tool_bar->addAction(QIcon(prop.icon_path), prop.name);
-		action->setData(QVariant::fromValue(QString("add preset")));
-
-		//connect(action, SIGNAL(triggered()), this, SLOT(handleCommand()));
-	}
+#endif
 }
 
 void MainWindow::ouvre_fichier_recent()

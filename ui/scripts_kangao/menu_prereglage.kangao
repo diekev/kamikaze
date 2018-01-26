@@ -1,0 +1,10 @@
+menu "Ajouter Préréglage" {
+    action(valeur="Création grille"; attache="ajouter_prereglage"; métadonnée="Création grille"; icône="icons/icon_grid.png")
+	action(valeur="Création boîte"; attache="ajouter_prereglage"; métadonnée="Création boîte"; icône="icons/icon_box.png")
+	action(valeur="Création cercle"; attache="ajouter_prereglage"; métadonnée="Création cercle"; icône="icons/icon_circle.png")
+	action(valeur="Création icosphère"; attache="ajouter_prereglage"; métadonnée="Création icosphère"; icône="icons/icon_icosphere.png")
+	action(valeur="Création tube"; attache="ajouter_prereglage"; métadonnée="Création tube"; icône="icons/icon_tube.png")
+	action(valeur="Création cone"; attache="ajouter_prereglage"; métadonnée="Création cone"; icône="icons/icon_cone.png")
+	action(valeur="Création torus"; attache="ajouter_prereglage"; métadonnée="Création torus"; icône="icons/icon_torus.png")
+	action(valeur="Création nuage point"; attache="ajouter_prereglage"; métadonnée="Création nuage point"; icône="icons/icon_point_cloud_cube.png")
+}

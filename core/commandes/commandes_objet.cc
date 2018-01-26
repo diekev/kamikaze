@@ -156,5 +156,5 @@ void enregistre_commandes_objet(CommandFactory *usine)
 {
 	ENREGISTRE_COMMANDE(usine, "ajouter_objet", AddObjectCmd);
 	ENREGISTRE_COMMANDE(usine, "ajouter_noeud", AddNodeCmd);
-	ENREGISTRE_COMMANDE(usine, "add preset", AddPresetObjectCmd);
+	ENREGISTRE_COMMANDE(usine, "ajouter_prereglage", AddPresetObjectCmd);
 }

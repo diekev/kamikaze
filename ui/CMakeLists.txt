@@ -40,6 +40,7 @@ set(FICHIERS_KANGAO
 	scripts_kangao/menu_edition.kangao
 	scripts_kangao/menu_fichier.kangao
 	scripts_kangao/menu_objet.kangao
+	scripts_kangao/menu_prereglage.kangao
 )
 
 add_compile_options(-fPIC)
