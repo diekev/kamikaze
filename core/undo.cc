@@ -74,6 +74,27 @@ bool Commande::evalue_predicat(Main *main, const Context &context, const std::st
 	return true;
 }
 
+void Commande::demarre_execution_modale(
+		Main */*main*/,
+		const Context &/*context*/,
+		const DonneesCommande &/*donnees*/)
+{
+}
+
+void Commande::ajourne_execution_modale(
+		Main */*main*/,
+		const Context &/*context*/,
+		const DonneesCommande &/*donnees*/)
+{
+}
+
+void Commande::termine_execution_modale(
+		Main */*main*/,
+		const Context &/*context*/,
+		const DonneesCommande &/*donnees*/)
+{
+}
+
 void UsineCommande::enregistre_type(const std::string &nom, const DescriptionCommande &description)
 {
 	const auto iter = m_tableau.find(nom);

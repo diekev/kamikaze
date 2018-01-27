@@ -86,7 +86,7 @@ QtNodeEditor::QtNodeEditor(
 	m_view->setScene(m_graphics_scene);
 	m_view->setRenderHint(QPainter::Antialiasing, true);
 	m_view->setInteractive(true);
-	m_view->setMouseTracking(true);
+	//m_view->setMouseTracking(true);
 	m_view->setBackgroundBrush(QBrush(QColor(127, 127, 127)));
 
 	m_rubber_band = nullptr;
@@ -211,6 +211,7 @@ QtConnection *QtNodeEditor::nodeOverConnection(QtNode *node)
 
 bool QtNodeEditor::eventFilter(QObject *object, QEvent *event)
 {
+	std::cerr << "Type évènement : " << static_cast<int>(event->type()) << '\n';
 	auto mouseEvent = static_cast<QGraphicsSceneMouseEvent *>(event);
 
 	switch (static_cast<int>(event->type())) {
@@ -231,10 +232,13 @@ bool QtNodeEditor::eventFilter(QObject *object, QEvent *event)
 			break;
 		}
 		case QEvent::GraphicsSceneMouseMove:
+		case QEvent::GraphicsSceneDragEnter:
+		case QEvent::GraphicsSceneDragMove:
 		{
 			return mouseMoveHandler(mouseEvent);
 			break;
 		}
+		case QEvent::GraphicsSceneDragLeave:
 		case QEvent::GraphicsSceneMouseRelease:
 		{
 			return mouseReleaseHandler(mouseEvent);
@@ -251,14 +255,15 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 		case Qt::LeftButton:
 		{
 			m_mouse_down = true;
+			std::cerr << __func__ << '\n';
 
-			DonneesCommande donnees;
-			donnees.souris = Qt::LeftButton;
-			donnees.x = mouseEvent->lastScenePos().x();
-			donnees.y = mouseEvent->lastScenePos().y();
+//			DonneesCommande donnees;
+//			donnees.souris = Qt::LeftButton;
+//			donnees.x = mouseEvent->lastScenePos().x();
+//			donnees.y = mouseEvent->lastScenePos().y();
 
-			m_repondant_commande->appele_commande("graphe", donnees);
-			return true;
+//			m_repondant_commande->appele_commande_modale("graphe", donnees);
+			return false;
 
 			const auto &item = itemAtExceptActiveConnection(mouseEvent->scenePos());
 
@@ -290,21 +295,6 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 				{
 					deselectNodes();
 					selectConnection(static_cast<QtConnection *>(item));
-					break;
-				}
-				case NODE_VALUE_TYPE_NODE:
-				{
-					selectNode(static_cast<QtNode *>(item), mouseEvent);
-					break;
-				}
-				case NODE_VALUE_TYPE_HEADER_ICON:
-				case NODE_VALUE_TYPE_HEADER_TITLE:
-				case NODE_VALUE_TYPE_NODE_BODY:
-				{
-					if (is_node(item->parentItem()) || is_object_node(item->parentItem())) {
-						selectNode(static_cast<QtNode *>(item->parentItem()), mouseEvent);
-					}
-
 					break;
 				}
 				case NODE_VALUE_TYPE_PORT:
@@ -430,6 +420,9 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 
 bool QtNodeEditor::mouseDoubleClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 {
+
+	std::cerr << __func__ << '\n';
+
 	switch (static_cast<int>(mouseEvent->button())) {
 		case Qt::LeftButton:
 		{
@@ -507,6 +500,16 @@ bool QtNodeEditor::mouseMoveHandler(QGraphicsSceneMouseEvent *mouseEvent)
 		return true;
 	}
 
+	std::cerr << __func__ << '\n';
+
+	DonneesCommande donnees;
+	donnees.souris = Qt::LeftButton;
+	donnees.x = mouseEvent->lastScenePos().x();
+	donnees.y = mouseEvent->lastScenePos().y();
+
+	m_repondant_commande->ajourne_commande_modale(donnees);
+	return true;
+
 	/* If there was a rubberband selection started, update its rectangle */
 	if (m_rubberband_selection && (mouseEvent->buttons() & Qt::LeftButton)) {
 		rubberbandSelection(mouseEvent);
@@ -538,13 +541,15 @@ bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 {
 	m_mouse_down = false;
 
+	std::cerr << __func__ << '\n';
+
 	/* À FAIRE : apparemment cette fonction déselectionne les noeuds. */
 	DonneesCommande donnees;
 	donnees.souris = Qt::LeftButton;
 	donnees.x = mouseEvent->lastScenePos().x();
 	donnees.y = mouseEvent->lastScenePos().y();
 
-	m_repondant_commande->appele_commande("graphe", donnees);
+	m_repondant_commande->acheve_commande_modale(donnees);
 	return true;
 
 	/* Determine whether a node has been dropped on a connection. */
@@ -1175,6 +1180,11 @@ void QtNodeEditor::sendNotification() const
 	auto scene = m_context->scene;
 	scene->notify_listeners(event_type::node | event_type::modified);
 }
+void QtNodeEditor::mouseMoveEvent(QMouseEvent *event)
+{
+	std::cerr << "QtNodeEditor::mouseMoveEvent\n";
+
+}
 
 /* ************************************************************************** */
 
@@ -1199,3 +1209,22 @@ void NodeView::wheelEvent(QWheelEvent *event)
 
 	this->scale(zoom, zoom);
 }
+
+#if 0
+void NodeView::mouseMoveEvent(QMouseEvent *event)
+{
+	/* À FAIRE : quand la souris est cliquée, c'est cette méthode qui est appelé
+	 * quand elle bouge, et non QGraphicsScene::mouseMoveEvent(); */
+	std::cerr << "NodeView::mouseMoveEvent\n";
+}
+
+void NodeView::mousePressEvent(QMouseEvent *event)
+{
+	std::cerr << "NodeView::mousePressEvent\n";
+}
+
+void NodeView::mouseReleaseEvent(QMouseEvent *event)
+{
+	std::cerr << "NodeView::mouseReleaseEvent\n";
+}
+#endif

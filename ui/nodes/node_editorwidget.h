@@ -48,10 +48,14 @@ public:
 	explicit NodeView(QWidget *parent = nullptr);
 	explicit NodeView(QGraphicsScene *scene, QWidget *parent = nullptr);
 
+//	void mousePressEvent(QMouseEvent *event) override;
+//	void mouseReleaseEvent(QMouseEvent *event) override;
 protected:
 	/* Reimplement wheelEvent to avoid getting conflicts between zooming and
 	 * scrolling. */
 	void wheelEvent(QWheelEvent *event) override;
+
+//	void mouseMoveEvent(QMouseEvent *event) override;
 };
 
 class QtNodeEditor : public WidgetBase {
@@ -134,6 +138,7 @@ public:
 
 	void sendNotification() const;
 
+	void mouseMoveEvent(QMouseEvent *event) override;
 public Q_SLOTS:
 	/* Activated when a connection is set between two nodes. */
 	void connectionEstablished(QtConnection*);

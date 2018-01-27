@@ -35,12 +35,20 @@ class RepondantCommande : public kangao::RepondantBouton {
 	Main *m_main = nullptr;
 	Context *m_contexte = nullptr;
 
+	Commande *m_commande_modale = nullptr;
+
 public:
 	RepondantCommande(
 			Main *main,
 			Context *contexte);
 
 	bool appele_commande(const std::string &categorie, const DonneesCommande &donnees_commande);
+
+	bool appele_commande_modale(const std::string &categorie, const DonneesCommande &donnees_commande);
+
+	void ajourne_commande_modale(const DonneesCommande &donnees_commande);
+
+	void acheve_commande_modale(const DonneesCommande &donnees_commande);
 
 	void repond_clique(const std::string &identifiant, const std::string &metadonnee) override;
 

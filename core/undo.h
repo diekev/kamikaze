@@ -52,6 +52,13 @@ public:
 	virtual bool evalue_predicat(Main *main, const Context &context, const std::string &metadonnee);
 
 	virtual void execute(Main *main, const Context &context, const DonneesCommande &donnees) = 0;
+
+	virtual void demarre_execution_modale(Main *main, const Context &context, const DonneesCommande &donnees);
+
+	virtual void ajourne_execution_modale(Main *main, const Context &context, const DonneesCommande &donnees);
+
+	virtual void termine_execution_modale(Main *main, const Context &context, const DonneesCommande &donnees);
+
 	virtual void defait() = 0;
 	virtual void refait() = 0;
 };

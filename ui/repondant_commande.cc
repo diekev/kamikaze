@@ -52,6 +52,47 @@ bool RepondantCommande::appele_commande(const std::string &categorie, const Donn
 	return true;
 }
 
+bool RepondantCommande::appele_commande_modale(const std::string &categorie, const DonneesCommande &donnees_commande)
+{
+	std::cerr << "Appele commande souris pour catégorie : " << categorie << " :\n";
+	std::cerr << "\tclé : " << donnees_commande.cle << '\n';
+	std::cerr << "\tmodificateur : " << donnees_commande.modificateur << '\n';
+	std::cerr << "\tsouris : " << donnees_commande.souris << '\n';
+	std::cerr << "\tx : " << donnees_commande.x << '\n';
+	std::cerr << "\ty : " << donnees_commande.y << '\n';
+
+	auto commande = m_main->usine_commandes()->trouve_commande(categorie, donnees_commande);
+
+	if (commande == nullptr) {
+		return false;
+	}
+
+	m_commande_modale = commande;
+
+	m_commande_modale->demarre_execution_modale(m_main, *m_contexte, donnees_commande);
+
+	return true;
+}
+
+void RepondantCommande::ajourne_commande_modale(const DonneesCommande &donnees_commande)
+{
+	if (!m_commande_modale) {
+		return;
+	}
+
+	m_commande_modale->ajourne_execution_modale(m_main, *m_contexte, donnees_commande);
+}
+
+void RepondantCommande::acheve_commande_modale(const DonneesCommande &donnees_commande)
+{
+	if (!m_commande_modale) {
+		return;
+	}
+
+	m_commande_modale->termine_execution_modale(m_main, *m_contexte, donnees_commande);
+	m_commande_modale = nullptr;
+}
+
 void RepondantCommande::execute_commande(Commande *commande, const DonneesCommande &donnees)
 {
 	m_main->gestionnaire_commande()->execute(m_main, commande, *m_contexte, donnees);
