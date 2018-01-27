@@ -27,6 +27,7 @@
 #include "graphs/graph_dumper.h"
 
 #include "kamikaze_main.h"
+#include "undo.h"
 
 /* ************************************************************************** */
 
@@ -201,12 +202,29 @@ class CommandeGrapheBasculeExpansion final : public Commande {
 
 /* ************************************************************************** */
 
-void enregistre_commandes_graphes(CommandFactory *usine)
+void enregistre_commandes_graphes(UsineCommande *usine)
 {
-	ENREGISTRE_COMMANDE(usine, "dessine_graphe_objet", CommandeDessineGrapheObjet);
-	ENREGISTRE_COMMANDE(usine, "dessine_graphe_dependance", CommandeDessineGrapheDependance);
-	ENREGISTRE_COMMANDE(usine, "graphe.zoom", CommandeGrapheZoom);
-	ENREGISTRE_COMMANDE(usine, "graphe.supprime_selection", CommandeGrapheSupprimeSelection);
-	ENREGISTRE_COMMANDE(usine, "graphe.centre", CommandeGrapheCentre);
-	ENREGISTRE_COMMANDE(usine, "graphe.bascule_expansion", CommandeGrapheBasculeExpansion);
+	usine->enregistre_type("dessine_graphe_objet",
+						   description_commande<CommandeDessineGrapheObjet>(
+							   "graphe", 0, 0, 0));
+
+	usine->enregistre_type("dessine_graphe_dependance",
+						   description_commande<CommandeDessineGrapheDependance>(
+							   "graphe", 0, 0, 0));
+
+	usine->enregistre_type("graphe.zoom",
+						   description_commande<CommandeGrapheZoom>(
+							   "graphe", 0, 0, 0));
+
+	usine->enregistre_type("graphe.supprime_selection",
+						   description_commande<CommandeGrapheSupprimeSelection>(
+							   "graphe", 0, 0, 0));
+
+	usine->enregistre_type("graphe.centre",
+						   description_commande<CommandeGrapheCentre>(
+							   "graphe", 0, 0, 0));
+
+	usine->enregistre_type("graphe.bascule_expansion",
+						   description_commande<CommandeGrapheBasculeExpansion>(
+							   "graphe", 0, 0, 0));
 }

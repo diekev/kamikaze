@@ -188,11 +188,25 @@ public:
 
 /* ************************************************************************** */
 
-void enregistre_commandes_objet(CommandFactory *usine)
+void enregistre_commandes_objet(UsineCommande *usine)
 {
-	ENREGISTRE_COMMANDE(usine, "ajouter_objet", AddObjectCmd);
-	ENREGISTRE_COMMANDE(usine, "ajouter_noeud", AddNodeCmd);
-	ENREGISTRE_COMMANDE(usine, "ajouter_prereglage", AddPresetObjectCmd);
-	ENREGISTRE_COMMANDE(usine, "objet.entre", CommandeEntreObjet);
-	ENREGISTRE_COMMANDE(usine, "objet.sors", CommandeSorsObjet);
+	usine->enregistre_type("ajouter_objet",
+						   description_commande<AddObjectCmd>(
+							   "objet", 0, 0, 0));
+
+	usine->enregistre_type("ajouter_noeud",
+						   description_commande<AddNodeCmd>(
+							   "objet", 0, 0, 0));
+
+	usine->enregistre_type("ajouter_prereglage",
+						   description_commande<AddPresetObjectCmd>(
+							   "objet", 0, 0, 0));
+
+	usine->enregistre_type("objet.entre",
+						   description_commande<CommandeEntreObjet>(
+							   "objet", 0, 0, 0));
+
+	usine->enregistre_type("objet.sors",
+						   description_commande<CommandeSorsObjet>(
+							   "objet", 0, 0, 0));
 }

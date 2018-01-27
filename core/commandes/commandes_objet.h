@@ -26,7 +26,7 @@
 
 #include "undo.h"
 
-void enregistre_commandes_objet(CommandFactory *usine);
+void enregistre_commandes_objet(UsineCommande *usine);
 
 class Object;
 class Scene;

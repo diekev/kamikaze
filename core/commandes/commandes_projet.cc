@@ -166,12 +166,29 @@ public:
 
 /* ************************************************************************** */
 
-void enregistre_commandes_projet(CommandFactory *usine)
+void enregistre_commandes_projet(UsineCommande *usine)
 {
-	ENREGISTRE_COMMANDE(usine, "ouvrir_fichier", CommandeOuvrir);
-	ENREGISTRE_COMMANDE(usine, "ouvrir_fichier_recent", CommandeOuvrirRecent);
-	ENREGISTRE_COMMANDE(usine, "sauvegarder", CommandeSauvegarder);
-	ENREGISTRE_COMMANDE(usine, "sauvegarder_sous", CommandeSauvegarderSous);
-	ENREGISTRE_COMMANDE(usine, "défaire", CommandeDefaire);
-	ENREGISTRE_COMMANDE(usine, "refaire", CommandeRefaire);
+	usine->enregistre_type("ouvrir_fichier",
+						   description_commande<CommandeOuvrir>(
+							   "projet", 0, 0, 0));
+
+	usine->enregistre_type("ouvrir_fichier_recent",
+						   description_commande<CommandeOuvrirRecent>(
+							   "projet", 0, 0, 0));
+
+	usine->enregistre_type("sauvegarder",
+						   description_commande<CommandeSauvegarder>(
+							   "projet", 0, 0, 0));
+
+	usine->enregistre_type("sauvegarder_sous",
+						   description_commande<CommandeSauvegarderSous>(
+							   "projet", 0, 0, 0));
+
+	usine->enregistre_type("défaire",
+						   description_commande<CommandeDefaire>(
+							   "projet", 0, 0, 0));
+
+	usine->enregistre_type("refaire",
+						   description_commande<CommandeRefaire>(
+							   "projet", 0, 0, 0));
 }

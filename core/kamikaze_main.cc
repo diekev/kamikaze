@@ -45,6 +45,7 @@
 #include "operateurs/operateurs_standards.h"
 
 #include "scene.h"
+#include "undo.h"
 
 #include "ui/mainwindow.h"
 
@@ -86,7 +87,7 @@ Main::Main()
 	, m_usine_operateur(new UsineOperateur)
     , m_scene(new Scene)
 	, m_gestionnaire_commandes(new CommandManager)
-	, m_usine_commandes(new CommandFactory)
+	, m_usine_commandes(new UsineCommande)
 {}
 
 Main::~Main()
@@ -243,7 +244,7 @@ CommandManager *Main::gestionnaire_commande() const
 	return m_gestionnaire_commandes;
 }
 
-CommandFactory *Main::usine_commandes() const
+UsineCommande *Main::usine_commandes() const
 {
 	return m_usine_commandes;
 }

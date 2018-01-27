@@ -25,6 +25,7 @@
 #include "commandes_scene.h"
 
 #include "kamikaze_main.h"
+#include "undo.h"
 
 /* ************************************************************************** */
 
@@ -77,7 +78,9 @@ public:
 
 /* ************************************************************************** */
 
-void enregistre_commandes_scene(CommandFactory *usine)
+void enregistre_commandes_scene(UsineCommande *usine)
 {
-	ENREGISTRE_COMMANDE(usine, "changement_temps", CommandeChangementTemps);
+	usine->enregistre_type("changement_temps",
+						   description_commande<CommandeChangementTemps>(
+							   "scene", 0, 0, 0));
 }

@@ -24,6 +24,6 @@
 
 #pragma once
 
-#include "undo.h"
+class UsineCommande;
 
-void enregistre_commandes_projet(CommandFactory *usine);
+void enregistre_commandes_projet(UsineCommande *usine);

@@ -73,3 +73,48 @@ bool Commande::evalue_predicat(Main *main, const Context &context, const std::st
 {
 	return true;
 }
+
+void UsineCommande::enregistre_type(const std::string &nom, const DescriptionCommande &description)
+{
+	const auto iter = m_tableau.find(nom);
+	assert(iter == m_tableau.end());
+
+	m_tableau[nom] = description;
+}
+
+Commande *UsineCommande::operator()(const std::string &nom)
+{
+	const auto iter = m_tableau.find(nom);
+	assert(iter != m_tableau.end());
+
+	const DescriptionCommande &desc = iter->second;
+
+	return desc.construction_commande();
+}
+
+Commande *UsineCommande::trouve_commande(const std::string &categorie, const DonneesCommande &donnees_commande)
+{
+	for (const auto &donnees : m_tableau) {
+		const DescriptionCommande &desc = donnees.second;
+
+		if (desc.categorie != categorie) {
+			continue;
+		}
+
+		if (desc.souris != donnees_commande.souris) {
+			continue;
+		}
+
+		if (desc.modificateur != donnees_commande.modificateur) {
+			continue;
+		}
+
+		if (desc.cle != donnees_commande.cle) {
+			continue;
+		}
+
+		return desc.construction_commande();
+	}
+
+	return nullptr;
+}

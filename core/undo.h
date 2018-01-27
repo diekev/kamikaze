@@ -56,7 +56,48 @@ public:
 	void refait();
 };
 
-using CommandFactory = Factory<Commande>;
+struct DescriptionCommande {
+	typedef Commande *(*fonction_usine)();
 
-#define ENREGISTRE_COMMANDE(factory, name, type) \
-	REGISTER_TYPE(factory, name, Commande, type)
+	std::string categorie;
+	int souris = 0;
+	int modificateur = 0;
+	int cle = 0;
+
+	fonction_usine construction_commande = nullptr;
+};
+
+struct DonneesCommande {
+	int souris = 0;
+	int modificateur = 0;
+	int cle = 0;
+	int x = 0;
+	int y = 0;
+
+	DonneesCommande() = default;
+};
+
+template <typename T>
+static inline constexpr auto description_commande(
+		const std::string &categorie, int souris, int modificateur, int cle)
+{
+	DescriptionCommande description;
+	description.cle = cle;
+	description.souris = souris;
+	description.modificateur = modificateur;
+	description.categorie = categorie;
+	description.construction_commande = []() -> Commande* { return new T(); };
+
+	return description;
+}
+
+class UsineCommande {
+	std::unordered_map<std::string, DescriptionCommande> m_tableau;
+
+public:
+	void enregistre_type(const std::string &nom, const DescriptionCommande &description);
+
+	Commande *operator()(const std::string &nom);
+
+	Commande *trouve_commande(const std::string &categorie, const DonneesCommande &donnees_commande);
+};

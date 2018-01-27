@@ -29,7 +29,6 @@
 
 #include <numero7/systeme_fichier/shared_library.h>
 
-#include "undo.h"
 #include "scene.h"
 
 enum {
@@ -37,7 +36,9 @@ enum {
 	FICHIER_SAUVEGARDE,
 };
 
+class CommandManager;
 class MainWindow;
+class UsineCommande;
 
 class Main final {
 	std::vector<numero7::systeme_fichier::shared_library> m_greffons;
@@ -54,7 +55,7 @@ class Main final {
 	MainWindow *m_fenetre_principale = nullptr;
 
 	CommandManager *m_gestionnaire_commandes = nullptr;
-	CommandFactory *m_usine_commandes = nullptr;
+	UsineCommande *m_usine_commandes = nullptr;
 
 public:
 	Main();
@@ -91,5 +92,5 @@ public:
 
 	CommandManager *gestionnaire_commande() const;
 
-	CommandFactory *usine_commandes() const;
+	UsineCommande *usine_commandes() const;
 };

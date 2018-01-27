@@ -39,6 +39,7 @@
 #include "core/kamikaze_main.h"
 #include "core/object.h"
 #include "core/sauvegarde.h"
+#include "core/undo.h"
 
 #include "node_editorwidget.h"
 #include "outliner_widget.h"
@@ -65,6 +66,24 @@ public:
 		: m_main(main)
 		, m_contexte(contexte)
 	{}
+
+	bool appele_commande(const std::string &categorie, const DonneesCommande &donnees_commande)
+	{
+		auto commande = m_main->usine_commandes()->trouve_commande(categorie, donnees_commande);
+
+		if (commande == nullptr) {
+			return false;
+		}
+
+		execute_commande(commande, donnees_commande);
+
+		return true;
+	}
+
+	void execute_commande(Commande *commande, const DonneesCommande &donnees)
+	{
+		m_main->gestionnaire_commande()->execute(m_main, commande, *m_contexte, "");
+	}
 
 	void repond_clique(const std::string &identifiant, const std::string &metadonnee) override
 	{
