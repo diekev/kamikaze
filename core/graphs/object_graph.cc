@@ -124,7 +124,13 @@ void Graph::deconnecte(PriseSortie *de, PriseEntree *a)
 		return lien->entree == a && lien->sortie == de;
 	});
 
-	delete *iter_lien;
+	LienNoeud *lien = *iter_lien;
+
+	if (lien->a_drapeau(NOEUD_SELECTIONE)) {
+		enleve_selection(lien);
+	}
+
+	delete lien;
 
 	m_liens.erase(iter_lien);
 
@@ -190,6 +196,21 @@ void Graph::enleve_selection(LienNoeud *lien)
 				std::find(m_liens_selectiones.begin(),
 						  m_liens_selectiones.end(),
 						  lien));
+}
+
+void Graph::supprime_selection()
+{
+	for (auto &noeud : m_noeuds_selectiones) {
+		enleve(noeud);
+	}
+
+	m_noeuds_selectiones.clear();
+
+	for (auto &lien : m_liens_selectiones) {
+		delete lien;
+	}
+
+	m_liens_selectiones.clear();
 }
 
 void Graph::deselectionne_tout()

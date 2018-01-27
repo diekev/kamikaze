@@ -117,6 +117,8 @@ public:
 
 	void enleve_selection(LienNoeud *lien);
 
+	void supprime_selection();
+
 	void deselectionne_tout();
 
 	void zoom(float valeur);

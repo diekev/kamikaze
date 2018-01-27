@@ -41,6 +41,9 @@
 #include "node_port.h"
 #include "node_scene.h"
 
+#include "repondant_commande.h"
+
+#include "undo.h"
 #include "object.h"
 #include "graphs/object_graph.h"
 #include "operateurs/operateurs_standards.h"
@@ -65,13 +68,14 @@ enum {
 #endif
 
 QtNodeEditor::QtNodeEditor(
-		kangao::RepondantBouton *repondant,
+		RepondantCommande *repondant,
 		kangao::GestionnaireInterface *gestionnaire,
 		QWidget *parent)
     : WidgetBase(parent)
     , m_view(new NodeView(this))
     , m_graphics_scene(new QtNodeGraphicsScene())
 	, m_gestionnaire(gestionnaire)
+	, m_repondant_commande(repondant)
 {
 	m_main_layout->addWidget(m_view);
 
@@ -94,7 +98,7 @@ QtNodeEditor::QtNodeEditor(
 	kangao::DonneesInterface donnees;
 	donnees.manipulable = nullptr;
 	donnees.conteneur = nullptr;
-	donnees.repondant_bouton = repondant;
+	donnees.repondant_bouton = m_repondant_commande;
 
 	const auto texte_entree = kangao::contenu_fichier("interface/menu_editeur_noeud.kangao");
 	m_context_menu = m_gestionnaire->compile_menu(donnees, texte_entree.c_str());
@@ -593,21 +597,17 @@ bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 
 void QtNodeEditor::keyPressEvent(QKeyEvent *event)
 {
-	if (event->key() == Qt::Key_Delete) {
-		removeAllSelelected();
-	}
-	else if (event->key() == Qt::Key_A) {
+	if (event->key() == Qt::Key_A) {
 		if (m_context->eval_ctx->edit_mode == true) {
 			m_add_node_menu->popup(QCursor::pos());
 		}
 	}
+	else {
+		DonneesCommande donnees;
+		donnees.cle = event->key();
 
-#if 0
-	DonneesCommande donnees;
-	donnees.cle = event->key();
-
-	m_appeleur.appele_commande("graphe", donnees);
-#endif
+		m_repondant_commande->appele_commande("graphe", donnees);
+	}
 }
 
 void QtNodeEditor::rubberbandSelection(QGraphicsSceneMouseEvent *mouseEvent)
@@ -763,33 +763,6 @@ QVector<QtNode *> QtNodeEditor::getNodes() const
 	return nodeList;
 }
 
-void QtNodeEditor::removeNode(QtNode *node)
-{
-	if (!node) {
-		return;
-	}
-
-	if (is_object_node(node)) {
-		auto object = static_cast<ObjectNodeItem *>(node)->scene_node();
-		m_context->scene->removeObject(object);
-	}
-	else {
-		auto scene = m_context->scene;
-		auto object = static_cast<Object *>(scene->active_node());
-		auto graph = object->graph();
-		auto pointeur_noeud = node->pointeur_noeud();
-		const auto avait_liaison = pointeur_noeud->est_connecte();
-
-		graph->enleve(pointeur_noeud);
-
-		if (avait_liaison) {
-			scene->evalObjectDag(*m_context, object);
-		}
-
-		m_context->scene->notify_listeners(event_type::node | event_type::removed);
-	}
-}
-
 using node_port_pair = std::pair<QtNode *, QtPort *>;
 
 std::pair<node_port_pair, node_port_pair> get_base_target_pairs(QtConnection *connection, bool remove)
@@ -813,16 +786,6 @@ std::pair<node_port_pair, node_port_pair> get_base_target_pairs(QtConnection *co
 		{ base_node, base_port },
 		{ target_node, target_port }
 	};
-}
-
-void QtNodeEditor::removeConnection(QtConnection *connection)
-{
-	const auto &pairs = get_base_target_pairs(connection, true);
-	const auto &base = pairs.first;
-	const auto &target = pairs.second;
-
-	connectionRemoved(base.first, base.second->getPortName(),
-	                  target.first, target.second->getPortName(), true);
 }
 
 void QtNodeEditor::splitConnectionWithNode(QtNode *node)
@@ -869,21 +832,6 @@ void QtNodeEditor::connectionEstablished(QtConnection *connection)
 
 	nodesConnected(base.first, base.second->getPortName(),
 	               target.first, target.second->getPortName(), true);
-}
-
-void QtNodeEditor::removeAllSelelected()
-{
-	for (auto &connection : m_selected_connections) {
-		removeConnection(connection);
-	}
-
-	m_selected_connections.clear();
-
-	for (auto &node : m_selected_nodes) {
-		removeNode(node);
-	}
-
-	m_selected_nodes.clear();
 }
 
 void QtNodeEditor::clear()

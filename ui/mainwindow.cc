@@ -44,6 +44,7 @@
 #include "node_editorwidget.h"
 #include "outliner_widget.h"
 #include "properties_widget.h"
+#include "repondant_commande.h"
 #include "timeline_widget.h"
 #include "utils_ui.h"
 #include "viewer.h"
@@ -53,49 +54,6 @@ static const char *chemins_scripts[] = {
 //	"interface/menu_edition.kangao",
 	"interface/menu_objet.kangao",
 	"interface/menu_debogage.kangao",
-};
-
-class RepondantCommande : public kangao::RepondantBouton {
-	Main *m_main = nullptr;
-	Context *m_contexte = nullptr;
-
-public:
-	RepondantCommande(
-			Main *main,
-			Context *contexte)
-		: m_main(main)
-		, m_contexte(contexte)
-	{}
-
-	bool appele_commande(const std::string &categorie, const DonneesCommande &donnees_commande)
-	{
-		auto commande = m_main->usine_commandes()->trouve_commande(categorie, donnees_commande);
-
-		if (commande == nullptr) {
-			return false;
-		}
-
-		execute_commande(commande, donnees_commande);
-
-		return true;
-	}
-
-	void execute_commande(Commande *commande, const DonneesCommande &donnees)
-	{
-		m_main->gestionnaire_commande()->execute(m_main, commande, *m_contexte, "");
-	}
-
-	void repond_clique(const std::string &identifiant, const std::string &metadonnee) override
-	{
-		auto commande = (*m_main->usine_commandes())(identifiant);
-		m_main->gestionnaire_commande()->execute(m_main, commande, *m_contexte, metadonnee);
-	}
-
-	bool evalue_predicat(const std::string &identifiant, const std::string &metadonnee) override
-	{
-		auto commande = (*m_main->usine_commandes())(identifiant);
-		return commande->evalue_predicat(m_main, *m_contexte, metadonnee);
-	}
 };
 
 MainWindow::MainWindow(Main *main, QWidget *parent)

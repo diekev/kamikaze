@@ -24,6 +24,8 @@
 
 #include "commandes_graphes.h"
 
+#include <QKeyEvent>
+
 #include "graphs/graph_dumper.h"
 
 #include "kamikaze_main.h"
@@ -125,12 +127,25 @@ class CommandeGrapheZoom final : public Commande {
 class CommandeGrapheSupprimeSelection final : public Commande {
 	void execute(Main */*main*/, const Context &context, const std::string &/*metadonnee*/) override
 	{
-		/* À FAIRE */
+		/* À FAIRE : évenements */
 		auto scene = context.scene;
 		auto objet = static_cast<Object *>(scene->active_node());
-		auto graphe = objet->graph();
 
-		graphe->deselectionne_tout();
+		if (context.eval_ctx->edit_mode == true) {
+			auto graphe = objet->graph();
+
+			graphe->supprime_selection();
+
+			scene->notify_listeners(event_type::node | event_type::modified);
+			scene->evalObjectDag(context, objet);
+		}
+		else {
+			if (objet) {
+				scene->removeObject(objet);
+				scene->notify_listeners(event_type::object | event_type::modified);
+				scene->notify_listeners(event_type::node | event_type::modified);
+			}
+		}
 	}
 
 	bool evalue_predicat(Main */*main*/, const Context &context, const std::string &/*metadonnee*/) override
@@ -218,7 +233,7 @@ void enregistre_commandes_graphes(UsineCommande *usine)
 
 	usine->enregistre_type("graphe.supprime_selection",
 						   description_commande<CommandeGrapheSupprimeSelection>(
-							   "graphe", 0, 0, 0));
+							   "graphe", 0, 0, Qt::Key_Delete));
 
 	usine->enregistre_type("graphe.centre",
 						   description_commande<CommandeGrapheCentre>(

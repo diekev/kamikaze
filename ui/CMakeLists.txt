@@ -68,6 +68,7 @@ add_library(kmk_ui STATIC
 	paramcallback.h
 	paramfactory.h
 	properties_widget.h
+	repondant_commande.h
 	timeline_widget.h
 	utils_ui.h
 	viewer.h
@@ -91,6 +92,7 @@ add_library(kmk_ui STATIC
 	paramcallback.cc
 	paramfactory.cc
 	properties_widget.cc
+	repondant_commande.cc
 	timeline_widget.cc
 	utils_ui.cc
 	viewer.cc

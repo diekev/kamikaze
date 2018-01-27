@@ -27,6 +27,7 @@
 #include "scene.h"
 
 class ObjectNodeItem;
+class RepondantCommande;
 class QGraphicsItem;
 class QGraphicsRectItem;
 class QGraphicsSceneMouseEvent;
@@ -39,7 +40,6 @@ class QtPort;
 namespace kangao {
 
 class GestionnaireInterface;
-class RepondantBouton;
 
 }  /* namespace kangao */
 
@@ -80,10 +80,11 @@ class QtNodeEditor : public WidgetBase {
 	QVector<QtConnection *> m_selected_connections;
 
 	kangao::GestionnaireInterface *m_gestionnaire;
+	RepondantCommande *m_repondant_commande;
 
 public:
 	explicit QtNodeEditor(
-			kangao::RepondantBouton *repondant,
+			RepondantCommande *repondant,
 			kangao::GestionnaireInterface *gestionnaire,
 			QWidget *parent = nullptr);
 
@@ -99,16 +100,6 @@ public:
 
 	/* Add a node to the scene (editor widget). */
 	QVector<QtNode *> getNodes() const;
-
-	/* Remove a node from the scene and destroy it. */
-	void removeNode(QtNode *node);
-
-	/* Removes (and destroys) all selected nodes and connections from the scene
-	 * (editor widget). */
-	void removeAllSelelected();
-
-	/* Remove a connection from the scene (editor widget) and destroy it. */
-	void removeConnection(QtConnection *connection);
 
 	/* Remove AND delete all items from the node editor scene. */
 	void clear();
