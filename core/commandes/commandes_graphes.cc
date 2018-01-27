@@ -263,9 +263,9 @@ class CommandeGrapheSelection final : public Commande {
 
 		auto scene = context.scene;
 		auto objet = static_cast<Object *>(scene->active_node());
-		auto graphe = objet->graph();
 
 		if (context.eval_ctx->edit_mode) {
+			auto graphe = objet->graph();
 			graphe->deselectionne_tout();
 
 			for (const auto &noeud : graphe->noeuds()) {
@@ -307,6 +307,58 @@ class CommandeGrapheSelection final : public Commande {
 
 /* ************************************************************************** */
 
+class CommandeGrapheEntreObjet : public Commande {
+public:
+	CommandeGrapheEntreObjet() = default;
+	~CommandeGrapheEntreObjet() = default;
+
+	void execute(Main */*main*/, const Context &context, const DonneesCommande &donnees) override
+	{
+		const auto pos_x = donnees.x;
+		const auto pos_y = donnees.y;
+
+		std::cerr << "Double clique : x = " << pos_x << ", y = " << pos_y << '\n';
+
+		auto scene = context.scene;
+
+		if (context.eval_ctx->edit_mode) {
+			auto objet = static_cast<Object *>(scene->active_node());
+			auto graphe = objet->graph();
+			graphe->deselectionne_tout();
+
+			/* À FAIRE : vérifie que le clique ne touche rien. */
+
+			scene->notify_listeners(event_type::node | event_type::modified);
+		}
+		else {
+			auto noeud = scene->active_node();
+
+			if (noeud == nullptr) {
+				return;
+			}
+
+			auto rectangle = Rectangle::depuis_coord(
+								 noeud->xpos(), noeud->ypos(),
+								 200.0f, 32.0f);
+
+			if (rectangle.contiens(pos_x, pos_y)) {
+				context.eval_ctx->edit_mode = true;
+			}
+			else {
+				scene->set_active_node(nullptr);
+			}
+
+			scene->notify_listeners(event_type::object | event_type::selected);
+		}
+
+	}
+
+	void defait() override {}
+	void refait() override {}
+};
+
+/* ************************************************************************** */
+
 void enregistre_commandes_graphes(UsineCommande *usine)
 {
 	usine->enregistre_type("dessine_graphe_objet",
@@ -336,4 +388,8 @@ void enregistre_commandes_graphes(UsineCommande *usine)
 	usine->enregistre_type("graphe.selection",
 						   description_commande<CommandeGrapheSelection>(
 							   "graphe", Qt::LeftButton, 0, 0, false));
+
+	usine->enregistre_type("graphe.entre_objet",
+						   description_commande<CommandeGrapheEntreObjet>(
+							   "graphe", Qt::LeftButton, 0, 0, true));
 }

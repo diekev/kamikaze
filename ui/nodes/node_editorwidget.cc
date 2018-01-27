@@ -433,6 +433,15 @@ bool QtNodeEditor::mouseDoubleClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 	switch (static_cast<int>(mouseEvent->button())) {
 		case Qt::LeftButton:
 		{
+			DonneesCommande donnees;
+			donnees.double_clique = true;
+			donnees.souris = Qt::LeftButton;
+			donnees.x = mouseEvent->scenePos().x();
+			donnees.y = mouseEvent->scenePos().y();
+
+			m_repondant_commande->appele_commande("graphe", donnees);
+			return true;
+
 			const auto &item = itemAtExceptActiveConnection(mouseEvent->scenePos());
 
 			if (!item) {
