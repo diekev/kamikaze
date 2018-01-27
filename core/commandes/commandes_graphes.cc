@@ -269,7 +269,7 @@ class CommandeGrapheSelection final : public Commande {
 			graphe->deselectionne_tout();
 
 			for (const auto &noeud : graphe->noeuds()) {
-				const auto rect = Rectangle::depuis_coord(
+				const auto rect = Rectangle::depuis_centre(
 									  noeud->posx(), noeud->posy(),
 									  200.0f, 32.0f);
 
@@ -286,7 +286,7 @@ class CommandeGrapheSelection final : public Commande {
 			scene->set_active_node(nullptr);
 
 			for (const auto &noeud : scene->nodes()) {
-				const auto rect = Rectangle::depuis_coord(
+				const auto rect = Rectangle::depuis_centre(
 									  noeud->xpos(), noeud->ypos(),
 									  200.0f, 32.0f);
 
@@ -337,9 +337,12 @@ public:
 				return;
 			}
 
-			auto rectangle = Rectangle::depuis_coord(
+			auto rectangle = Rectangle::depuis_centre(
 								 noeud->xpos(), noeud->ypos(),
 								 200.0f, 32.0f);
+
+			std::cerr << "Rectangle (K) : " << rectangle.x << ", " << rectangle.y << ", "
+					  << rectangle.largeur << ", " << rectangle.hauteur << "\n";
 
 			if (rectangle.contiens(pos_x, pos_y)) {
 				context.eval_ctx->edit_mode = true;
@@ -350,7 +353,6 @@ public:
 
 			scene->notify_listeners(event_type::object | event_type::selected);
 		}
-
 	}
 
 	void defait() override {}

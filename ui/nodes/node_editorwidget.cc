@@ -217,7 +217,7 @@ bool QtNodeEditor::eventFilter(QObject *object, QEvent *event)
 		case QEvent::GraphicsSceneMousePress:
 		{
 			this->set_active();
-			mouseClickHandler(mouseEvent);
+			return mouseClickHandler(mouseEvent);
 			break;
 		}
 		case QEvent::GraphicsSceneMouseDoubleClick:
@@ -232,12 +232,12 @@ bool QtNodeEditor::eventFilter(QObject *object, QEvent *event)
 		}
 		case QEvent::GraphicsSceneMouseMove:
 		{
-			mouseMoveHandler(mouseEvent);
+			return mouseMoveHandler(mouseEvent);
 			break;
 		}
 		case QEvent::GraphicsSceneMouseRelease:
 		{
-			mouseReleaseHandler(mouseEvent);
+			return mouseReleaseHandler(mouseEvent);
 			break;
 		}
 	}
@@ -538,6 +538,15 @@ bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 {
 	m_mouse_down = false;
 
+	/* À FAIRE : apparemment cette fonction déselectionne les noeuds. */
+	DonneesCommande donnees;
+	donnees.souris = Qt::LeftButton;
+	donnees.x = mouseEvent->lastScenePos().x();
+	donnees.y = mouseEvent->lastScenePos().y();
+
+	m_repondant_commande->appele_commande("graphe", donnees);
+	return true;
+
 	/* Determine whether a node has been dropped on a connection. */
 	if (m_hover_connection) {
 		splitConnectionWithNode(getLastSelectedNode());
@@ -579,7 +588,7 @@ bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 						auto item_Max_Y = qMax(pos_prise_base.y(), pos_prise_cible.y());
 
 						if (item_Min_X > minX && item_Max_X < maxX &&
-						    item_Min_Y > minY && item_Max_Y < maxY)
+							item_Min_Y > minY && item_Max_Y < maxY)
 						{
 							selectConnection(connection);
 						}
@@ -596,7 +605,7 @@ bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 					auto item_Max_Y = item_Min_Y + cadre_noeud.height()  + 10;
 
 					if (item_Min_X > minX && item_Max_X < maxX &&
-					    item_Min_Y > minY && item_Max_Y < maxY)
+						item_Min_Y > minY && item_Max_Y < maxY)
 					{
 						selectNode(noeud, nullptr);
 					}
@@ -1068,6 +1077,12 @@ void QtNodeEditor::update_state(event_type event)
 			node_item->setEditor(this);
 			node_item->setScene(m_graphics_scene);
 			node_item->setPos(node->xpos(), node->ypos());
+
+			auto rect = node_item->boundingRect();
+
+			std::cerr << "Position : " << node->xpos() << ", " << node->ypos() << "\n";
+			std::cerr << "Rectangle (Qt) : " << rect.x() << ", " << rect.y() << ", "
+					  << rect.width() << ", " << rect.height() << "\n";
 
 			if (node.get() == m_context->scene->active_node()) {
 				m_selected_nodes.append(node_item);
