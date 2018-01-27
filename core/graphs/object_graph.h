@@ -37,9 +37,52 @@ enum {
 	NOEUD_CONTRACTE  = (1 << 2),
 };
 
+struct LienNoeud {
+	PriseEntree *entree;
+	PriseSortie *sortie;
+
+	/**
+	 * Retourne les drapeaux de ce noeud.
+	 */
+	inline int drapeaux() const
+	{
+		return m_drapeaux;
+	}
+
+	/**
+	 * Ajoute un drapeau à ce noeud.
+	 */
+	inline void ajoute_drapeau(int drapeau)
+	{
+		m_drapeaux |= drapeau;
+	}
+
+	/**
+	 * Enleve un drapeau à ce noeud.
+	 */
+	inline void enleve_drapeau(int drapeau)
+	{
+		m_drapeaux &= ~drapeau;
+	}
+
+	/**
+	 * Vérifie si oui ou non ce noeud a le drapeau en question.
+	 */
+	inline bool a_drapeau(int drapeau) const
+	{
+		return (m_drapeaux & drapeau) != 0;
+	}
+
+private:
+	int m_drapeaux;
+};
+
 class Graph {
 	std::vector<std::unique_ptr<Noeud>> m_noeuds{};
 	std::vector<Noeud *> m_noeuds_selectiones{};
+
+	std::vector<LienNoeud *> m_liens{};
+	std::vector<LienNoeud *> m_liens_selectiones{};
 
 	Noeud *m_noeud_actif = nullptr;
 
@@ -58,6 +101,8 @@ public:
 
 	const std::vector<std::unique_ptr<Noeud>> &noeuds() const;
 
+	const std::vector<LienNoeud *> &liens() const;
+
 	void noeud_actif(Noeud *noeud);
 
 	Noeud *noeud_actif() const;
@@ -67,6 +112,12 @@ public:
 	void ajoute_selection(Noeud *noeud);
 
 	void enleve_selection(Noeud *noeud);
+
+	void ajoute_selection(LienNoeud *lien);
+
+	void enleve_selection(LienNoeud *lien);
+
+	void deselectionne_tout();
 
 	void zoom(float valeur);
 

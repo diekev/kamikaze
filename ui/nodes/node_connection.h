@@ -26,6 +26,7 @@
 
 class QtNode;
 class QtPort;
+class LienNoeud;
 
 /* ***************************************************************************
  * QtConnection establishes a connection between two ports of different nodes.
@@ -36,6 +37,8 @@ class QtConnection : public QGraphicsPathItem {
 	QtPort *m_base_port = nullptr;
 	QtPort *m_target_port = nullptr;
 	QColor m_color = Qt::black;
+
+	LienNoeud *m_pointeur_lien;
 
 public:
 	explicit QtConnection(QtPort *basePort, QGraphicsPathItem *parent = nullptr);
@@ -59,4 +62,8 @@ public:
 
 	/* Determines whether a given node is connected to this connection */
 	bool isNodeConnectedToThisConnection(QtNode *node);
+
+	void pointeur_lien(LienNoeud *lien);
+
+	LienNoeud *pointeur_lien() const;
 };

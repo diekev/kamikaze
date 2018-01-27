@@ -92,3 +92,13 @@ bool QtConnection::isNodeConnectedToThisConnection(QtNode *node)
 
 	return false;
 }
+
+void QtConnection::pointeur_lien(LienNoeud *lien)
+{
+	m_pointeur_lien = lien;
+}
+
+LienNoeud *QtConnection::pointeur_lien() const
+{
+	return m_pointeur_lien;
+}

@@ -129,7 +129,7 @@ class CommandeGrapheSupprimeSelection final : public Commande {
 		auto objet = static_cast<Object *>(scene->active_node());
 		auto graphe = objet->graph();
 
-		graphe->enleve_selection(nullptr);
+		graphe->deselectionne_tout();
 	}
 
 	bool evalue_predicat(Main */*main*/, const Context &context, const std::string &/*metadonnee*/) override

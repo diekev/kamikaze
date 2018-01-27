@@ -90,6 +90,12 @@ void Graph::connecte(PriseSortie *de, PriseEntree *a)
 	a->lien = de;
 	de->liens.push_back(a);
 
+	auto lien = new LienNoeud;
+	lien->entree = a;
+	lien->sortie = de;
+
+	m_liens.push_back(lien);
+
 	m_besoin_actualisation = true;
 }
 
@@ -111,12 +117,28 @@ void Graph::deconnecte(PriseSortie *de, PriseEntree *a)
 
 	a->lien = nullptr;
 
+	/* Supprime le lien. */
+	auto iter_lien = std::find_if(m_liens.begin(), m_liens.end(),
+								  [=](LienNoeud *lien)
+	{
+		return lien->entree == a && lien->sortie == de;
+	});
+
+	delete *iter_lien;
+
+	m_liens.erase(iter_lien);
+
 	m_besoin_actualisation = true;
 }
 
 const std::vector<std::unique_ptr<Noeud> > &Graph::noeuds() const
 {
 	return m_noeuds;
+}
+
+const std::vector<LienNoeud *> &Graph::liens() const
+{
+	return m_liens;
 }
 
 void Graph::noeud_actif(Noeud *noeud)
@@ -152,6 +174,36 @@ void Graph::enleve_selection(Noeud *noeud)
 				std::find(m_noeuds_selectiones.begin(),
 						  m_noeuds_selectiones.end(),
 						  noeud));
+}
+
+void Graph::ajoute_selection(LienNoeud *lien)
+{
+	lien->ajoute_drapeau(NOEUD_SELECTIONE);
+	m_liens_selectiones.push_back(lien);
+}
+
+void Graph::enleve_selection(LienNoeud *lien)
+{
+	lien->enleve_drapeau(NOEUD_SELECTIONE);
+
+	m_liens_selectiones.erase(
+				std::find(m_liens_selectiones.begin(),
+						  m_liens_selectiones.end(),
+						  lien));
+}
+
+void Graph::deselectionne_tout()
+{
+	for (auto &noeud : m_noeuds_selectiones) {
+		noeud->enleve_drapeau(NOEUD_SELECTIONE);
+	}
+
+	for (auto &lien : m_liens_selectiones) {
+		lien->enleve_drapeau(NOEUD_SELECTIONE);
+	}
+
+	m_noeuds_selectiones.clear();
+	m_liens_selectiones.clear();
 }
 
 void Graph::zoom(float valeur)

@@ -637,6 +637,10 @@ void QtNodeEditor::selectConnection(QtConnection *connection)
 	}
 
 	if (!isAlreadySelected(connection)) {
+		auto object = static_cast<Object *>(m_context->scene->active_node());
+		auto graph = object->graph();
+		graph->ajoute_selection(connection->pointeur_lien());
+
 		m_selected_connections.append(connection);
 		connection->setSelected(true);
 	}
@@ -1028,29 +1032,28 @@ void QtNodeEditor::update_state(event_type event)
 		}
 
 		/* Add the connections. */
-		for (const auto &noeud : graph->noeuds()) {
-			/* Skip if no outputs. */
-			if (noeud->sorties().empty()) {
-				continue;
+		for (const auto &lien : graph->liens()) {
+			PriseSortie *sortie = lien->sortie;
+			PriseEntree *entree = lien->entree;
+
+			QtNode *from_node_item = node_items_map[sortie->parent];
+			QtNode *to_node_item = node_items_map[entree->parent];
+
+			QtPort *from_port = from_node_item->output(sortie->nom.c_str());
+			QtPort *to_port = to_node_item->input(entree->nom.c_str());
+
+			assert(from_port != nullptr && to_port != nullptr);
+
+			from_node_item->createActiveConnection(from_port, from_port->pos());
+			auto item = to_port->createConnection(from_node_item->m_active_connection);
+
+			item->pointeur_lien(lien);
+
+			if (lien->a_drapeau(NOEUD_SELECTIONE)) {
+				item->setSelected(true);
 			}
 
-			QtNode *from_node_item = node_items_map[noeud.get()];
-
-			for (const PriseSortie *sortie : noeud->sorties()) {
-				for (const PriseEntree *entree : sortie->liens) {
-					QtNode *to_node_item = node_items_map[entree->parent];
-
-					QtPort *from_port = from_node_item->output(sortie->nom.c_str());
-					QtPort *to_port = to_node_item->input(entree->nom.c_str());
-
-					assert(from_port != nullptr && to_port != nullptr);
-
-					from_node_item->createActiveConnection(from_port, from_port->pos());
-					to_port->createConnection(from_node_item->m_active_connection);
-
-					from_node_item->m_active_connection = nullptr;
-				}
-			}
+			from_node_item->m_active_connection = nullptr;
 		}
 
 		/* Add the children of this object. */
