@@ -47,6 +47,96 @@
 
 /* ************************************************************************** */
 
+#if 0
+class Commande;
+
+enum {
+	SOURIS_AUCUNE = 0,
+	SOURIS_GAUCHE = 1,
+	SOURIS_DOUBLE_CLIQUE = 2,
+	SOURIS_MILIEU = 3,
+	SOURIS_DROIT = 4,
+};
+
+enum {
+	MODIFICATEUR_AUCUN = 0,
+	MODIFICATEUR_CTRL = 1,
+	MODIFICATEUR_ALT = 2,
+	MODIFICATEUR_MAJ = 3,
+};
+
+struct DescriptionCommande {
+	int souris = 0;
+	int modificateur = 0;
+	int cle = 0;
+
+	Commande *commande;
+};
+
+struct DonneesCommande {
+	int souris = 0;
+	int modificateur = 0;
+	int cle = 0;
+	int x = 0;
+	int y = 0;
+
+	DonneesCommande() = default;
+};
+
+class UsineCommande {
+	std::unordered_map<std::string, std::vector<DescriptionCommande>> m_tableau_commandes;
+
+public:
+	Commande *trouve_commande(const std::string &categorie, const DonneesCommande &donnees_commande)
+	{
+		const auto &donnees_commandes = m_tableau_commandes[categorie];
+
+		for (const DescriptionCommande &donnees : donnees_commandes) {
+			if (donnees.souris != donnees_commande.souris) {
+				continue;
+			}
+
+			if (donnees.modificateur != donnees_commande.modificateur) {
+				continue;
+			}
+
+			if (donnees.cle != donnees_commande.cle) {
+				continue;
+			}
+
+			return donnees.commande;
+		}
+
+		return nullptr;
+	}
+};
+
+class Appeleur {
+	UsineCommande *m_usine;
+
+public:
+	bool appele_commande(const std::string &categorie, const DonneesCommande &donnees_commande)
+	{
+		auto commande = m_usine->trouve_commande(categorie, donnees_commande);
+
+		if (commande == nullptr) {
+			return false;
+		}
+
+		execute_commande(commande, donnees_commande);
+
+		return true;
+	}
+
+	void execute_commande(Commande *commande, const DonneesCommande &donnees_commande)
+	{
+
+	}
+};
+
+Appeleur m_appeleur;
+#endif
+
 QtNodeEditor::QtNodeEditor(
 		kangao::RepondantBouton *repondant,
 		kangao::GestionnaireInterface *gestionnaire,
@@ -584,6 +674,13 @@ void QtNodeEditor::keyPressEvent(QKeyEvent *event)
 			m_add_node_menu->popup(QCursor::pos());
 		}
 	}
+
+#if 0
+	DonneesCommande donnees;
+	donnees.cle = event->key();
+
+	m_appeleur.appele_commande("graphe", donnees);
+#endif
 }
 
 void QtNodeEditor::rubberbandSelection(QGraphicsSceneMouseEvent *mouseEvent)
