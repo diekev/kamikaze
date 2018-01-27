@@ -192,21 +192,21 @@ void enregistre_commandes_objet(UsineCommande *usine)
 {
 	usine->enregistre_type("ajouter_objet",
 						   description_commande<AddObjectCmd>(
-							   "objet", 0, 0, 0));
+							   "objet", 0, 0, 0, false));
 
 	usine->enregistre_type("ajouter_noeud",
 						   description_commande<AddNodeCmd>(
-							   "objet", 0, 0, 0));
+							   "objet", 0, 0, 0, false));
 
 	usine->enregistre_type("ajouter_prereglage",
 						   description_commande<AddPresetObjectCmd>(
-							   "objet", 0, 0, 0));
+							   "objet", 0, 0, 0, false));
 
 	usine->enregistre_type("objet.entre",
 						   description_commande<CommandeEntreObjet>(
-							   "objet", 0, 0, 0));
+							   "objet", 0, 0, 0, false));
 
 	usine->enregistre_type("objet.sors",
 						   description_commande<CommandeSorsObjet>(
-							   "objet", 0, 0, 0));
+							   "objet", 0, 0, 0, false));
 }

@@ -82,5 +82,5 @@ void enregistre_commandes_scene(UsineCommande *usine)
 {
 	usine->enregistre_type("changement_temps",
 						   description_commande<CommandeChangementTemps>(
-							   "scene", 0, 0, 0));
+							   "scene", 0, 0, 0, false));
 }

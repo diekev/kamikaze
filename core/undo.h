@@ -37,6 +37,7 @@ struct DonneesCommande {
 	int souris = 0;
 	int modificateur = 0;
 	int cle = 0;
+	bool double_clique = false;
 	float x = 0;
 	float y = 0;
 	std::string metadonnee = "";
@@ -74,19 +75,21 @@ struct DescriptionCommande {
 	int souris = 0;
 	int modificateur = 0;
 	int cle = 0;
+	bool double_clique = false;
 
 	fonction_usine construction_commande = nullptr;
 };
 
 template <typename T>
 static inline constexpr auto description_commande(
-		const std::string &categorie, int souris, int modificateur, int cle)
+		const std::string &categorie, int souris, int modificateur, int cle, bool double_clique)
 {
 	DescriptionCommande description;
 	description.cle = cle;
 	description.souris = souris;
 	description.modificateur = modificateur;
 	description.categorie = categorie;
+	description.double_clique = double_clique;
 	description.construction_commande = []() -> Commande* { return new T(); };
 
 	return description;

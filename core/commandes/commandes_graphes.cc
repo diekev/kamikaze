@@ -311,29 +311,29 @@ void enregistre_commandes_graphes(UsineCommande *usine)
 {
 	usine->enregistre_type("dessine_graphe_objet",
 						   description_commande<CommandeDessineGrapheObjet>(
-							   "graphe", 0, 0, 0));
+							   "graphe", 0, 0, 0, false));
 
 	usine->enregistre_type("dessine_graphe_dependance",
 						   description_commande<CommandeDessineGrapheDependance>(
-							   "graphe", 0, 0, 0));
+							   "graphe", 0, 0, 0, false));
 
 	usine->enregistre_type("graphe.zoom",
 						   description_commande<CommandeGrapheZoom>(
-							   "graphe", 0, 0, 0));
+							   "graphe", 0, 0, 0, false));
 
 	usine->enregistre_type("graphe.supprime_selection",
 						   description_commande<CommandeGrapheSupprimeSelection>(
-							   "graphe", 0, 0, Qt::Key_Delete));
+							   "graphe", 0, 0, Qt::Key_Delete, false));
 
 	usine->enregistre_type("graphe.centre",
 						   description_commande<CommandeGrapheCentre>(
-							   "graphe", 0, 0, 0));
+							   "graphe", 0, 0, 0, false));
 
 	usine->enregistre_type("graphe.bascule_expansion",
 						   description_commande<CommandeGrapheBasculeExpansion>(
-							   "graphe", 0, 0, 0));
+							   "graphe", 0, 0, 0, false));
 
 	usine->enregistre_type("graphe.selection",
 						   description_commande<CommandeGrapheSelection>(
-							   "graphe", Qt::LeftButton, 0, 0));
+							   "graphe", Qt::LeftButton, 0, 0, false));
 }

@@ -105,6 +105,10 @@ Commande *UsineCommande::trouve_commande(const std::string &categorie, const Don
 			continue;
 		}
 
+		if (desc.double_clique != donnees_commande.double_clique) {
+			continue;
+		}
+
 		if (desc.modificateur != donnees_commande.modificateur) {
 			continue;
 		}

@@ -170,25 +170,25 @@ void enregistre_commandes_projet(UsineCommande *usine)
 {
 	usine->enregistre_type("ouvrir_fichier",
 						   description_commande<CommandeOuvrir>(
-							   "projet", 0, 0, 0));
+							   "projet", 0, 0, 0, false));
 
 	usine->enregistre_type("ouvrir_fichier_recent",
 						   description_commande<CommandeOuvrirRecent>(
-							   "projet", 0, 0, 0));
+							   "projet", 0, 0, 0, false));
 
 	usine->enregistre_type("sauvegarder",
 						   description_commande<CommandeSauvegarder>(
-							   "projet", 0, 0, 0));
+							   "projet", 0, 0, 0, false));
 
 	usine->enregistre_type("sauvegarder_sous",
 						   description_commande<CommandeSauvegarderSous>(
-							   "projet", 0, 0, 0));
+							   "projet", 0, 0, 0, false));
 
 	usine->enregistre_type("défaire",
 						   description_commande<CommandeDefaire>(
-							   "projet", 0, 0, 0));
+							   "projet", 0, 0, 0, false));
 
 	usine->enregistre_type("refaire",
 						   description_commande<CommandeRefaire>(
-							   "projet", 0, 0, 0));
+							   "projet", 0, 0, 0, false));
 }
