@@ -32,9 +32,9 @@ CommandManager::~CommandManager()
 	release_stack_memory(m_redo_commands);
 }
 
-void CommandManager::execute(Main *main, Commande *command, const Context &context, const std::string &metadonnee)
+void CommandManager::execute(Main *main, Commande *command, const Context &context, const DonneesCommande &donnees)
 {
-	command->execute(main, context, metadonnee);
+	command->execute(main, context, donnees);
 	m_undo_commands.push(command);
 }
 

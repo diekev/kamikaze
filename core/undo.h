@@ -33,13 +33,24 @@ class Context;
 class Main;
 class ParamCallback;
 
+struct DonneesCommande {
+	int souris = 0;
+	int modificateur = 0;
+	int cle = 0;
+	float x = 0;
+	float y = 0;
+	std::string metadonnee = "";
+
+	DonneesCommande() = default;
+};
+
 class Commande {
 public:
 	virtual ~Commande() = default;
 
 	virtual bool evalue_predicat(Main *main, const Context &context, const std::string &metadonnee);
 
-	virtual void execute(Main *main, const Context &context, const std::string &metadonnee) = 0;
+	virtual void execute(Main *main, const Context &context, const DonneesCommande &donnees) = 0;
 	virtual void defait() = 0;
 	virtual void refait() = 0;
 };
@@ -51,7 +62,7 @@ class CommandManager final {
 public:
 	~CommandManager();
 
-	void execute(Main *main, Commande *command, const Context &context, const std::string &metadonnee);
+	void execute(Main *main, Commande *command, const Context &context, const DonneesCommande &donnees);
 	void defait();
 	void refait();
 };
@@ -65,16 +76,6 @@ struct DescriptionCommande {
 	int cle = 0;
 
 	fonction_usine construction_commande = nullptr;
-};
-
-struct DonneesCommande {
-	int souris = 0;
-	int modificateur = 0;
-	int cle = 0;
-	int x = 0;
-	int y = 0;
-
-	DonneesCommande() = default;
 };
 
 template <typename T>

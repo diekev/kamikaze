@@ -252,6 +252,14 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 		{
 			m_mouse_down = true;
 
+			DonneesCommande donnees;
+			donnees.souris = Qt::LeftButton;
+			donnees.x = mouseEvent->lastScenePos().x();
+			donnees.y = mouseEvent->lastScenePos().y();
+
+			m_repondant_commande->appele_commande("graphe", donnees);
+			return true;
+
 			const auto &item = itemAtExceptActiveConnection(mouseEvent->scenePos());
 
 			if (!item) {

@@ -35,7 +35,7 @@
 
 class CommandeDessineGrapheObjet final : public Commande {
 public:
-	void execute(Main */*main*/, const Context &context, const std::string &/*metadonnee*/) override
+	void execute(Main */*main*/, const Context &context, const DonneesCommande &/*donnees*/) override
 	{
 		auto scene = context.scene;
 		auto scene_node = scene->active_node();
@@ -62,7 +62,7 @@ public:
 
 class CommandeDessineGrapheDependance final : public Commande {
 public:
-	void execute(Main */*main*/, const Context &context, const std::string &/*metadonnee*/) override
+	void execute(Main */*main*/, const Context &context, const DonneesCommande &/*donnees*/) override
 	{
 		auto scene = context.scene;
 		DepsGraphDumper gd(scene->depsgraph());
@@ -80,35 +80,35 @@ public:
 /* ************************************************************************** */
 
 class CommandeGrapheZoom final : public Commande {
-	void execute(Main */*main*/, const Context &context, const std::string &metadonnee) override
+	void execute(Main */*main*/, const Context &context, const DonneesCommande &donnees) override
 	{
 		auto zoom = 1.0f;
 
-		if (metadonnee == "10%") {
+		if (donnees.metadonnee == "10%") {
 			zoom = 0.1f;
 		}
-		else if (metadonnee == "25%") {
+		else if (donnees.metadonnee == "25%") {
 			zoom = 0.25f;
 		}
-		else if (metadonnee == "50%") {
+		else if (donnees.metadonnee == "50%") {
 			zoom = 0.5f;
 		}
-		else if (metadonnee == "75%") {
+		else if (donnees.metadonnee == "75%") {
 			zoom = 0.75f;
 		}
-		else if (metadonnee == "90%") {
+		else if (donnees.metadonnee == "90%") {
 			zoom = 0.90f;
 		}
-		else if (metadonnee == "100%") {
+		else if (donnees.metadonnee == "100%") {
 			zoom = 1.0f;
 		}
-		else if (metadonnee == "150%") {
+		else if (donnees.metadonnee == "150%") {
 			zoom = 1.5f;
 		}
-		else if (metadonnee == "200%") {
+		else if (donnees.metadonnee == "200%") {
 			zoom = 2.0f;
 		}
-		else if (metadonnee == "300%") {
+		else if (donnees.metadonnee == "300%") {
 			zoom = 3.0f;
 		}
 
@@ -125,7 +125,7 @@ class CommandeGrapheZoom final : public Commande {
 /* ************************************************************************** */
 
 class CommandeGrapheSupprimeSelection final : public Commande {
-	void execute(Main */*main*/, const Context &context, const std::string &/*metadonnee*/) override
+	void execute(Main */*main*/, const Context &context, const DonneesCommande &/*donnees*/) override
 	{
 		/* À FAIRE : évenements */
 		auto scene = context.scene;
@@ -174,7 +174,7 @@ class CommandeGrapheSupprimeSelection final : public Commande {
 /* ************************************************************************** */
 
 class CommandeGrapheCentre final : public Commande {
-	void execute(Main */*main*/, const Context &context, const std::string &/*metadonnee*/) override
+	void execute(Main */*main*/, const Context &context, const DonneesCommande &/*donnees*/) override
 	{
 		auto scene = context.scene;
 		auto objet = static_cast<Object *>(scene->active_node());
@@ -193,14 +193,14 @@ class CommandeGrapheCentre final : public Commande {
 /* ************************************************************************** */
 
 class CommandeGrapheBasculeExpansion final : public Commande {
-	void execute(Main */*main*/, const Context &context, const std::string &metadonnee) override
+	void execute(Main */*main*/, const Context &context, const DonneesCommande &donnees) override
 	{
 		auto scene = context.scene;
 		auto objet = static_cast<Object *>(scene->active_node());
 		auto graphe = objet->graph();
 
 		for (auto &noeud : graphe->noeuds()) {
-			if (metadonnee == "contracte") {
+			if (donnees.metadonnee == "contracte") {
 				noeud->enleve_drapeau(NOEUD_DILATE);
 				noeud->ajoute_drapeau(NOEUD_CONTRACTE);
 			}
@@ -208,6 +208,96 @@ class CommandeGrapheBasculeExpansion final : public Commande {
 				noeud->enleve_drapeau(NOEUD_CONTRACTE);
 				noeud->ajoute_drapeau(NOEUD_DILATE);
 			}
+		}
+	}
+
+	void defait() override {}
+	void refait() override {}
+};
+
+/* ************************************************************************** */
+
+struct Rectangle {
+	float x = 0.0f;
+	float y = 0.0f;
+	float largeur = 0.0f;
+	float hauteur = 0.0f;
+
+	Rectangle() = default;
+
+	static Rectangle depuis_centre(float x, float y, float largeur, float hauteur)
+	{
+		Rectangle rectangle;
+		rectangle.hauteur = hauteur;
+		rectangle.largeur = largeur;
+		rectangle.x = x - largeur * 0.5f;
+		rectangle.y = y - hauteur * 0.5f;
+
+		return rectangle;
+	}
+
+	static Rectangle depuis_coord(float x, float y, float largeur, float hauteur)
+	{
+		Rectangle rectangle;
+		rectangle.hauteur = hauteur;
+		rectangle.largeur = largeur;
+		rectangle.x = x;
+		rectangle.y = y;
+
+		return rectangle;
+	}
+
+	bool contiens(float pos_x, float pos_y) const
+	{
+		return pos_x > x && pos_y > y && pos_x < (x + largeur) && pos_y < (y + hauteur);
+	}
+};
+
+class CommandeGrapheSelection final : public Commande {
+	void execute(Main */*main*/, const Context &context, const DonneesCommande &donnees) override
+	{
+		const auto pos_x = donnees.x;
+		const auto pos_y = donnees.y;
+
+		std::cerr << "Sélection : x = " << pos_x << ", y = " << pos_y << '\n';
+
+		auto scene = context.scene;
+		auto objet = static_cast<Object *>(scene->active_node());
+		auto graphe = objet->graph();
+
+		if (context.eval_ctx->edit_mode) {
+			graphe->deselectionne_tout();
+
+			for (const auto &noeud : graphe->noeuds()) {
+				const auto rect = Rectangle::depuis_coord(
+									  noeud->posx(), noeud->posy(),
+									  200.0f, 32.0f);
+
+				if (rect.contiens(pos_x, pos_y)) {
+					graphe->ajoute_selection(noeud.get());
+					std::cerr << "Sélection noeud !\n";
+					break;
+				}
+			}
+
+			scene->notify_listeners(event_type::node | event_type::modified);
+		}
+		else {
+			scene->set_active_node(nullptr);
+
+			for (const auto &noeud : scene->nodes()) {
+				const auto rect = Rectangle::depuis_coord(
+									  noeud->xpos(), noeud->ypos(),
+									  200.0f, 32.0f);
+
+				if (rect.contiens(pos_x, pos_y)) {
+					scene->set_active_node(noeud.get());
+					std::cerr << "Sélection objet !\n";
+					break;
+				}
+			}
+
+			scene->notify_listeners(event_type::node | event_type::modified);
 		}
 	}
 
@@ -242,4 +332,8 @@ void enregistre_commandes_graphes(UsineCommande *usine)
 	usine->enregistre_type("graphe.bascule_expansion",
 						   description_commande<CommandeGrapheBasculeExpansion>(
 							   "graphe", 0, 0, 0));
+
+	usine->enregistre_type("graphe.selection",
+						   description_commande<CommandeGrapheSelection>(
+							   "graphe", Qt::LeftButton, 0, 0));
 }

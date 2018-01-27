@@ -67,7 +67,7 @@ static void ouvre_fichier_implementation(Main *main, const Context &contexte, co
 
 class CommandeOuvrir final : public Commande {
 public:
-	void execute(Main *main, const Context &contexte, const std::string &/*metadonnee*/) override
+	void execute(Main *main, const Context &contexte, const DonneesCommande &/*donnees*/) override
 	{
 		const auto chemin_projet = main->requiers_dialogue(FICHIER_OUVERTURE);
 
@@ -86,9 +86,9 @@ public:
 
 class CommandeOuvrirRecent final : public Commande {
 public:
-	void execute(Main *main, const Context &contexte, const std::string &metadonnee) override
+	void execute(Main *main, const Context &contexte, const DonneesCommande &donnees) override
 	{
-		ouvre_fichier_implementation(main, contexte, metadonnee);
+		ouvre_fichier_implementation(main, contexte, donnees.metadonnee);
 	}
 
 	void defait() override {}
@@ -109,7 +109,7 @@ static void sauve_fichier_sous(Main *main, const Context &context)
 
 class CommandeSauvegarder final : public Commande {
 public:
-	void execute(Main *main, const Context &context, const std::string &/*metadonnee*/) override
+	void execute(Main *main, const Context &context, const DonneesCommande &/*donnees*/) override
 	{
 		if (main->projet_ouvert()) {
 			kamikaze::sauvegarde_projet(main->chemin_projet(), *main, context.scene);
@@ -127,7 +127,7 @@ public:
 
 class CommandeSauvegarderSous final : public Commande {
 public:
-	void execute(Main *main, const Context &context, const std::string &/*metadonnee*/) override
+	void execute(Main *main, const Context &context, const DonneesCommande &/*donnees*/) override
 	{
 		sauve_fichier_sous(main, context);
 	}
@@ -140,7 +140,7 @@ public:
 
 class CommandeDefaire final : public Commande {
 public:
-	void execute(Main *main, const Context &/*context*/, const std::string &/*metadonnee*/) override
+	void execute(Main *main, const Context &/*context*/, const DonneesCommande &/*donnees*/) override
 	{
 		/* À FAIRE */
 		main->gestionnaire_commande()->defait();
@@ -154,7 +154,7 @@ public:
 
 class CommandeRefaire final : public Commande {
 public:
-	void execute(Main *main, const Context &/*context*/, const std::string &/*metadonnee*/) override
+	void execute(Main *main, const Context &/*context*/, const DonneesCommande &/*donnees*/) override
 	{
 		/* À FAIRE */
 		main->gestionnaire_commande()->refait();

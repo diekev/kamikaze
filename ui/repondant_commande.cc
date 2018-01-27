@@ -54,13 +54,17 @@ bool RepondantCommande::appele_commande(const std::string &categorie, const Donn
 
 void RepondantCommande::execute_commande(Commande *commande, const DonneesCommande &donnees)
 {
-	m_main->gestionnaire_commande()->execute(m_main, commande, *m_contexte, "");
+	m_main->gestionnaire_commande()->execute(m_main, commande, *m_contexte, donnees);
 }
 
 void RepondantCommande::repond_clique(const std::string &identifiant, const std::string &metadonnee)
 {
 	auto commande = (*m_main->usine_commandes())(identifiant);
-	m_main->gestionnaire_commande()->execute(m_main, commande, *m_contexte, metadonnee);
+
+	DonneesCommande donnees;
+	donnees.metadonnee = metadonnee;
+
+	m_main->gestionnaire_commande()->execute(m_main, commande, *m_contexte, donnees);
 }
 
 bool RepondantCommande::evalue_predicat(const std::string &identifiant, const std::string &metadonnee)

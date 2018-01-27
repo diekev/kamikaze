@@ -40,7 +40,7 @@ public:
 	AddObjectCmd() = default;
 	~AddObjectCmd() = default;
 
-	void execute(Main *main, const Context &context, const std::string &metadonnee) override;
+	void execute(Main *main, const Context &context, const DonneesCommande &donnees) override;
 	void defait() override;
 	void refait() override;
 };
@@ -53,7 +53,7 @@ public:
 	AddNodeCmd() = default;
 	~AddNodeCmd() = default;
 
-	void execute(Main *main, const Context &context, const std::string &metadonnee) override;
+	void execute(Main *main, const Context &context, const DonneesCommande &donnees) override;
 	void defait() override;
 	void refait() override;
 };
@@ -66,7 +66,7 @@ public:
 	AddPresetObjectCmd() = default;
 	~AddPresetObjectCmd() = default;
 
-	void execute(Main *main, const Context &context, const std::string &metadonnee) override;
+	void execute(Main *main, const Context &context, const DonneesCommande &donnees) override;
 	void defait() override;
 	void refait() override;
 };

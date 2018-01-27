@@ -31,39 +31,39 @@
 
 class CommandeChangementTemps final : public Commande {
 public:
-	void execute(Main */*main*/, const Context &contexte, const std::string &metadonnee) override
+	void execute(Main */*main*/, const Context &contexte, const DonneesCommande &donnees) override
 	{
 		auto scene = contexte.scene;
 
-		if (metadonnee == "va_image_debut") {
+		if (donnees.metadonnee == "va_image_debut") {
 			scene->currentFrame(scene->startFrame());
 			scene->updateForNewFrame(contexte);
 		}
-		else if (metadonnee == "joue_en_arriere") {
+		else if (donnees.metadonnee == "joue_en_arriere") {
 			contexte.eval_ctx->animation = true;
 			contexte.eval_ctx->time_direction = TIME_DIR_BACKWARD;
 			scene->notify_listeners(event_type::time | event_type::modified);
 		}
-		else if (metadonnee == "pas_en_arriere") {
+		else if (donnees.metadonnee == "pas_en_arriere") {
 			contexte.eval_ctx->time_direction = TIME_DIR_BACKWARD;
 			scene->currentFrame(scene->currentFrame() - 1);
 			scene->updateForNewFrame(contexte);
 		}
-		else if (metadonnee == "arrete_animation") {
+		else if (donnees.metadonnee == "arrete_animation") {
 			contexte.eval_ctx->animation = false;
 			scene->notify_listeners(event_type::time | event_type::modified);
 		}
-		else if (metadonnee == "pas_en_avant") {
+		else if (donnees.metadonnee == "pas_en_avant") {
 			contexte.eval_ctx->time_direction = TIME_DIR_FORWARD;
 			scene->currentFrame(scene->currentFrame() + 1);
 			scene->updateForNewFrame(contexte);
 		}
-		else if (metadonnee == "joue_en_avant") {
+		else if (donnees.metadonnee == "joue_en_avant") {
 			contexte.eval_ctx->animation = true;
 			contexte.eval_ctx->time_direction = TIME_DIR_FORWARD;
 			scene->notify_listeners(event_type::time | event_type::modified);
 		}
-		else if (metadonnee == "va_image_fin") {
+		else if (donnees.metadonnee == "va_image_fin") {
 			scene->currentFrame(scene->endFrame());
 			scene->updateForNewFrame(contexte);
 		}

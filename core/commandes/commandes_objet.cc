@@ -37,12 +37,12 @@
 
 /* *************************** add object command *************************** */
 
-void AddObjectCmd::execute(Main */*main*/, const Context &context, const std::string &metadonnee)
+void AddObjectCmd::execute(Main */*main*/, const Context &context, const DonneesCommande &donnees)
 {
 	m_scene = context.scene;
 
 	m_object = new Object(context);
-	m_object->name(metadonnee);
+	m_object->name(donnees.metadonnee);
 
 	assert(m_scene != nullptr);
 	m_scene->addObject(m_object);
@@ -60,7 +60,7 @@ void AddObjectCmd::refait()
 
 /* **************************** add node command **************************** */
 
-void AddNodeCmd::execute(Main */*main*/, const Context &context, const std::string &metadonnee)
+void AddNodeCmd::execute(Main */*main*/, const Context &context, const DonneesCommande &donnees)
 {
 	m_scene = context.scene;
 	auto scene_node = m_scene->active_node();
@@ -74,9 +74,9 @@ void AddNodeCmd::execute(Main */*main*/, const Context &context, const std::stri
 	assert(m_object != nullptr);
 
 	auto noeud = new Noeud();
-	noeud->nom(metadonnee);
+	noeud->nom(donnees.metadonnee);
 
-	auto operateur = (*context.usine_operateur)(metadonnee, noeud, context);
+	auto operateur = (*context.usine_operateur)(donnees.metadonnee, noeud, context);
 	static_cast<void>(operateur);
 
 	noeud->synchronise_donnees();
@@ -98,7 +98,7 @@ void AddNodeCmd::refait()
 
 /* **************************** add torus command **************************** */
 
-void AddPresetObjectCmd::execute(Main */*main*/, const Context &context, const std::string &metadonnee)
+void AddPresetObjectCmd::execute(Main */*main*/, const Context &context, const DonneesCommande &donnees)
 {
 	m_scene = context.scene;
 
@@ -114,7 +114,7 @@ void AddPresetObjectCmd::execute(Main */*main*/, const Context &context, const s
 	}
 	else {
 		m_object = new Object(context);
-		m_object->name(metadonnee);
+		m_object->name(donnees.metadonnee);
 	}
 
 	assert(m_object != nullptr);
@@ -123,7 +123,7 @@ void AddPresetObjectCmd::execute(Main */*main*/, const Context &context, const s
 	noeud->posx(-300);
 	noeud->posy(-100);
 
-	(*context.usine_operateur)(metadonnee, noeud, context);
+	(*context.usine_operateur)(donnees.metadonnee, noeud, context);
 
 	noeud->synchronise_donnees();
 
@@ -159,7 +159,7 @@ public:
 	CommandeEntreObjet() = default;
 	~CommandeEntreObjet() = default;
 
-	void execute(Main */*main*/, const Context &context, const std::string &/*metadonnee*/) override
+	void execute(Main */*main*/, const Context &context, const DonneesCommande &/*donnees*/) override
 	{
 		context.eval_ctx->edit_mode = true;
 		context.scene->notify_listeners(event_type::object | event_type::selected);
@@ -176,7 +176,7 @@ public:
 	CommandeSorsObjet() = default;
 	~CommandeSorsObjet() = default;
 
-	void execute(Main */*main*/, const Context &context, const std::string &/*metadonnee*/) override
+	void execute(Main */*main*/, const Context &context, const DonneesCommande &/*donnees*/) override
 	{
 		context.eval_ctx->edit_mode = false;
 		context.scene->notify_listeners(event_type::object | event_type::selected);
