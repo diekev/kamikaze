@@ -573,21 +573,6 @@ bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 	return true;
 }
 
-void QtNodeEditor::keyPressEvent(QKeyEvent *event)
-{
-	if (event->key() == Qt::Key_A) {
-		if (m_context->eval_ctx->edit_mode == true) {
-			//m_add_node_menu->popup(QCursor::pos());
-		}
-	}
-	else {
-		DonneesCommande donnees;
-		donnees.cle = event->key();
-
-		//m_repondant_commande->appele_commande("graphe", donnees);
-	}
-}
-
 void QtNodeEditor::rubberbandSelection(QGraphicsSceneMouseEvent *mouseEvent)
 {
 	/* Mouse is pressed and moves => draw rubberband */
@@ -1138,7 +1123,7 @@ NodeView::NodeView(
 	donnees.repondant_bouton = m_repondant_commande;
 
 	const auto texte_entree = kangao::contenu_fichier("interface/menu_editeur_noeud.kangao");
-	m_context_menu = m_gestionnaire->compile_menu(donnees, texte_entree.c_str());
+	m_menu_contexte = m_gestionnaire->compile_menu(donnees, texte_entree.c_str());
 
 	setDragMode(QGraphicsView::ScrollHandDrag);
 }
@@ -1151,7 +1136,21 @@ NodeView::NodeView(QGraphicsScene *scene, QWidget *parent)
 
 void NodeView::menu_ajout_noeud(QMenu *menu)
 {
-	m_add_node_menu = menu;
+	m_menu_ajout_noeud = menu;
+}
+
+void NodeView::keyPressEvent(QKeyEvent *event)
+{
+	if (event->key() == Qt::Key_A) {
+		/* À FAIRE : vérifie si nous sommes en mode édition? */
+		m_menu_ajout_noeud->popup(QCursor::pos());
+	}
+	else {
+		DonneesCommande donnees;
+		donnees.cle = event->key();
+
+		m_repondant_commande->appele_commande("graphe", donnees);
+	}
 }
 
 void NodeView::wheelEvent(QWheelEvent *event)
@@ -1199,7 +1198,7 @@ void NodeView::mousePressEvent(QMouseEvent *event)
 		case Qt::RightButton:
 		{
 			m_gestionnaire->ajourne_menu("Éditeur Noeud");
-			m_context_menu->popup(event->globalPos());
+			m_menu_contexte->popup(event->globalPos());
 			break;
 		}
 	}

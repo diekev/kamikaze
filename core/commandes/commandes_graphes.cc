@@ -310,8 +310,6 @@ class CommandeGrapheSelection final : public Commande {
 	{
 		auto scene = context.scene;
 
-		std::cerr << "Ajournement : " << donnees.x << ", " << donnees.y << '\n';
-
 		if (context.eval_ctx->edit_mode) {
 			auto objet = static_cast<Object *>(scene->active_node());
 			auto graphe = objet->graph();

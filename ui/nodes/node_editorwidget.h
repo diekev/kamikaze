@@ -47,8 +47,8 @@ class NodeView : public QGraphicsView {
 	kangao::GestionnaireInterface *m_gestionnaire = nullptr;
 	RepondantCommande *m_repondant_commande = nullptr;
 
-	QMenu *m_context_menu = nullptr;
-	QMenu *m_add_node_menu = nullptr;
+	QMenu *m_menu_contexte = nullptr;
+	QMenu *m_menu_ajout_noeud = nullptr;
 
 public:
 	explicit NodeView(
@@ -71,6 +71,8 @@ public:
 	void wheelEvent(QWheelEvent *event) override;
 
 	void mouseMoveEvent(QMouseEvent *event) override;
+
+	void keyPressEvent(QKeyEvent *event) override;
 };
 
 class QtNodeEditor : public WidgetBase {
@@ -174,7 +176,6 @@ protected:
 	bool mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent);
 
 	bool ctrlPressed();
-	void keyPressEvent(QKeyEvent *event) override;
 
 	QGraphicsItem *itemAtExceptActiveConnection(const QPointF &pos);
 
