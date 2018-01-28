@@ -37,7 +37,21 @@
 
 /* *************************** add object command *************************** */
 
-void AddObjectCmd::execute(Main */*main*/, const Context &context, const DonneesCommande &donnees)
+class CommandeAjoutObjet : public Commande {
+	Object *m_object = nullptr;
+	Scene *m_scene = nullptr;
+
+public:
+	CommandeAjoutObjet() = default;
+	~CommandeAjoutObjet() = default;
+
+	void execute(Main *main, const Context &context, const DonneesCommande &donnees) override;
+
+	void defait() override {}
+	void refait() override {}
+};
+
+void CommandeAjoutObjet::execute(Main */*main*/, const Context &context, const DonneesCommande &donnees)
 {
 	m_scene = context.scene;
 
@@ -48,19 +62,23 @@ void AddObjectCmd::execute(Main */*main*/, const Context &context, const Donnees
 	m_scene->addObject(m_object);
 }
 
-void AddObjectCmd::defait()
-{
-	/* TODO */
-}
-
-void AddObjectCmd::refait()
-{
-	/* TODO */
-}
-
 /* **************************** add node command **************************** */
 
-void AddNodeCmd::execute(Main */*main*/, const Context &context, const DonneesCommande &donnees)
+class CommandeAjoutNoeud : public Commande {
+	Object *m_object = nullptr;
+	Scene *m_scene = nullptr;
+
+public:
+	CommandeAjoutNoeud() = default;
+	~CommandeAjoutNoeud() = default;
+
+	void execute(Main *main, const Context &context, const DonneesCommande &donnees) override;
+
+	void defait() override {}
+	void refait() override {}
+};
+
+void CommandeAjoutNoeud::execute(Main */*main*/, const Context &context, const DonneesCommande &donnees)
 {
 	m_scene = context.scene;
 	auto scene_node = m_scene->active_node();
@@ -86,19 +104,23 @@ void AddNodeCmd::execute(Main */*main*/, const Context &context, const DonneesCo
 	m_scene->notify_listeners(event_type::node | event_type::added);
 }
 
-void AddNodeCmd::defait()
-{
-	/* TODO */
-}
-
-void AddNodeCmd::refait()
-{
-	/* TODO */
-}
-
 /* **************************** add torus command **************************** */
 
-void AddPresetObjectCmd::execute(Main */*main*/, const Context &context, const DonneesCommande &donnees)
+class CommandeObjetPrereglage : public Commande {
+	Object *m_object = nullptr;
+	Scene *m_scene = nullptr;
+
+public:
+	CommandeObjetPrereglage() = default;
+	~CommandeObjetPrereglage() = default;
+
+	void execute(Main *main, const Context &context, const DonneesCommande &donnees) override;
+
+	void defait() override {}
+	void refait() override {}
+};
+
+void CommandeObjetPrereglage::execute(Main */*main*/, const Context &context, const DonneesCommande &donnees)
 {
 	m_scene = context.scene;
 
@@ -142,16 +164,6 @@ void AddPresetObjectCmd::execute(Main */*main*/, const Context &context, const D
 	}
 }
 
-void AddPresetObjectCmd::defait()
-{
-	/* TODO */
-}
-
-void AddPresetObjectCmd::refait()
-{
-	/* TODO */
-}
-
 /* ************************************************************************** */
 
 class CommandeEntreObjet : public Commande {
@@ -191,15 +203,15 @@ public:
 void enregistre_commandes_objet(UsineCommande *usine)
 {
 	usine->enregistre_type("ajouter_objet",
-						   description_commande<AddObjectCmd>(
+						   description_commande<CommandeAjoutObjet>(
 							   "objet", 0, 0, 0, false));
 
 	usine->enregistre_type("ajouter_noeud",
-						   description_commande<AddNodeCmd>(
+						   description_commande<CommandeAjoutNoeud>(
 							   "objet", 0, 0, 0, false));
 
 	usine->enregistre_type("ajouter_prereglage",
-						   description_commande<AddPresetObjectCmd>(
+						   description_commande<CommandeObjetPrereglage>(
 							   "objet", 0, 0, 0, false));
 
 	usine->enregistre_type("objet.entre",
