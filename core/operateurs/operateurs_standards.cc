@@ -39,8 +39,6 @@
 #include <random>
 #include <sstream>
 
-#include "ui/paramfactory.h"
-
 /* ************************************************************************** */
 
 static const char *NOM_SORTIE = "Sortie";

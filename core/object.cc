@@ -33,8 +33,6 @@
 #include "scene.h"
 #include "task.h"
 
-#include "ui/paramfactory.h"
-
 Object::Object(const Context &contexte)
 	: m_graph(contexte)
 {

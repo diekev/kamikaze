@@ -67,9 +67,6 @@ add_compile_options(-fPIC)
 qt5_wrap_cpp(
 	test_hdr_moc
 
-	intern/custom_widgets.h
-	intern/param_widgets.h
-
 	nodes/node_editorwidget.h
 
 	mainwindow.h
@@ -82,17 +79,12 @@ qt5_wrap_cpp(
 add_library(kmk_ui STATIC
 	mainwindow.h
 	outliner_widget.h
-	paramcallback.h
-	paramfactory.h
 	properties_widget.h
 	repondant_commande.h
 	timeline_widget.h
 	utils_ui.h
 	viewer.h
 	widgetbase.h
-
-	intern/custom_widgets.h
-	intern/param_widgets.h
 
 	nodes/node_compound.h
 	nodes/node_connection.h
@@ -107,17 +99,12 @@ add_library(kmk_ui STATIC
 
 	mainwindow.cc
 	outliner_widget.cc
-	paramcallback.cc
-	paramfactory.cc
 	properties_widget.cc
 	repondant_commande.cc
 	timeline_widget.cc
 	utils_ui.cc
 	viewer.cc
 	widgetbase.cc
-
-	intern/custom_widgets.cc
-	intern/param_widgets.cc
 
 	nodes/node_compound.cc
 	nodes/node_connection.cc

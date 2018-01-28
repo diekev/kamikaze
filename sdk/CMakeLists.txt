@@ -77,7 +77,6 @@ set(HEADERS
 	mesh.h
 	noeud.h
 	operateur.h
-	persona.h
 	prim_points.h
 	primitive.h
 	renderbuffer.h
@@ -95,7 +94,6 @@ add_library(kamikaze SHARED
 	noeud.cc
 	mesh.cc
 	operateur.cc
-	persona.cc
 	prim_points.cc
 	primitive.cc
 	renderbuffer.cc

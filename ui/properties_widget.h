@@ -25,9 +25,7 @@
 #pragma once
 
 #include "widgetbase.h"
-#include "paramcallback.h"
 
-class ParamCallback;
 class Persona;
 class QFrame;
 class QGridLayout;
@@ -47,7 +45,6 @@ class PropertiesWidget : public WidgetBase {
 	QWidget *m_conteneur_disposition;
 	QScrollArea *m_scroll;
 	QGridLayout *m_glayout;
-	ParamCallback m_callback;
 
 	kangao::Manipulable *m_manipulable = nullptr;
 

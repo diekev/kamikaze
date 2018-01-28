@@ -36,8 +36,6 @@
 
 #include <kangao/kangao.h>
 
-#include "paramcallback.h"
-#include "paramfactory.h"
 #include "utils_ui.h"
 
 #include "core/graphs/object_graph.h"
@@ -51,7 +49,6 @@ PropertiesWidget::PropertiesWidget(QWidget *parent)
     , m_widget(new QWidget())
     , m_scroll(new QScrollArea())
     , m_glayout(new QGridLayout(m_widget))
-    , m_callback(m_glayout)
 {
 	m_widget->setSizePolicy(m_frame->sizePolicy());
 
