@@ -34,27 +34,25 @@ static void ouvre_fichier_implementation(Main *main, const Context &contexte, co
 {
 	const auto erreur = kamikaze::ouvre_projet(chemin_projet, *main, contexte);
 
-	if (erreur != kamikaze::erreur_fichier::AUCUNE_ERREUR) {
-		switch (erreur) {
-			case kamikaze::erreur_fichier::CORROMPU:
-				main->affiche_erreur("Le fichier est corrompu !");
-				break;
-			case kamikaze::erreur_fichier::NON_OUVERT:
-				main->affiche_erreur("Le fichier n'est pas ouvert !");
-				break;
-			case kamikaze::erreur_fichier::NON_TROUVE:
-				main->affiche_erreur("Le fichier n'a pas été trouvé !");
-				break;
-			case kamikaze::erreur_fichier::INCONNU:
-				main->affiche_erreur("Erreur inconnu !");
-				break;
-			case kamikaze::erreur_fichier::GREFFON_MANQUANT:
-				main->affiche_erreur("Le fichier ne pas être ouvert car il"
-									   " y a un greffon manquant !");
-				break;
-		}
-
-		return;
+	switch (erreur) {
+		case kamikaze::erreur_fichier::AUCUNE_ERREUR:
+			break;
+		case kamikaze::erreur_fichier::CORROMPU:
+			main->affiche_erreur("Le fichier est corrompu !");
+			return;
+		case kamikaze::erreur_fichier::NON_OUVERT:
+			main->affiche_erreur("Le fichier n'est pas ouvert !");
+			return;
+		case kamikaze::erreur_fichier::NON_TROUVE:
+			main->affiche_erreur("Le fichier n'a pas été trouvé !");
+			return;
+		case kamikaze::erreur_fichier::INCONNU:
+			main->affiche_erreur("Erreur inconnu !");
+			return;
+		case kamikaze::erreur_fichier::GREFFON_MANQUANT:
+			main->affiche_erreur("Le fichier ne pas être ouvert car il"
+								 " y a un greffon manquant !");
+			return;
 	}
 
 	main->chemin_projet(chemin_projet);
