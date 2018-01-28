@@ -31,7 +31,7 @@
 #include <QVariant>
 
 WidgetBase::WidgetBase(QWidget *parent)
-    : QWidget(parent)
+	: kangao::ConteneurControles(parent)
     , m_frame(new QFrame(this))
     , m_layout(new QHBoxLayout())
 {

@@ -24,6 +24,8 @@
 
 #include "commandes_graphes.h"
 
+#include <iostream>
+
 #include <QKeyEvent>
 
 #include "graphs/graph_dumper.h"

@@ -24,6 +24,8 @@
 
 #include "scene.h"
 
+#include <iostream>
+
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <kamikaze/primitive.h>

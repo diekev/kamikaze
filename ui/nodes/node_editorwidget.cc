@@ -24,6 +24,7 @@
 #include <QToolTip>
 #include <QVBoxLayout>
 
+#include <iostream>
 #include <kamikaze/operateur.h>
 #include <sstream>
 

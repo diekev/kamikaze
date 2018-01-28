@@ -24,6 +24,8 @@
 
 #include "repondant_commande.h"
 
+#include <iostream>
+
 #include "kamikaze_main.h"
 #include "undo.h"
 

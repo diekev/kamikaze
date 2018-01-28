@@ -24,14 +24,14 @@
 
 #pragma once
 
-#include <QWidget>
+#include <kangao/conteneur_controles.h>
 
 #include "context.h"
 
 class QFrame;
 class QHBoxLayout;
 
-class WidgetBase : public QWidget, public ContextListener {
+class WidgetBase : public kangao::ConteneurControles, public ContextListener {
 protected:
 	QFrame *m_frame;
 	QHBoxLayout *m_layout;
@@ -45,4 +45,6 @@ public:
 	void set_active();
 
 	void mousePressEvent(QMouseEvent *e) override;
+
+	void ajourne_manipulable() override {}
 };

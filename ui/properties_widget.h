@@ -27,8 +27,6 @@
 #include "widgetbase.h"
 #include "paramcallback.h"
 
-#include <kangao/conteneur_controles.h>
-
 class ParamCallback;
 class Persona;
 class QFrame;
@@ -42,7 +40,7 @@ class Manipulable;
 
 }  /* namespace kangao */
 
-class PropertiesWidget : public WidgetBase, public kangao::ConteneurControles {
+class PropertiesWidget : public WidgetBase {
 	Q_OBJECT
 
 	QWidget *m_widget;

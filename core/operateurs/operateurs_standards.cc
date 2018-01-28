@@ -212,6 +212,26 @@ public:
 		const auto uniform_scale = evalue_decimal("échelle");
 		const auto transform_type = evalue_liste("ordre_transformation");
 		const auto rot_order = evalue_liste("ordre_rotation");
+		auto index_ordre = -1;
+
+		if (rot_order == "xyz") {
+			index_ordre = 0;
+		}
+		else if (rot_order == "xzy") {
+			index_ordre = 1;
+		}
+		else if (rot_order == "yxz") {
+			index_ordre = 2;
+		}
+		else if (rot_order == "yzx") {
+			index_ordre = 3;
+		}
+		else if (rot_order == "zxy") {
+			index_ordre = 4;
+		}
+		else if (rot_order == "zyx") {
+			index_ordre = 5;
+		}
 
 		/* determine the rotatation order */
 		int rot_ord[6][3] = {
@@ -229,34 +249,32 @@ public:
 			glm::vec3(0.0f, 0.0f, 1.0f),
 		};
 
-		const auto X = rot_ord[rot_order][0];
-		const auto Y = rot_ord[rot_order][1];
-		const auto Z = rot_ord[rot_order][2];
+		const auto X = rot_ord[index_ordre][0];
+		const auto Y = rot_ord[index_ordre][1];
+		const auto Z = rot_ord[index_ordre][2];
 
 		for (auto &prim : primitive_iterator(this->m_collection)) {
 			auto matrix = glm::mat4(1.0f);
 
-			switch (transform_type) {
-				case 0: /* Pre Transform */
-					matrix = pre_translate(matrix, pivot);
-					matrix = pre_rotate(matrix, glm::radians(rotate[X]), axis[X]);
-					matrix = pre_rotate(matrix, glm::radians(rotate[Y]), axis[Y]);
-					matrix = pre_rotate(matrix, glm::radians(rotate[Z]), axis[Z]);
-					matrix = pre_scale(matrix, scale * uniform_scale);
-					matrix = pre_translate(matrix, -pivot);
-					matrix = pre_translate(matrix, translate);
-					matrix = matrix * prim->matrix();
-					break;
-				case 1: /* Post Transform */
-					matrix = post_translate(matrix, pivot);
-					matrix = post_rotate(matrix, glm::radians(rotate[X]), axis[X]);
-					matrix = post_rotate(matrix, glm::radians(rotate[Y]), axis[Y]);
-					matrix = post_rotate(matrix, glm::radians(rotate[Z]), axis[Z]);
-					matrix = post_scale(matrix, scale * uniform_scale);
-					matrix = post_translate(matrix, -pivot);
-					matrix = post_translate(matrix, translate);
-					matrix = prim->matrix() * matrix;
-					break;
+			if (transform_type == "pre") {
+				matrix = pre_translate(matrix, pivot);
+				matrix = pre_rotate(matrix, glm::radians(rotate[X]), axis[X]);
+				matrix = pre_rotate(matrix, glm::radians(rotate[Y]), axis[Y]);
+				matrix = pre_rotate(matrix, glm::radians(rotate[Z]), axis[Z]);
+				matrix = pre_scale(matrix, scale * uniform_scale);
+				matrix = pre_translate(matrix, -pivot);
+				matrix = pre_translate(matrix, translate);
+				matrix = matrix * prim->matrix();
+			}
+			else {
+				matrix = post_translate(matrix, pivot);
+				matrix = post_rotate(matrix, glm::radians(rotate[X]), axis[X]);
+				matrix = post_rotate(matrix, glm::radians(rotate[Y]), axis[Y]);
+				matrix = post_rotate(matrix, glm::radians(rotate[Z]), axis[Z]);
+				matrix = post_scale(matrix, scale * uniform_scale);
+				matrix = post_translate(matrix, -pivot);
+				matrix = post_translate(matrix, translate);
+				matrix = prim->matrix() * matrix;
 			}
 
 			prim->matrix(matrix);
@@ -1080,7 +1098,7 @@ public:
 
 	bool ajourne_proprietes() override
 	{
-		auto method = evalue_entier("méthode");
+		auto method = evalue_liste("méthode");
 
 		if (method == "unique") {
 			rend_propriete_visible("couleur", true);
@@ -1098,9 +1116,9 @@ public:
 	{
 		entree(0)->requiers_collection(m_collection, contexte, temps);
 
-		const auto &methode = evalue_entier("méthode");
-		const auto &portee = evalue_entier("graine");
-		const auto &graine = evalue_entier("portée");
+		const auto &methode = evalue_liste("méthode");
+		const auto &portee = evalue_liste("portée");
+		const auto &graine = evalue_entier("graine");
 
 		std::mt19937 rng(19937 + graine);
 		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
@@ -1260,6 +1278,39 @@ public:
 static const char *NOM_CREATION_ATTRIBUT = "Création attribut";
 static const char *AIDE_CREATION_ATTRIBUT = "Création d'un attribut.";
 
+static AttributeType type_attribut_depuis_chaine(const std::string &chaine)
+{
+	if (chaine == "octet") {
+		return ATTR_TYPE_BYTE;
+	}
+	else if (chaine == "entier") {
+		return ATTR_TYPE_INT;
+	}
+	else if (chaine == "décimal") {
+		return ATTR_TYPE_FLOAT;
+	}
+	else if (chaine == "chaine") {
+		return ATTR_TYPE_STRING;
+	}
+	else if (chaine == "vecteur_2d") {
+		return ATTR_TYPE_VEC2;
+	}
+	else if (chaine == "vecteur_3d") {
+		return ATTR_TYPE_VEC3;
+	}
+	else if (chaine == "vecteur_4d") {
+		return ATTR_TYPE_VEC4;
+	}
+	else if (chaine == "matrice_3x3") {
+		return ATTR_TYPE_MAT3;
+	}
+	else if (chaine == "matrice_4x4") {
+		return ATTR_TYPE_MAT4;
+	}
+
+	return ATTR_TYPE_INT;
+}
+
 class OperateurCreationAttribut : public Operateur {
 public:
 	OperateurCreationAttribut(Noeud *noeud, const Context &contexte)
@@ -1298,9 +1349,10 @@ public:
 
 		auto nom_attribut = evalue_chaine("nom_attribut");
 		auto type_attribut = evalue_liste("type_attribut");
+		auto type = type_attribut_depuis_chaine(type_attribut);
 
 		for (Primitive *prim : primitive_iterator(m_collection)) {
-			if (prim->has_attribute(nom_attribut, type_attribut)) {
+			if (prim->has_attribute(nom_attribut, type)) {
 				std::stringstream ss;
 				ss << prim->name() << " already has an attribute named " << nom_attribut;
 
@@ -1325,7 +1377,7 @@ public:
 				}
 			}
 
-			prim->add_attribute(nom_attribut, type_attribut, attrib_size);
+			prim->add_attribute(nom_attribut, type, attrib_size);
 		}
 	}
 };
@@ -1373,13 +1425,14 @@ public:
 
 		auto nom_attribut = evalue_chaine("nom_attribut");
 		auto type_attribut = evalue_liste("type_attribut");
+		auto type = type_attribut_depuis_chaine(type_attribut);
 
 		for (Primitive *prim : primitive_iterator(m_collection)) {
-			if (!prim->has_attribute(nom_attribut, type_attribut)) {
+			if (!prim->has_attribute(nom_attribut, type)) {
 				continue;
 			}
 
-			prim->remove_attribute(nom_attribut, type_attribut);
+			prim->remove_attribute(nom_attribut, type);
 		}
 	}
 };
@@ -1447,17 +1500,18 @@ public:
 		entree(0)->requiers_collection(m_collection, contexte, temps);
 
 		auto name = evalue_chaine("nom_attribut");
-		auto attribute_type = evalue_liste("type_attribut");
+		auto type_attribut = evalue_liste("type_attribut");
 		auto distribution = evalue_liste("distribution");
 		auto value = evalue_decimal("valeur");
 		auto min_value = evalue_decimal("valeur_min");
 		auto max_value = evalue_decimal("valeur_max");
 		auto mean = evalue_decimal("moyenne");
 		auto stddev = evalue_decimal("écart_type");
+		auto type = type_attribut_depuis_chaine(type_attribut);
 
 		std::mt19937 rng(19993754);
 
-		if (attribute_type != ATTR_TYPE_VEC3) {
+		if (type != ATTR_TYPE_VEC3) {
 			std::stringstream ss;
 			ss << "Only 3D Vector attributes are supported for now!";
 
@@ -1466,12 +1520,12 @@ public:
 		}
 
 		for (Primitive *prim : primitive_iterator(m_collection)) {
-			auto attribute = prim->attribute(name, attribute_type);
+			auto attribute = prim->attribute(name, type);
 
 			if (!attribute) {
 				std::stringstream ss;
 				ss << prim->name() << " does not have an attribute named \"" << name
-				   << "\" of type " << static_cast<int>(attribute_type);
+				   << "\" of type " << static_cast<int>(type);
 
 				this->ajoute_avertissement(ss.str());
 				continue;
@@ -1807,10 +1861,7 @@ public:
 		entrees(2);
 		sorties(1);
 
-		ajoute_propriete("prise", "Prise", kangao::TypePropriete::ENTIER);
-		set_prop_tooltip("L'index de la prise à évaluer");
-		set_prop_default_value_int(0);
-		set_prop_min_max(0, 1);
+		ajoute_propriete("prise", kangao::TypePropriete::ENTIER);
 	}
 
 	const char *chemin_interface() const override

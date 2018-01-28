@@ -24,6 +24,8 @@
 
 #include "properties_widget.h"
 
+#include <iostream>
+
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QScrollArea>
@@ -183,6 +185,7 @@ void PropertiesWidget::tagObjectUpdate()
 
 void PropertiesWidget::updateProperties()
 {
+#if 0
 	auto scene = m_context->scene;
 	auto scene_node = scene->active_node();
 
@@ -211,10 +214,12 @@ void PropertiesWidget::updateProperties()
 			m_callback.setVisible(prop.ui_name.c_str(), prop.visible);
 		}
 	}
+#endif
 }
 
 void PropertiesWidget::drawProperties(Persona *persona, bool set_context)
 {
+#if 0
 	persona->update_properties();
 
 	for (Property &prop : persona->props()) {
@@ -295,4 +300,5 @@ void PropertiesWidget::drawProperties(Persona *persona, bool set_context)
 	}
 
 	m_callback.setContext(this, SLOT(updateProperties()));
+#endif
 }

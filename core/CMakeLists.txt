@@ -112,7 +112,7 @@ add_library(kmk_core STATIC
 )
 
 target_include_directories(kmk_core PUBLIC "${INC_SYS}")
-target_link_libraries(kmk_core stdc++fs ${QT5_WIDGETS_LIBRARIES})
+target_link_libraries(kmk_core stdc++fs ${QT5_WIDGETS_LIBRARIES} ${KANGAO_LIBRARIES})
 
 install(
 	FILES ${SHADERS}

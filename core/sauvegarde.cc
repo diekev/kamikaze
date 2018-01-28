@@ -46,56 +46,67 @@ static std::string id_depuis_pointeur(void *pointeur)
 static void sauvegarde_proprietes(
 		tinyxml2::XMLDocument &doc,
 		tinyxml2::XMLElement *element,
-		Persona *persona)
+		kangao::Manipulable *manipulable)
 {
 	tinyxml2::XMLElement *racine_propriete = doc.NewElement("proprietes");
 	element->InsertEndChild(racine_propriete);
 
-	for (const auto &prop : persona->props()) {
+	for (auto iter = manipulable->debut(); iter != manipulable->fin(); ++iter) {
+		kangao::Propriete prop = iter->second;
+		auto nom = iter->first;
+
 		auto element_prop = doc.NewElement("propriete");
-		element_prop->SetAttribute("nom", prop.name.c_str());
-		element_prop->SetAttribute("min", prop.min);
-		element_prop->SetAttribute("max", prop.max);
+		element_prop->SetAttribute("nom", nom.c_str());
+//		element_prop->SetAttribute("min", prop.min);
+//		element_prop->SetAttribute("max", prop.max);
 		element_prop->SetAttribute("visible", prop.visible);
 		element_prop->SetAttribute("type", static_cast<int>(prop.type));
 
 		auto element_donnees = doc.NewElement("donnees");
 
 		switch (prop.type) {
-			case property_type::prop_bool:
+			case kangao::TypePropriete::BOOL:
 			{
-				auto donnees = std::experimental::any_cast<bool>(prop.data);
+				auto donnees = manipulable->evalue_bool(nom);
 				element_donnees->SetAttribute("valeur", donnees);
 				break;
 			}
-			case property_type::prop_enum:
-			case property_type::prop_int:
+			case kangao::TypePropriete::ENTIER:
 			{
-				auto donnees = std::experimental::any_cast<int>(prop.data);
+				auto donnees = manipulable->evalue_entier(nom);
 				element_donnees->SetAttribute("valeur", donnees);
 				break;
 			}
-			case property_type::prop_float:
+			case kangao::TypePropriete::DECIMAL:
 			{
-				auto donnees = std::experimental::any_cast<float>(prop.data);
+				auto donnees = manipulable->evalue_decimal(nom);
 				element_donnees->SetAttribute("valeur", donnees);
 				break;
 			}
-			case property_type::prop_vec3:
+			case kangao::TypePropriete::VECTEUR:
 			{
-				glm::vec3 donnees = std::experimental::any_cast<glm::vec3>(prop.data);
+				glm::vec3 donnees = manipulable->evalue_vecteur(nom);
 
 				element_donnees->SetAttribute("valeurx", donnees.x);
 				element_donnees->SetAttribute("valeury", donnees.y);
 				element_donnees->SetAttribute("valeurz", donnees.z);
 				break;
 			}
-			case property_type::prop_list:
-			case property_type::prop_output_file:
-			case property_type::prop_input_file:
-			case property_type::prop_string:
+			case kangao::TypePropriete::COULEUR:
 			{
-				std::string donnees = std::experimental::any_cast<std::string>(prop.data);
+				glm::vec3 donnees = manipulable->evalue_couleur(nom);
+
+				element_donnees->SetAttribute("valeurx", donnees.x);
+				element_donnees->SetAttribute("valeury", donnees.y);
+				element_donnees->SetAttribute("valeurz", donnees.z);
+				break;
+			}
+			case kangao::TypePropriete::ENUM:
+			case kangao::TypePropriete::FICHIER_SORTIE:
+			case kangao::TypePropriete::FICHIER_ENTREE:
+			case kangao::TypePropriete::CHAINE_CARACTERE:
+			{
+				std::string donnees = manipulable->evalue_chaine(nom);
 				element_donnees->SetAttribute("valeur", donnees.c_str());
 				break;
 			}
@@ -224,49 +235,57 @@ erreur_fichier sauvegarde_projet(const filesystem::path &chemin, const Main &mai
 
 static void lecture_propriete(
 		tinyxml2::XMLElement *element,
-		Persona *persona)
+		kangao::Manipulable *manipulable)
 {
 	const auto type_prop = element->Attribute("type");
 	const auto nom_prop = element->Attribute("nom");
 
 	const auto element_donnees = element->FirstChildElement("donnees");
 
-	switch (static_cast<property_type>(atoi(type_prop))) {
-		case property_type::prop_bool:
+	switch (static_cast<kangao::TypePropriete>(atoi(type_prop))) {
+		case kangao::TypePropriete::BOOL:
 		{
 			const auto donnees = element_donnees->Attribute("valeur");
-			persona->valeur_propriete_bool(nom_prop, atoi(donnees));
+			manipulable->valeur_bool(nom_prop, atoi(donnees));
 			break;
 		}
-		case property_type::prop_enum:
-		case property_type::prop_int:
+		case kangao::TypePropriete::ENTIER:
 		{
 			const auto donnees = element_donnees->Attribute("valeur");
-			persona->valeur_propriete_int(nom_prop, atoi(donnees));
+			manipulable->valeur_entier(nom_prop, atoi(donnees));
 			break;
 		}
-		case property_type::prop_float:
+		case kangao::TypePropriete::DECIMAL:
 		{
 			const auto donnees = element_donnees->Attribute("valeur");
-			persona->valeur_propriete_float(nom_prop, atof(donnees));
+			manipulable->valeur_decimal(nom_prop, atof(donnees));
 			break;
 		}
-		case property_type::prop_vec3:
+		case kangao::TypePropriete::VECTEUR:
 		{
 			const auto donnee_x = atof(element_donnees->Attribute("valeurx"));
 			const auto donnee_y = atof(element_donnees->Attribute("valeury"));
 			const auto donnee_z = atof(element_donnees->Attribute("valeurz"));
 			const auto donnees = glm::vec3{donnee_x, donnee_y, donnee_z};
-			persona->valeur_propriete_vec3(nom_prop, donnees);
+			manipulable->valeur_vecteur(nom_prop, donnees);
 			break;
 		}
-		case property_type::prop_list:
-		case property_type::prop_output_file:
-		case property_type::prop_input_file:
-		case property_type::prop_string:
+		case kangao::TypePropriete::COULEUR:
+		{
+			const auto donnee_x = atof(element_donnees->Attribute("valeurx"));
+			const auto donnee_y = atof(element_donnees->Attribute("valeury"));
+			const auto donnee_z = atof(element_donnees->Attribute("valeurz"));
+			const auto donnees = glm::vec3{donnee_x, donnee_y, donnee_z};
+			manipulable->valeur_couleur(nom_prop, donnees);
+			break;
+		}
+		case kangao::TypePropriete::ENUM:
+		case kangao::TypePropriete::FICHIER_SORTIE:
+		case kangao::TypePropriete::FICHIER_ENTREE:
+		case kangao::TypePropriete::CHAINE_CARACTERE:
 		{
 			const auto donnees = element_donnees->Attribute("valeur");
-			persona->valeur_propriete_string(nom_prop, donnees);
+			manipulable->valeur_chaine(nom_prop, donnees);
 			break;
 		}
 	}
@@ -274,13 +293,13 @@ static void lecture_propriete(
 
 static void lecture_proprietes(
 		tinyxml2::XMLElement *element,
-		Persona *persona)
+		kangao::Manipulable *manipulable)
 {
 	const auto racine_propriete = element->FirstChildElement("proprietes");
 	auto element_propriete = racine_propriete->FirstChildElement("propriete");
 
 	for (; element_propriete != nullptr; element_propriete = element_propriete->NextSiblingElement("propriete")) {
-		lecture_propriete(element_propriete, persona);
+		lecture_propriete(element_propriete, manipulable);
 	}
 }
 
