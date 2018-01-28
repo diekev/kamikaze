@@ -26,11 +26,10 @@
 
 #include "widgetbase.h"
 
-class Persona;
 class QFrame;
-class QGridLayout;
 class QHBoxLayout;
 class QScrollArea;
+class QVBoxLayout;
 
 namespace kangao {
 
@@ -43,8 +42,10 @@ class PropertiesWidget : public WidgetBase {
 
 	QWidget *m_widget;
 	QWidget *m_conteneur_disposition;
+	QWidget *m_conteneur_alarmes;
+
 	QScrollArea *m_scroll;
-	QGridLayout *m_glayout;
+	QVBoxLayout *m_disposition_widget;
 
 	kangao::Manipulable *m_manipulable = nullptr;
 
@@ -55,15 +56,15 @@ public:
 	void update_state(event_type event) override;
 
 private:
-	void drawProperties(Persona *persona, bool set_context);
+	void drawProperties(class Persona *persona, bool set_context);
 
 	void dessine_interface(kangao::Manipulable *manipulable, const char *chemin_interface);
 
 	void ajourne_manipulable() override;
 
 	void efface_disposition();
-private Q_SLOTS:
+
 	void evalObjectGraph();
+
 	void tagObjectUpdate();
-	void updateProperties();
 };

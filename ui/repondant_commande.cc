@@ -36,12 +36,14 @@ RepondantCommande::RepondantCommande(Main *main, Context *contexte)
 
 bool RepondantCommande::appele_commande(const std::string &categorie, const DonneesCommande &donnees_commande)
 {
+#if 0
 	std::cerr << "Appele commande pour catégorie : " << categorie << " :\n";
 	std::cerr << "\tclé : " << donnees_commande.cle << '\n';
 	std::cerr << "\tmodificateur : " << donnees_commande.modificateur << '\n';
 	std::cerr << "\tsouris : " << donnees_commande.souris << '\n';
 	std::cerr << "\tx : " << donnees_commande.x << '\n';
 	std::cerr << "\ty : " << donnees_commande.y << '\n';
+#endif
 
 	auto commande = m_main->usine_commandes()->trouve_commande(categorie, donnees_commande);
 
@@ -56,12 +58,14 @@ bool RepondantCommande::appele_commande(const std::string &categorie, const Donn
 
 bool RepondantCommande::appele_commande_modale(const std::string &categorie, const DonneesCommande &donnees_commande)
 {
+#if 0
 	std::cerr << "Appele commande souris pour catégorie : " << categorie << " :\n";
 	std::cerr << "\tclé : " << donnees_commande.cle << '\n';
 	std::cerr << "\tmodificateur : " << donnees_commande.modificateur << '\n';
 	std::cerr << "\tsouris : " << donnees_commande.souris << '\n';
 	std::cerr << "\tx : " << donnees_commande.x << '\n';
 	std::cerr << "\ty : " << donnees_commande.y << '\n';
+#endif
 
 	auto commande = m_main->usine_commandes()->trouve_commande(categorie, donnees_commande);
 

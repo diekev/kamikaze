@@ -44,11 +44,19 @@
 
 #include "util/utils.h"
 
+/* -- Scroll
+ * ---- Widget
+ * ------ VLayout
+ * --------- Widget Alarmes
+ * --------- Widget Interface
+ */
+
 PropertiesWidget::PropertiesWidget(QWidget *parent)
     : WidgetBase(parent)
     , m_widget(new QWidget())
+	, m_conteneur_disposition(new QWidget())
     , m_scroll(new QScrollArea())
-    , m_glayout(new QGridLayout(m_widget))
+	, m_disposition_widget(new QVBoxLayout(m_widget))
 {
 	m_widget->setSizePolicy(m_frame->sizePolicy());
 
@@ -60,12 +68,14 @@ PropertiesWidget::PropertiesWidget(QWidget *parent)
 	m_scroll->setFrameStyle(0);
 
 	m_main_layout->addWidget(m_scroll);
+
+	m_disposition_widget->addWidget(m_conteneur_disposition);
 }
 
 void PropertiesWidget::update_state(event_type event)
 {
 	kangao::Manipulable *manipulable = nullptr;
-	bool set_context = true;
+//	bool set_context = true;
 	auto scene = m_context->scene;
 	const char *chemin_interface = "";
 
@@ -105,7 +115,7 @@ void PropertiesWidget::update_state(event_type event)
 			warnings = operateur->avertissements();
 
 			/* Only update/evaluate the graph if the node is connected. */
-			set_context = noeud->est_connecte();
+//			set_context = noeud->est_connecte();
 		}
 		else if (is_elem(event_action, event_type::removed)) {
 			efface_disposition();
@@ -120,6 +130,7 @@ void PropertiesWidget::update_state(event_type event)
 		return;
 	}
 
+	std::cerr << "update_state : suppression des widgets\n";
 	efface_disposition();
 
 	/* À FAIRE : affiche avertissements */
@@ -130,11 +141,13 @@ void PropertiesWidget::update_state(event_type event)
 
 void PropertiesWidget::dessine_interface(kangao::Manipulable *manipulable, const char *chemin_interface)
 {
+	std::cerr << "PropertiesWidget::dessine_interface : " << chemin_interface << '\n';
 	manipulable->ajourne_proprietes();
 
 	const auto &texte = kangao::contenu_fichier(chemin_interface);
 
 	if (texte.empty()) {
+		std::cerr << chemin_interface << " est vide !\n";
 		return;
 	}
 
@@ -145,17 +158,33 @@ void PropertiesWidget::dessine_interface(kangao::Manipulable *manipulable, const
 	auto disposition = kangao::compile_interface(donnees, texte.c_str());
 
 	m_conteneur_disposition->setLayout(disposition);
+
+	m_manipulable = manipulable;
 }
 
 void PropertiesWidget::ajourne_manipulable()
 {
 	std::cerr << "PropertiesWidget::ajourne_manipulable";
 	m_manipulable->ajourne_proprietes();
+
+	/* À FAIRE : redessine interface. */
+
+	if (m_context->eval_ctx->edit_mode) {
+		evalObjectGraph();
+	}
+	else {
+		tagObjectUpdate();
+	}
 }
 
 void PropertiesWidget::efface_disposition()
 {
-	delete m_conteneur_disposition->layout();
+	/* Qt ne permet d'extrait la disposition d'un widget que si celle-ci est
+	 * assignée à un autre widget. Donc pour détruire la disposition précédente
+	 * nous la reparentons à un widget temporaire qui la détruira dans son
+	 * destructeur. */
+	QWidget temp;
+	temp.setLayout(m_conteneur_disposition->layout());
 }
 
 void PropertiesWidget::evalObjectGraph()
@@ -175,127 +204,6 @@ void PropertiesWidget::evalObjectGraph()
 
 void PropertiesWidget::tagObjectUpdate()
 {
-	std::cerr << __func__ << "\n";
 	this->set_active();
 	m_context->scene->tagObjectUpdate();
-}
-
-void PropertiesWidget::updateProperties()
-{
-#if 0
-	auto scene = m_context->scene;
-	auto scene_node = scene->active_node();
-
-	if (!scene_node) {
-		return;
-	}
-
-	Persona *persona = nullptr;
-
-	if (m_context->eval_ctx->edit_mode) {
-		auto graph = static_cast<Object *>(scene_node)->graph();
-		auto noeud = graph->noeud_actif();
-
-		if (noeud == nullptr) {
-			return;
-		}
-
-		persona = noeud->operateur();
-	}
-	else {
-		persona = scene_node;
-	}
-
-	if (persona->update_properties()) {
-		for (Property &prop : persona->props()) {
-			m_callback.setVisible(prop.ui_name.c_str(), prop.visible);
-		}
-	}
-#endif
-}
-
-void PropertiesWidget::drawProperties(Persona *persona, bool set_context)
-{
-#if 0
-	persona->update_properties();
-
-	for (Property &prop : persona->props()) {
-		assert(!prop.data.empty());
-
-		switch (prop.type) {
-			case property_type::prop_bool:
-				bool_param(m_callback,
-				           prop.ui_name.c_str(),
-						   std::experimental::any_cast<bool>(&prop.data),
-						   std::experimental::any_cast<bool>(prop.data));
-				break;
-			case property_type::prop_float:
-				float_param(m_callback,
-				            prop.ui_name.c_str(),
-							std::experimental::any_cast<float>(&prop.data),
-				            prop.min, prop.max,
-							std::experimental::any_cast<float>(prop.data));
-				break;
-			case property_type::prop_int:
-				int_param(m_callback,
-				          prop.ui_name.c_str(),
-						  std::experimental::any_cast<int>(&prop.data),
-				          prop.min, prop.max,
-						  std::experimental::any_cast<int>(prop.data));
-				break;
-			case property_type::prop_enum:
-				enum_param(m_callback,
-				           prop.ui_name.c_str(),
-						   std::experimental::any_cast<int>(&prop.data),
-				           prop.enum_items,
-						   std::experimental::any_cast<int>(prop.data));
-				break;
-			case property_type::prop_vec3:
-				xyz_param(m_callback,
-				          prop.ui_name.c_str(),
-						  &(std::experimental::any_cast<glm::vec3>(&prop.data)->x),
-				          prop.min, prop.max);
-				break;
-			case property_type::prop_input_file:
-				input_file_param(m_callback,
-				                 prop.ui_name.c_str(),
-								 std::experimental::any_cast<std::string>(&prop.data));
-				break;
-			case property_type::prop_output_file:
-				output_file_param(m_callback,
-				                  prop.ui_name.c_str(),
-								  std::experimental::any_cast<std::string>(&prop.data));
-				break;
-			case property_type::prop_string:
-				string_param(m_callback,
-				             prop.ui_name.c_str(),
-							 std::experimental::any_cast<std::string>(&prop.data),
-							 std::experimental::any_cast<std::string>(prop.data).c_str());
-				break;
-			case property_type::prop_list:
-				list_selection_param(m_callback,
-				                     prop.ui_name.c_str(),
-				                     prop.enum_items,
-									 std::experimental::any_cast<std::string>(&prop.data));
-				break;
-		}
-
-		if (!prop.tooltip.empty()) {
-			param_tooltip(m_callback, prop.tooltip.c_str());
-		}
-
-		m_callback.setVisible(prop.ui_name.c_str(), prop.visible);
-	}
-
-	if (set_context) {
-		if (m_context->eval_ctx->edit_mode) {
-			m_callback.setContext(this, SLOT(evalObjectGraph()));
-		}
-		else {
-			m_callback.setContext(this, SLOT(tagObjectUpdate()));
-		}
-	}
-
-	m_callback.setContext(this, SLOT(updateProperties()));
-#endif
 }

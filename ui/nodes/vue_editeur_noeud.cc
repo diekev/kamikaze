@@ -40,8 +40,8 @@ VueEditeurNoeud::VueEditeurNoeud(
 		kangao::GestionnaireInterface *gestionnaire,
 		QWidget *parent)
 	: QGraphicsView(parent)
-	, m_repondant_commande(repondant)
 	, m_gestionnaire(gestionnaire)
+	, m_repondant_commande(repondant)
 {
 	kangao::DonneesInterface donnees;
 	donnees.manipulable = nullptr;
@@ -127,6 +127,8 @@ void VueEditeurNoeud::mousePressEvent(QMouseEvent *event)
 			m_menu_contexte->popup(event->globalPos());
 			break;
 		}
+		default:
+			break;
 	}
 }
 

@@ -261,7 +261,7 @@ class CommandeGrapheSelection final : public Commande {
 		const auto pos_x = donnees.x;
 		const auto pos_y = donnees.y;
 
-		std::cerr << "Sélection : x = " << pos_x << ", y = " << pos_y << '\n';
+	//	std::cerr << "Sélection : x = " << pos_x << ", y = " << pos_y << '\n';
 
 		auto scene = context.scene;
 		auto objet = static_cast<Object *>(scene->active_node());
@@ -277,12 +277,12 @@ class CommandeGrapheSelection final : public Commande {
 
 				if (rect.contiens(pos_x, pos_y)) {
 					graphe->ajoute_selection(noeud.get());
-					std::cerr << "Sélection noeud !\n";
+				//	std::cerr << "Sélection noeud !\n";
 					break;
 				}
 			}
 
-			scene->notify_listeners(event_type::node | event_type::modified);
+			scene->notify_listeners(event_type::node | event_type::selected);
 		}
 		else {
 			scene->set_active_node(nullptr);
@@ -294,7 +294,7 @@ class CommandeGrapheSelection final : public Commande {
 
 				if (rect.contiens(pos_x, pos_y)) {
 					scene->set_active_node(noeud.get());
-					std::cerr << "Sélection objet !\n";
+				//	std::cerr << "Sélection objet !\n";
 					break;
 				}
 			}
@@ -358,7 +358,7 @@ public:
 		const auto pos_x = donnees.x;
 		const auto pos_y = donnees.y;
 
-		std::cerr << "Double clique : x = " << pos_x << ", y = " << pos_y << '\n';
+	//	std::cerr << "Double clique : x = " << pos_x << ", y = " << pos_y << '\n';
 
 		auto scene = context.scene;
 

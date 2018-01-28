@@ -60,6 +60,7 @@ set(FICHIERS_KANGAO
 	scripts_kangao/operateur_randomise_attribut.kangao
 	scripts_kangao/operateur_suppression_attribut.kangao
 	scripts_kangao/operateur_transformation.kangao
+	scripts_kangao/proprietes_objet.kangao
 )
 
 add_compile_options(-fPIC)

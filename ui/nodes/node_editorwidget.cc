@@ -895,11 +895,13 @@ void QtNodeEditor::update_state(event_type event)
 			node_item->setScene(m_graphics_scene);
 			node_item->setPos(node->xpos(), node->ypos());
 
+#if 0
 			auto rect = node_item->boundingRect();
 
 			std::cerr << "Position : " << node->xpos() << ", " << node->ypos() << "\n";
 			std::cerr << "Rectangle (Qt) : " << rect.x() << ", " << rect.y() << ", "
 					  << rect.width() << ", " << rect.height() << "\n";
+#endif
 
 			if (node.get() == m_context->scene->active_node()) {
 				m_selected_nodes.append(node_item);
