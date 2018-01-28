@@ -130,7 +130,6 @@ void PropertiesWidget::update_state(event_type event)
 		return;
 	}
 
-	std::cerr << "update_state : suppression des widgets\n";
 	efface_disposition();
 
 	/* À FAIRE : affiche avertissements */
@@ -141,13 +140,11 @@ void PropertiesWidget::update_state(event_type event)
 
 void PropertiesWidget::dessine_interface(kangao::Manipulable *manipulable, const char *chemin_interface)
 {
-	std::cerr << "PropertiesWidget::dessine_interface : " << chemin_interface << '\n';
 	manipulable->ajourne_proprietes();
 
 	const auto &texte = kangao::contenu_fichier(chemin_interface);
 
 	if (texte.empty()) {
-		std::cerr << chemin_interface << " est vide !\n";
 		return;
 	}
 
@@ -164,7 +161,6 @@ void PropertiesWidget::dessine_interface(kangao::Manipulable *manipulable, const
 
 void PropertiesWidget::ajourne_manipulable()
 {
-	std::cerr << "PropertiesWidget::ajourne_manipulable";
 	m_manipulable->ajourne_proprietes();
 
 	/* À FAIRE : redessine interface. */
