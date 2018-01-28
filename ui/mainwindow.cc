@@ -35,18 +35,13 @@
 #include <QStatusBar>
 #include <QSettings>
 
-#include "core/graphs/graph_dumper.h"
 #include "core/kamikaze_main.h"
-#include "core/object.h"
-#include "core/sauvegarde.h"
-#include "core/undo.h"
 
 #include "node_editorwidget.h"
 #include "outliner_widget.h"
 #include "properties_widget.h"
 #include "repondant_commande.h"
 #include "timeline_widget.h"
-#include "utils_ui.h"
 #include "viewer.h"
 
 static const char *chemins_scripts[] = {

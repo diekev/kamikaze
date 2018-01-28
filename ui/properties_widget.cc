@@ -26,17 +26,12 @@
 
 #include <iostream>
 
-#include <QFrame>
 #include <QHBoxLayout>
 #include <QScrollArea>
 
-#include <kamikaze/context.h>
-#include <kamikaze/noeud.h>
 #include <kamikaze/operateur.h>
 
 #include <kangao/kangao.h>
-
-#include "utils_ui.h"
 
 #include "core/graphs/object_graph.h"
 #include "core/object.h"
@@ -44,7 +39,10 @@
 
 #include "util/utils.h"
 
-/* -- Scroll
+/* La hierarchie est la suivante :
+ *
+ * Disposition Principale
+ * -- Scroll
  * ---- Widget
  * ------ VLayout
  * --------- Widget Alarmes
@@ -75,7 +73,6 @@ PropertiesWidget::PropertiesWidget(QWidget *parent)
 void PropertiesWidget::update_state(event_type event)
 {
 	kangao::Manipulable *manipulable = nullptr;
-//	bool set_context = true;
 	auto scene = m_context->scene;
 	const char *chemin_interface = "";
 
@@ -113,9 +110,6 @@ void PropertiesWidget::update_state(event_type event)
 			manipulable = operateur;
 			chemin_interface = operateur->chemin_interface();
 			warnings = operateur->avertissements();
-
-			/* Only update/evaluate the graph if the node is connected. */
-//			set_context = noeud->est_connecte();
 		}
 		else if (is_elem(event_action, event_type::removed)) {
 			efface_disposition();
@@ -166,6 +160,7 @@ void PropertiesWidget::ajourne_manipulable()
 	/* À FAIRE : redessine interface. */
 
 	if (m_context->eval_ctx->edit_mode) {
+		/* À FAIRE : n'évalue le graphe que si le noeud était connecté. */
 		evalObjectGraph();
 	}
 	else {

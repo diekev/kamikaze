@@ -26,8 +26,6 @@
 
 #include "widgetbase.h"
 
-class QFrame;
-class QHBoxLayout;
 class QScrollArea;
 class QVBoxLayout;
 
@@ -56,8 +54,6 @@ public:
 	void update_state(event_type event) override;
 
 private:
-	void drawProperties(class Persona *persona, bool set_context);
-
 	void dessine_interface(kangao::Manipulable *manipulable, const char *chemin_interface);
 
 	void ajourne_manipulable() override;
