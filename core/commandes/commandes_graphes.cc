@@ -301,6 +301,47 @@ class CommandeGrapheSelection final : public Commande {
 		}
 	}
 
+	void demarre_execution_modale(Main *main, const Context &context, const DonneesCommande &donnees)
+	{
+		execute(main, context, donnees);
+	}
+
+	void ajourne_execution_modale(Main */*main*/, const Context &context, const DonneesCommande &donnees)
+	{
+		auto scene = context.scene;
+
+		std::cerr << "Ajournement : " << donnees.x << ", " << donnees.y << '\n';
+
+		if (context.eval_ctx->edit_mode) {
+			auto objet = static_cast<Object *>(scene->active_node());
+			auto graphe = objet->graph();
+			auto noeud = graphe->noeud_actif();
+
+			if (noeud == nullptr) {
+				return;
+			}
+
+			noeud->posx(donnees.x);
+			noeud->posy(donnees.y);
+		}
+		else {
+			auto noeud = scene->active_node();
+
+			if (noeud == nullptr) {
+				return;
+			}
+
+			noeud->xpos(donnees.x);
+			noeud->ypos(donnees.y);
+		}
+
+		scene->notify_listeners(event_type::node | event_type::modified);
+	}
+
+	void termine_execution_modale(Main */*main*/, const Context &context, const DonneesCommande &donnees)
+	{
+	}
+
 	void defait() override {}
 	void refait() override {}
 };
@@ -354,45 +395,6 @@ public:
 
 			scene->notify_listeners(event_type::object | event_type::selected);
 		}
-	}
-
-	void demarre_execution_modale(Main *main, const Context &context, const DonneesCommande &donnees)
-	{
-		execute(main, context, donnees);
-	}
-
-	void ajourne_execution_modale(Main */*main*/, const Context &context, const DonneesCommande &donnees)
-	{
-		auto scene = context.scene;
-
-		if (context.eval_ctx->edit_mode) {
-			auto objet = static_cast<Object *>(scene->active_node());
-			auto graphe = objet->graph();
-			auto noeud = graphe->noeud_actif();
-
-			if (noeud == nullptr) {
-				return;
-			}
-
-			noeud->posx(donnees.x);
-			noeud->posy(donnees.y);
-		}
-		else {
-			auto noeud = scene->active_node();
-
-			if (noeud == nullptr) {
-				return;
-			}
-
-			noeud->xpos(donnees.x);
-			noeud->ypos(donnees.y);
-		}
-
-		scene->notify_listeners(event_type::node | event_type::modified);
-	}
-
-	void termine_execution_modale(Main */*main*/, const Context &context, const DonneesCommande &donnees)
-	{
 	}
 
 	void defait() override {}

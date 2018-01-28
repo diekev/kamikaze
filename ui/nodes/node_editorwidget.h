@@ -44,18 +44,33 @@ class GestionnaireInterface;
 }  /* namespace kangao */
 
 class NodeView : public QGraphicsView {
+	kangao::GestionnaireInterface *m_gestionnaire = nullptr;
+	RepondantCommande *m_repondant_commande = nullptr;
+
+	QMenu *m_context_menu = nullptr;
+	QMenu *m_add_node_menu = nullptr;
+
 public:
-	explicit NodeView(QWidget *parent = nullptr);
+	explicit NodeView(
+			RepondantCommande *repondant,
+			kangao::GestionnaireInterface *gestionnaire,
+			QWidget *parent = nullptr);
+
 	explicit NodeView(QGraphicsScene *scene, QWidget *parent = nullptr);
 
-//	void mousePressEvent(QMouseEvent *event) override;
-//	void mouseReleaseEvent(QMouseEvent *event) override;
-protected:
+	void menu_ajout_noeud(QMenu *menu);
+
+	void mousePressEvent(QMouseEvent *event) override;
+
+	void mouseDoubleClickEvent(QMouseEvent *event) override;
+
+	void mouseReleaseEvent(QMouseEvent *event) override;
+
 	/* Reimplement wheelEvent to avoid getting conflicts between zooming and
 	 * scrolling. */
 	void wheelEvent(QWheelEvent *event) override;
 
-//	void mouseMoveEvent(QMouseEvent *event) override;
+	void mouseMoveEvent(QMouseEvent *event) override;
 };
 
 class QtNodeEditor : public WidgetBase {
@@ -64,9 +79,7 @@ class QtNodeEditor : public WidgetBase {
 	NodeView *m_view;
 	QtNodeGraphicsScene *m_graphics_scene;
 
-	QMenu *m_context_menu;
 	QMenu *m_zoom_sub_menu;
-	QMenu *m_add_node_menu;
 
 	QGraphicsRectItem *m_rubber_band;
 	QPointF m_last_mouse_position;
@@ -82,9 +95,6 @@ class QtNodeEditor : public WidgetBase {
 	QtConnection *m_active_connection;
 	QVector<QtNode *> m_selected_nodes;
 	QVector<QtConnection *> m_selected_connections;
-
-	kangao::GestionnaireInterface *m_gestionnaire;
-	RepondantCommande *m_repondant_commande;
 
 public:
 	explicit QtNodeEditor(
@@ -129,16 +139,12 @@ public:
 	QtConnection *nodeOverConnection(QtNode *node);
 	QtConnection *lastSelectedConnection() const;
 
-	void setAddNodeMenu(QMenu *menu)
-	{
-		m_add_node_menu = menu;
-	}
+	void setAddNodeMenu(QMenu *menu);
 
 	void update_state(event_type event) override;
 
 	void sendNotification() const;
 
-	void mouseMoveEvent(QMouseEvent *event) override;
 public Q_SLOTS:
 	/* Activated when a connection is set between two nodes. */
 	void connectionEstablished(QtConnection*);
@@ -184,6 +190,4 @@ protected:
 
 	bool isAlreadySelected(QtNode *node);
 	bool isAlreadySelected(QtConnection *connection);
-
-	void showContextMenu(const QPoint &pos);
 };
