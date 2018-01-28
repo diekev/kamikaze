@@ -175,6 +175,10 @@ void PropertiesWidget::ajourne_manipulable()
 
 void PropertiesWidget::efface_disposition()
 {
+	if (!m_conteneur_disposition->layout()) {
+		return;
+	}
+
 	/* Qt ne permet d'extrait la disposition d'un widget que si celle-ci est
 	 * assignée à un autre widget. Donc pour détruire la disposition précédente
 	 * nous la reparentons à un widget temporaire qui la détruira dans son
