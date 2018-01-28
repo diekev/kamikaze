@@ -21,18 +21,10 @@
 #include "node_editorwidget.h"
 
 #include <QApplication>
-#include <QGraphicsScene>
-#include <QGraphicsView>
-#include <QGuiApplication>
-#include <QKeyEvent>
-#include <QMenu>
 #include <QToolTip>
 #include <QVBoxLayout>
 
-#include <iostream>
-#include <kamikaze/context.h>
 #include <kamikaze/operateur.h>
-#include <kangao/kangao.h>
 #include <sstream>
 
 #include "node_compound.h"
@@ -42,31 +34,10 @@
 #include "node_scene.h"
 #include "vue_editeur_noeud.h"
 
-#include "repondant_commande.h"
-
-#include "undo.h"
 #include "object.h"
 #include "graphs/object_graph.h"
-#include "operateurs/operateurs_standards.h"
 
 /* ************************************************************************** */
-
-#if 0
-enum {
-	SOURIS_AUCUNE = 0,
-	SOURIS_GAUCHE = 1,
-	SOURIS_DOUBLE_CLIQUE = 2,
-	SOURIS_MILIEU = 3,
-	SOURIS_DROIT = 4,
-};
-
-enum {
-	MODIFICATEUR_AUCUN = 0,
-	MODIFICATEUR_CTRL = 1,
-	MODIFICATEUR_ALT = 2,
-	MODIFICATEUR_MAJ = 3,
-};
-#endif
 
 QtNodeEditor::QtNodeEditor(
 		RepondantCommande *repondant,
@@ -91,7 +62,6 @@ QtNodeEditor::QtNodeEditor(
 	m_hover_connection = nullptr;
 	m_active_connection = nullptr;
 	m_rubberband_selection = false;
-	m_context_menu_enabled = true;
 
 	setContextMenuPolicy(Qt::CustomContextMenu);
 }
@@ -99,16 +69,6 @@ QtNodeEditor::QtNodeEditor(
 QtNodeEditor::~QtNodeEditor()
 {
 	delete m_graphics_scene;
-}
-
-void QtNodeEditor::setContextMenuEnabled(bool enabled)
-{
-	m_context_menu_enabled = enabled;
-}
-
-bool QtNodeEditor::isContextMenuEnabled()
-{
-	return m_context_menu_enabled;
 }
 
 QGraphicsItem *QtNodeEditor::itemAtExceptActiveConnection(const QPointF &pos)
@@ -318,19 +278,6 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 			}
 
 			break;
-		}
-		case Qt::RightButton:
-		{
-			if (m_context_menu_enabled) {
-				QPoint pos;
-				pos.setX(mouseEvent->lastScreenPos().x());
-				pos.setY(mouseEvent->lastScreenPos().y());
-			}
-			else {
-				deselectAll();
-			}
-
-			return true;
 		}
 		case Qt::MiddleButton:
 		{
@@ -693,39 +640,6 @@ QtNode *QtNodeEditor::nodeWithActiveConnection()
 	return static_cast<QtNode *>(m_active_connection->getBasePort()->parentItem());
 }
 
-void QtNodeEditor::addNode(QtNode *node)
-{
-	node->setEditor(this);
-	node->setScene(m_graphics_scene);
-
-	m_graphics_scene->addItem(node);
-
-	m_hover_connection = lastSelectedConnection();
-
-	if (m_hover_connection != nullptr) {
-		splitConnectionWithNode(node);
-	}
-
-	m_hover_connection = nullptr;
-}
-
-QVector<QtNode *> QtNodeEditor::getNodes() const
-{
-	const auto &items = m_graphics_scene->items();
-	auto nodeList = QVector<QtNode *>{};
-
-	QtNode *node;
-
-	for (const auto &item : items) {
-		if (is_node(item) && item->isVisible()) {
-			node = static_cast<QtNode *>(item);
-			nodeList.append(node);
-		}
-	}
-
-	return nodeList;
-}
-
 using node_port_pair = std::pair<QtNode *, QtPort *>;
 
 std::pair<node_port_pair, node_port_pair> get_base_target_pairs(QtConnection *connection, bool remove)
@@ -797,11 +711,6 @@ void QtNodeEditor::connectionEstablished(QtConnection *connection)
 	               target.first, target.second->getPortName(), true);
 }
 
-void QtNodeEditor::clear()
-{
-	m_graphics_scene->clear(); /* removes + deletes all items in the scene */
-}
-
 QtNode *QtNodeEditor::getLastSelectedNode() const
 {
 	if (m_selected_nodes.empty()) {
@@ -811,28 +720,9 @@ QtNode *QtNodeEditor::getLastSelectedNode() const
 	return m_selected_nodes.back();
 }
 
-const QVector<QtNode *> &QtNodeEditor::selectedNodes() const
-{
-	return m_selected_nodes;
-}
-
-QtConnection *QtNodeEditor::lastSelectedConnection() const
-{
-	if (m_selected_connections.empty()) {
-		return nullptr;
-	}
-
-	return m_selected_connections.back();
-}
-
-void QtNodeEditor::setAddNodeMenu(QMenu *menu)
+void QtNodeEditor::menu_ajout_noeud(QMenu *menu)
 {
 	m_view->menu_ajout_noeud(menu);
-}
-
-const QVector<QtConnection *> &QtNodeEditor::selectedConnections() const
-{
-	return m_selected_connections;
 }
 
 void QtNodeEditor::toFront(QtNode *node)
@@ -881,11 +771,6 @@ void QtNodeEditor::toBack(QtNode *node)
 			node->stackBefore(item);
 		}
 	}
-}
-
-void QtNodeEditor::setZoom(qreal zoom)
-{
-	m_view->scale(zoom, zoom);
 }
 
 bool QtNodeEditor::ctrlPressed()

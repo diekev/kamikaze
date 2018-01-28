@@ -261,7 +261,7 @@ void MainWindow::addGraphEditorWidget()
 
 	QtNodeEditor *graph_editor = new QtNodeEditor(m_repondant_commande, m_gestionnaire, dock);
 	graph_editor->listens(&m_context);
-	graph_editor->setAddNodeMenu(m_add_nodes_menu);
+	graph_editor->menu_ajout_noeud(m_add_nodes_menu);
 	/* XXX - graph editor needs to be able to draw the scene from the scratch. */
 	graph_editor->update_state(static_cast<event_type>(-1));
 
@@ -324,7 +324,7 @@ void MainWindow::addGraphOutlinerWidget()
 
 	QtNodeEditor *graph_editor = new QtNodeEditor(m_repondant_commande, m_gestionnaire, graph_dock);
 	graph_editor->listens(&m_context);
-	graph_editor->setAddNodeMenu(m_add_nodes_menu);
+	graph_editor->menu_ajout_noeud(m_add_nodes_menu);
 
 	graph_dock->setWidget(graph_editor);
 	graph_dock->setAllowedAreas(Qt::AllDockWidgetAreas);

@@ -49,15 +49,10 @@ class QtNodeEditor : public WidgetBase {
 	VueEditeurNoeud *m_view;
 	QtNodeGraphicsScene *m_graphics_scene;
 
-	QMenu *m_zoom_sub_menu;
-
 	QGraphicsRectItem *m_rubber_band;
 	QPointF m_last_mouse_position;
 
 	bool m_rubberband_selection;
-	bool m_context_menu_enabled;
-	bool m_menu_zoom_enabled;
-	bool m_menu_collapse_expand_enabled;
 	bool m_mouse_down = false;
 
 	/* Cached informations */
@@ -74,28 +69,23 @@ public:
 
 	virtual ~QtNodeEditor();
 
-	/* If true, a context menu is displayed when the right mousebutton is
-	 * selected. */
-	void setContextMenuEnabled(bool enabled);
-	bool isContextMenuEnabled();
+	/* Interface */
 
-	/* Add a node to the scene (editor widget). */
-	void addNode(QtNode *node);
+	/**
+	 * Redessine les noeuds selon l'état du modèle.
+	 */
+	void update_state(event_type event) override;
 
-	/* Add a node to the scene (editor widget). */
-	QVector<QtNode *> getNodes() const;
+	/**
+	 * Installe le pointeur vers le menu de création de noeuds dans la vue
+	 * de l'éditeur.
+	 */
+	void menu_ajout_noeud(QMenu *menu);
 
-	/* Remove AND delete all items from the node editor scene. */
-	void clear();
+	/* À FAIRE */
 
 	/* If there is a selected node, return the last one that was selected. */
 	QtNode *getLastSelectedNode() const;
-
-	/* Return a vector with all the currently selected nodes. */
-	const QVector<QtNode *> &selectedNodes() const;
-
-	/* Return a vector with all the currently selected connections. */
-	const QVector<QtConnection *> &selectedConnections() const;
 
 	/* Moves a node to front; before all other nodes. */
 	void toFront(QtNode *node);
@@ -103,15 +93,7 @@ public:
 	/* Moves all other nodes in front of the given node. */
 	void toBack(QtNode *node);
 
-	/* Scale all nodes with the zoom factor. */
-	void setZoom(qreal zoom);
-
 	QtConnection *nodeOverConnection(QtNode *node);
-	QtConnection *lastSelectedConnection() const;
-
-	void setAddNodeMenu(QMenu *menu);
-
-	void update_state(event_type event) override;
 
 	void sendNotification() const;
 
