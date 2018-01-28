@@ -1,0 +1,10 @@
+disposition "operateur_dispersion_points" {
+    ligne {
+        étiquette(valeur="Graine")
+        entier(valeur="1"; attache="graine"; min="1"; max="100000")
+    }
+    ligne {
+        étiquette(valeur="Nombre Points Par Polygones")
+        entier(valeur="100"; attache="nombre_points_polys"; min="1"; max="1000")
+    }
+}

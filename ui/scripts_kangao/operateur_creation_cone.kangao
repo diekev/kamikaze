@@ -1,0 +1,18 @@
+disposition "operateur_creation_cone" {
+    ligne {
+        étiquette(valeur="Vertices")
+        entier(valeur="32"; attache="vertices"; min="3"; max="500")
+    }
+    ligne {
+        étiquette(valeur="Rayon mineur")
+        décimal(valeur="0"; attache="rayon_mineur"; min="0"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Rayon majeur")
+        décimal(valeur="1"; attache="rayon_majeur"; min="0"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Profondeur")
+        décimal(valeur="1"; attache="profondeur"; min="0"; max="10")
+    }
+}

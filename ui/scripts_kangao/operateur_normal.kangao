@@ -1,0 +1,6 @@
+disposition "operateur_normal" {
+    ligne {
+        étiquette(valeur="Inverse")
+        case(valeur="faux"; attache="inverse"; infobulle="Inverse la direction des vecteurs normaux générés.")
+    }
+}

@@ -1,0 +1,20 @@
+disposition "operateur_couleur" {
+    ligne {
+        étiquette(valeur="Portée")
+        liste(valeur="unique"; attache="portée";
+                items=[{nom="Vertices", valeur="vertices"}, {nom="Primitive", valeur="primitive"}])
+    }
+    ligne {
+        étiquette(valeur="Méthode remplissage")
+        liste(valeur="unique"; attache="méthode";
+                items=[{nom="Unique", valeur="unique"}, {nom="Aléatoire", valeur="aléatoire"}])
+    }
+    ligne {
+        étiquette(valeur="Couleur")
+        couleur(valeur=""; attache="couleur"; min="0"; max="1")
+    }
+    ligne {
+        étiquette(valeur="Graine")
+        entier(valeur="1"; attache="graine"; min="1"; max="100000")
+    }
+}

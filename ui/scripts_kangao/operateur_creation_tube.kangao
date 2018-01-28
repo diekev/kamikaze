@@ -1,0 +1,14 @@
+disposition "operateur_creation_tube" {
+    ligne {
+        étiquette(valeur="Vertices")
+        entier(valeur="32"; attache="vertices"; min="3"; max="500")
+    }
+    ligne {
+        étiquette(valeur="Rayon")
+        décimal(valeur="1"; attache="rayon"; min="0"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Profondeur")
+        décimal(valeur="1"; attache="profondeur"; min="0"; max="10")
+    }
+}

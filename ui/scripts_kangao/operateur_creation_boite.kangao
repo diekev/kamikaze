@@ -1,0 +1,14 @@
+disposition "operateur_creation_boite" {
+    ligne {
+        étiquette(valeur="Centre")
+        vecteur(valeur=""; attache="centre"; min="-10"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Taille")
+        vecteur(valeur=""; attache="taille"; min="0"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Échelle")
+        décimal(valeur="1"; attache="échelle"; min="0"; max="10")
+    }
+}

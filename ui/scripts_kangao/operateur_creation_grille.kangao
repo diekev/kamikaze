@@ -1,0 +1,18 @@
+disposition "operateur_creation_grille" {
+    ligne {
+        étiquette(valeur="Centre")
+        vecteur(valeur=""; attache="centre"; min="-10"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Taille")
+        vecteur(valeur=""; attache="taille"; min="0"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Lignes")
+        entier(valeur="2"; attache="lignes"; min="2"; max="100")
+    }
+    ligne {
+        étiquette(valeur="Colonnes")
+        entier(valeur="2"; attache="colonnes"; min="2"; max="100")
+    }
+}

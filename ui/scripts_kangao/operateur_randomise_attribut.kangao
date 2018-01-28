@@ -1,0 +1,50 @@
+disposition "operateur_creation_courbes" {
+    ligne {
+        étiquette(valeur="Nom attribut")
+        chaine(valeur=""; attache="nom_attribut"; infobulle="Nom de l'attribut à randomiser.")
+    }
+    ligne {
+        étiquette(valeur="Type attribut")
+        liste(valeur="octet"; attache="type_attribut";
+            items=[
+                {nom="Octet", valeur="octet"},
+                {nom="Entier", valeur="entier"},
+                {nom="Décimal", valeur="décimal"},
+                {nom="Chaîne", valeur="chaine"},
+                {nom="Vecteur 2D", valeur="vecteur_2d"},
+                {nom="Vecteur 3D", valeur="vecteur_3d"},
+                {nom="Vecteur 4D", valeur="vecteur_4d"},
+                {nom="Matrice 3x3", valeur="matrice_3x3"},
+                {nom="Matrice 4x4", valeur="matrice_4x4"},
+            ])
+    }
+    ligne {
+        étiquette(valeur="Distribution")
+        liste(valeur="constant"; attache="distribution";
+            items=[
+                {nom="Constante", valeur="constante"},
+                {nom="Uniforme", valeur="uniforme"},
+                {nom="Gaussienne", valeur="gaussienne"}
+            ])
+    }
+    ligne {
+        étiquette(valeur="Valeur")
+        décimal(valeur="1"; attache="valeur"; min="0"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Valeur Minimum")
+        décimal(valeur="1"; attache="valeur_min"; min="0"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Valeur Maximum")
+        décimal(valeur="1"; attache="valeur_max"; min="0"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Moyenne")
+        décimal(valeur="1"; attache="moyenne"; min="0"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Écart Type")
+        décimal(valeur="1"; attache="écart_type"; min="0"; max="10")
+    }
+}

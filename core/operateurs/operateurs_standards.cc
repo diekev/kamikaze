@@ -93,6 +93,11 @@ public:
 		set_prop_default_value_float(1.0f);
 	}
 
+	const char *chemin_interface() const
+	{
+		return "interface/operateur_creation_boite.kangao";
+	}
+
 	const char *nom_sortie(size_t /*index*/)
 	{
 		return "Sortie";
@@ -215,6 +220,11 @@ public:
 		add_prop("invert_xform", "Invert Transformation", property_type::prop_bool);
 	}
 
+	const char *chemin_interface() const
+	{
+		return "interface/operateur_transformation.kangao";
+	}
+
 	const char *nom_entree(size_t /*index*/)
 	{
 		return "Entrée";
@@ -328,6 +338,11 @@ public:
 		add_prop("uniform_scale", "Uniform Scale", property_type::prop_float);
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_default_value_float(1.0f);
+	}
+
+	const char *chemin_interface() const
+	{
+		return "interface/operateur_creation_torus.kangao";
 	}
 
 	const char *nom_sortie(size_t /*index*/)
@@ -445,6 +460,11 @@ public:
 		set_prop_default_value_int(2);
 	}
 
+	const char *chemin_interface() const
+	{
+		return "interface/operateur_creation_grille.kangao";
+	}
+
 	const char *nom_sortie(size_t /*index*/)
 	{
 		return "Sortie";
@@ -536,6 +556,11 @@ public:
 		add_prop("radius", "Radius", property_type::prop_float);
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_default_value_float(1.0f);
+	}
+
+	const char *chemin_interface() const
+	{
+		return "interface/operateur_creation_cercle.kangao";
 	}
 
 	const char *nom_sortie(size_t /*index*/) override
@@ -690,6 +715,11 @@ public:
 		set_prop_default_value_float(1.0f);
 	}
 
+	const char *chemin_interface() const
+	{
+		return "interface/operateur_creation_tube.kangao";
+	}
+
 	const char *nom_sortie(size_t /*index*/) override
 	{
 		return "Sortie";
@@ -744,6 +774,11 @@ public:
 		add_prop("depth", "Depth", property_type::prop_float);
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_default_value_float(1.0f);
+	}
+
+	const char *chemin_interface() const
+	{
+		return "interface/operateur_creation_cone.kangao";
 	}
 
 	const char *nom_sortie(size_t /*index*/) override
@@ -829,6 +864,11 @@ public:
 		set_prop_default_value_float(1.0f);
 	}
 
+	const char *chemin_interface() const
+	{
+		return "interface/operateur_creation_icosphere.kangao";
+	}
+
 	const char *nom() override
 	{
 		return NOM_CREATION_ICOSPHERE;
@@ -893,6 +933,11 @@ public:
 		sorties(1);
 
 		add_prop("flip", "Flip", property_type::prop_bool);
+	}
+
+	const char *chemin_interface() const
+	{
+		return "interface/operateur_normal.kangao";
 	}
 
 	const char *nom_entree(size_t /*index*/) override
@@ -1009,6 +1054,11 @@ public:
 		add_prop("temps", "Temps", property_type::prop_float);
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_default_value_float(2.0f);
+	}
+
+	const char *chemin_interface() const
+	{
+		return "interface/operateur_bruit.kangao";
 	}
 
 	bool update_properties() override
@@ -1183,6 +1233,11 @@ public:
 		set_prop_default_value_int(1);
 	}
 
+	const char *chemin_interface() const
+	{
+		return "interface/operateur_couleur.kangao";
+	}
+
 	const char *nom_entree(size_t /*index*/) override
 	{
 		return "Entrée";
@@ -1337,6 +1392,11 @@ public:
 		set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
 	}
 
+	const char *chemin_interface() const
+	{
+		return "interface/operateur_creation_nuage_point.kangao";
+	}
+
 	const char *nom_sortie(size_t /*index*/) override
 	{
 		return "Sortie";
@@ -1407,6 +1467,11 @@ public:
 
 		add_prop("attribute_type", "Attribute Type", property_type::prop_enum);
 		set_prop_enum_values(type_enum);
+	}
+
+	const char *chemin_interface() const
+	{
+		return "interface/operateur_suppression_attribut.kangao";
 	}
 
 	const char *nom_entree(size_t /*index*/) override
@@ -1491,6 +1556,11 @@ public:
 
 		add_prop("attribute_type", "Attribute Type", property_type::prop_enum);
 		set_prop_enum_values(type_enum);
+	}
+
+	const char *chemin_interface() const
+	{
+		return "interface/operateur_suppression_attribut.kangao";
 	}
 
 	const char *nom_entree(size_t /*index*/) override
@@ -1595,6 +1665,11 @@ public:
 		add_prop("stddev", "Standard Deviation", property_type::prop_float);
 		set_prop_min_max(0.0f, 10.0f);
 		set_prop_default_value_float(1.0f);
+	}
+
+	const char *chemin_interface() const
+	{
+		return "interface/operateur_randomise_attribut.kangao";
 	}
 
 	const char *nom_entree(size_t /*index*/) override
@@ -1804,6 +1879,11 @@ public:
 		set_prop_default_value_vec3(glm::vec3{0.0f, 1.0f, 0.0f});
 		set_prop_min_max(-1.0f, 1.0f);
 		set_prop_tooltip("Direction de la courbe.");
+	}
+
+	const char *chemin_interface() const
+	{
+		return "interface/operateur_creation_courbes.kangao";
 	}
 
 	bool update_properties() override
@@ -2072,6 +2152,11 @@ public:
 		set_prop_min_max(0, 1);
 	}
 
+	const char *chemin_interface() const
+	{
+		return "interface/operateur_commutateur.kangao";
+	}
+
 	const char *nom_entree(size_t index) override
 	{
 		if (index == 0) {
@@ -2121,6 +2206,11 @@ public:
 		set_prop_min_max(1, 1000);
 		set_prop_default_value_int(100);
 		set_prop_tooltip("Nombre de points par polygone.");
+	}
+
+	const char *chemin_interface() const
+	{
+		return "interface/operateur_dispersion_points.kangao";
 	}
 
 	const char *nom_entree(size_t /*index*/) override

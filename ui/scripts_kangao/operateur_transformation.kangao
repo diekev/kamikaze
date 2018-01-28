@@ -1,0 +1,42 @@
+disposition "operateur_transformation" {
+    ligne {
+        étiquette(valeur="Ordre Transformation")
+        liste(valeur="pre"; attache="ordre_transformation";
+              items=[{nom="Pré-transformation", valeur="pre"}, {nom="Post-transformation", valeur="post"}])
+    }
+    ligne {
+        étiquette(valeur="Ordre Rotation")
+        liste(valeur="xyz"; attache="ordre_rotation"
+            items=[{nom="XYZ", valeur="xyz"},
+                   {nom="XZY", valeur="xzy"},
+                   {nom="YXZ", valeur="yxz"},
+                   {nom="YZX", valeur="yzx"},
+                   {nom="ZXY", valeur="zxy"},
+                   {nom="ZYX", valeur="zyx"}
+            ])
+    }
+    ligne {
+        étiquette(valeur="Translation")
+        vecteur(valeur=""; attache="translation"; min="-10"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Rotation")
+        vecteur(valeur=""; attache="rotation"; min="0"; max="360")
+    }
+    ligne {
+        étiquette(valeur="Taille")
+        vecteur(valeur=""; attache="taille"; min="0"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Pivot")
+        vecteur(valeur=""; attache="pivot"; min="-10"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Échelle")
+        décimal(valeur="1"; attache="échelle"; min="0"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Inverse Transformation")
+        case(valeur="faux"; attache="inverse")
+    }
+}

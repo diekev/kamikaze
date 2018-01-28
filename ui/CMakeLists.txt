@@ -43,6 +43,23 @@ set(FICHIERS_KANGAO
 	scripts_kangao/menu_fichier.kangao
 	scripts_kangao/menu_objet.kangao
 	scripts_kangao/menu_prereglage.kangao
+	scripts_kangao/operateur_bruit.kangao
+	scripts_kangao/operateur_commutateur.kangao
+	scripts_kangao/operateur_couleur.kangao
+	scripts_kangao/operateur_creation_boite.kangao
+	scripts_kangao/operateur_creation_cercle.kangao
+	scripts_kangao/operateur_creation_cone.kangao
+	scripts_kangao/operateur_creation_courbes.kangao
+	scripts_kangao/operateur_creation_grille.kangao
+	scripts_kangao/operateur_creation_icosphere.kangao
+	scripts_kangao/operateur_creation_nuage_point.kangao
+	scripts_kangao/operateur_creation_torus.kangao
+	scripts_kangao/operateur_creation_tube.kangao
+	scripts_kangao/operateur_dispersion_points.kangao
+	scripts_kangao/operateur_normal.kangao
+	scripts_kangao/operateur_randomise_attribut.kangao
+	scripts_kangao/operateur_suppression_attribut.kangao
+	scripts_kangao/operateur_transformation.kangao
 )
 
 add_compile_options(-fPIC)

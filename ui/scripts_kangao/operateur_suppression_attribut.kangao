@@ -1,0 +1,21 @@
+disposition "operateur_suppression_attribut" {
+    ligne {
+        étiquette(valeur="Nom attribut")
+        chaine(valeur=""; attache="nom_attribut"; infobulle="Nom de l'attribut à randomiser.")
+    }
+    ligne {
+        étiquette(valeur="Type attribut")
+        liste(valeur="octet"; attache="type_attribut";
+            items=[
+                {nom="Octet", valeur="octet"},
+                {nom="Entier", valeur="entier"},
+                {nom="Décimal", valeur="décimal"},
+                {nom="Chaîne", valeur="chaine"},
+                {nom="Vecteur 2D", valeur="vecteur_2d"},
+                {nom="Vecteur 3D", valeur="vecteur_3d"},
+                {nom="Vecteur 4D", valeur="vecteur_4d"},
+                {nom="Matrice 3x3", valeur="matrice_3x3"},
+                {nom="Matrice 4x4", valeur="matrice_4x4"},
+            ])
+    }
+}

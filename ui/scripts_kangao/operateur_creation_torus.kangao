@@ -1,0 +1,26 @@
+disposition "operateur_creation_torus" {
+    ligne {
+        étiquette(valeur="Centre")
+        vecteur(valeur=""; attache="centre"; min="-10"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Rayon mineur")
+        décimal(valeur="0"; attache="rayon_mineur"; min="0"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Rayon majeur")
+        décimal(valeur="1"; attache="rayon_majeur"; min="0"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Segments mineurs")
+        entier(valeur="24"; attache="vertices"; min="4"; max="100")
+    }
+    ligne {
+        étiquette(valeur="Segments majeurs")
+        entier(valeur="48"; attache="vertices"; min="4"; max="100")
+    }
+    ligne {
+        étiquette(valeur="Échelle")
+        décimal(valeur="1"; attache="échelle"; min="0"; max="10")
+    }
+}

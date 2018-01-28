@@ -1,0 +1,14 @@
+disposition "operateur_creation_nuage_point" {
+    ligne {
+        étiquette(valeur="Nombre de points")
+        entier(valeur="1000"; attache="nombre_points"; min="1"; max="100000")
+    }
+    ligne {
+        étiquette(valeur="Limite Minimale")
+        vecteur(valeur=""; attache="limite_min"; min="-10"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Limite Maximale")
+        vecteur(valeur=""; attache="limite_max"; min="-10"; max="10")
+    }
+}

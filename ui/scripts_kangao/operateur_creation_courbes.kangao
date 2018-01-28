@@ -1,0 +1,30 @@
+disposition "operateur_creation_courbes" {
+    ligne {
+        étiquette(valeur="Méthode")
+        liste(valeur="vertices"; attache="méthode"; items=[{nom="Vertices", valeur="vertices"}, {nom="Polygones", valeur="polygones"}])
+    }
+    ligne {
+        étiquette(valeur="Graine")
+        entier(valeur="1"; attache="graine"; min="1"; max="100000")
+    }
+    ligne {
+        étiquette(valeur="Nombre Courbes")
+        entier(valeur="100"; attache="nombre_courbes"; min="1"; max="1000"; infobulle="Nombre de courbes par polygone")
+    }
+    ligne {
+        étiquette(valeur="Segments")
+        entier(valeur="1"; attache="segments"; min="1"; max="10"; infobulle="Nombre de segments dans chaque courbe")
+    }
+    ligne {
+        étiquette(valeur="Taille")
+        décimal(valeur="0"; attache="taille"; min="0"; max="10"; infobulle="Taille de chaque segment.")
+    }
+    ligne {
+        étiquette(valeur="Direction")
+        liste(valeur="normal"; attache="direction"; items=[{nom="Normal", valeur="normal"}, {nom="Personnalisée", valeur="personnalisée"}])
+    }
+    ligne {
+        étiquette(valeur="Normale")
+        vecteur(valeur=""; attache="normale"; min="-1"; max="1"; infobulle="Direction de la courbe.")
+    }
+}

@@ -1,0 +1,40 @@
+disposition "operateur_bruit" {
+    ligne {
+        étiquette(valeur="Bruit")
+		liste(valeur="simplex"; attache="bruit";
+		      items=[{nom="Simplex", valeur="simplex"}, {nom="Perlin", valeur="perlin"}, {nom="Flux", valeur="flux"}])
+    }
+    ligne {
+        étiquette(valeur="Direction")
+		liste(valeur="unique"; attache="direction";
+		      items=[{nom="X", valeur="x"}, {nom="Y", valeur="y"}, {nom="Z", valeur="z"}, {nom="Toutes", valeur="toutes"}, {nom="Normal", valeur="normal"}])
+    }
+    ligne {
+        étiquette(valeur="Taille")
+        décimal(valeur="1"; attache="taille"; min="0"; max="20")
+    }
+    ligne {
+        étiquette(valeur="Octaves")
+        entier(valeur="1"; attache="octaves"; min="1"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Fréquence")
+        décimal(valeur="1"; attache="frequence"; min="0"; max="1")
+    }
+    ligne {
+        étiquette(valeur="Amplitude")
+        décimal(valeur="1"; attache="amplitude"; min="0"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Persistence")
+        décimal(valeur="1"; attache="persistence"; min="0"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Lacunarité")
+        décimal(valeur="1"; attache="lacunarité"; min="0"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Temps")
+        décimal(valeur="1"; attache="temps"; min="0"; max="10")
+    }
+}
