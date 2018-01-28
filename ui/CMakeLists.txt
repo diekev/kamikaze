@@ -85,7 +85,6 @@ add_library(kmk_ui STATIC
 	editeur_proprietes.h
 	fenetre_principale.h
 	repondant_commande.h
-	utils_ui.h
 
 	nodes/node_compound.h
 	nodes/node_connection.h
@@ -105,7 +104,6 @@ add_library(kmk_ui STATIC
 	editeur_proprietes.cc
 	fenetre_principale.cc
 	repondant_commande.cc
-	utils_ui.cc
 
 	nodes/node_compound.cc
 	nodes/node_connection.cc
