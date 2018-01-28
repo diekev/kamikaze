@@ -31,7 +31,6 @@
 #include "factory.h"
 
 class Modifier;
-class ParamCallback;
 class Ray;
 class ViewerContext;
 

@@ -31,7 +31,6 @@
 
 class Context;
 class Main;
-class ParamCallback;
 
 struct DonneesCommande {
 	int souris = 0;
