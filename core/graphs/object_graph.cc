@@ -43,6 +43,13 @@ Graph::Graph(const Context &contexte)
 	ajoute(noeud_sortie);
 }
 
+Graph::~Graph()
+{
+	for (auto &lien : m_liens) {
+		delete lien;
+	}
+}
+
 void Graph::ajoute(Noeud *noeud)
 {
 	m_noeuds.push_back(std::unique_ptr<Noeud>(noeud));

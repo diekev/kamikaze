@@ -96,6 +96,8 @@ void RepondantCommande::acheve_commande_modale(const DonneesCommande &donnees_co
 	}
 
 	m_commande_modale->termine_execution_modale(m_main, *m_contexte, donnees_commande);
+
+	delete m_commande_modale;
 	m_commande_modale = nullptr;
 }
 

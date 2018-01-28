@@ -92,6 +92,7 @@ class Graph {
 
 public:
 	explicit Graph(const Context &contexte);
+	~Graph();
 
 	void ajoute(Noeud *noeud);
 	void enleve(Noeud *noeud);
