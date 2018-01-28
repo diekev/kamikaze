@@ -35,7 +35,7 @@ class QMenu;
 class QtConnection;
 class QtNode;
 class QtNodeGraphicsScene;
-class QtPort;
+class VueEditeurNoeud;
 
 namespace kangao {
 
@@ -43,42 +43,10 @@ class GestionnaireInterface;
 
 }  /* namespace kangao */
 
-class NodeView : public QGraphicsView {
-	kangao::GestionnaireInterface *m_gestionnaire = nullptr;
-	RepondantCommande *m_repondant_commande = nullptr;
-
-	QMenu *m_menu_contexte = nullptr;
-	QMenu *m_menu_ajout_noeud = nullptr;
-
-public:
-	explicit NodeView(
-			RepondantCommande *repondant,
-			kangao::GestionnaireInterface *gestionnaire,
-			QWidget *parent = nullptr);
-
-	explicit NodeView(QGraphicsScene *scene, QWidget *parent = nullptr);
-
-	void menu_ajout_noeud(QMenu *menu);
-
-	void mousePressEvent(QMouseEvent *event) override;
-
-	void mouseDoubleClickEvent(QMouseEvent *event) override;
-
-	void mouseReleaseEvent(QMouseEvent *event) override;
-
-	/* Reimplement wheelEvent to avoid getting conflicts between zooming and
-	 * scrolling. */
-	void wheelEvent(QWheelEvent *event) override;
-
-	void mouseMoveEvent(QMouseEvent *event) override;
-
-	void keyPressEvent(QKeyEvent *event) override;
-};
-
 class QtNodeEditor : public WidgetBase {
 	Q_OBJECT
 
-	NodeView *m_view;
+	VueEditeurNoeud *m_view;
 	QtNodeGraphicsScene *m_graphics_scene;
 
 	QMenu *m_zoom_sub_menu;

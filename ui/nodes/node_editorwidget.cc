@@ -40,6 +40,7 @@
 #include "node_node.h"
 #include "node_port.h"
 #include "node_scene.h"
+#include "vue_editeur_noeud.h"
 
 #include "repondant_commande.h"
 
@@ -72,7 +73,7 @@ QtNodeEditor::QtNodeEditor(
 		kangao::GestionnaireInterface *gestionnaire,
 		QWidget *parent)
     : WidgetBase(parent)
-	, m_view(new NodeView(repondant, gestionnaire, this))
+	, m_view(new VueEditeurNoeud(repondant, gestionnaire, this))
 	, m_graphics_scene(new QtNodeGraphicsScene())
 {
 	m_main_layout->addWidget(m_view);
@@ -109,7 +110,6 @@ bool QtNodeEditor::isContextMenuEnabled()
 {
 	return m_context_menu_enabled;
 }
-
 
 QGraphicsItem *QtNodeEditor::itemAtExceptActiveConnection(const QPointF &pos)
 {
@@ -1105,125 +1105,4 @@ void QtNodeEditor::sendNotification() const
 {
 	auto scene = m_context->scene;
 	scene->notify_listeners(event_type::node | event_type::modified);
-}
-
-/* ************************************************************************** */
-
-NodeView::NodeView(
-		RepondantCommande *repondant,
-		kangao::GestionnaireInterface *gestionnaire,
-		QWidget *parent)
-    : QGraphicsView(parent)
-	, m_repondant_commande(repondant)
-	, m_gestionnaire(gestionnaire)
-{
-	kangao::DonneesInterface donnees;
-	donnees.manipulable = nullptr;
-	donnees.conteneur = nullptr;
-	donnees.repondant_bouton = m_repondant_commande;
-
-	const auto texte_entree = kangao::contenu_fichier("interface/menu_editeur_noeud.kangao");
-	m_menu_contexte = m_gestionnaire->compile_menu(donnees, texte_entree.c_str());
-
-	setDragMode(QGraphicsView::ScrollHandDrag);
-}
-
-NodeView::NodeView(QGraphicsScene *scene, QWidget *parent)
-    : QGraphicsView(scene, parent)
-{
-	setDragMode(QGraphicsView::ScrollHandDrag);
-}
-
-void NodeView::menu_ajout_noeud(QMenu *menu)
-{
-	m_menu_ajout_noeud = menu;
-}
-
-void NodeView::keyPressEvent(QKeyEvent *event)
-{
-	if (event->key() == Qt::Key_A) {
-		/* À FAIRE : vérifie si nous sommes en mode édition? */
-		m_menu_ajout_noeud->popup(QCursor::pos());
-	}
-	else {
-		DonneesCommande donnees;
-		donnees.cle = event->key();
-
-		m_repondant_commande->appele_commande("graphe", donnees);
-	}
-}
-
-void NodeView::wheelEvent(QWheelEvent *event)
-{
-	this->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
-
-	const auto factor = 1.15f;
-	const auto zoom = ((event->delta() > 0) ? factor : 1.0f / factor);
-
-	this->scale(zoom, zoom);
-}
-
-void NodeView::mouseMoveEvent(QMouseEvent *event)
-{
-	const auto position = mapToScene(event->pos());
-
-	DonneesCommande donnees;
-	donnees.souris = Qt::LeftButton;
-	donnees.x = position.x();
-	donnees.y = position.y();
-
-	m_repondant_commande->ajourne_commande_modale(donnees);
-}
-
-void NodeView::mousePressEvent(QMouseEvent *event)
-{
-	switch (event->button()) {
-		case Qt::LeftButton:
-		{
-			const auto position = mapToScene(event->pos());
-
-			DonneesCommande donnees;
-			donnees.souris = Qt::LeftButton;
-			donnees.x = position.x();
-			donnees.y = position.y();
-
-			m_repondant_commande->appele_commande_modale("graphe", donnees);
-			break;
-		}
-		case Qt::MiddleButton:
-		{
-			/* À FAIRE : montre infos noeud. */
-			break;
-		}
-		case Qt::RightButton:
-		{
-			m_gestionnaire->ajourne_menu("Éditeur Noeud");
-			m_menu_contexte->popup(event->globalPos());
-			break;
-		}
-	}
-}
-
-void NodeView::mouseDoubleClickEvent(QMouseEvent *event)
-{
-	const auto position = mapToScene(event->pos());
-
-	DonneesCommande donnees;
-	donnees.double_clique = true;
-	donnees.souris = Qt::LeftButton;
-	donnees.x = position.x();
-	donnees.y = position.y();
-
-	m_repondant_commande->appele_commande("graphe", donnees);
-}
-
-void NodeView::mouseReleaseEvent(QMouseEvent *event)
-{
-	const auto position = mapToScene(event->pos());
-
-	DonneesCommande donnees;
-	donnees.x = position.x();
-	donnees.y = position.y();
-
-	m_repondant_commande->acheve_commande_modale(donnees);
 }

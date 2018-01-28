@@ -84,6 +84,7 @@ add_library(kmk_ui STATIC
 	nodes/node_node.h
 	nodes/node_port.h
 	nodes/node_scene.h
+	nodes/vue_editeur_noeud.h
 
 	${test_hdr_moc}
 
@@ -106,6 +107,7 @@ add_library(kmk_ui STATIC
 	nodes/node_editorwidget.cc
 	nodes/node_node.cc
 	nodes/node_port.cc
+	nodes/vue_editeur_noeud.cc
 
 	${FICHIERS_KANGAO}
 )
