@@ -37,7 +37,7 @@ enum {
 };
 
 class CommandManager;
-class MainWindow;
+class FenetrePrincipale;
 class UsineCommande;
 
 class Main final {
@@ -52,7 +52,7 @@ class Main final {
 
 	bool m_projet_ouvert = false;
 
-	MainWindow *m_fenetre_principale = nullptr;
+	FenetrePrincipale *m_fenetre_principale = nullptr;
 
 	CommandManager *m_gestionnaire_commandes = nullptr;
 	UsineCommande *m_usine_commandes = nullptr;
@@ -65,7 +65,7 @@ public:
 	Main(const Main &other) = delete;
 	Main &operator=(const Main &other) = delete;
 
-	void fenetre_principale(MainWindow *fenetre);
+	void fenetre_principale(FenetrePrincipale *fenetre);
 
 	void initialize();
 	void charge_greffons();

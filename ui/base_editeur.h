@@ -31,15 +31,15 @@
 class QFrame;
 class QHBoxLayout;
 
-class WidgetBase : public kangao::ConteneurControles, public ContextListener {
+class BaseEditeur : public kangao::ConteneurControles, public ContextListener {
 protected:
 	QFrame *m_frame;
 	QHBoxLayout *m_layout;
 	QHBoxLayout *m_main_layout;
 
 public:
-	explicit WidgetBase(QWidget *parent = nullptr);
-	virtual ~WidgetBase() = default;
+	explicit BaseEditeur(QWidget *parent = nullptr);
+	virtual ~BaseEditeur() = default;
 
 	void active(bool yesno);
 	void set_active();

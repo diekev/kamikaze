@@ -29,10 +29,11 @@
 #include <QPainter>
 #include <QTextCursor>
 
+#include "editeur_graphe.h"
+
 #include "node_constants.h"
 #include "node_compound.h"
 #include "node_port.h"
-#include "node_editorwidget.h"
 
 static constexpr auto NODE_HEADER_TITLE_FONT_SIZE = 12;
 static constexpr auto NODE_HEADER_ICON_SIZE = 20.0f;
@@ -317,7 +318,7 @@ void QtNode::setTitlePosition()
 	}
 }
 
-void QtNode::setEditor(QtNodeEditor *editor)
+void QtNode::setEditor(EditeurGraphe *editor)
 {
 	m_editor = editor;
 }

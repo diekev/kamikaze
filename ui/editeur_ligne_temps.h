@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "widgetbase.h"
+#include "base_editeur.h"
 
 class QDoubleSpinBox;
 class QGridLayout;
@@ -41,7 +41,7 @@ class RepondantBouton;
 
 }  /* namespace kangao */
 
-class TimeLineWidget : public WidgetBase {
+class EditeurLigneTemps : public BaseEditeur {
 	Q_OBJECT
 
 	QSlider *m_slider;
@@ -57,7 +57,7 @@ class TimeLineWidget : public WidgetBase {
 	bool m_timer_has_started = false;
 
 public:
-	explicit TimeLineWidget(kangao::RepondantBouton *repondant, QWidget *parent = nullptr);
+	explicit EditeurLigneTemps(kangao::RepondantBouton *repondant, QWidget *parent = nullptr);
 
 	void update_state(event_type event) override;
 

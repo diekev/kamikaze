@@ -22,7 +22,7 @@
  *
  */
 
-#include "timeline_widget.h"
+#include "editeur_ligne_temps.h"
 
 #include <kamikaze/context.h>
 #include <kangao/kangao.h>
@@ -39,8 +39,8 @@
 
 #include "core/scene.h"
 
-TimeLineWidget::TimeLineWidget(kangao::RepondantBouton *repondant, QWidget *parent)
-    : WidgetBase(parent)
+EditeurLigneTemps::EditeurLigneTemps(kangao::RepondantBouton *repondant, QWidget *parent)
+	: BaseEditeur(parent)
     , m_timer(new QTimer(this))
 {
 	m_vbox_layout = new QVBoxLayout();
@@ -132,7 +132,7 @@ TimeLineWidget::TimeLineWidget(kangao::RepondantBouton *repondant, QWidget *pare
 	connect(m_timer, SIGNAL(timeout()), this, SLOT(updateFrame()));
 }
 
-void TimeLineWidget::update_state(event_type event)
+void EditeurLigneTemps::update_state(event_type event)
 {
 	if (event != (event_type::time | event_type::modified)) {
 		return;
@@ -161,21 +161,21 @@ void TimeLineWidget::update_state(event_type event)
 	}
 }
 
-void TimeLineWidget::setStartFrame(int value)
+void EditeurLigneTemps::setStartFrame(int value)
 {
 	this->set_active();
 	auto scene = m_context->scene;
 	scene->startFrame(value);
 }
 
-void TimeLineWidget::setEndFrame(int value)
+void EditeurLigneTemps::setEndFrame(int value)
 {
 	this->set_active();
 	auto scene = m_context->scene;
 	scene->endFrame(value);
 }
 
-void TimeLineWidget::setCurrentFrame(int value)
+void EditeurLigneTemps::setCurrentFrame(int value)
 {
 	this->set_active();
 	auto scene = m_context->scene;
@@ -183,14 +183,14 @@ void TimeLineWidget::setCurrentFrame(int value)
 	scene->updateForNewFrame(*m_context);
 }
 
-void TimeLineWidget::setFPS(double value)
+void EditeurLigneTemps::setFPS(double value)
 {
 	this->set_active();
 	auto scene = m_context->scene;
 	scene->framesPerSecond(value);
 }
 
-void TimeLineWidget::updateFrame() const
+void EditeurLigneTemps::updateFrame() const
 {
 	auto scene = m_context->scene;
 	auto value = scene->currentFrame();

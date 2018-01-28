@@ -22,7 +22,7 @@
  *
  */
 
-#include "viewer.h"
+#include "editeur_canevas.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
@@ -44,7 +44,7 @@
 
 #include "grid.h"
 
-Viewer::Viewer(QWidget *parent)
+Canevas::Canevas(QWidget *parent)
     : QGLWidget(parent)
     , m_camera(new Camera(m_width, m_height))
     , m_viewer_context()
@@ -52,13 +52,13 @@ Viewer::Viewer(QWidget *parent)
 	setFocusPolicy(Qt::FocusPolicy::StrongFocus);
 }
 
-Viewer::~Viewer()
+Canevas::~Canevas()
 {
 	delete m_camera;
 	delete m_grid;
 }
 
-void Viewer::initializeGL()
+void Canevas::initializeGL()
 {
 	glewExperimental = GL_TRUE;
 	const auto &err = glewInit();
@@ -77,7 +77,7 @@ void Viewer::initializeGL()
 	m_camera->update();
 }
 
-void Viewer::resizeGL(int w, int h)
+void Canevas::resizeGL(int w, int h)
 {
 	glViewport(0, 0, (GLsizei)w, (GLsizei)h);
 	m_camera->resize(w, h);
@@ -85,7 +85,7 @@ void Viewer::resizeGL(int w, int h)
 	m_height = h;
 }
 
-void Viewer::paintGL()
+void Canevas::paintGL()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -188,7 +188,7 @@ void Viewer::paintGL()
 	}
 }
 
-void Viewer::mousePressEvent(QMouseEvent *e)
+void Canevas::mousePressEvent(QMouseEvent *e)
 {
 	const int x = e->pos().x();
 	const int y = e->pos().y();
@@ -229,7 +229,7 @@ void Viewer::mousePressEvent(QMouseEvent *e)
 	m_base->set_active();
 }
 
-void Viewer::mouseMoveEvent(QMouseEvent *e)
+void Canevas::mouseMoveEvent(QMouseEvent *e)
 {
 	if (m_mouse_button == MOUSE_NONE) {
 		return;
@@ -242,13 +242,13 @@ void Viewer::mouseMoveEvent(QMouseEvent *e)
 	update();
 }
 
-void Viewer::mouseReleaseEvent(QMouseEvent */*e*/)
+void Canevas::mouseReleaseEvent(QMouseEvent */*e*/)
 {
 	m_mouse_button = MOUSE_NONE;
 	update();
 }
 
-void Viewer::keyPressEvent(QKeyEvent *e)
+void Canevas::keyPressEvent(QKeyEvent *e)
 {
 	switch (e->key()) {
 		case Qt::Key_Delete:
@@ -261,7 +261,7 @@ void Viewer::keyPressEvent(QKeyEvent *e)
 	m_base->set_active();
 }
 
-void Viewer::wheelEvent(QWheelEvent *e)
+void Canevas::wheelEvent(QWheelEvent *e)
 {
 	if (e->delta() < 0) {
 		m_mouse_button = MOUSE_SCROLL_DOWN;
@@ -275,7 +275,7 @@ void Viewer::wheelEvent(QWheelEvent *e)
 	m_base->set_active();
 }
 
-void Viewer::intersectScene(int x, int y) const
+void Canevas::intersectScene(int x, int y) const
 {
 	const auto &start = unproject(glm::vec3(x, m_height - y, 0.0f));
 	const auto &end = unproject(glm::vec3(x, m_height - y, 1.0f));
@@ -287,7 +287,7 @@ void Viewer::intersectScene(int x, int y) const
 	m_context->scene->intersect(ray);
 }
 
-void Viewer::selectObject(int x, int y) const
+void Canevas::selectObject(int x, int y) const
 {
 	float z;
 	glReadPixels(x, m_height - y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &z);
@@ -296,14 +296,14 @@ void Viewer::selectObject(int x, int y) const
 	m_context->scene->selectObject(pos);
 }
 
-glm::vec3 Viewer::unproject(const glm::vec3 &pos) const
+glm::vec3 Canevas::unproject(const glm::vec3 &pos) const
 {
 	const auto &MV = m_camera->MV();
 	const auto &P = m_camera->P();
 	return glm::unProject(pos, MV, P, glm::vec4(0, 0, m_width, m_height));
 }
 
-void Viewer::changeBackground()
+void Canevas::changeBackground()
 {
 	const auto &color = QColorDialog::getColor();
 
@@ -314,7 +314,7 @@ void Viewer::changeBackground()
 	}
 }
 
-void Viewer::drawGrid(bool b)
+void Canevas::drawGrid(bool b)
 {
 	m_draw_grid = b;
 	update();
@@ -322,9 +322,9 @@ void Viewer::drawGrid(bool b)
 
 /* ************************************************************************** */
 
-ViewerWidget::ViewerWidget(QWidget *parent)
-    : WidgetBase(parent)
-    , m_viewer(new Viewer(this))
+EditeurCanvas::EditeurCanvas(QWidget *parent)
+	: BaseEditeur(parent)
+	, m_viewer(new Canevas(this))
 {
 	m_viewer->set_base(this);
 
@@ -348,7 +348,7 @@ ViewerWidget::ViewerWidget(QWidget *parent)
 	m_main_layout->addLayout(vert_layout);
 }
 
-void ViewerWidget::update_state(event_type event)
+void EditeurCanvas::update_state(event_type event)
 {
 	if (get_category(event) == event_type::node) {
 		/* Ignore all events from edit mode stuff. */

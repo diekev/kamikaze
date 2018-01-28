@@ -18,7 +18,7 @@
 **
 ****************************************************************************/
 
-#include "node_editorwidget.h"
+#include "editeur_graphe.h"
 
 #include <QApplication>
 #include <QToolTip>
@@ -40,11 +40,11 @@
 
 /* ************************************************************************** */
 
-QtNodeEditor::QtNodeEditor(
+EditeurGraphe::EditeurGraphe(
 		RepondantCommande *repondant,
 		kangao::GestionnaireInterface *gestionnaire,
 		QWidget *parent)
-    : WidgetBase(parent)
+	: BaseEditeur(parent)
 	, m_view(new VueEditeurNoeud(repondant, gestionnaire, this))
 	, m_graphics_scene(new QtNodeGraphicsScene())
 {
@@ -67,12 +67,12 @@ QtNodeEditor::QtNodeEditor(
 	setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
-QtNodeEditor::~QtNodeEditor()
+EditeurGraphe::~EditeurGraphe()
 {
 	delete m_graphics_scene;
 }
 
-QGraphicsItem *QtNodeEditor::itemAtExceptActiveConnection(const QPointF &pos)
+QGraphicsItem *EditeurGraphe::itemAtExceptActiveConnection(const QPointF &pos)
 {
 	const auto &items = m_graphics_scene->items(QRectF(pos - QPointF(1, 1), QSize(3, 3)));
 	const auto is_active = (m_active_connection != nullptr);
@@ -96,7 +96,7 @@ QGraphicsItem *QtNodeEditor::itemAtExceptActiveConnection(const QPointF &pos)
 	return nullptr;
 }
 
-QtConnection *QtNodeEditor::nodeOverConnection(QtNode *node)
+QtConnection *EditeurGraphe::nodeOverConnection(QtNode *node)
 {
 	if (!node->hasInputs() || !node->hasOutputs()) {
 		return nullptr;
@@ -158,7 +158,7 @@ QtConnection *QtNodeEditor::nodeOverConnection(QtNode *node)
 	return nullptr;
 }
 
-bool QtNodeEditor::eventFilter(QObject *object, QEvent *event)
+bool EditeurGraphe::eventFilter(QObject *object, QEvent *event)
 {
 	auto mouseEvent = static_cast<QGraphicsSceneMouseEvent *>(event);
 
@@ -197,7 +197,7 @@ bool QtNodeEditor::eventFilter(QObject *object, QEvent *event)
 	return QObject::eventFilter(object, event);
 }
 
-bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
+bool EditeurGraphe::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 {
 	switch (static_cast<int>(mouseEvent->button())) {
 		case Qt::LeftButton:
@@ -343,7 +343,7 @@ bool QtNodeEditor::mouseClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 	return true;
 }
 
-bool QtNodeEditor::mouseDoubleClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
+bool EditeurGraphe::mouseDoubleClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 {
 
 	std::cerr << __func__ << '\n';
@@ -403,14 +403,14 @@ bool QtNodeEditor::mouseDoubleClickHandler(QGraphicsSceneMouseEvent *mouseEvent)
 	return true;
 }
 
-void QtNodeEditor::enterObjectNode(QAction */*action*/)
+void EditeurGraphe::enterObjectNode(QAction */*action*/)
 {
 	/* À FAIRE */
 	m_context->eval_ctx->edit_mode = true;
 	m_context->scene->notify_listeners(event_type::node | event_type::selected);
 }
 
-bool QtNodeEditor::mouseMoveHandler(QGraphicsSceneMouseEvent *mouseEvent)
+bool EditeurGraphe::mouseMoveHandler(QGraphicsSceneMouseEvent *mouseEvent)
 {
 	if (!m_mouse_down) {
 		return true;
@@ -443,7 +443,7 @@ bool QtNodeEditor::mouseMoveHandler(QGraphicsSceneMouseEvent *mouseEvent)
 	return true;
 }
 
-bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
+bool EditeurGraphe::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 {
 	m_mouse_down = false;
 
@@ -521,7 +521,7 @@ bool QtNodeEditor::mouseReleaseHandler(QGraphicsSceneMouseEvent *mouseEvent)
 	return true;
 }
 
-void QtNodeEditor::rubberbandSelection(QGraphicsSceneMouseEvent *mouseEvent)
+void EditeurGraphe::rubberbandSelection(QGraphicsSceneMouseEvent *mouseEvent)
 {
 	/* Mouse is pressed and moves => draw rubberband */
 	const auto x = mouseEvent->lastScenePos().x();
@@ -546,7 +546,7 @@ void QtNodeEditor::rubberbandSelection(QGraphicsSceneMouseEvent *mouseEvent)
 	m_rubber_band->setRect(minX, minY, maxX - minX, maxY - minY);
 }
 
-void QtNodeEditor::selectNode(QtNode *node, QGraphicsSceneMouseEvent *mouseEvent)
+void EditeurGraphe::selectNode(QtNode *node, QGraphicsSceneMouseEvent *mouseEvent)
 {
 	if (!ctrlPressed()) {
 		deselectAll();
@@ -565,7 +565,7 @@ void QtNodeEditor::selectNode(QtNode *node, QGraphicsSceneMouseEvent *mouseEvent
 	}
 }
 
-void QtNodeEditor::selectConnection(QtConnection *connection)
+void EditeurGraphe::selectConnection(QtConnection *connection)
 {
 	if (!ctrlPressed()) {
 		deselectAll();
@@ -581,7 +581,7 @@ void QtNodeEditor::selectConnection(QtConnection *connection)
 	}
 }
 
-void QtNodeEditor::deselectAll()
+void EditeurGraphe::deselectAll()
 {
 	setCursor(Qt::ArrowCursor);
 	deleteAllActiveConnections();
@@ -589,7 +589,7 @@ void QtNodeEditor::deselectAll()
 	deselectNodes();
 }
 
-void QtNodeEditor::deleteAllActiveConnections()
+void EditeurGraphe::deleteAllActiveConnections()
 {
 	const auto &items = m_graphics_scene->items();
 	QtNode *node;
@@ -604,7 +604,7 @@ void QtNodeEditor::deleteAllActiveConnections()
 	m_active_connection = nullptr;
 }
 
-void QtNodeEditor::deselectConnections()
+void EditeurGraphe::deselectConnections()
 {
 	for (const auto &connection : m_selected_connections) {
 		if (connection->isVisible()) {
@@ -615,7 +615,7 @@ void QtNodeEditor::deselectConnections()
 	m_selected_connections.clear();
 }
 
-void QtNodeEditor::deselectNodes()
+void EditeurGraphe::deselectNodes()
 {
 	if (m_context->eval_ctx->edit_mode) {
 		auto object = static_cast<Object *>(m_context->scene->active_node());
@@ -632,7 +632,7 @@ void QtNodeEditor::deselectNodes()
 	m_selected_nodes.clear();
 }
 
-QtNode *QtNodeEditor::nodeWithActiveConnection()
+QtNode *EditeurGraphe::nodeWithActiveConnection()
 {
 	if (!m_active_connection) {
 		return nullptr;
@@ -666,7 +666,7 @@ std::pair<node_port_pair, node_port_pair> get_base_target_pairs(QtConnection *co
 	};
 }
 
-void QtNodeEditor::splitConnectionWithNode(QtNode *node)
+void EditeurGraphe::splitConnectionWithNode(QtNode *node)
 {
 	const auto &connection = m_hover_connection;
 
@@ -702,7 +702,7 @@ void QtNodeEditor::splitConnectionWithNode(QtNode *node)
 	scene->notify_listeners(event_type::node | event_type::modified);
 }
 
-void QtNodeEditor::connectionEstablished(QtConnection *connection)
+void EditeurGraphe::connectionEstablished(QtConnection *connection)
 {
 	const auto &pairs = get_base_target_pairs(connection, false);
 	const auto &base = pairs.first;
@@ -712,7 +712,7 @@ void QtNodeEditor::connectionEstablished(QtConnection *connection)
 	               target.first, target.second->getPortName(), true);
 }
 
-QtNode *QtNodeEditor::getLastSelectedNode() const
+QtNode *EditeurGraphe::getLastSelectedNode() const
 {
 	if (m_selected_nodes.empty()) {
 		return nullptr;
@@ -721,12 +721,12 @@ QtNode *QtNodeEditor::getLastSelectedNode() const
 	return m_selected_nodes.back();
 }
 
-void QtNodeEditor::menu_ajout_noeud(QMenu *menu)
+void EditeurGraphe::menu_ajout_noeud(QMenu *menu)
 {
 	m_view->menu_ajout_noeud(menu);
 }
 
-void QtNodeEditor::toFront(QtNode *node)
+void EditeurGraphe::toFront(QtNode *node)
 {
 	if (!node) {
 		return;
@@ -758,7 +758,7 @@ void QtNodeEditor::toFront(QtNode *node)
 	}
 }
 
-void QtNodeEditor::toBack(QtNode *node)
+void EditeurGraphe::toBack(QtNode *node)
 {
 	if (!node) {
 		return;
@@ -774,12 +774,12 @@ void QtNodeEditor::toBack(QtNode *node)
 	}
 }
 
-bool QtNodeEditor::ctrlPressed()
+bool EditeurGraphe::ctrlPressed()
 {
 	return (QGuiApplication::keyboardModifiers() & Qt::ControlModifier);
 }
 
-bool QtNodeEditor::isAlreadySelected(QtNode *node)
+bool EditeurGraphe::isAlreadySelected(QtNode *node)
 {
 	auto iter = std::find(m_selected_nodes.begin(),
 	                      m_selected_nodes.end(),
@@ -788,7 +788,7 @@ bool QtNodeEditor::isAlreadySelected(QtNode *node)
 	return (iter != m_selected_nodes.end());
 }
 
-bool QtNodeEditor::isAlreadySelected(QtConnection *connection)
+bool EditeurGraphe::isAlreadySelected(QtConnection *connection)
 {
 	auto iter = std::find(m_selected_connections.begin(),
 	                      m_selected_connections.end(),
@@ -797,7 +797,7 @@ bool QtNodeEditor::isAlreadySelected(QtConnection *connection)
 	return (iter != m_selected_connections.end());
 }
 
-void QtNodeEditor::update_state(event_type event)
+void EditeurGraphe::update_state(event_type event)
 {
 	if (event == static_cast<event_type>(-1)) {
 		return;
@@ -918,12 +918,12 @@ void QtNodeEditor::update_state(event_type event)
 	}
 }
 
-void QtNodeEditor::setActiveObject(ObjectNodeItem *node)
+void EditeurGraphe::setActiveObject(ObjectNodeItem *node)
 {
 	m_context->scene->set_active_node(node->scene_node());
 }
 
-void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to, bool notify)
+void EditeurGraphe::nodesConnected(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to, bool notify)
 {
 	auto scene = m_context->scene;
 
@@ -957,7 +957,7 @@ void QtNodeEditor::nodesConnected(QtNode *from, const QString &socket_from, QtNo
 	}
 }
 
-void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to, bool notify)
+void EditeurGraphe::connectionRemoved(QtNode *from, const QString &socket_from, QtNode *to, const QString &socket_to, bool notify)
 {
 	auto scene = m_context->scene;
 
@@ -989,7 +989,7 @@ void QtNodeEditor::connectionRemoved(QtNode *from, const QString &socket_from, Q
 	}
 }
 
-void QtNodeEditor::sendNotification() const
+void EditeurGraphe::sendNotification() const
 {
 	auto scene = m_context->scene;
 	scene->notify_listeners(event_type::node | event_type::modified);

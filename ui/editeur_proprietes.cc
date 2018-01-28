@@ -22,7 +22,7 @@
  *
  */
 
-#include "properties_widget.h"
+#include "editeur_proprietes.h"
 
 #include <iostream>
 
@@ -49,8 +49,8 @@
  * --------- Widget Interface
  */
 
-PropertiesWidget::PropertiesWidget(QWidget *parent)
-    : WidgetBase(parent)
+EditeurProprietes::EditeurProprietes(QWidget *parent)
+	: BaseEditeur(parent)
     , m_widget(new QWidget())
 	, m_conteneur_disposition(new QWidget())
     , m_scroll(new QScrollArea())
@@ -70,7 +70,7 @@ PropertiesWidget::PropertiesWidget(QWidget *parent)
 	m_disposition_widget->addWidget(m_conteneur_disposition);
 }
 
-void PropertiesWidget::update_state(event_type event)
+void EditeurProprietes::update_state(event_type event)
 {
 	kangao::Manipulable *manipulable = nullptr;
 	auto scene = m_context->scene;
@@ -132,7 +132,7 @@ void PropertiesWidget::update_state(event_type event)
 	dessine_interface(manipulable, chemin_interface);
 }
 
-void PropertiesWidget::dessine_interface(kangao::Manipulable *manipulable, const char *chemin_interface)
+void EditeurProprietes::dessine_interface(kangao::Manipulable *manipulable, const char *chemin_interface)
 {
 	manipulable->ajourne_proprietes();
 
@@ -153,7 +153,7 @@ void PropertiesWidget::dessine_interface(kangao::Manipulable *manipulable, const
 	m_manipulable = manipulable;
 }
 
-void PropertiesWidget::ajourne_manipulable()
+void EditeurProprietes::ajourne_manipulable()
 {
 	m_manipulable->ajourne_proprietes();
 
@@ -161,14 +161,14 @@ void PropertiesWidget::ajourne_manipulable()
 
 	if (m_context->eval_ctx->edit_mode) {
 		/* À FAIRE : n'évalue le graphe que si le noeud était connecté. */
-		evalObjectGraph();
+		evalue_graphe();
 	}
 	else {
-		tagObjectUpdate();
+		ajourne_objet();
 	}
 }
 
-void PropertiesWidget::efface_disposition()
+void EditeurProprietes::efface_disposition()
 {
 	if (!m_conteneur_disposition->layout()) {
 		return;
@@ -182,7 +182,7 @@ void PropertiesWidget::efface_disposition()
 	temp.setLayout(m_conteneur_disposition->layout());
 }
 
-void PropertiesWidget::evalObjectGraph()
+void EditeurProprietes::evalue_graphe()
 {
 	this->set_active();
 	auto scene = m_context->scene;
@@ -197,7 +197,7 @@ void PropertiesWidget::evalObjectGraph()
 	scene->notify_listeners(static_cast<event_type>(-1));
 }
 
-void PropertiesWidget::tagObjectUpdate()
+void EditeurProprietes::ajourne_objet()
 {
 	this->set_active();
 	m_context->scene->tagObjectUpdate();

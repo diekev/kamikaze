@@ -48,7 +48,7 @@
 #include "scene.h"
 #include "undo.h"
 
-#include "ui/mainwindow.h"
+#include "ui/fenetre_principale.h"
 
 namespace fs = std::experimental::filesystem;
 namespace sf = numero7::systeme_fichier;
@@ -97,7 +97,7 @@ Main::~Main()
 	delete m_gestionnaire_commandes;
 }
 
-void Main::fenetre_principale(MainWindow *fenetre)
+void Main::fenetre_principale(FenetrePrincipale *fenetre)
 {
 	m_fenetre_principale = fenetre;
 }

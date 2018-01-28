@@ -29,7 +29,7 @@
 #include <tbb/task.h>
 
 class Context;
-class MainWindow;
+class FenetrePrincipale;
 
 /* Apparently we can not have a class derived from both a QObject and a
  * tbb::task so this class is to be used in conjunction with a tbb::task derived
@@ -39,7 +39,7 @@ class TaskNotifier : public QObject {
 	Q_OBJECT
 
 public:
-	explicit TaskNotifier(MainWindow *window);
+	explicit TaskNotifier(FenetrePrincipale *window);
 
 	void signalStart();
 	void signalProgressUpdate(float progress);

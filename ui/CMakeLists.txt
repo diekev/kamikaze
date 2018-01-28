@@ -68,29 +68,28 @@ add_compile_options(-fPIC)
 qt5_wrap_cpp(
 	test_hdr_moc
 
-	nodes/node_editorwidget.h
-
-	mainwindow.h
-	outliner_widget.h
-	properties_widget.h
-	timeline_widget.h
-	viewer.h
+	editeur_arborescence.h
+	editeur_canevas.h
+	editeur_graphe.h
+	editeur_ligne_temps.h
+	editeur_proprietes.h
+	fenetre_principale.h
 )
 
 add_library(kmk_ui STATIC
-	mainwindow.h
-	outliner_widget.h
-	properties_widget.h
+	base_editeur.h
+	editeur_arborescence.h
+	editeur_canevas.h
+	editeur_graphe.h
+	editeur_ligne_temps.h
+	editeur_proprietes.h
+	fenetre_principale.h
 	repondant_commande.h
-	timeline_widget.h
 	utils_ui.h
-	viewer.h
-	widgetbase.h
 
 	nodes/node_compound.h
 	nodes/node_connection.h
 	nodes/node_constants.h
-	nodes/node_editorwidget.h
 	nodes/node_node.h
 	nodes/node_port.h
 	nodes/node_scene.h
@@ -98,18 +97,18 @@ add_library(kmk_ui STATIC
 
 	${test_hdr_moc}
 
-	mainwindow.cc
-	outliner_widget.cc
-	properties_widget.cc
+	base_editeur.cc
+	editeur_arborescence.cc
+	editeur_canevas.cc
+	editeur_graphe.cc
+	editeur_ligne_temps.cc
+	editeur_proprietes.cc
+	fenetre_principale.cc
 	repondant_commande.cc
-	timeline_widget.cc
 	utils_ui.cc
-	viewer.cc
-	widgetbase.cc
 
 	nodes/node_compound.cc
 	nodes/node_connection.cc
-	nodes/node_editorwidget.cc
 	nodes/node_node.cc
 	nodes/node_port.cc
 	nodes/vue_editeur_noeud.cc

@@ -32,7 +32,7 @@ static constexpr auto NODE_ACTION_TARGET = 2;
 
 class QtPort;
 class QtConnection;
-class QtNodeEditor;
+class EditeurGraphe;
 
 /* ************************************************************************** */
 
@@ -65,7 +65,7 @@ class QtNode : public QGraphicsPathItem {
 	QGraphicsPathItem *m_body;
 	QBrush m_header_brush;
 	QPen m_pen;
-	QtNodeEditor *m_editor;
+	EditeurGraphe *m_editor;
 	QGraphicsScene *m_scene;
 	TextItem *m_title_label;
 	QFont m_font_header;
@@ -94,7 +94,7 @@ public:
 
 	/* Set the editor; this is called(by the editor) as soon as a node is added
 	 * to the scene. Do not use this(only for internal use) */
-	void setEditor(QtNodeEditor *editor);
+	void setEditor(EditeurGraphe *editor);
 
 	/* Set the scene; this is called(by the editor) as soon as a node is added
 	 * to the scene. Do not use this (only for internal use) */

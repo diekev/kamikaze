@@ -29,7 +29,7 @@
 #include <kamikaze/renderbuffer.h>
 
 #include "core/kamikaze_main.h"
-#include "ui/mainwindow.h"
+#include "ui/fenetre_principale.h"
 
 int main(int argc, char *argv[])
 {
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 		splash->showMessage("Loading plugins...");
 		main.charge_greffons();
 
-		MainWindow w(&main);
+		FenetrePrincipale w(&main);
 		w.setWindowTitle(QCoreApplication::applicationName());
 		w.showMaximized();
 

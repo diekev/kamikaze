@@ -20,11 +20,12 @@
 
 #include "node_compound.h"
 
-#include "node_editorwidget.h"
+#include "core/object.h"
+
+#include "editeur_graphe.h"
+
 #include "node_port.h"
 #include "node_scene.h"
-
-#include "core/object.h"
 
 ObjectNodeItem::ObjectNodeItem(SceneNode *scene_node, const QString &title, QGraphicsItem *parent)
     : QtNode(title, parent)

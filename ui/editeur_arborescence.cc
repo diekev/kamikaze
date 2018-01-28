@@ -22,7 +22,7 @@
  *
  */
 
-#include "outliner_widget.h"
+#include "editeur_arborescence.h"
 
 #include <kamikaze/context.h>
 #include <kamikaze/noeud.h>
@@ -131,7 +131,7 @@ TreeWidget::TreeWidget(QWidget *parent)
 	setHeaderHidden(true);
 }
 
-void TreeWidget::set_base(WidgetBase *base)
+void TreeWidget::set_base(BaseEditeur *base)
 {
 	m_base = base;
 }
@@ -177,8 +177,8 @@ void TreeWidget::dropEvent(QDropEvent *event)
 	QTreeView::dropEvent(event);
 }
 
-OutlinerTreeWidget::OutlinerTreeWidget(QWidget *parent)
-    : WidgetBase(parent)
+EditeurArborescence::EditeurArborescence(QWidget *parent)
+	: BaseEditeur(parent)
     , m_tree_widget(new TreeWidget(this))
 {
 	m_main_layout->addWidget(m_tree_widget);
@@ -195,7 +195,7 @@ OutlinerTreeWidget::OutlinerTreeWidget(QWidget *parent)
 	        this, SLOT(handleItemSelection()));
 }
 
-void OutlinerTreeWidget::update_state(event_type event)
+void EditeurArborescence::update_state(event_type event)
 {
 	if (event == static_cast<event_type>(-1)) {
 		return;
@@ -221,7 +221,7 @@ void OutlinerTreeWidget::update_state(event_type event)
 	item->setExpanded(scene->has_flags(SCENE_OL_EXPANDED));
 }
 
-void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
+void EditeurArborescence::handleItemExpanded(QTreeWidgetItem *item)
 {
 	auto scene_item = dynamic_cast<SceneTreeWidgetItem *>(item);
 
@@ -270,7 +270,7 @@ void OutlinerTreeWidget::handleItemExpanded(QTreeWidgetItem *item)
 	}
 }
 
-void OutlinerTreeWidget::handleItemCollapsed(QTreeWidgetItem *item)
+void EditeurArborescence::handleItemCollapsed(QTreeWidgetItem *item)
 {
 	auto scene_item = dynamic_cast<SceneTreeWidgetItem *>(item);
 
@@ -289,7 +289,7 @@ void OutlinerTreeWidget::handleItemCollapsed(QTreeWidgetItem *item)
 	}
 }
 
-void OutlinerTreeWidget::handleItemSelection()
+void EditeurArborescence::handleItemSelection()
 {
 	auto items = m_tree_widget->selectedItems();
 

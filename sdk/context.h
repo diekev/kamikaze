@@ -28,11 +28,11 @@
 
 #include "primitive.h"
 
-class MainWindow;
+class FenetrePrincipale;
 class NodeFactory;
 class Scene;
 class UsineOperateur;
-class WidgetBase;
+class BaseEditeur;
 
 enum {
 	TIME_DIR_FORWARD = 0,
@@ -54,8 +54,8 @@ struct Context {
 	Scene *scene;
 	PrimitiveFactory *primitive_factory;
 	UsineOperateur *usine_operateur;
-	MainWindow *main_window;
-	WidgetBase *active_widget;
+	FenetrePrincipale *main_window;
+	BaseEditeur *active_widget;
 };
 
 class ViewerContext {

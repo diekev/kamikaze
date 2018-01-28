@@ -22,7 +22,7 @@
  *
  */
 
-#include "widgetbase.h"
+#include "base_editeur.h"
 
 #include <QApplication>
 #include <QFrame>
@@ -30,7 +30,7 @@
 #include <QStyle>
 #include <QVariant>
 
-WidgetBase::WidgetBase(QWidget *parent)
+BaseEditeur::BaseEditeur(QWidget *parent)
 	: kangao::ConteneurControles(parent)
     , m_frame(new QFrame(this))
     , m_layout(new QHBoxLayout())
@@ -55,13 +55,13 @@ WidgetBase::WidgetBase(QWidget *parent)
 	this->active(false);
 }
 
-void WidgetBase::active(bool yesno)
+void BaseEditeur::active(bool yesno)
 {
 	m_frame->setProperty("state", (yesno) ? "on" : "off");
 	m_frame->setStyle(QApplication::style());
 }
 
-void WidgetBase::set_active()
+void BaseEditeur::set_active()
 {
 	if (m_context->active_widget) {
 		m_context->active_widget->active(false);
@@ -71,7 +71,7 @@ void WidgetBase::set_active()
 	this->active(true);
 }
 
-void WidgetBase::mousePressEvent(QMouseEvent *e)
+void BaseEditeur::mousePressEvent(QMouseEvent *e)
 {
 	this->set_active();
 	QWidget::mousePressEvent(e);

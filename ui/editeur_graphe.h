@@ -22,7 +22,7 @@
 
 #include <QGraphicsView>
 
-#include "widgetbase.h"
+#include "base_editeur.h"
 
 #include "scene.h"
 
@@ -43,7 +43,7 @@ class GestionnaireInterface;
 
 }  /* namespace kangao */
 
-class QtNodeEditor : public WidgetBase {
+class EditeurGraphe : public BaseEditeur {
 	Q_OBJECT
 
 	VueEditeurNoeud *m_view;
@@ -62,12 +62,12 @@ class QtNodeEditor : public WidgetBase {
 	QVector<QtConnection *> m_selected_connections;
 
 public:
-	explicit QtNodeEditor(
+	explicit EditeurGraphe(
 			RepondantCommande *repondant,
 			kangao::GestionnaireInterface *gestionnaire,
 			QWidget *parent = nullptr);
 
-	virtual ~QtNodeEditor();
+	virtual ~EditeurGraphe();
 
 	/* Interface */
 

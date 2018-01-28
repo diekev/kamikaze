@@ -30,7 +30,7 @@
 #include <kamikaze/context.h>
 #include <stack>
 
-#include "widgetbase.h"
+#include "base_editeur.h"
 #include "util/util_input.h"
 
 class Camera;
@@ -63,7 +63,7 @@ public:
 	}
 };
 
-class Viewer : public QGLWidget {
+class Canevas : public QGLWidget {
 	Q_OBJECT
 
 	int m_mouse_button = MOUSE_NONE;
@@ -80,7 +80,7 @@ class Viewer : public QGLWidget {
 	MatrixStack m_stack = {};
 
 	Context *m_context = nullptr;
-	WidgetBase *m_base = nullptr;
+	BaseEditeur *m_base = nullptr;
 
 	/* Get the world space position of the given point. */
 	glm::vec3 unproject(const glm::vec3 &pos) const;
@@ -90,8 +90,8 @@ public Q_SLOTS:
 	void drawGrid(bool b);
 
 public:
-	explicit Viewer(QWidget *parent = nullptr);
-	~Viewer();
+	explicit Canevas(QWidget *parent = nullptr);
+	~Canevas();
 
 	void initializeGL();
 	void paintGL();
@@ -114,7 +114,7 @@ public:
 		m_context = context;
 	}
 
-	void set_base(WidgetBase *base)
+	void set_base(BaseEditeur *base)
 	{
 		m_base = base;
 	}
@@ -122,13 +122,13 @@ public:
 
 /* ************************************************************************** */
 
-class ViewerWidget : public WidgetBase {
+class EditeurCanvas : public BaseEditeur {
 	Q_OBJECT
 
-	Viewer *m_viewer;
+	Canevas *m_viewer;
 
 public:
-	explicit ViewerWidget(QWidget *parent = nullptr);
+	explicit EditeurCanvas(QWidget *parent = nullptr);
 
 	void update_state(event_type event) override;
 };

@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "widgetbase.h"
+#include "base_editeur.h"
 
 class QScrollArea;
 class QVBoxLayout;
@@ -35,7 +35,7 @@ class Manipulable;
 
 }  /* namespace kangao */
 
-class PropertiesWidget : public WidgetBase {
+class EditeurProprietes : public BaseEditeur {
 	Q_OBJECT
 
 	QWidget *m_widget;
@@ -48,8 +48,8 @@ class PropertiesWidget : public WidgetBase {
 	kangao::Manipulable *m_manipulable = nullptr;
 
 public:
-	explicit PropertiesWidget(QWidget *parent = nullptr);
-	~PropertiesWidget() = default;
+	explicit EditeurProprietes(QWidget *parent = nullptr);
+	~EditeurProprietes() = default;
 
 	void update_state(event_type event) override;
 
@@ -60,7 +60,7 @@ private:
 
 	void efface_disposition();
 
-	void evalObjectGraph();
+	void evalue_graphe();
 
-	void tagObjectUpdate();
+	void ajourne_objet();
 };

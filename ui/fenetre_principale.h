@@ -39,35 +39,27 @@ class GestionnaireInterface;
 
 }  /* namespace kangao */
 
-class MainWindow : public QMainWindow {
+class FenetrePrincipale : public QMainWindow {
 	Q_OBJECT
 
-	QProgressBar *m_progress_bar;
+	Main *m_main = nullptr;
 
-	Main *m_main;
+	Context m_contexte;
+	EvaluationContext m_contexte_evaluation;
 
-	QTimer *m_timer;
-
-	bool m_has_glwindow;
-
-	Context m_context;
-	EvaluationContext m_eval_context;
-
-	QMenu *m_add_object_menu;
-	QMenu *m_add_nodes_menu;
-	QMenu *m_edit_menu;
-	QMenu *m_add_window_menu;
-
-	QToolBar *m_tool_bar;
-
-	QDockWidget *m_viewer_dock = nullptr;
-
-	RepondantCommande *m_repondant_commande;
+	RepondantCommande *m_repondant_commande = nullptr;
 	kangao::GestionnaireInterface *m_gestionnaire = nullptr;
 
+	QMenu *m_menu_ajout_noeud = nullptr;
+
+	QProgressBar *m_barre_progres = nullptr;
+
+	QDockWidget *m_dock_canevas = nullptr;
+	bool m_possede_canevas = false;
+
 public:
-	explicit MainWindow(Main *main, QWidget *parent = nullptr);
-	~MainWindow();
+	explicit FenetrePrincipale(Main *main, QWidget *parent = nullptr);
+	~FenetrePrincipale();
 
 public Q_SLOTS:
 	/* Progress Bar */
@@ -78,22 +70,22 @@ public Q_SLOTS:
 
 private:
 	void genere_menu_fichier();
-	void generateWindowMenu();
-	void generateNodeMenu();
-	void generatePresetMenu();
+	void genere_menu_fenetre();
+	void genere_menu_noeud();
+	void genere_menu_prereglages();
 
-	void ecrit_reglages() const;
 	void charge_reglages();
+	void ecrit_reglages() const;
 
 	void closeEvent(QCloseEvent *) override;
 
 private Q_SLOTS:
-	void addTimeLineWidget();
-	void addGraphEditorWidget();
-	void addGraphOutlinerWidget();
-	void addGLViewerWidget();
-	void addOutlinerWidget();
-	void addPropertiesWidget();
+	void ajout_editeur_arborescence();
+	void ajout_editeur_canevas();
+	void ajout_editeur_graphe();
+	void ajout_editeur_ligne_temps();
+	void ajout_editeur_propriete();
+	void ajout_editeurs_arborescence_graphe();
 
 	void mis_a_jour_menu_fichier_recent();
 };

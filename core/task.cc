@@ -24,11 +24,11 @@
 
 #include "task.h"
 
-#include "ui/mainwindow.h"
+#include "ui/fenetre_principale.h"
 
 /* ************************ */
 
-TaskNotifier::TaskNotifier(MainWindow *window)
+TaskNotifier::TaskNotifier(FenetrePrincipale *window)
 {
 	if (!window) {
 		return;

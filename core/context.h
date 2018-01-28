@@ -28,10 +28,10 @@
 #include <kamikaze/primitive.h>
 
 class EvaluationContext;
-class MainWindow;
+class FenetrePrincipale;
 class Scene;
 class UsineOperateur;
-class WidgetBase;
+class BaseEditeur;
 
 /* - 0x000000ff Category.
  * - 0x0000ff00 Action.
