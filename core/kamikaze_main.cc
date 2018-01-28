@@ -32,6 +32,7 @@
 #include <kamikaze/segmentprim.h>
 
 #include <dlfcn.h>
+#include <iostream>
 
 #include <QFileDialog>
 #include <QMessageBox>

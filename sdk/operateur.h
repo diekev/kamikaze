@@ -24,10 +24,11 @@
 
 #pragma once
 
-#include "persona.h"
+#include <kangao/manipulable.h>
 
 #include <set>
 #include <unordered_map>
+#include <vector>
 
 class Context;
 class PrimitiveCollection;
@@ -108,7 +109,7 @@ enum type_operateur {
  * d'entrées du noeud. Chaque opérateur est responsable d'appeler l'exécution
  * des noeuds se trouvant en son amont à travers la méthode virtuelle 'execute'.
  */
-class Operateur : public Persona {
+class Operateur : public kangao::Manipulable {
 	int m_nombre_entrees = 0;
 	int m_nombre_sorties = 0;
 	bool m_besoin_execution = true;
@@ -299,6 +300,11 @@ public:
 	 * Retourne le nom de cet opérateur.
 	 */
 	virtual const char *nom() = 0;
+
+	/**
+	 * Retourne le chemin vers la définition de l'interface de cet opérateur.
+	 */
+	virtual const char *chemin_interface() const;
 };
 
 /* ************************************************************************** */

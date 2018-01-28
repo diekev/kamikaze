@@ -27,6 +27,8 @@
 #include "widgetbase.h"
 #include "paramcallback.h"
 
+#include <kangao/conteneur_controles.h>
+
 class ParamCallback;
 class Persona;
 class QFrame;
@@ -34,13 +36,22 @@ class QGridLayout;
 class QHBoxLayout;
 class QScrollArea;
 
-class PropertiesWidget : public WidgetBase {
+namespace kangao {
+
+class Manipulable;
+
+}  /* namespace kangao */
+
+class PropertiesWidget : public WidgetBase, public kangao::ConteneurControles {
 	Q_OBJECT
 
 	QWidget *m_widget;
+	QWidget *m_conteneur_disposition;
 	QScrollArea *m_scroll;
 	QGridLayout *m_glayout;
 	ParamCallback m_callback;
+
+	kangao::Manipulable *m_manipulable = nullptr;
 
 public:
 	explicit PropertiesWidget(QWidget *parent = nullptr);
@@ -51,6 +62,11 @@ public:
 private:
 	void drawProperties(Persona *persona, bool set_context);
 
+	void dessine_interface(kangao::Manipulable *manipulable, const char *chemin_interface);
+
+	void ajourne_manipulable() override;
+
+	void efface_disposition();
 private Q_SLOTS:
 	void evalObjectGraph();
 	void tagObjectUpdate();

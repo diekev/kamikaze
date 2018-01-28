@@ -80,20 +80,12 @@ public:
 	{
 		sorties(1);
 
-		add_prop("size", "Size", property_type::prop_vec3);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
-
-		add_prop("center", "Center", property_type::prop_vec3);
-		set_prop_min_max(-10.0f, 10.0f);
-		set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
-
-		add_prop("uniform_scale", "Uniform Scale", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(1.0f);
+		ajoute_propriete("taille", kangao::TypePropriete::VECTEUR);
+		ajoute_propriete("centre", kangao::TypePropriete::VECTEUR);
+		ajoute_propriete("échelle", kangao::TypePropriete::DECIMAL);
 	}
 
-	const char *chemin_interface() const
+	const char *chemin_interface() const override
 	{
 		return "interface/operateur_creation_boite.kangao";
 	}
@@ -118,9 +110,9 @@ public:
 		PointList *points = mesh->points();
 		points->reserve(8);
 
-		const auto dimension = eval_vec3("size");
-		const auto center = eval_vec3("center");
-		const auto uniform_scale = eval_float("uniform_scale");
+		const auto dimension = evalue_vecteur("taille");
+		const auto center = evalue_vecteur("centre");
+		const auto uniform_scale = evalue_decimal("échelle");
 
 		/* todo: expose this to the UI */
 		const auto &x_div = 2;
@@ -179,48 +171,17 @@ public:
 		entrees(1);
 		sorties(1);
 
-		EnumProperty xform_enum_prop;
-		xform_enum_prop.insert("Pre Transform", 0);
-		xform_enum_prop.insert("Post Transform", 1);
-
-		add_prop("xform_order", "Transform Order", property_type::prop_enum);
-		set_prop_enum_values(xform_enum_prop);
-
-		EnumProperty rot_enum_prop;
-		rot_enum_prop.insert("X Y Z", 0);
-		rot_enum_prop.insert("X Z Y", 1);
-		rot_enum_prop.insert("Y X Z", 2);
-		rot_enum_prop.insert("Y Z X", 3);
-		rot_enum_prop.insert("Z X Y", 4);
-		rot_enum_prop.insert("Z Y X", 5);
-
-		add_prop("rot_order", "Rotation Order", property_type::prop_enum);
-		set_prop_enum_values(rot_enum_prop);
-
-		add_prop("translate", "Translate", property_type::prop_vec3);
-		set_prop_min_max(-10.0f, 10.0f);
-		set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
-
-		add_prop("rotate", "Rotate", property_type::prop_vec3);
-		set_prop_min_max(0.0f, 360.0f);
-		set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
-
-		add_prop("scale", "Scale", property_type::prop_vec3);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
-
-		add_prop("pivot", "Pivot", property_type::prop_vec3);
-		set_prop_min_max(-10.0f, 10.0f);
-		set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
-
-		add_prop("uniform_scale", "Uniform Scale", property_type::prop_float);
-		set_prop_min_max(0.0f, 1000.0f);
-		set_prop_default_value_float(1.0f);
-
-		add_prop("invert_xform", "Invert Transformation", property_type::prop_bool);
+		ajoute_propriete("ordre_transformation", kangao::TypePropriete::ENUM);
+		ajoute_propriete("ordre_rotation", kangao::TypePropriete::ENUM);
+		ajoute_propriete("translation", kangao::TypePropriete::VECTEUR);
+		ajoute_propriete("rotation", kangao::TypePropriete::VECTEUR);
+		ajoute_propriete("taille", kangao::TypePropriete::VECTEUR);
+		ajoute_propriete("pivot", kangao::TypePropriete::VECTEUR);
+		ajoute_propriete("échelle", kangao::TypePropriete::DECIMAL);
+		ajoute_propriete("inverse", kangao::TypePropriete::BOOL);
 	}
 
-	const char *chemin_interface() const
+	const char *chemin_interface() const override
 	{
 		return "interface/operateur_transformation.kangao";
 	}
@@ -244,13 +205,13 @@ public:
 	{
 		entree(0)->requiers_collection(m_collection, contexte, temps);
 
-		const auto translate = eval_vec3("translate");
-		const auto rotate = eval_vec3("rotate");
-		const auto scale = eval_vec3("scale");
-		const auto pivot = eval_vec3("pivot");
-		const auto uniform_scale = eval_float("uniform_scale");
-		const auto transform_type = eval_int("xform_order");
-		const auto rot_order = eval_int("rot_order");
+		const auto translate = evalue_vecteur("translation");
+		const auto rotate = evalue_vecteur("rotation");
+		const auto scale = evalue_vecteur("taille");
+		const auto pivot = evalue_vecteur("pivot");
+		const auto uniform_scale = evalue_decimal("échelle");
+		const auto transform_type = evalue_liste("ordre_transformation");
+		const auto rot_order = evalue_liste("ordre_rotation");
 
 		/* determine the rotatation order */
 		int rot_ord[6][3] = {
@@ -315,32 +276,15 @@ public:
 	{
 		sorties(1);
 
-		add_prop("center", "Center", property_type::prop_vec3);
-		set_prop_min_max(-10.0f, 10.0f);
-		set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
-
-		add_prop("major_radius", "Major Radius", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(1.0f);
-
-		add_prop("minor_radius", "Minor Radius", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(0.25f);
-
-		add_prop("major_segment", "Major Segment", property_type::prop_int);
-		set_prop_min_max(4, 100);
-		set_prop_default_value_int(48);
-
-		add_prop("minor_segment", "Minor Segment", property_type::prop_int);
-		set_prop_min_max(4, 100);
-		set_prop_default_value_int(24);
-
-		add_prop("uniform_scale", "Uniform Scale", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(1.0f);
+		ajoute_propriete("centre", kangao::TypePropriete::VECTEUR);
+		ajoute_propriete("rayon_majeur", kangao::TypePropriete::DECIMAL);
+		ajoute_propriete("rayon_mineur", kangao::TypePropriete::DECIMAL);
+		ajoute_propriete("segments_majeurs", kangao::TypePropriete::ENTIER);
+		ajoute_propriete("segments_mineurs", kangao::TypePropriete::ENTIER);
+		ajoute_propriete("échelle", kangao::TypePropriete::DECIMAL);
 	}
 
-	const char *chemin_interface() const
+	const char *chemin_interface() const override
 	{
 		return "interface/operateur_creation_torus.kangao";
 	}
@@ -362,13 +306,13 @@ public:
 		auto prim = m_collection->build("Mesh");
 		auto mesh = static_cast<Mesh *>(prim);
 
-		const auto center = eval_vec3("center");
-		const auto uniform_scale = eval_float("uniform_scale");
+		const auto center = evalue_vecteur("centre");
+		const auto uniform_scale = evalue_decimal("échelle");
 
-		const auto major_radius = eval_float("major_radius") * uniform_scale;
-		const auto minor_radius = eval_float("minor_radius") * uniform_scale;
-		const auto major_segment = eval_int("major_segment");
-		const auto minor_segment = eval_int("minor_segment");
+		const auto major_radius = evalue_decimal("rayon_majeur") * uniform_scale;
+		const auto minor_radius = evalue_decimal("rayon_mineur") * uniform_scale;
+		const auto major_segment = evalue_entier("segments_majeurs");
+		const auto minor_segment = evalue_entier("segments_mineurs");
 
 		PointList *points = mesh->points();
 		PolygonList *polys = mesh->polys();
@@ -443,24 +387,13 @@ public:
 	{
 		sorties(1);
 
-		add_prop("center", "Center", property_type::prop_vec3);
-		set_prop_min_max(-10.0f, 10.0f);
-		set_prop_default_value_vec3(glm::vec3{0.0f, 0.0f, 0.0f});
-
-		add_prop("size", "Size", property_type::prop_vec3);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
-
-		add_prop("rows", "Rows", property_type::prop_int);
-		set_prop_min_max(2, 100);
-		set_prop_default_value_int(2);
-
-		add_prop("columns", "Columns", property_type::prop_int);
-		set_prop_min_max(2, 100);
-		set_prop_default_value_int(2);
+		ajoute_propriete("centre", kangao::TypePropriete::VECTEUR);
+		ajoute_propriete("taille", kangao::TypePropriete::VECTEUR);
+		ajoute_propriete("lignes", kangao::TypePropriete::ENTIER);
+		ajoute_propriete("colonnes", kangao::TypePropriete::ENTIER);
 	}
 
-	const char *chemin_interface() const
+	const char *chemin_interface() const override
 	{
 		return "interface/operateur_creation_grille.kangao";
 	}
@@ -482,11 +415,11 @@ public:
 		auto prim = m_collection->build("Mesh");
 		auto mesh = static_cast<Mesh *>(prim);
 
-		const auto size = eval_vec3("size");
-		const auto center = eval_vec3("center");
+		const auto size = evalue_vecteur("taille");
+		const auto center = evalue_vecteur("centre");
 
-		const auto rows = eval_int("rows");
-		const auto columns = eval_int("columns");
+		const auto rows = evalue_entier("lignes");
+		const auto columns = evalue_entier("colonnes");
 
 		const auto totpoints = rows * columns;
 
@@ -549,16 +482,11 @@ public:
 	{
 		sorties(1);
 
-		add_prop("vertices", "Vertices", property_type::prop_int);
-		set_prop_min_max(3, 500);
-		set_prop_default_value_int(32);
-
-		add_prop("radius", "Radius", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(1.0f);
+		ajoute_propriete("vertices", kangao::TypePropriete::ENTIER);
+		ajoute_propriete("rayon", kangao::TypePropriete::DECIMAL);
 	}
 
-	const char *chemin_interface() const
+	const char *chemin_interface() const override
 	{
 		return "interface/operateur_creation_cercle.kangao";
 	}
@@ -582,8 +510,8 @@ public:
 		auto prim = m_collection->build("Mesh");
 		auto mesh = static_cast<Mesh *>(prim);
 
-		const auto segs = eval_int("vertices");
-		const auto dia = eval_float("radius");
+		const auto segs = evalue_entier("vertices");
+		const auto dia = evalue_decimal("rayon");
 
 		const auto phid = 2.0f * static_cast<float>(M_PI) / segs;
 		auto phi = 0.0f;
@@ -702,20 +630,12 @@ public:
 	{
 		sorties(1);
 
-		add_prop("vertices", "Vertices", property_type::prop_int);
-		set_prop_min_max(3, 500);
-		set_prop_default_value_int(32);
-
-		add_prop("radius", "Radius", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(1.0f);
-
-		add_prop("depth", "Depth", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(1.0f);
+		ajoute_propriete("vertices", kangao::TypePropriete::ENTIER);
+		ajoute_propriete("rayon", kangao::TypePropriete::DECIMAL);
+		ajoute_propriete("profondeur", kangao::TypePropriete::DECIMAL);
 	}
 
-	const char *chemin_interface() const
+	const char *chemin_interface() const override
 	{
 		return "interface/operateur_creation_tube.kangao";
 	}
@@ -737,9 +657,9 @@ public:
 		auto prim = m_collection->build("Mesh");
 		auto mesh = static_cast<Mesh *>(prim);
 
-		const auto segs = eval_int("vertices");
-		const auto dia = eval_float("radius");
-		const auto depth = eval_float("depth");
+		const auto segs = evalue_entier("vertices");
+		const auto dia = evalue_decimal("rayon");
+		const auto depth = evalue_decimal("profondeur");
 
 		create_cylinder(mesh->points(), mesh->polys(), segs, dia, dia, depth);
 
@@ -759,24 +679,13 @@ public:
 	{
 		sorties(1);
 
-		add_prop("vertices", "Vertices", property_type::prop_int);
-		set_prop_min_max(3, 500);
-		set_prop_default_value_int(32);
-
-		add_prop("minor_radius", "Minor Radius", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(0.0f);
-
-		add_prop("major_radius", "Major Radius", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(1.0f);
-
-		add_prop("depth", "Depth", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(1.0f);
+		ajoute_propriete("vertices", kangao::TypePropriete::ENTIER);
+		ajoute_propriete("rayon_mineur", kangao::TypePropriete::DECIMAL);
+		ajoute_propriete("rayon_majeur", kangao::TypePropriete::DECIMAL);
+		ajoute_propriete("profondeur", kangao::TypePropriete::DECIMAL);
 	}
 
-	const char *chemin_interface() const
+	const char *chemin_interface() const override
 	{
 		return "interface/operateur_creation_cone.kangao";
 	}
@@ -798,10 +707,10 @@ public:
 		auto prim = m_collection->build("Mesh");
 		auto mesh = static_cast<Mesh *>(prim);
 
-		const auto segs = eval_int("vertices");
-		const auto dia1 = eval_float("major_radius");
-		const auto dia2 = eval_float("minor_radius");
-		const auto depth = eval_float("depth");
+		const auto segs = evalue_entier("vertices");
+		const auto dia1 = evalue_decimal("rayon_mineur");
+		const auto dia2 = evalue_decimal("rayon_majeur");
+		const auto depth = evalue_decimal("profondeur");
 
 		create_cylinder(mesh->points(), mesh->polys(), segs, dia1, dia2, depth);
 
@@ -859,12 +768,10 @@ public:
 	{
 		sorties(1);
 
-		add_prop("radius", "Radius", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(1.0f);
+		ajoute_propriete("rayon", kangao::TypePropriete::DECIMAL);
 	}
 
-	const char *chemin_interface() const
+	const char *chemin_interface() const override
 	{
 		return "interface/operateur_creation_icosphere.kangao";
 	}
@@ -886,7 +793,7 @@ public:
 		auto prim = m_collection->build("Mesh");
 		auto mesh = static_cast<Mesh *>(prim);
 
-		const auto dia = eval_float("radius");
+		const auto dia = evalue_decimal("rayon");
 		const auto dia_div = dia / 200.0f;
 
 		PointList *points = mesh->points();
@@ -932,10 +839,10 @@ public:
 		entrees(1);
 		sorties(1);
 
-		add_prop("flip", "Flip", property_type::prop_bool);
+		ajoute_propriete("inverse", kangao::TypePropriete::BOOL);
 	}
 
-	const char *chemin_interface() const
+	const char *chemin_interface() const override
 	{
 		return "interface/operateur_normal.kangao";
 	}
@@ -959,7 +866,7 @@ public:
 	{
 		entree(0)->requiers_collection(m_collection, contexte, temps);
 
-		const auto flip = eval_bool("flip");
+		const auto flip = evalue_bool("inverse");
 
 		for (auto &prim : primitive_iterator(this->m_collection, Mesh::id)) {
 			auto mesh = static_cast<Mesh *>(prim);
@@ -984,20 +891,6 @@ public:
 static const char *NOM_BRUIT = "Bruit";
 static const char *AIDE_BRUIT = "Ajouter du bruit.";
 
-enum {
-	DIRECTION_X = 0,
-	DIRECTION_Y = 1,
-	DIRECTION_Z = 2,
-	DIRECTION_TOUTE = 3,
-	DIRECTION_NORMALE = 4,
-};
-
-enum {
-	BRUIT_SIMPLEX = 0,
-	BRUIT_PERLIN = 1,
-	BRUIT_FLUX = 2,
-};
-
 class OperateurBruit : public Operateur {
 	BruitPerlin3D m_bruit_perlin;
 	BruitFlux3D m_bruit_flux;
@@ -1009,63 +902,27 @@ public:
 		entrees(1);
 		sorties(1);
 
-		EnumProperty prop_enum_bruit;
-		prop_enum_bruit.insert("Simplex", BRUIT_SIMPLEX);
-		prop_enum_bruit.insert("Perlin", BRUIT_PERLIN);
-		prop_enum_bruit.insert("Flux", BRUIT_FLUX);
-
-		add_prop("bruit", "Bruit", property_type::prop_enum);
-		set_prop_enum_values(prop_enum_bruit);
-
-		EnumProperty prop_enum;
-		prop_enum.insert("X", DIRECTION_X);
-		prop_enum.insert("Y", DIRECTION_Y);
-		prop_enum.insert("Z", DIRECTION_Z);
-		prop_enum.insert("Toute", DIRECTION_TOUTE);
-		prop_enum.insert("Normale", DIRECTION_NORMALE);
-
-		add_prop("direction", "Direction", property_type::prop_enum);
-		set_prop_enum_values(prop_enum);
-
-		add_prop("taille", "Taille", property_type::prop_float);
-		set_prop_min_max(0.0f, 20.0f);
-		set_prop_default_value_float(1.0f);
-
-		add_prop("octaves", "Octaves", property_type::prop_int);
-		set_prop_min_max(1, 10);
-		set_prop_default_value_int(1);
-
-		add_prop("frequency", "Frequency", property_type::prop_float);
-		set_prop_min_max(0.0f, 1.0f);
-		set_prop_default_value_float(1.0f);
-
-		add_prop("amplitude", "Amplitude", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(1.0f);
-
-		add_prop("persistence", "Persistence", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(1.0f);
-
-		add_prop("lacunarity", "Lacunarity", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(2.0f);
-
-		add_prop("temps", "Temps", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(2.0f);
+		ajoute_propriete("bruit", kangao::TypePropriete::ENUM);
+		ajoute_propriete("direction", kangao::TypePropriete::ENUM);
+		ajoute_propriete("taille", kangao::TypePropriete::DECIMAL);
+		ajoute_propriete("octaves", kangao::TypePropriete::ENTIER);
+		ajoute_propriete("frequence", kangao::TypePropriete::DECIMAL);
+		ajoute_propriete("amplitude", kangao::TypePropriete::DECIMAL);
+		ajoute_propriete("persistence", kangao::TypePropriete::DECIMAL);
+		ajoute_propriete("lacunarité", kangao::TypePropriete::DECIMAL);
+		ajoute_propriete("temps", kangao::TypePropriete::DECIMAL);
 	}
 
-	const char *chemin_interface() const
+	const char *chemin_interface() const override
 	{
 		return "interface/operateur_bruit.kangao";
 	}
 
-	bool update_properties() override
+	bool ajourne_proprietes() override
 	{
-		const auto bruit = eval_enum("bruit");
+		const auto bruit = evalue_liste("bruit");
 
-		set_prop_visible("temps", bruit == BRUIT_FLUX);
+		rend_propriete_visible("temps", bruit == "flux");
 
 		return true;
 	}
@@ -1089,18 +946,18 @@ public:
 	{
 		entree(0)->requiers_collection(m_collection, contexte, temps);
 
-		const auto taille = eval_float("taille");
+		const auto taille = evalue_decimal("taille");
 		const auto taille_inverse = (taille > 0.0f) ? 1.0f / taille : 0.0f;
-		const auto octaves = eval_int("octaves");
-		const auto lacunarity = eval_float("lacunarity");
-		const auto persistence = eval_float("persistence");
-		const auto ofrequency = eval_float("frequency");
-		const auto oamplitude = eval_float("amplitude");
-		const auto direction = eval_enum("direction");
-		const auto bruit = eval_enum("bruit");
+		const auto octaves = evalue_entier("octaves");
+		const auto lacunarity = evalue_decimal("lacunarité");
+		const auto persistence = evalue_decimal("persistence");
+		const auto ofrequency = evalue_decimal("frequence");
+		const auto oamplitude = evalue_decimal("amplitude");
+		const auto direction = evalue_liste("direction");
+		const auto bruit = evalue_liste("bruit");
 
-		if (bruit == BRUIT_FLUX) {
-			const auto temps_bruit = eval_float("temps");
+		if (bruit == "flux") {
+			const auto temps_bruit = evalue_decimal("temps");
 			m_bruit_flux.change_temps(temps_bruit);
 		}
 
@@ -1114,7 +971,7 @@ public:
 				points = mesh->points();
 				normales = mesh->attribute("normal", ATTR_TYPE_VEC3);
 
-				if (direction == DIRECTION_NORMALE && (normales == nullptr || normales->size() == 0)) {
+				if (direction == "normal" && (normales == nullptr || normales->size() == 0)) {
 					this->ajoute_avertissement("Absence de normales pour calculer le bruit !");
 					continue;
 				}
@@ -1123,7 +980,7 @@ public:
 				auto prim_points = static_cast<PrimPoints *>(prim);
 				points = prim_points->points();
 
-				if (direction == DIRECTION_NORMALE) {
+				if (direction == "normal") {
 					this->ajoute_avertissement("On ne peut calculer le bruit suivant la normale sur un nuage de points !");
 					continue;
 				}
@@ -1143,10 +1000,10 @@ public:
 				auto amplitude = oamplitude;
 
 				for (size_t j = 0; j < octaves; ++j) {
-					if (bruit == BRUIT_SIMPLEX) {
+					if (bruit == "simplex") {
 						valeur += (amplitude * bruit_simplex_3d(x * frequency, y * frequency, z * frequency));
 					}
-					else if (bruit == BRUIT_PERLIN) {
+					else if (bruit == "perlin") {
 						valeur += (amplitude * m_bruit_perlin(x * frequency, y * frequency, z * frequency));
 					}
 					else {
@@ -1157,30 +1014,25 @@ public:
 					amplitude *= persistence;
 				}
 
-				switch (direction) {
-					case DIRECTION_X:
-						point.x += valeur;
-						break;
-					case DIRECTION_Y:
-						point.y += valeur;
-						break;
-					case DIRECTION_Z:
-						point.z += valeur;
-						break;
-					default:
-					case DIRECTION_TOUTE:
-						point.x += valeur;
-						point.y += valeur;
-						point.z += valeur;
-						break;
-					case DIRECTION_NORMALE:
-					{
-						const auto normale = normales->vec3(i);
-						point.x += valeur * normale.x;
-						point.y += valeur * normale.y;
-						point.z += valeur * normale.z;
-						break;
-					}
+				if (direction == "x") {
+					point.x += valeur;
+				}
+				else if (direction == "y") {
+					point.y += valeur;
+				}
+				else if (direction == "z") {
+					point.z += valeur;
+				}
+				else if (direction == "toutes") {
+					point.x += valeur;
+					point.y += valeur;
+					point.z += valeur;
+				}
+				else if (direction == "normal") {
+					const auto normale = normales->vec3(i);
+					point.x += valeur * normale.x;
+					point.y += valeur * normale.y;
+					point.z += valeur * normale.z;
 				}
 			}
 		}
@@ -1192,16 +1044,6 @@ public:
 static const char *NOM_COULEUR = "Couleur";
 static const char *AIDE_COULEUR = "Ajouter de la couleur.";
 
-enum {
-	COLOR_NODE_VERTEX    = 0,
-	COLOR_NODE_PRIMITIVE = 1,
-};
-
-enum {
-	COLOR_NODE_UNIQUE = 0,
-	COLOR_NODE_RANDOM = 1,
-};
-
 class OperateurCouleur : public Operateur {
 public:
 	OperateurCouleur(Noeud *noeud, const Context &contexte)
@@ -1210,30 +1052,13 @@ public:
 		entrees(1);
 		sorties(1);
 
-		EnumProperty scope_enum_prop;
-		scope_enum_prop.insert("Vertex", COLOR_NODE_VERTEX);
-		scope_enum_prop.insert("Primitive", COLOR_NODE_PRIMITIVE);
-
-		add_prop("scope", "Scope", property_type::prop_enum);
-		set_prop_enum_values(scope_enum_prop);
-
-		EnumProperty color_enum_prop;
-		color_enum_prop.insert("Unique", COLOR_NODE_UNIQUE);
-		color_enum_prop.insert("Random", COLOR_NODE_RANDOM);
-
-		add_prop("fill_method", "Fill Method", property_type::prop_enum);
-		set_prop_enum_values(color_enum_prop);
-
-		add_prop("color", "Color", property_type::prop_vec3);
-		set_prop_min_max(0.0f, 1.0f);
-		set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
-
-		add_prop("seed", "Seed", property_type::prop_int);
-		set_prop_min_max(1, 100000);
-		set_prop_default_value_int(1);
+		ajoute_propriete("portée", kangao::TypePropriete::ENUM);
+		ajoute_propriete("méthode", kangao::TypePropriete::ENUM);
+		ajoute_propriete("couleur", kangao::TypePropriete::COULEUR);
+		ajoute_propriete("graine", kangao::TypePropriete::ENTIER);
 	}
 
-	const char *chemin_interface() const
+	const char *chemin_interface() const override
 	{
 		return "interface/operateur_couleur.kangao";
 	}
@@ -1253,17 +1078,17 @@ public:
 		return NOM_COULEUR;
 	}
 
-	bool update_properties() override
+	bool ajourne_proprietes() override
 	{
-		auto method = eval_int("fill_method");
+		auto method = evalue_entier("méthode");
 
-		if (method == COLOR_NODE_UNIQUE) {
-			set_prop_visible("color", true);
-			set_prop_visible("seed", false);
+		if (method == "unique") {
+			rend_propriete_visible("couleur", true);
+			rend_propriete_visible("graine", false);
 		}
-		else if (method == COLOR_NODE_RANDOM) {
-			set_prop_visible("seed", true);
-			set_prop_visible("color", false);
+		else if (method == "aléatoire") {
+			rend_propriete_visible("graine", true);
+			rend_propriete_visible("couleur", false);
 		}
 
 		return true;
@@ -1273,11 +1098,11 @@ public:
 	{
 		entree(0)->requiers_collection(m_collection, contexte, temps);
 
-		const auto &method = eval_int("fill_method");
-		const auto &scope = eval_int("scope");
-		const auto &seed = eval_int("seed");
+		const auto &methode = evalue_entier("méthode");
+		const auto &portee = evalue_entier("graine");
+		const auto &graine = evalue_entier("portée");
 
-		std::mt19937 rng(19937 + seed);
+		std::mt19937 rng(19937 + graine);
 		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
 		for (auto prim : primitive_iterator(this->m_collection)) {
@@ -1295,20 +1120,20 @@ public:
 				continue;
 			}
 
-			if (method == COLOR_NODE_UNIQUE) {
-				const auto &color = eval_vec3("color");
+			if (methode == "unique") {
+				const auto &color = evalue_couleur("color");
 
 				for (size_t i = 0, e = colors->size(); i < e; ++i) {
 					colors->vec3(i, color);
 				}
 			}
-			else if (method == COLOR_NODE_RANDOM) {
-				if (scope == COLOR_NODE_VERTEX) {
+			else if (methode == "aléatoire") {
+				if (portee == "vertices") {
 					for (size_t i = 0, e = colors->size(); i < e; ++i) {
 						colors->vec3(i, glm::vec3{dist(rng), dist(rng), dist(rng)});
 					}
 				}
-				else if (scope == COLOR_NODE_PRIMITIVE) {
+				else if (portee == "primitive") {
 					const auto &color = glm::vec3{dist(rng), dist(rng), dist(rng)};
 
 					for (size_t i = 0, e = colors->size(); i < e; ++i) {
@@ -1379,20 +1204,12 @@ public:
 	{
 		sorties(1);
 
-		add_prop("points_count", "Points Count", property_type::prop_int);
-		set_prop_min_max(1, 100000);
-		set_prop_default_value_int(1000);
-
-		add_prop("bbox_min", "BBox Min", property_type::prop_vec3);
-		set_prop_min_max(-10.0f, 10.0f);
-		set_prop_default_value_vec3(glm::vec3{-1.0f, -1.0f, -1.0f});
-
-		add_prop("bbox_max", "BBox Max", property_type::prop_vec3);
-		set_prop_min_max(-10.0f, 10.0f);
-		set_prop_default_value_vec3(glm::vec3{1.0f, 1.0f, 1.0f});
+		ajoute_propriete("nombre_points", kangao::TypePropriete::ENTIER);
+		ajoute_propriete("limite_min", kangao::TypePropriete::VECTEUR);
+		ajoute_propriete("limite_max", kangao::TypePropriete::VECTEUR);
 	}
 
-	const char *chemin_interface() const
+	const char *chemin_interface() const override
 	{
 		return "interface/operateur_creation_nuage_point.kangao";
 	}
@@ -1414,22 +1231,22 @@ public:
 		auto prim = m_collection->build("PrimPoints");
 		auto points = static_cast<PrimPoints *>(prim);
 
-		const auto &point_count = eval_int("points_count");
+		const auto &nombre_points = evalue_entier("nombre_points");
 
 		auto point_list = points->points();
-		point_list->resize(point_count);
+		point_list->resize(nombre_points);
 
-		const auto &bbox_min = eval_vec3("bbox_min");
-		const auto &bbox_max = eval_vec3("bbox_max");
+		const auto &limite_min = evalue_vecteur("limite_min");
+		const auto &limite_max = evalue_vecteur("limite_max");
 
-		std::uniform_real_distribution<float> dist_x(bbox_min[0], bbox_max[0]);
-		std::uniform_real_distribution<float> dist_y(bbox_min[1], bbox_max[1]);
-		std::uniform_real_distribution<float> dist_z(bbox_min[2], bbox_max[2]);
+		std::uniform_real_distribution<float> dist_x(limite_min[0], limite_max[0]);
+		std::uniform_real_distribution<float> dist_y(limite_min[1], limite_max[1]);
+		std::uniform_real_distribution<float> dist_z(limite_min[2], limite_max[2]);
 		std::mt19937 rng_x(19937);
 		std::mt19937 rng_y(19937 + 1);
 		std::mt19937 rng_z(19937 + 2);
 
-		for (size_t i = 0; i < point_count; ++i) {
+		for (size_t i = 0; i < nombre_points; ++i) {
 			const auto &point = glm::vec3(dist_x(rng_x), dist_y(rng_y), dist_z(rng_z));
 			(*point_list)[i] = point;
 		}
@@ -1451,25 +1268,11 @@ public:
 		entrees(1);
 		sorties(1);
 
-		add_prop("attribute_name", "Name", property_type::prop_string);
-		set_prop_tooltip("Name of the attribute to create.");
-
-		EnumProperty type_enum;
-		type_enum.insert("Byte", ATTR_TYPE_BYTE);
-		type_enum.insert("Integer", ATTR_TYPE_INT);
-		type_enum.insert("Float", ATTR_TYPE_FLOAT);
-		type_enum.insert("String", ATTR_TYPE_STRING);
-		type_enum.insert("2D Vector", ATTR_TYPE_VEC2);
-		type_enum.insert("3D Vector", ATTR_TYPE_VEC3);
-		type_enum.insert("4D Vector", ATTR_TYPE_VEC4);
-		type_enum.insert("3x3 Matrix", ATTR_TYPE_MAT3);
-		type_enum.insert("4x4 Matrix", ATTR_TYPE_MAT4);
-
-		add_prop("attribute_type", "Attribute Type", property_type::prop_enum);
-		set_prop_enum_values(type_enum);
+		ajoute_propriete("nom_attribut", kangao::TypePropriete::CHAINE_CARACTERE);
+		ajoute_propriete("type_attribut", kangao::TypePropriete::ENUM);
 	}
 
-	const char *chemin_interface() const
+	const char *chemin_interface() const override
 	{
 		return "interface/operateur_suppression_attribut.kangao";
 	}
@@ -1493,13 +1296,13 @@ public:
 	{
 		entree(0)->requiers_collection(m_collection, contexte, temps);
 
-		auto name = eval_string("attribute_name");
-		auto attribute_type = static_cast<AttributeType>(eval_enum("attribute_type"));
+		auto nom_attribut = evalue_chaine("nom_attribut");
+		auto type_attribut = evalue_liste("type_attribut");
 
 		for (Primitive *prim : primitive_iterator(m_collection)) {
-			if (prim->has_attribute(name, attribute_type)) {
+			if (prim->has_attribute(nom_attribut, type_attribut)) {
 				std::stringstream ss;
-				ss << prim->name() << " already has an attribute named " << name;
+				ss << prim->name() << " already has an attribute named " << nom_attribut;
 
 				this->ajoute_avertissement(ss.str());
 				continue;
@@ -1510,19 +1313,19 @@ public:
 			if (prim->typeID() == Mesh::id) {
 				auto mesh = static_cast<Mesh *>(prim);
 
-				if (attribute_type == ATTR_TYPE_VEC3) {
+				if (type_attribut == "vecteur_3d") {
 					attrib_size = mesh->points()->size();
 				}
 			}
 			else if (prim->typeID() == PrimPoints::id) {
 				auto point_cloud = static_cast<PrimPoints *>(prim);
 
-				if (attribute_type == ATTR_TYPE_VEC3) {
+				if (type_attribut == "vecteur_3d") {
 					attrib_size = point_cloud->points()->size();
 				}
 			}
 
-			prim->add_attribute(name, attribute_type, attrib_size);
+			prim->add_attribute(nom_attribut, type_attribut, attrib_size);
 		}
 	}
 };
@@ -1540,25 +1343,11 @@ public:
 		entrees(1);
 		sorties(1);
 
-		add_prop("attribute_name", "Name", property_type::prop_string);
-		set_prop_tooltip("Name of the attribute to delete.");
-
-		EnumProperty type_enum;
-		type_enum.insert("Byte", ATTR_TYPE_BYTE);
-		type_enum.insert("Integer", ATTR_TYPE_INT);
-		type_enum.insert("Float", ATTR_TYPE_FLOAT);
-		type_enum.insert("String", ATTR_TYPE_STRING);
-		type_enum.insert("2D Vector", ATTR_TYPE_VEC2);
-		type_enum.insert("3D Vector", ATTR_TYPE_VEC3);
-		type_enum.insert("4D Vector", ATTR_TYPE_VEC4);
-		type_enum.insert("3x3 Matrix", ATTR_TYPE_MAT3);
-		type_enum.insert("4x4 Matrix", ATTR_TYPE_MAT4);
-
-		add_prop("attribute_type", "Attribute Type", property_type::prop_enum);
-		set_prop_enum_values(type_enum);
+		ajoute_propriete("nom_attribut", kangao::TypePropriete::CHAINE_CARACTERE);
+		ajoute_propriete("type_attribut", kangao::TypePropriete::ENUM);
 	}
 
-	const char *chemin_interface() const
+	const char *chemin_interface() const override
 	{
 		return "interface/operateur_suppression_attribut.kangao";
 	}
@@ -1582,15 +1371,15 @@ public:
 	{
 		entree(0)->requiers_collection(m_collection, contexte, temps);
 
-		auto name = eval_string("attribute_name");
-		auto attribute_type = static_cast<AttributeType>(eval_enum("attribute_type"));
+		auto nom_attribut = evalue_chaine("nom_attribut");
+		auto type_attribut = evalue_liste("type_attribut");
 
 		for (Primitive *prim : primitive_iterator(m_collection)) {
-			if (!prim->has_attribute(name, attribute_type)) {
+			if (!prim->has_attribute(nom_attribut, type_attribut)) {
 				continue;
 			}
 
-			prim->remove_attribute(name, attribute_type);
+			prim->remove_attribute(nom_attribut, type_attribut);
 		}
 	}
 };
@@ -1600,15 +1389,7 @@ public:
 static const char *NOM_RANDOMISATION_ATTRIBUT = "Randomisation attribut";
 static const char *AIDE_RANDOMISATION_ATTRIBUT = "Randomisation d'un attribut.";
 
-enum {
-	DIST_CONSTANT = 0,
-	DIST_UNIFORM,
-	DIST_GAUSSIAN,
-	DIST_EXPONENTIAL,
-	DIST_LOGNORMAL,
-	DIST_CAUCHY,
-	DIST_DISCRETE,
-};
+/* À FAIRE : distribution exponentielle, lognormal, cauchy, discrète */
 
 class OperateurRandomisationAttribut : public Operateur {
 public:
@@ -1618,56 +1399,17 @@ public:
 		entrees(1);
 		sorties(1);
 
-		add_prop("attribute_name", "Name", property_type::prop_string);
-		set_prop_tooltip("Name of the attribute to randomise.");
-
-		EnumProperty type_enum;
-		type_enum.insert("Byte", ATTR_TYPE_BYTE);
-		type_enum.insert("Integer", ATTR_TYPE_INT);
-		type_enum.insert("Float", ATTR_TYPE_FLOAT);
-		type_enum.insert("String", ATTR_TYPE_STRING);
-		type_enum.insert("2D Vector", ATTR_TYPE_VEC2);
-		type_enum.insert("3D Vector", ATTR_TYPE_VEC3);
-		type_enum.insert("4D Vector", ATTR_TYPE_VEC4);
-		type_enum.insert("3x3 Matrix", ATTR_TYPE_MAT3);
-		type_enum.insert("4x4 Matrix", ATTR_TYPE_MAT4);
-
-		add_prop("attribute_type", "Attribute Type", property_type::prop_enum);
-		set_prop_enum_values(type_enum);
-
-		EnumProperty dist_enum;
-		dist_enum.insert("Constant", DIST_CONSTANT);
-		dist_enum.insert("Uniform", DIST_UNIFORM);
-		dist_enum.insert("Gaussian", DIST_GAUSSIAN);
-
-		add_prop("distribution", "Distribution", property_type::prop_enum);
-		set_prop_enum_values(dist_enum);
-
-		/* Constant Value */
-		add_prop("value", "Value", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(1.0f);
-
-		/* Min/Max Value */
-		add_prop("min_value", "Min Value", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(0.0f);
-
-		add_prop("max_value", "Max Value", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(1.0f);
-
-		/* Gaussian Distribution */
-		add_prop("mean", "Mean", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(0.0f);
-
-		add_prop("stddev", "Standard Deviation", property_type::prop_float);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_default_value_float(1.0f);
+		ajoute_propriete("nom_attribut", kangao::TypePropriete::CHAINE_CARACTERE);
+		ajoute_propriete("type_attribut", kangao::TypePropriete::ENUM);
+		ajoute_propriete("distribution", kangao::TypePropriete::ENUM);
+		ajoute_propriete("valeur", kangao::TypePropriete::DECIMAL);
+		ajoute_propriete("valeur_min", kangao::TypePropriete::DECIMAL);
+		ajoute_propriete("valeur_max", kangao::TypePropriete::DECIMAL);
+		ajoute_propriete("moyenne", kangao::TypePropriete::DECIMAL);
+		ajoute_propriete("écart_type", kangao::TypePropriete::DECIMAL);
 	}
 
-	const char *chemin_interface() const
+	const char *chemin_interface() const override
 	{
 		return "interface/operateur_randomise_attribut.kangao";
 	}
@@ -1687,15 +1429,15 @@ public:
 		return NOM_RANDOMISATION_ATTRIBUT;
 	}
 
-	bool update_properties() override
+	bool ajourne_proprietes() override
 	{
-		const auto distribution = eval_enum("distribution");
+		const auto distribution = evalue_liste("distribution");
 
-		set_prop_visible("value", distribution == DIST_CONSTANT);
-		set_prop_visible("min_value", distribution == DIST_UNIFORM);
-		set_prop_visible("max_value", distribution == DIST_UNIFORM);
-		set_prop_visible("mean", distribution == DIST_GAUSSIAN);
-		set_prop_visible("stddev", distribution == DIST_GAUSSIAN);
+		rend_propriete_visible("valeur", distribution == "constante");
+		rend_propriete_visible("min_value", distribution == "uniforme");
+		rend_propriete_visible("max_value", distribution == "uniforme");
+		rend_propriete_visible("mean", distribution == "gaussienne");
+		rend_propriete_visible("stddev", distribution == "gaussienne");
 
 		return true;
 	}
@@ -1704,14 +1446,14 @@ public:
 	{
 		entree(0)->requiers_collection(m_collection, contexte, temps);
 
-		auto name = eval_string("attribute_name");
-		auto attribute_type = static_cast<AttributeType>(eval_enum("attribute_type"));
-		auto distribution = eval_enum("distribution");
-		auto value = eval_float("value");
-		auto min_value = eval_float("min_value");
-		auto max_value = eval_float("max_value");
-		auto mean = eval_float("mean");
-		auto stddev = eval_float("stddev");
+		auto name = evalue_chaine("nom_attribut");
+		auto attribute_type = evalue_liste("type_attribut");
+		auto distribution = evalue_liste("distribution");
+		auto value = evalue_decimal("valeur");
+		auto min_value = evalue_decimal("valeur_min");
+		auto max_value = evalue_decimal("valeur_max");
+		auto mean = evalue_decimal("moyenne");
+		auto stddev = evalue_decimal("écart_type");
 
 		std::mt19937 rng(19993754);
 
@@ -1735,35 +1477,25 @@ public:
 				continue;
 			}
 
-			switch (distribution) {
-				case DIST_CONSTANT:
-				{
-					for (size_t i = 0; i < attribute->size(); ++i) {
-						attribute->vec3(i, glm::vec3{value, value, value});
-					}
-
-					break;
+			if (distribution == "constante") {
+				for (size_t i = 0; i < attribute->size(); ++i) {
+					attribute->vec3(i, glm::vec3{value, value, value});
 				}
-				case DIST_UNIFORM:
-				{
-					std::uniform_real_distribution<float> dist(min_value, max_value);
+			}
+			else if (distribution == "uniforme") {
+				std::uniform_real_distribution<float> dist(min_value, max_value);
 
-					for (size_t i = 0; i < attribute->size(); ++i) {
-						attribute->vec3(i, glm::vec3{dist(rng), dist(rng), dist(rng)});
-					}
-
-					break;
+				for (size_t i = 0; i < attribute->size(); ++i) {
+					attribute->vec3(i, glm::vec3{dist(rng), dist(rng), dist(rng)});
 				}
-				case DIST_GAUSSIAN:
-				{
-					std::normal_distribution<float> dist(mean, stddev);
+			}
+			else if (distribution == "gaussienne") {
+				std::normal_distribution<float> dist(mean, stddev);
 
-					for (size_t i = 0; i < attribute->size(); ++i) {
-						attribute->vec3(i, glm::vec3{dist(rng), dist(rng), dist(rng)});
-					}
-
-					break;
+				for (size_t i = 0; i < attribute->size(); ++i) {
+					attribute->vec3(i, glm::vec3{dist(rng), dist(rng), dist(rng)});
 				}
+
 			}
 		}
 	}
@@ -1818,16 +1550,6 @@ std::vector<Triangle> convertis_maillage_triangles(const Mesh *maillage_entree)
 static const char *NOM_CREATION_SEGMENTS = "Création courbes";
 static const char *AIDE_CREATION_SEGMENTS = "Création de courbes.";
 
-enum {
-	CREER_COURBES_VERTS = 0,
-	CREER_COURBES_POLYS = 1,
-};
-
-enum {
-	DIRECTION_COURBE_NORMALE       = 0,
-	DIRECTION_COURBE_PERSONNALISEE = 1,
-};
-
 class OperateurCreationCourbes : public Operateur {
 public:
 	OperateurCreationCourbes(Noeud *noeud, const Context &contexte)
@@ -1836,65 +1558,28 @@ public:
 		entrees(1);
 		sorties(1);
 
-		/* méthode */
-		EnumProperty prop_enum;
-		prop_enum.insert("Vertices", CREER_COURBES_VERTS);
-		prop_enum.insert("Polygones", CREER_COURBES_POLYS);
-
-		add_prop("méthode", "Méthode", property_type::prop_enum);
-		set_prop_enum_values(prop_enum);
-		set_prop_default_value_int(0);
-
-		/* graine */
-		add_prop("graine", "Graine", property_type::prop_int);
-		set_prop_min_max(1, 100000);
-		set_prop_default_value_int(1);
-
-		/* nombre courbes */
-		add_prop("nombre_courbes", "Nombre Courbes", property_type::prop_int);
-		set_prop_min_max(1, 1000);
-		set_prop_default_value_int(100);
-		set_prop_tooltip("Nombre de courbes par polygone.");
-
-		add_prop("segments", "Segments", property_type::prop_int);
-		set_prop_default_value_int(1);
-		set_prop_min_max(1, 10);
-		set_prop_tooltip("Nombre de segments dans chaque courbe.");
-
-		add_prop("taille", "Taille", property_type::prop_float);
-		set_prop_default_value_float(1);
-		set_prop_min_max(0.0f, 10.0f);
-		set_prop_tooltip("Taille de chaque segment.");
-
-		/* direction */
-		EnumProperty enum_direcion;
-		enum_direcion.insert("Normale", DIRECTION_COURBE_NORMALE);
-		enum_direcion.insert("Personnalisée", DIRECTION_COURBE_PERSONNALISEE);
-
-		add_prop("direction", "Direction", property_type::prop_enum);
-		set_prop_enum_values(enum_direcion);
-		set_prop_default_value_int(0);
-
-		add_prop("normale", "Normale", property_type::prop_vec3);
-		set_prop_default_value_vec3(glm::vec3{0.0f, 1.0f, 0.0f});
-		set_prop_min_max(-1.0f, 1.0f);
-		set_prop_tooltip("Direction de la courbe.");
+		ajoute_propriete("méthode", kangao::TypePropriete::ENUM);
+		ajoute_propriete("graine", kangao::TypePropriete::ENTIER);
+		ajoute_propriete("nombre_courbes", kangao::TypePropriete::ENTIER);
+		ajoute_propriete("segments", kangao::TypePropriete::ENTIER);
+		ajoute_propriete("taille", kangao::TypePropriete::DECIMAL);
+		ajoute_propriete("direction", kangao::TypePropriete::ENUM);
+		ajoute_propriete("normal", kangao::TypePropriete::VECTEUR);
 	}
 
-	const char *chemin_interface() const
+	const char *chemin_interface() const override
 	{
 		return "interface/operateur_creation_courbes.kangao";
 	}
 
-	bool update_properties() override
+	bool ajourne_proprietes() override
 	{
-		auto methode = eval_enum("méthode");
+		auto methode = evalue_liste("méthode");
+		rend_propriete_visible("graine", methode == "polygones");
+		rend_propriete_visible("nombre_courbes", methode == "polygones");
 
-		set_prop_visible("graine", methode == CREER_COURBES_POLYS);
-		set_prop_visible("nombre_courbes", methode == CREER_COURBES_POLYS);
-
-		const auto direction = eval_enum("direction");
-		set_prop_visible("normale", direction == DIRECTION_COURBE_PERSONNALISEE);
+		const auto direction = evalue_liste("direction");
+		rend_propriete_visible("normale", direction == "personnalisée");
 
 		return true;
 	}
@@ -1928,11 +1613,11 @@ public:
 		const auto input_mesh = static_cast<Mesh *>(iter.get());
 		const auto input_points = input_mesh->points();
 
-		const auto segment_number = eval_int("segments");
-		const auto segment_normal = eval_vec3("normale");
-		const auto segment_size = eval_float("taille");
-		const auto methode = eval_enum("méthode");
-		const auto direction = eval_enum("direction");
+		const auto segment_number = evalue_entier("segments");
+		const auto segment_normal = evalue_vecteur("normal");
+		const auto segment_size = evalue_decimal("taille");
+		const auto methode = evalue_liste("méthode");
+		const auto direction = evalue_liste("direction");
 
 		auto segment_prim = static_cast<SegmentPrim *>(m_collection->build("SegmentPrim"));
 		auto output_edges = segment_prim->edges();
@@ -1941,10 +1626,12 @@ public:
 		auto num_points = 0ul;
 		auto total_points = 0ul;
 
-		if (methode == CREER_COURBES_VERTS) {
+		const auto direction_normal = (direction == "normal");
+
+		if (methode == "vertices") {
 			Attribute *normales = nullptr;
 
-			if (direction == DIRECTION_COURBE_NORMALE) {
+			if (direction_normal) {
 				normales = input_mesh->attribute("normal", ATTR_TYPE_VEC3);
 
 				if (normales == nullptr || normales->size() == 0) {
@@ -1962,20 +1649,7 @@ public:
 
 			for (size_t i = 0; i < input_points->size(); ++i) {
 				auto point = (*input_points)[i];
-
-				switch (direction) {
-					default:
-					case DIRECTION_COURBE_NORMALE:
-					{
-						normale = normales->vec3(i);
-						break;
-					}
-					case DIRECTION_COURBE_PERSONNALISEE:
-					{
-						normale = segment_normal;
-						break;
-					}
-				}
+				normale = direction_normal ? normales->vec3(i) : segment_normal;
 
 				output_points->push_back(point);
 				++num_points;
@@ -1990,10 +1664,10 @@ public:
 				++head;
 			}
 		}
-		else if (methode == CREER_COURBES_POLYS) {
+		else if (methode == "polygones") {
 			auto triangles = convertis_maillage_triangles(input_mesh);
 
-			const auto nombre_courbes = eval_int("nombre_courbes");
+			const auto nombre_courbes = evalue_entier("nombre_courbes");
 			const auto nombre_polys = triangles.size();
 
 			output_edges->reserve((nombre_courbes * segment_number) * nombre_polys);
@@ -2001,7 +1675,7 @@ public:
 
 			total_points = nombre_polys * nombre_courbes * (segment_number + 1);
 
-			const auto graine = eval_int("graine");
+			const auto graine = evalue_entier("graine");
 
 			std::mt19937 rng(19937 + graine);
 			std::uniform_real_distribution<float> dist(0.0f, 1.0f);
@@ -2018,20 +1692,7 @@ public:
 				const auto e0 = v1 - v0;
 				const auto e1 = v2 - v0;
 
-				switch (direction) {
-					default:
-					case DIRECTION_COURBE_NORMALE:
-					{
-						/* Calcul la normale du polygone. */
-						normale = glm::normalize(normale_triangle(v0, v1, v2));
-						break;
-					}
-					case DIRECTION_COURBE_PERSONNALISEE:
-					{
-						normale = segment_normal;
-						break;
-					}
-				}
+				normale = (direction_normal) ? glm::normalize(normale_triangle(v0, v1, v2)) : segment_normal;
 
 				for (size_t j = 0; j < nombre_courbes; ++j) {
 					/* Génère des coordonnées barycentriques aléatoires. */
@@ -2146,13 +1807,13 @@ public:
 		entrees(2);
 		sorties(1);
 
-		add_prop("prise", "Prise", property_type::prop_int);
+		ajoute_propriete("prise", "Prise", kangao::TypePropriete::ENTIER);
 		set_prop_tooltip("L'index de la prise à évaluer");
 		set_prop_default_value_int(0);
 		set_prop_min_max(0, 1);
 	}
 
-	const char *chemin_interface() const
+	const char *chemin_interface() const override
 	{
 		return "interface/operateur_commutateur.kangao";
 	}
@@ -2178,7 +1839,7 @@ public:
 
 	void execute(const Context &contexte, double temps) override
 	{
-		const auto prise = eval_int("prise");
+		const auto prise = evalue_entier("prise");
 		entree(prise)->requiers_collection(m_collection, contexte, temps);
 	}
 };
@@ -2196,19 +1857,11 @@ public:
 		entrees(1);
 		sorties(1);
 
-		/* graine */
-		add_prop("graine", "Graine", property_type::prop_int);
-		set_prop_min_max(1, 100000);
-		set_prop_default_value_int(1);
-
-		/* nombre courbes */
-		add_prop("nombre_points_polys", "Nombre Points Par Polygones", property_type::prop_int);
-		set_prop_min_max(1, 1000);
-		set_prop_default_value_int(100);
-		set_prop_tooltip("Nombre de points par polygone.");
+		ajoute_propriete("graine", kangao::TypePropriete::ENTIER);
+		ajoute_propriete("nombre_points_polys", kangao::TypePropriete::ENTIER);
 	}
 
-	const char *chemin_interface() const
+	const char *chemin_interface() const override
 	{
 		return "interface/operateur_dispersion_points.kangao";
 	}
@@ -2246,12 +1899,12 @@ public:
 		auto nuage_points = static_cast<PrimPoints *>(m_collection->build("PrimPoints"));
 		auto points_sorties = nuage_points->points();
 
-		const auto nombre_points_polys = eval_int("nombre_points_polys");
+		const auto nombre_points_polys = evalue_entier("nombre_points_polys");
 		const auto nombre_points = triangles.size() * nombre_points_polys;
 
 		points_sorties->reserve(nombre_points);
 
-		const auto graine = eval_int("graine");
+		const auto graine = evalue_entier("graine");
 
 		std::mt19937 rng(19937 + graine);
 		std::uniform_real_distribution<float> dist(0.0f, 1.0f);

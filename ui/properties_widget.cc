@@ -32,6 +32,8 @@
 #include <kamikaze/noeud.h>
 #include <kamikaze/operateur.h>
 
+#include <kangao/kangao.h>
+
 #include "paramcallback.h"
 #include "paramfactory.h"
 #include "utils_ui.h"
@@ -63,9 +65,10 @@ PropertiesWidget::PropertiesWidget(QWidget *parent)
 
 void PropertiesWidget::update_state(event_type event)
 {
-	Persona *persona = nullptr;
+	kangao::Manipulable *manipulable = nullptr;
 	bool set_context = true;
 	auto scene = m_context->scene;
+	const char *chemin_interface = "";
 
 	if (scene->active_node() == nullptr) {
 		return;
@@ -78,11 +81,11 @@ void PropertiesWidget::update_state(event_type event)
 
 	if (event_category == event_type::object) {
 		if (is_elem(event_action, event_type::added, event_type::selected)) {
-			auto scene_node = scene->active_node();
-			persona = scene_node;
+			manipulable = scene->active_node();
+			chemin_interface = "interface/proprietes_objet.kangao";
 		}
 		else if (is_elem(event_action, event_type::removed)) {
-			m_callback.clear();
+			efface_disposition();
 			return;
 		}
 	}
@@ -98,14 +101,15 @@ void PropertiesWidget::update_state(event_type event)
 			}
 
 			auto operateur = noeud->operateur();
-			persona = operateur;
+			manipulable = operateur;
+			chemin_interface = operateur->chemin_interface();
 			warnings = operateur->avertissements();
 
 			/* Only update/evaluate the graph if the node is connected. */
 			set_context = noeud->est_connecte();
 		}
 		else if (is_elem(event_action, event_type::removed)) {
-			m_callback.clear();
+			efface_disposition();
 			return;
 		}
 	}
@@ -113,18 +117,46 @@ void PropertiesWidget::update_state(event_type event)
 		return;
 	}
 
-	if (persona == nullptr) {
+	if (manipulable == nullptr) {
 		return;
 	}
 
-	m_callback.clear();
+	efface_disposition();
 
-	/* Add warnings first. */
-	for (const auto &warning : warnings) {
-		m_callback.addWarning(warning.c_str());
+	/* À FAIRE : affiche avertissements */
+
+	/* À FAIRE : set_context */
+	dessine_interface(manipulable, chemin_interface);
+}
+
+void PropertiesWidget::dessine_interface(kangao::Manipulable *manipulable, const char *chemin_interface)
+{
+	manipulable->ajourne_proprietes();
+
+	const auto &texte = kangao::contenu_fichier(chemin_interface);
+
+	if (texte.empty()) {
+		return;
 	}
 
-	drawProperties(persona, set_context);
+	kangao::DonneesInterface donnees;
+	donnees.manipulable = manipulable;
+	donnees.conteneur = this;
+
+	auto disposition = kangao::compile_interface(donnees, texte.c_str());
+
+	m_conteneur_disposition->setLayout(disposition);
+}
+
+void PropertiesWidget::ajourne_manipulable()
+{
+	std::cerr << "PropertiesWidget::ajourne_manipulable";
+	m_manipulable->ajourne_proprietes();
+}
+
+void PropertiesWidget::efface_disposition()
+{
+	delete m_conteneur_disposition->layout();
 }
 
 void PropertiesWidget::evalObjectGraph()

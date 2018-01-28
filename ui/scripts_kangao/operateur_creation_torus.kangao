@@ -13,11 +13,11 @@ disposition "operateur_creation_torus" {
     }
     ligne {
         étiquette(valeur="Segments mineurs")
-        entier(valeur="24"; attache="vertices"; min="4"; max="100")
+        entier(valeur="24"; attache="segments_mineurs"; min="4"; max="100")
     }
     ligne {
         étiquette(valeur="Segments majeurs")
-        entier(valeur="48"; attache="vertices"; min="4"; max="100")
+        entier(valeur="48"; attache="segments_majeurs"; min="4"; max="100")
     }
     ligne {
         étiquette(valeur="Échelle")

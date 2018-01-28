@@ -24,6 +24,8 @@
 
 #include "operateur.h"
 
+#include <iostream>
+
 #include <tbb/tick_count.h>
 
 #include "context.h"
@@ -280,6 +282,11 @@ std::string Operateur::chemin_icone() const
 void Operateur::chemin_icone(const std::string &chemin)
 {
 	m_chemin_icone = chemin;
+}
+
+const char *Operateur::chemin_interface() const
+{
+	return "";
 }
 
 /* ************************************************************************** */

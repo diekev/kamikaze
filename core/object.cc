@@ -41,17 +41,9 @@ Object::Object(const Context &contexte)
 	add_input("Parent");
 	add_output("Child");
 
-	add_prop("position", "Position", property_type::prop_vec3);
-	set_prop_min_max(-10.0f, 10.0f);
-	set_prop_default_value_vec3(glm::vec3(0.0f, 0.0f, 0.0f));
-
-	add_prop("rotation", "Rotation", property_type::prop_vec3);
-	set_prop_min_max(0.0f, 360.0f);
-	set_prop_default_value_vec3(glm::vec3(0.0f, 0.0f, 0.0f));
-
-	add_prop("size", "Size", property_type::prop_vec3);
-	set_prop_min_max(0.0f, 10.0f);
-	set_prop_default_value_vec3(glm::vec3(1.0f, 1.0f, 1.0f));
+	ajoute_propriete("position", kangao::TypePropriete::VECTEUR);
+	ajoute_propriete("rotation", kangao::TypePropriete::VECTEUR);
+	ajoute_propriete("taille", kangao::TypePropriete::VECTEUR);
 
 	updateMatrix();
 }
@@ -99,9 +91,9 @@ const Graph *Object::graph() const
 
 void Object::updateMatrix()
 {
-	const auto m_pos = eval_vec3("position");
-	const auto m_rotation = eval_vec3("rotation");
-	const auto m_scale = eval_vec3("size");
+	const auto m_pos = evalue_vecteur("position");
+	const auto m_rotation = evalue_vecteur("rotation");
+	const auto m_scale = evalue_vecteur("taille");
 
 	m_matrix = glm::mat4(1.0f);
 	m_matrix = glm::translate(m_matrix, m_pos);

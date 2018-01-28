@@ -49,11 +49,13 @@ add_definitions(-DGLM_FORCE_RADIANS)
 # ------------------------------------------------------------------------------
 
 find_package(Ego REQUIRED)
+find_package(Kangao REQUIRED)
 
 # ------------------------------------------------------------------------------
 
 set(INC_SYS
 	${EGO_INCLUDE_DIRS}
+	${KANGAO_INCLUDE_DIRS}
 )
 
 set(ENTETES_OUTILS

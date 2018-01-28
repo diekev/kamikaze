@@ -1,0 +1,14 @@
+disposition "proprietes_objet" {
+    ligne {
+        étiquette(valeur="Position")
+        vecteur(valeur=""; attache="position"; min="-10"; max="10")
+    }
+    ligne {
+        étiquette(valeur="Rotation")
+        vecteur(valeur=""; attache="rotation"; min="0"; max="360")
+    }
+    ligne {
+        étiquette(valeur="Taille")
+        vecteur(valeur=""; attache="taille"; min="0"; max="10")
+    }
+}

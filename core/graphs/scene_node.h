@@ -24,8 +24,9 @@
 
 #pragma once
 
-#include <kamikaze/persona.h>
+#include <kangao/manipulable.h>
 #include <memory>
+#include <vector>
 
 struct SceneNode;
 struct SceneInputSocket;
@@ -61,7 +62,7 @@ enum {
 	SNODE_OL_EXPANDED = (1 << 0),  /* Is it expanded in the outliner? */
 };
 
-class SceneNode : public Persona {
+class SceneNode : public kangao::Manipulable {
 protected:
 	std::vector<SceneInputSocketPtr> m_inputs = {};
 	std::vector<SceneOutputSocketPtr> m_outputs = {};
