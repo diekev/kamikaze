@@ -11,7 +11,7 @@ disposition "operateur_couleur" {
     }
     ligne {
         étiquette(valeur="Couleur")
-        couleur(valeur=""; attache="couleur"; min="0"; max="1")
+		couleur(valeur="0.5,0.5,0.5"; attache="couleur"; min="0"; max="1")
     }
     ligne {
         étiquette(valeur="Graine")

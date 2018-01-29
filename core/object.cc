@@ -39,9 +39,9 @@ Object::Object(const Context &contexte)
 	add_input("Parent");
 	add_output("Child");
 
-	ajoute_propriete("position", kangao::TypePropriete::VECTEUR);
-	ajoute_propriete("rotation", kangao::TypePropriete::VECTEUR);
-	ajoute_propriete("taille", kangao::TypePropriete::VECTEUR);
+	ajoute_propriete("position", kangao::TypePropriete::VECTEUR, glm::vec3(0.0));
+	ajoute_propriete("rotation", kangao::TypePropriete::VECTEUR, glm::vec3(0.0));
+	ajoute_propriete("taille", kangao::TypePropriete::VECTEUR, glm::vec3(1.0));
 
 	updateMatrix();
 }

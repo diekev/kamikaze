@@ -5,10 +5,10 @@ disposition "operateur_creation_nuage_point" {
     }
     ligne {
         étiquette(valeur="Limite Minimale")
-        vecteur(valeur=""; attache="limite_min"; min="-10"; max="10")
+		vecteur(valeur="-1,-1,-1"; attache="limite_min"; min="-10"; max="10")
     }
     ligne {
         étiquette(valeur="Limite Maximale")
-        vecteur(valeur=""; attache="limite_max"; min="-10"; max="10")
+		vecteur(valeur="1,1,1"; attache="limite_max"; min="-10"; max="10")
     }
 }

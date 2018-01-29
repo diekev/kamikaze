@@ -17,7 +17,7 @@ disposition "operateur_creation_courbes" {
     }
     ligne {
         étiquette(valeur="Taille")
-        décimal(valeur="0"; attache="taille"; min="0"; max="10"; infobulle="Taille de chaque segment.")
+		décimal(valeur="1"; attache="taille"; min="0"; max="10"; infobulle="Taille de chaque segment.")
     }
     ligne {
         étiquette(valeur="Direction")
@@ -25,6 +25,6 @@ disposition "operateur_creation_courbes" {
     }
     ligne {
         étiquette(valeur="Normal")
-        vecteur(valeur=""; attache="normal"; min="-1"; max="1"; infobulle="Direction de la courbe.")
+		vecteur(valeur="0,1,0"; attache="normal"; min="-1"; max="1"; infobulle="Direction de la courbe.")
     }
 }

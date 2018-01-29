@@ -6,7 +6,7 @@ disposition "operateur_bruit" {
     }
     ligne {
         étiquette(valeur="Direction")
-		liste(valeur="unique"; attache="direction";
+		liste(valeur="x"; attache="direction";
 		      items=[{nom="X", valeur="x"}, {nom="Y", valeur="y"}, {nom="Z", valeur="z"}, {nom="Toutes", valeur="toutes"}, {nom="Normal", valeur="normal"}])
     }
     ligne {

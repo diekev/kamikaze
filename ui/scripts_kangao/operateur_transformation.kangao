@@ -17,19 +17,19 @@ disposition "operateur_transformation" {
     }
     ligne {
         étiquette(valeur="Translation")
-        vecteur(valeur=""; attache="translation"; min="-10"; max="10")
+		vecteur(valeur="0,0,0"; attache="translation"; min="-10"; max="10")
     }
     ligne {
         étiquette(valeur="Rotation")
-        vecteur(valeur=""; attache="rotation"; min="0"; max="360")
+		vecteur(valeur="0,0,0"; attache="rotation"; min="0"; max="360")
     }
     ligne {
         étiquette(valeur="Taille")
-        vecteur(valeur=""; attache="taille"; min="0"; max="10")
+		vecteur(valeur="1,1,1"; attache="taille"; min="0"; max="10")
     }
     ligne {
         étiquette(valeur="Pivot")
-        vecteur(valeur=""; attache="pivot"; min="-10"; max="10")
+		vecteur(valeur="0,0,0"; attache="pivot"; min="-10"; max="10")
     }
     ligne {
         étiquette(valeur="Échelle")

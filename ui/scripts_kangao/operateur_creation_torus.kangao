@@ -1,11 +1,11 @@
 disposition "operateur_creation_torus" {
     ligne {
         étiquette(valeur="Centre")
-        vecteur(valeur=""; attache="centre"; min="-10"; max="10")
+		vecteur(valeur="0,0,0"; attache="centre"; min="-10"; max="10")
     }
     ligne {
         étiquette(valeur="Rayon mineur")
-        décimal(valeur="0"; attache="rayon_mineur"; min="0"; max="10")
+		décimal(valeur="0.25"; attache="rayon_mineur"; min="0"; max="10")
     }
     ligne {
         étiquette(valeur="Rayon majeur")
