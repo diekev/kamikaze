@@ -222,6 +222,66 @@ erreur_fichier sauvegarde_projet(const filesystem::path &chemin, const Main &mai
 
 /* ************************************************************************** */
 
+class iterateur_adelphe {
+	tinyxml2::XMLElement *m_pointeur = nullptr;
+	const char *m_nom = nullptr;
+
+public:
+	/* Construit l'itérateur de fin. */
+	iterateur_adelphe() = default;
+
+	/* Construit l'itérateur de début. */
+	iterateur_adelphe(tinyxml2::XMLElement *noeud)
+		: iterateur_adelphe(noeud, nullptr)
+	{}
+
+	/* Construit l'itérateur de début. */
+	iterateur_adelphe(tinyxml2::XMLElement *noeud, const char *nom)
+		: m_pointeur(noeud)
+		, m_nom(nom)
+	{}
+
+	void operator++()
+	{
+		m_pointeur = m_pointeur->NextSiblingElement(m_nom);
+	}
+
+	void operator--()
+	{
+		m_pointeur = m_pointeur->PreviousSiblingElement(m_nom);
+	}
+
+	tinyxml2::XMLElement *pointeur() const
+	{
+		return m_pointeur;
+	}
+
+	tinyxml2::XMLElement *operator*()
+	{
+		return m_pointeur;
+	}
+};
+
+bool operator==(const iterateur_adelphe &a, const iterateur_adelphe &b)
+{
+	return a.pointeur() == b.pointeur();
+}
+
+bool operator!=(const iterateur_adelphe &a, const iterateur_adelphe &b)
+{
+	return !(a == b);
+}
+
+iterateur_adelphe begin(const iterateur_adelphe &it)
+{
+	return it;
+}
+
+iterateur_adelphe end(const iterateur_adelphe &)
+{
+	return iterateur_adelphe();
+}
+
 static void lecture_propriete(
 		tinyxml2::XMLElement *element,
 		Persona *persona)
@@ -279,8 +339,8 @@ static void lecture_proprietes(
 	const auto racine_propriete = element->FirstChildElement("proprietes");
 	auto element_propriete = racine_propriete->FirstChildElement("propriete");
 
-	for (; element_propriete != nullptr; element_propriete = element_propriete->NextSiblingElement("propriete")) {
-		lecture_propriete(element_propriete, persona);
+	for (tinyxml2::XMLElement *noeud : iterateur_adelphe(element_propriete, "propriete")) {
+		lecture_propriete(noeud, persona);
 	}
 }
 
@@ -332,10 +392,10 @@ static void lecture_noeud(
 	const auto racine_prise_entree = element_noeud->FirstChildElement("prises_entree");
 	auto element_prise_entree = racine_prise_entree->FirstChildElement("entree");
 
-	for (; element_prise_entree != nullptr; element_prise_entree = element_prise_entree->NextSiblingElement("entree")) {
-		const auto nom_prise = element_prise_entree->Attribute("nom");
-		const auto id_prise = element_prise_entree->Attribute("id");
-		const auto connection = element_prise_entree->Attribute("connection");
+	for (tinyxml2::XMLElement *elem_prise : iterateur_adelphe(element_prise_entree, "entree")) {
+		const auto nom_prise = elem_prise->Attribute("nom");
+		const auto id_prise = elem_prise->Attribute("id");
+		const auto connection = elem_prise->Attribute("connection");
 
 		donnees_connection.tableau_connection_id[id_prise] = connection;
 		donnees_connection.tableau_id_prise_entree[id_prise] = noeud->entree(nom_prise);
@@ -344,9 +404,9 @@ static void lecture_noeud(
 	const auto racine_prise_sortie = element_noeud->FirstChildElement("prises_sortie");
 	auto element_prise_sortie = racine_prise_sortie->FirstChildElement("sortie");
 
-	for (; element_prise_sortie != nullptr; element_prise_sortie = element_prise_sortie->NextSiblingElement("sortie")) {
-		const auto nom_prise = element_prise_sortie->Attribute("nom");
-		const auto id_prise = element_prise_sortie->Attribute("id");
+	for (tinyxml2::XMLElement *elem_prise : iterateur_adelphe(element_prise_sortie, "sortie")) {
+		const auto nom_prise = elem_prise->Attribute("nom");
+		const auto id_prise = elem_prise->Attribute("id");
 
 		donnees_connection.tableau_id_prise_sortie[id_prise] = noeud->sortie(nom_prise);
 	}
@@ -362,8 +422,8 @@ static void lecture_graphe(
 
 	DonneesConnections donnees_connections;
 
-	for (; element_noeud != nullptr; element_noeud = element_noeud->NextSiblingElement("noeud")) {
-		lecture_noeud(element_noeud, contexte, objet, donnees_connections);
+	for (tinyxml2::XMLElement *elem_noeud : iterateur_adelphe(element_noeud, "noeud")) {
+		lecture_noeud(elem_noeud, contexte, objet, donnees_connections);
 	}
 
 	/* Création des connections. */
@@ -415,14 +475,12 @@ erreur_fichier ouvre_projet(const filesystem::path &chemin, const Main &main, co
 
 	auto element_greffon = racine_greffons->FirstChildElement("greffon");
 
-	while (element_greffon != nullptr) {
-		const auto chemin_greffon = element_greffon->Attribute("nom");
+	for (tinyxml2::XMLElement *elem_greffon : iterateur_adelphe(element_greffon, "greffon")) {
+		const auto chemin_greffon = elem_greffon->Attribute("nom");
 
 		if (ensemble_greffons.find(chemin_greffon) == ensemble_greffons.end()) {
 			return erreur_fichier::GREFFON_MANQUANT;
 		}
-
-		element_greffon = element_greffon->NextSiblingElement("greffon");
 	}
 
 	/* Lecture de la scène. */
@@ -446,11 +504,11 @@ erreur_fichier ouvre_projet(const filesystem::path &chemin, const Main &main, co
 	const auto racine_objets = racine_scene->FirstChildElement("objets");
 	auto element_objet = racine_objets->FirstChildElement("objet");
 
-	for (; element_objet != nullptr; element_objet = element_objet->NextSiblingElement("objet")) {
-		const auto nom_objet = element_objet->Attribute("nom");
-		const auto posx = element_objet->Attribute("posx");
-		const auto posy = element_objet->Attribute("posy");
-		const auto drapeaux = element_objet->Attribute("drapeaux");
+	for (tinyxml2::XMLElement *elem_objet : iterateur_adelphe(element_objet, "objet")) {
+		const auto nom_objet = elem_objet->Attribute("nom");
+		const auto posx = elem_objet->Attribute("posx");
+		const auto posy = elem_objet->Attribute("posy");
+		const auto drapeaux = elem_objet->Attribute("drapeaux");
 
 		Object *objet = new Object(contexte);
 		objet->name(nom_objet);
@@ -458,12 +516,12 @@ erreur_fichier ouvre_projet(const filesystem::path &chemin, const Main &main, co
 		objet->ypos(atoi(posy));
 		objet->set_flags(atoi(drapeaux));
 
-		lecture_proprietes(element_objet, objet);
+		lecture_proprietes(elem_objet, objet);
 
 		scene->addObject(objet);
 
 		/* Lecture du graphe. */
-		lecture_graphe(element_objet, contexte, objet);
+		lecture_graphe(elem_objet, contexte, objet);
 
 		objet->updateMatrix();
 	}
