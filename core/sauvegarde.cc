@@ -36,6 +36,98 @@
 
 namespace kamikaze {
 
+class Document {
+	tinyxml2::XMLDocument m_document;
+
+public:
+	explicit Document(const char *texte_declaration = nullptr)
+	{
+		m_document.InsertFirstChild(m_document.NewDeclaration(texte_declaration));
+	}
+
+	~Document() = default;
+
+	void sauve_fichier(const std::experimental::filesystem::path &chemin)
+	{
+		m_document.SaveFile(chemin.c_str());
+	}
+};
+
+class UsineNoeudXML {
+	tinyxml2::XMLDocument *m_document;
+
+public:
+	explicit UsineNoeudXML(tinyxml2::XMLDocument *document)
+		: m_document(document)
+	{}
+
+	tinyxml2::XMLElement *cree_element(const char *nom)
+	{
+		return m_document->NewElement(nom);
+	}
+};
+
+class NoeudXML {
+
+};
+
+enum {
+	DIRECTION_PARENT = 0,
+	DIRECTION_ADELPHE = 1,
+};
+
+enum {
+	NOEUD_PARENT = 0,
+	NOEUD_ENFANT = 1,
+};
+
+enum {
+	NOEUD_AINE = 0,
+	NOEUD_PUINE = 1,
+};
+
+template <typename T>
+class NoeudForet {
+	NoeudForet<T> *m_famille[2][2] = {
+		{ nullptr, nullptr },
+		{ nullptr, nullptr }
+	};
+
+	T m_donnees;
+
+public:
+	NoeudForet() = default;
+
+	NoeudForet(T valeur)
+		: m_donnees(valeur)
+	{}
+
+	NoeudForet<T> *ajoute_noeud(T valeur, int direction, int noeud)
+	{
+		m_famille[direction][noeud] = new NoeudForet<T>(valeur);
+		return m_famille[direction][noeud];
+	}
+};
+
+template <typename T>
+class Foret {
+	NoeudForet<T> m_racine;
+	NoeudForet<T> *m_dernier_noeud = &m_racine;
+
+public:
+	void insere_adelphe(T valeur)
+	{
+		m_dernier_noeud = m_dernier_noeud->ajoute_noeud(
+							  valeur, DIRECTION_ADELPHE, NOEUD_PUINE);
+	}
+
+	void insere_enfant(T valeur)
+	{
+		m_dernier_noeud = m_dernier_noeud->ajoute_noeud(
+							  valeur, DIRECTION_PARENT, NOEUD_ENFANT);
+	}
+};
+
 static std::string id_depuis_pointeur(void *pointeur)
 {
 	std::stringstream ss;
@@ -109,6 +201,8 @@ static void sauvegarde_proprietes(
 
 erreur_fichier sauvegarde_projet(const filesystem::path &chemin, const Main &main, const Scene *scene)
 {
+	Document document("kamikaze version=\"0.1\" encoding=\"UTF-8\"");
+
 	tinyxml2::XMLDocument doc;
 	doc.InsertFirstChild(doc.NewDeclaration());
 
