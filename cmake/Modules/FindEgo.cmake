@@ -49,7 +49,7 @@ if(EGO_FOUND)
 	set(EGO_LIBRARIES ${EGO_LIBRARY})
 	set(EGO_INCLUDE_DIRS ${EGO_INCLUDE_DIR})
 else()
-	set(EGO_EGO_FOUND FALSE)
+	set(EGO_FOUND FALSE)
 endif()
 
 mark_as_advanced(

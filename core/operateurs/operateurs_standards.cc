@@ -1126,11 +1126,11 @@ public:
 
 			if (prim->typeID() == Mesh::id) {
 				auto mesh = static_cast<Mesh *>(prim);
-				colors = mesh->add_attribute("color", ATTR_TYPE_VEC3, mesh->points()->size());
+				colors = mesh->add_attribute("color", ATTR_TYPE_VEC4, mesh->points()->size());
 			}
 			else if (prim->typeID() == PrimPoints::id) {
 				auto prim_points = static_cast<PrimPoints *>(prim);
-				colors = prim_points->add_attribute("color", ATTR_TYPE_VEC3, prim_points->points()->size());
+				colors = prim_points->add_attribute("color", ATTR_TYPE_VEC4, prim_points->points()->size());
 			}
 			else {
 				continue;
@@ -1140,20 +1140,20 @@ public:
 				const auto &color = evalue_couleur("color");
 
 				for (size_t i = 0, e = colors->size(); i < e; ++i) {
-					colors->vec3(i, color);
+					colors->vec4(i, color);
 				}
 			}
 			else if (methode == "aléatoire") {
 				if (portee == "vertices") {
 					for (size_t i = 0, e = colors->size(); i < e; ++i) {
-						colors->vec3(i, glm::vec3{dist(rng), dist(rng), dist(rng)});
+						colors->vec4(i, glm::vec4{dist(rng), dist(rng), dist(rng), 1.0f});
 					}
 				}
 				else if (portee == "primitive") {
-					const auto &color = glm::vec3{dist(rng), dist(rng), dist(rng)};
+					const auto &color = glm::vec4{dist(rng), dist(rng), dist(rng), 1.0f};
 
 					for (size_t i = 0, e = colors->size(); i < e; ++i) {
-						colors->vec3(i, color);
+						colors->vec4(i, color);
 					}
 				}
 			}

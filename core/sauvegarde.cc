@@ -94,11 +94,12 @@ static void sauvegarde_proprietes(
 			}
 			case danjo::TypePropriete::COULEUR:
 			{
-				glm::vec3 donnees = manipulable->evalue_couleur(nom);
+				glm::vec4 donnees = manipulable->evalue_couleur(nom);
 
 				element_donnees->SetAttribute("valeurx", donnees.x);
 				element_donnees->SetAttribute("valeury", donnees.y);
 				element_donnees->SetAttribute("valeurz", donnees.z);
+				element_donnees->SetAttribute("valeurw", donnees.w);
 				break;
 			}
 			case danjo::TypePropriete::ENUM:
@@ -275,7 +276,8 @@ static void lecture_propriete(
 			const auto donnee_x = atof(element_donnees->Attribute("valeurx"));
 			const auto donnee_y = atof(element_donnees->Attribute("valeury"));
 			const auto donnee_z = atof(element_donnees->Attribute("valeurz"));
-			const auto donnees = glm::vec3{donnee_x, donnee_y, donnee_z};
+			const auto donnee_w = atof(element_donnees->Attribute("valeurw"));
+			const auto donnees = glm::vec4{donnee_x, donnee_y, donnee_z, donnee_w};
 			manipulable->valeur_couleur(nom_prop, donnees);
 			break;
 		}

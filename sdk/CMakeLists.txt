@@ -54,6 +54,7 @@ find_package(Kangao REQUIRED)
 # ------------------------------------------------------------------------------
 
 set(INC_SYS
+	${DANJO_INCLUDE_DIRS}
 	${EGO_INCLUDE_DIRS}
 	${KANGAO_INCLUDE_DIRS}
 )
