@@ -25,7 +25,7 @@ set(INC_SYS
 	${EGO_INCLUDE_DIRS}
 	${FILESYSTEM_INCLUDE_DIRS}
 	${KAMIKAZE_INCLUDE_DIRS}
-	${KANGAO_INCLUDE_DIRS}
+	${DANJO_INCLUDE_DIRS}
 	${QT5_CORE_INCLUDE_DIRS}
 	${QT5_WIDGETS_INCLUDE_DIRS}
 )
@@ -112,7 +112,7 @@ add_library(kmk_core STATIC
 )
 
 target_include_directories(kmk_core PUBLIC "${INC_SYS}")
-target_link_libraries(kmk_core stdc++fs ${QT5_WIDGETS_LIBRARIES} ${KANGAO_LIBRARIES})
+target_link_libraries(kmk_core stdc++fs ${QT5_WIDGETS_LIBRARIES} ${DANJO_LIBRARIES})
 
 install(
 	FILES ${SHADERS}

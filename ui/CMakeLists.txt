@@ -28,39 +28,39 @@ set(INC_SYS
 	${EGO_INCLUDE_DIRS}
 	${FILESYSTEM_INCLUDE_DIRS}
 	${KAMIKAZE_INCLUDE_DIRS}
-	${KANGAO_INCLUDE_DIRS}
+	${DANJO_INCLUDE_DIRS}
 	${QT5_CORE_INCLUDE_DIRS}
 	${QT5_GUI_INCLUDE_DIRS}
 	${QT5_OPENGL_INCLUDE_DIRS}
 	${QT5_WIDGETS_INCLUDE_DIRS}
 )
 
-set(FICHIERS_KANGAO
-	scripts_kangao/disposition_ligne_temps.kangao
-	scripts_kangao/menu_debogage.kangao
-	scripts_kangao/menu_editeur_noeud.kangao
-	scripts_kangao/menu_edition.kangao
-	scripts_kangao/menu_fichier.kangao
-	scripts_kangao/menu_objet.kangao
-	scripts_kangao/menu_prereglage.kangao
-	scripts_kangao/operateur_bruit.kangao
-	scripts_kangao/operateur_commutateur.kangao
-	scripts_kangao/operateur_couleur.kangao
-	scripts_kangao/operateur_creation_boite.kangao
-	scripts_kangao/operateur_creation_cercle.kangao
-	scripts_kangao/operateur_creation_cone.kangao
-	scripts_kangao/operateur_creation_courbes.kangao
-	scripts_kangao/operateur_creation_grille.kangao
-	scripts_kangao/operateur_creation_icosphere.kangao
-	scripts_kangao/operateur_creation_nuage_point.kangao
-	scripts_kangao/operateur_creation_torus.kangao
-	scripts_kangao/operateur_creation_tube.kangao
-	scripts_kangao/operateur_dispersion_points.kangao
-	scripts_kangao/operateur_normal.kangao
-	scripts_kangao/operateur_randomise_attribut.kangao
-	scripts_kangao/operateur_suppression_attribut.kangao
-	scripts_kangao/operateur_transformation.kangao
-	scripts_kangao/proprietes_objet.kangao
+set(FICHIERS_DANJO
+	scripts_danjo/disposition_ligne_temps.jo
+	scripts_danjo/menu_debogage.jo
+	scripts_danjo/menu_editeur_noeud.jo
+	scripts_danjo/menu_edition.jo
+	scripts_danjo/menu_fichier.jo
+	scripts_danjo/menu_objet.jo
+	scripts_danjo/menu_prereglage.jo
+	scripts_danjo/operateur_bruit.jo
+	scripts_danjo/operateur_commutateur.jo
+	scripts_danjo/operateur_couleur.jo
+	scripts_danjo/operateur_creation_boite.jo
+	scripts_danjo/operateur_creation_cercle.jo
+	scripts_danjo/operateur_creation_cone.jo
+	scripts_danjo/operateur_creation_courbes.jo
+	scripts_danjo/operateur_creation_grille.jo
+	scripts_danjo/operateur_creation_icosphere.jo
+	scripts_danjo/operateur_creation_nuage_point.jo
+	scripts_danjo/operateur_creation_torus.jo
+	scripts_danjo/operateur_creation_tube.jo
+	scripts_danjo/operateur_dispersion_points.jo
+	scripts_danjo/operateur_normal.jo
+	scripts_danjo/operateur_randomise_attribut.jo
+	scripts_danjo/operateur_suppression_attribut.jo
+	scripts_danjo/operateur_transformation.jo
+	scripts_danjo/proprietes_objet.jo
 )
 
 add_compile_options(-fPIC)
@@ -111,12 +111,12 @@ add_library(kmk_ui STATIC
 	nodes/node_port.cc
 	nodes/vue_editeur_noeud.cc
 
-	${FICHIERS_KANGAO}
+	${FICHIERS_DANJO}
 )
 
 target_include_directories(kmk_ui PUBLIC "${INC_SYS}")
 
 install(
-	FILES ${FICHIERS_KANGAO}
+	FILES ${FICHIERS_DANJO}
 	DESTINATION interface
 )

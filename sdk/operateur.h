@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include <kangao/manipulable.h>
+#include <danjo/manipulable.h>
 
 #include <set>
 #include <unordered_map>
@@ -109,7 +109,7 @@ enum type_operateur {
  * d'entrées du noeud. Chaque opérateur est responsable d'appeler l'exécution
  * des noeuds se trouvant en son amont à travers la méthode virtuelle 'execute'.
  */
-class Operateur : public kangao::Manipulable {
+class Operateur : public danjo::Manipulable {
 	int m_nombre_entrees = 0;
 	int m_nombre_sorties = 0;
 	bool m_besoin_execution = true;

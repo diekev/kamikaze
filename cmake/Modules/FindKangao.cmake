@@ -1,60 +1,60 @@
-# - Find Kangao library
-# Find the native KANGAO includes and library
+# - Find Danjo library
+# Find the native DANJO includes and library
 # This module defines
-#  KANGAO_INCLUDE_DIRS, where to find kangao.h, Set when
-#                    KANGAO is found.
-#  KANGAO_LIBRARIES, libraries to link against to use KANGAO.
-#  KANGAO_ROOT_DIR, The base directory to search for KANGAO.
+#  DANJO_INCLUDE_DIRS, where to find danjo.h, Set when
+#                    DANJO is found.
+#  DANJO_LIBRARIES, libraries to link against to use DANJO.
+#  DANJO_ROOT_DIR, The base directory to search for DANJO.
 #                This can also be an environment variable.
-#  KANGAO_FOUND, If false, do not try to use KANGAO.
+#  DANJO_FOUND, If false, do not try to use DANJO.
 #
 # also defined, but not for general use are
-#  KANGAO_LIBRARY, where to find the Kangao library.
+#  DANJO_LIBRARY, where to find the Danjo library.
 
-# If KANGAO_ROOT_DIR was defined in the environment, use it.
-if(NOT KANGAO_ROOT_DIR AND NOT $ENV{KANGAO_ROOT_DIR} STREQUAL "")
-	set(KANGAO_ROOT_DIR $ENV{KANGAO_ROOT_DIR})
+# If DANJO_ROOT_DIR was defined in the environment, use it.
+if(NOT DANJO_ROOT_DIR AND NOT $ENV{DANJO_ROOT_DIR} STREQUAL "")
+	set(DANJO_ROOT_DIR $ENV{DANJO_ROOT_DIR})
 endif()
 
-set(_kangao_SEARCH_DIRS
-	${KANGAO_ROOT_DIR}
-	/opt/lib/kangao
+set(_danjo_SEARCH_DIRS
+	${DANJO_ROOT_DIR}
+	/opt/lib/danjo
 )
 
-find_path(KANGAO_INCLUDE_DIR
+find_path(DANJO_INCLUDE_DIR
 	NAMES
-	    kangao/kangao.h
+	    danjo/danjo.h
 	HINTS
-		${_kangao_SEARCH_DIRS}
+		${_danjo_SEARCH_DIRS}
 	PATH_SUFFIXES
 		include
 )
 
-find_library(KANGAO_LIBRARY
+find_library(DANJO_LIBRARY
 	NAMES
-		kangao
+		danjo
 	HINTS
-		${_kangao_SEARCH_DIRS}
+		${_danjo_SEARCH_DIRS}
 	PATH_SUFFIXES
 		lib64 lib
 )
 
-# handle the QUIETLY and REQUIRED arguments and set KANGAO_FOUND to TRUE if
+# handle the QUIETLY and REQUIRED arguments and set DANJO_FOUND to TRUE if
 # all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(KANGAO DEFAULT_MSG
-    KANGAO_LIBRARY KANGAO_INCLUDE_DIR)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(DANJO DEFAULT_MSG
+	DANJO_LIBRARY DANJO_INCLUDE_DIR)
 
-if(KANGAO_FOUND)
-	set(KANGAO_LIBRARIES ${KANGAO_LIBRARY})
-	set(KANGAO_INCLUDE_DIRS ${KANGAO_INCLUDE_DIR} ${KANGAO_INCLUDE_DIR}/../)
+if(DANJO_FOUND)
+	set(DANJO_LIBRARIES ${DANJO_LIBRARY})
+	set(DANJO_INCLUDE_DIRS ${DANJO_INCLUDE_DIR} ${DANJO_INCLUDE_DIR}/../)
 else()
-	set(KANGAO_FOUND FALSE)
+	set(DANJO_FOUND FALSE)
 endif()
 
 mark_as_advanced(
-	KANGAO_INCLUDE_DIR
-	KANGAO_LIBRARY
+	DANJO_INCLUDE_DIR
+	DANJO_LIBRARY
 )
 
-unset(_kangao_SEARCH_DIRS)
+unset(_danjo_SEARCH_DIRS)

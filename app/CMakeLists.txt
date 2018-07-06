@@ -53,7 +53,7 @@ set(LIBS
 
 	${EGO_LIBRARIES}
 	${OPENGL_LIBRARIES}
-	${KANGAO_LIBRARIES}
+	${DANJO_LIBRARIES}
 )
 
 add_compile_options(-fPIC)

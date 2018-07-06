@@ -25,8 +25,8 @@
 #include "fenetre_principale.h"
 
 #include <kamikaze/primitive.h>
-#include <kangao/kangao.h>
-#include <kangao/repondant_bouton.h>
+#include <danjo/danjo.h>
+#include <danjo/repondant_bouton.h>
 
 #include <QDockWidget>
 #include <QFileInfo>
@@ -45,17 +45,17 @@
 #include "repondant_commande.h"
 
 static const char *chemins_scripts[] = {
-	"interface/menu_fichier.kangao",
-//	"interface/menu_edition.kangao",
-	"interface/menu_objet.kangao",
-	"interface/menu_debogage.kangao",
+	"interface/menu_fichier.danjo",
+//	"interface/menu_edition.danjo",
+	"interface/menu_objet.danjo",
+	"interface/menu_debogage.danjo",
 };
 
 FenetrePrincipale::FenetrePrincipale(Main *main, QWidget *parent)
     : QMainWindow(parent)
 	, m_main(main)
 	, m_repondant_commande(new RepondantCommande(main, &m_contexte))
-	, m_gestionnaire(new kangao::GestionnaireInterface)
+	, m_gestionnaire(new danjo::GestionnaireInterface)
 	, m_barre_progres(new QProgressBar(this))
 {
 	genere_menu_fichier();
@@ -143,13 +143,13 @@ void FenetrePrincipale::genere_menu_fenetre()
 
 void FenetrePrincipale::genere_menu_fichier()
 {
-	kangao::DonneesInterface donnees;
+	danjo::DonneesInterface donnees;
 	donnees.manipulable = nullptr;
 	donnees.conteneur = nullptr;
 	donnees.repondant_bouton = m_repondant_commande;
 
 	for (const auto &chemin : chemins_scripts) {
-		const auto texte_entree = kangao::contenu_fichier(chemin);
+		const auto texte_entree = danjo::contenu_fichier(chemin);
 		auto menu = m_gestionnaire->compile_menu(donnees, texte_entree.c_str());
 
 		menuBar()->addMenu(menu);
@@ -190,7 +190,7 @@ void FenetrePrincipale::genere_menu_noeud()
 
 	ss << "}";
 
-	kangao::DonneesInterface donnees;
+	danjo::DonneesInterface donnees;
 	donnees.manipulable = nullptr;
 	donnees.conteneur = nullptr;
 	donnees.repondant_bouton = m_repondant_commande;
@@ -201,12 +201,12 @@ void FenetrePrincipale::genere_menu_noeud()
 
 void FenetrePrincipale::genere_menu_prereglages()
 {
-	kangao::DonneesInterface donnees;
+	danjo::DonneesInterface donnees;
 	donnees.manipulable = nullptr;
 	donnees.conteneur = nullptr;
 	donnees.repondant_bouton = m_repondant_commande;
 
-	const auto texte_entree = kangao::contenu_fichier("interface/menu_prereglage.kangao");
+	const auto texte_entree = danjo::contenu_fichier("interface/menu_prereglage.danjo");
 
 	auto barre_outil = m_gestionnaire->compile_barre_outils(donnees, texte_entree.c_str());
 	addToolBar(Qt::TopToolBarArea, barre_outil);
@@ -356,9 +356,9 @@ void FenetrePrincipale::ajout_editeurs_arborescence_graphe()
 
 void FenetrePrincipale::mis_a_jour_menu_fichier_recent()
 {
-	std::vector<kangao::DonneesAction> donnees_actions;
+	std::vector<danjo::DonneesAction> donnees_actions;
 
-	kangao::DonneesAction donnees;
+	danjo::DonneesAction donnees;
 	donnees.attache = "ouvrir_fichier_recent";
 	donnees.repondant_bouton = m_repondant_commande;
 

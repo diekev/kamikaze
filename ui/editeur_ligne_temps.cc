@@ -25,8 +25,8 @@
 #include "editeur_ligne_temps.h"
 
 #include <kamikaze/context.h>
-#include <kangao/kangao.h>
-#include <kangao/manipulable.h>
+#include <danjo/danjo.h>
+#include <danjo/manipulable.h>
 
 #include <QDoubleSpinBox>
 #include <QFrame>
@@ -39,7 +39,7 @@
 
 #include "core/scene.h"
 
-EditeurLigneTemps::EditeurLigneTemps(kangao::RepondantBouton *repondant, QWidget *parent)
+EditeurLigneTemps::EditeurLigneTemps(danjo::RepondantBouton *repondant, QWidget *parent)
 	: BaseEditeur(parent)
     , m_timer(new QTimer(this))
 {
@@ -95,15 +95,15 @@ EditeurLigneTemps::EditeurLigneTemps(kangao::RepondantBouton *repondant, QWidget
 
 	m_tc_layout->addStretch();
 
-	kangao::Manipulable dummy;
+	danjo::Manipulable dummy;
 
-	kangao::DonneesInterface donnees;
+	danjo::DonneesInterface donnees;
 	donnees.conteneur = nullptr;
 	donnees.manipulable = &dummy;
 	donnees.repondant_bouton = repondant;
 
-	auto text_entree = kangao::contenu_fichier("interface/disposition_ligne_temps.kangao");
-	auto disp_controles = kangao::compile_interface(donnees, text_entree.c_str());
+	auto text_entree = danjo::contenu_fichier("interface/disposition_ligne_temps.danjo");
+	auto disp_controles = danjo::compile_interface(donnees, text_entree.c_str());
 
 	m_tc_layout->addLayout(disp_controles);
 

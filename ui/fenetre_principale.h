@@ -33,11 +33,11 @@ class Main;
 class QProgressBar;
 class RepondantCommande;
 
-namespace kangao {
+namespace danjo {
 
 class GestionnaireInterface;
 
-}  /* namespace kangao */
+}  /* namespace danjo */
 
 class FenetrePrincipale : public QMainWindow {
 	Q_OBJECT
@@ -48,7 +48,7 @@ class FenetrePrincipale : public QMainWindow {
 	EvaluationContext m_contexte_evaluation;
 
 	RepondantCommande *m_repondant_commande = nullptr;
-	kangao::GestionnaireInterface *m_gestionnaire = nullptr;
+	danjo::GestionnaireInterface *m_gestionnaire = nullptr;
 
 	QMenu *m_menu_ajout_noeud = nullptr;
 

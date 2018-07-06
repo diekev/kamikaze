@@ -78,14 +78,14 @@ public:
 	{
 		sorties(1);
 
-		ajoute_propriete("taille", kangao::TypePropriete::VECTEUR, glm::vec3(1.0));
-		ajoute_propriete("centre", kangao::TypePropriete::VECTEUR, glm::vec3(0.0));
-		ajoute_propriete("échelle", kangao::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("taille", danjo::TypePropriete::VECTEUR, glm::vec3(1.0));
+		ajoute_propriete("centre", danjo::TypePropriete::VECTEUR, glm::vec3(0.0));
+		ajoute_propriete("échelle", danjo::TypePropriete::DECIMAL, 1.0f);
 	}
 
 	const char *chemin_interface() const override
 	{
-		return "interface/operateur_creation_boite.kangao";
+		return "interface/operateur_creation_boite.danjo";
 	}
 
 	const char *nom_sortie(size_t /*index*/)
@@ -169,19 +169,19 @@ public:
 		entrees(1);
 		sorties(1);
 
-		ajoute_propriete("ordre_transformation", kangao::TypePropriete::ENUM, std::string("pre"));
-		ajoute_propriete("ordre_rotation", kangao::TypePropriete::ENUM, std::string("xyz"));
-		ajoute_propriete("translation", kangao::TypePropriete::VECTEUR, glm::vec3(0.0));
-		ajoute_propriete("rotation", kangao::TypePropriete::VECTEUR, glm::vec3(0.0));
-		ajoute_propriete("taille", kangao::TypePropriete::VECTEUR, glm::vec3(1.0));
-		ajoute_propriete("pivot", kangao::TypePropriete::VECTEUR, glm::vec3(0.0));
-		ajoute_propriete("échelle", kangao::TypePropriete::DECIMAL, 1.0f);
-		ajoute_propriete("inverse", kangao::TypePropriete::BOOL, false);
+		ajoute_propriete("ordre_transformation", danjo::TypePropriete::ENUM, std::string("pre"));
+		ajoute_propriete("ordre_rotation", danjo::TypePropriete::ENUM, std::string("xyz"));
+		ajoute_propriete("translation", danjo::TypePropriete::VECTEUR, glm::vec3(0.0));
+		ajoute_propriete("rotation", danjo::TypePropriete::VECTEUR, glm::vec3(0.0));
+		ajoute_propriete("taille", danjo::TypePropriete::VECTEUR, glm::vec3(1.0));
+		ajoute_propriete("pivot", danjo::TypePropriete::VECTEUR, glm::vec3(0.0));
+		ajoute_propriete("échelle", danjo::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("inverse", danjo::TypePropriete::BOOL, false);
 	}
 
 	const char *chemin_interface() const override
 	{
-		return "interface/operateur_transformation.kangao";
+		return "interface/operateur_transformation.danjo";
 	}
 
 	const char *nom_entree(size_t /*index*/)
@@ -292,17 +292,17 @@ public:
 	{
 		sorties(1);
 
-		ajoute_propriete("centre", kangao::TypePropriete::VECTEUR, glm::vec3(0.0));
-		ajoute_propriete("rayon_majeur", kangao::TypePropriete::DECIMAL, 1.0f);
-		ajoute_propriete("rayon_mineur", kangao::TypePropriete::DECIMAL, 0.25f);
-		ajoute_propriete("segments_majeurs", kangao::TypePropriete::ENTIER, 48);
-		ajoute_propriete("segments_mineurs", kangao::TypePropriete::ENTIER, 24);
-		ajoute_propriete("échelle", kangao::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("centre", danjo::TypePropriete::VECTEUR, glm::vec3(0.0));
+		ajoute_propriete("rayon_majeur", danjo::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("rayon_mineur", danjo::TypePropriete::DECIMAL, 0.25f);
+		ajoute_propriete("segments_majeurs", danjo::TypePropriete::ENTIER, 48);
+		ajoute_propriete("segments_mineurs", danjo::TypePropriete::ENTIER, 24);
+		ajoute_propriete("échelle", danjo::TypePropriete::DECIMAL, 1.0f);
 	}
 
 	const char *chemin_interface() const override
 	{
-		return "interface/operateur_creation_torus.kangao";
+		return "interface/operateur_creation_torus.danjo";
 	}
 
 	const char *nom_sortie(size_t /*index*/)
@@ -403,15 +403,15 @@ public:
 	{
 		sorties(1);
 
-		ajoute_propriete("centre", kangao::TypePropriete::VECTEUR, glm::vec3(0.0));
-		ajoute_propriete("taille", kangao::TypePropriete::VECTEUR, glm::vec3(1.0));
-		ajoute_propriete("lignes", kangao::TypePropriete::ENTIER, 2);
-		ajoute_propriete("colonnes", kangao::TypePropriete::ENTIER, 2);
+		ajoute_propriete("centre", danjo::TypePropriete::VECTEUR, glm::vec3(0.0));
+		ajoute_propriete("taille", danjo::TypePropriete::VECTEUR, glm::vec3(1.0));
+		ajoute_propriete("lignes", danjo::TypePropriete::ENTIER, 2);
+		ajoute_propriete("colonnes", danjo::TypePropriete::ENTIER, 2);
 	}
 
 	const char *chemin_interface() const override
 	{
-		return "interface/operateur_creation_grille.kangao";
+		return "interface/operateur_creation_grille.danjo";
 	}
 
 	const char *nom_sortie(size_t /*index*/)
@@ -498,13 +498,13 @@ public:
 	{
 		sorties(1);
 
-		ajoute_propriete("vertices", kangao::TypePropriete::ENTIER, 32);
-		ajoute_propriete("rayon", kangao::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("vertices", danjo::TypePropriete::ENTIER, 32);
+		ajoute_propriete("rayon", danjo::TypePropriete::DECIMAL, 1.0f);
 	}
 
 	const char *chemin_interface() const override
 	{
-		return "interface/operateur_creation_cercle.kangao";
+		return "interface/operateur_creation_cercle.danjo";
 	}
 
 	const char *nom_sortie(size_t /*index*/) override
@@ -646,14 +646,14 @@ public:
 	{
 		sorties(1);
 
-		ajoute_propriete("vertices", kangao::TypePropriete::ENTIER, 32);
-		ajoute_propriete("rayon", kangao::TypePropriete::DECIMAL, 1.0f);
-		ajoute_propriete("profondeur", kangao::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("vertices", danjo::TypePropriete::ENTIER, 32);
+		ajoute_propriete("rayon", danjo::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("profondeur", danjo::TypePropriete::DECIMAL, 1.0f);
 	}
 
 	const char *chemin_interface() const override
 	{
-		return "interface/operateur_creation_tube.kangao";
+		return "interface/operateur_creation_tube.danjo";
 	}
 
 	const char *nom_sortie(size_t /*index*/) override
@@ -695,15 +695,15 @@ public:
 	{
 		sorties(1);
 
-		ajoute_propriete("vertices", kangao::TypePropriete::ENTIER, 32);
-		ajoute_propriete("rayon_mineur", kangao::TypePropriete::DECIMAL, 0.0f);
-		ajoute_propriete("rayon_majeur", kangao::TypePropriete::DECIMAL, 1.0f);
-		ajoute_propriete("profondeur", kangao::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("vertices", danjo::TypePropriete::ENTIER, 32);
+		ajoute_propriete("rayon_mineur", danjo::TypePropriete::DECIMAL, 0.0f);
+		ajoute_propriete("rayon_majeur", danjo::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("profondeur", danjo::TypePropriete::DECIMAL, 1.0f);
 	}
 
 	const char *chemin_interface() const override
 	{
-		return "interface/operateur_creation_cone.kangao";
+		return "interface/operateur_creation_cone.danjo";
 	}
 
 	const char *nom_sortie(size_t /*index*/) override
@@ -784,12 +784,12 @@ public:
 	{
 		sorties(1);
 
-		ajoute_propriete("rayon", kangao::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("rayon", danjo::TypePropriete::DECIMAL, 1.0f);
 	}
 
 	const char *chemin_interface() const override
 	{
-		return "interface/operateur_creation_icosphere.kangao";
+		return "interface/operateur_creation_icosphere.danjo";
 	}
 
 	const char *nom() override
@@ -855,12 +855,12 @@ public:
 		entrees(1);
 		sorties(1);
 
-		ajoute_propriete("inverse", kangao::TypePropriete::BOOL, false);
+		ajoute_propriete("inverse", danjo::TypePropriete::BOOL, false);
 	}
 
 	const char *chemin_interface() const override
 	{
-		return "interface/operateur_normal.kangao";
+		return "interface/operateur_normal.danjo";
 	}
 
 	const char *nom_entree(size_t /*index*/) override
@@ -918,20 +918,20 @@ public:
 		entrees(1);
 		sorties(1);
 
-		ajoute_propriete("bruit", kangao::TypePropriete::ENUM, std::string("simplex"));
-		ajoute_propriete("direction", kangao::TypePropriete::ENUM, std::string("x"));
-		ajoute_propriete("taille", kangao::TypePropriete::DECIMAL, 1.0f);
-		ajoute_propriete("octaves", kangao::TypePropriete::ENTIER, 1.0f);
-		ajoute_propriete("frequence", kangao::TypePropriete::DECIMAL, 1.0f);
-		ajoute_propriete("amplitude", kangao::TypePropriete::DECIMAL, 1.0f);
-		ajoute_propriete("persistence", kangao::TypePropriete::DECIMAL, 1.0f);
-		ajoute_propriete("lacunarité", kangao::TypePropriete::DECIMAL, 1.0f);
-		ajoute_propriete("temps", kangao::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("bruit", danjo::TypePropriete::ENUM, std::string("simplex"));
+		ajoute_propriete("direction", danjo::TypePropriete::ENUM, std::string("x"));
+		ajoute_propriete("taille", danjo::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("octaves", danjo::TypePropriete::ENTIER, 1.0f);
+		ajoute_propriete("frequence", danjo::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("amplitude", danjo::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("persistence", danjo::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("lacunarité", danjo::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("temps", danjo::TypePropriete::DECIMAL, 1.0f);
 	}
 
 	const char *chemin_interface() const override
 	{
-		return "interface/operateur_bruit.kangao";
+		return "interface/operateur_bruit.danjo";
 	}
 
 	bool ajourne_proprietes() override
@@ -1068,15 +1068,15 @@ public:
 		entrees(1);
 		sorties(1);
 
-		ajoute_propriete("portée", kangao::TypePropriete::ENUM, std::string("vertices"));
-		ajoute_propriete("méthode", kangao::TypePropriete::ENUM, std::string("unique"));
-		ajoute_propriete("couleur", kangao::TypePropriete::COULEUR, glm::vec3(0.5, 0.5, 0.5));
-		ajoute_propriete("graine", kangao::TypePropriete::ENTIER, 1);
+		ajoute_propriete("portée", danjo::TypePropriete::ENUM, std::string("vertices"));
+		ajoute_propriete("méthode", danjo::TypePropriete::ENUM, std::string("unique"));
+		ajoute_propriete("couleur", danjo::TypePropriete::COULEUR, glm::vec3(0.5, 0.5, 0.5));
+		ajoute_propriete("graine", danjo::TypePropriete::ENTIER, 1);
 	}
 
 	const char *chemin_interface() const override
 	{
-		return "interface/operateur_couleur.kangao";
+		return "interface/operateur_couleur.danjo";
 	}
 
 	const char *nom_entree(size_t /*index*/) override
@@ -1220,14 +1220,14 @@ public:
 	{
 		sorties(1);
 
-		ajoute_propriete("nombre_points", kangao::TypePropriete::ENTIER, 1000);
-		ajoute_propriete("limite_min", kangao::TypePropriete::VECTEUR, glm::vec3(-1.0));
-		ajoute_propriete("limite_max", kangao::TypePropriete::VECTEUR, glm::vec3(1.0));
+		ajoute_propriete("nombre_points", danjo::TypePropriete::ENTIER, 1000);
+		ajoute_propriete("limite_min", danjo::TypePropriete::VECTEUR, glm::vec3(-1.0));
+		ajoute_propriete("limite_max", danjo::TypePropriete::VECTEUR, glm::vec3(1.0));
 	}
 
 	const char *chemin_interface() const override
 	{
-		return "interface/operateur_creation_nuage_point.kangao";
+		return "interface/operateur_creation_nuage_point.danjo";
 	}
 
 	const char *nom_sortie(size_t /*index*/) override
@@ -1317,13 +1317,13 @@ public:
 		entrees(1);
 		sorties(1);
 
-		ajoute_propriete("nom_attribut", kangao::TypePropriete::CHAINE_CARACTERE, std::string(""));
-		ajoute_propriete("type_attribut", kangao::TypePropriete::ENUM, std::string("octet"));
+		ajoute_propriete("nom_attribut", danjo::TypePropriete::CHAINE_CARACTERE, std::string(""));
+		ajoute_propriete("type_attribut", danjo::TypePropriete::ENUM, std::string("octet"));
 	}
 
 	const char *chemin_interface() const override
 	{
-		return "interface/operateur_suppression_attribut.kangao";
+		return "interface/operateur_suppression_attribut.danjo";
 	}
 
 	const char *nom_entree(size_t /*index*/) override
@@ -1393,13 +1393,13 @@ public:
 		entrees(1);
 		sorties(1);
 
-		ajoute_propriete("nom_attribut", kangao::TypePropriete::CHAINE_CARACTERE, std::string(""));
-		ajoute_propriete("type_attribut", kangao::TypePropriete::ENUM, std::string("octet"));
+		ajoute_propriete("nom_attribut", danjo::TypePropriete::CHAINE_CARACTERE, std::string(""));
+		ajoute_propriete("type_attribut", danjo::TypePropriete::ENUM, std::string("octet"));
 	}
 
 	const char *chemin_interface() const override
 	{
-		return "interface/operateur_suppression_attribut.kangao";
+		return "interface/operateur_suppression_attribut.danjo";
 	}
 
 	const char *nom_entree(size_t /*index*/) override
@@ -1450,19 +1450,19 @@ public:
 		entrees(1);
 		sorties(1);
 
-		ajoute_propriete("nom_attribut", kangao::TypePropriete::CHAINE_CARACTERE, std::string(""));
-		ajoute_propriete("type_attribut", kangao::TypePropriete::ENUM, std::string("octet"));
-		ajoute_propriete("distribution", kangao::TypePropriete::ENUM, std::string("constant"));
-		ajoute_propriete("valeur", kangao::TypePropriete::DECIMAL, 1.0f);
-		ajoute_propriete("valeur_min", kangao::TypePropriete::DECIMAL, 1.0f);
-		ajoute_propriete("valeur_max", kangao::TypePropriete::DECIMAL, 1.0f);
-		ajoute_propriete("moyenne", kangao::TypePropriete::DECIMAL, 1.0f);
-		ajoute_propriete("écart_type", kangao::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("nom_attribut", danjo::TypePropriete::CHAINE_CARACTERE, std::string(""));
+		ajoute_propriete("type_attribut", danjo::TypePropriete::ENUM, std::string("octet"));
+		ajoute_propriete("distribution", danjo::TypePropriete::ENUM, std::string("constant"));
+		ajoute_propriete("valeur", danjo::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("valeur_min", danjo::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("valeur_max", danjo::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("moyenne", danjo::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("écart_type", danjo::TypePropriete::DECIMAL, 1.0f);
 	}
 
 	const char *chemin_interface() const override
 	{
-		return "interface/operateur_randomise_attribut.kangao";
+		return "interface/operateur_randomise_attribut.danjo";
 	}
 
 	const char *nom_entree(size_t /*index*/) override
@@ -1610,18 +1610,18 @@ public:
 		entrees(1);
 		sorties(1);
 
-		ajoute_propriete("méthode", kangao::TypePropriete::ENUM, std::string("vertices"));
-		ajoute_propriete("graine", kangao::TypePropriete::ENTIER, 1);
-		ajoute_propriete("nombre_courbes", kangao::TypePropriete::ENTIER, 100);
-		ajoute_propriete("segments", kangao::TypePropriete::ENTIER, 1);
-		ajoute_propriete("taille", kangao::TypePropriete::DECIMAL, 1.0f);
-		ajoute_propriete("direction", kangao::TypePropriete::ENUM, std::string("normal"));
-		ajoute_propriete("normal", kangao::TypePropriete::VECTEUR, glm::vec3(0.0f, 1.0f, 0.0f));
+		ajoute_propriete("méthode", danjo::TypePropriete::ENUM, std::string("vertices"));
+		ajoute_propriete("graine", danjo::TypePropriete::ENTIER, 1);
+		ajoute_propriete("nombre_courbes", danjo::TypePropriete::ENTIER, 100);
+		ajoute_propriete("segments", danjo::TypePropriete::ENTIER, 1);
+		ajoute_propriete("taille", danjo::TypePropriete::DECIMAL, 1.0f);
+		ajoute_propriete("direction", danjo::TypePropriete::ENUM, std::string("normal"));
+		ajoute_propriete("normal", danjo::TypePropriete::VECTEUR, glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
 	const char *chemin_interface() const override
 	{
-		return "interface/operateur_creation_courbes.kangao";
+		return "interface/operateur_creation_courbes.danjo";
 	}
 
 	bool ajourne_proprietes() override
@@ -1859,12 +1859,12 @@ public:
 		entrees(2);
 		sorties(1);
 
-		ajoute_propriete("prise", kangao::TypePropriete::ENTIER, 0);
+		ajoute_propriete("prise", danjo::TypePropriete::ENTIER, 0);
 	}
 
 	const char *chemin_interface() const override
 	{
-		return "interface/operateur_commutateur.kangao";
+		return "interface/operateur_commutateur.danjo";
 	}
 
 	const char *nom_entree(size_t index) override
@@ -1906,13 +1906,13 @@ public:
 		entrees(1);
 		sorties(1);
 
-		ajoute_propriete("graine", kangao::TypePropriete::ENTIER, 1);
-		ajoute_propriete("nombre_points_polys", kangao::TypePropriete::ENTIER, 100);
+		ajoute_propriete("graine", danjo::TypePropriete::ENTIER, 1);
+		ajoute_propriete("nombre_points_polys", danjo::TypePropriete::ENTIER, 100);
 	}
 
 	const char *chemin_interface() const override
 	{
-		return "interface/operateur_dispersion_points.kangao";
+		return "interface/operateur_dispersion_points.danjo";
 	}
 
 	const char *nom_entree(size_t /*index*/) override

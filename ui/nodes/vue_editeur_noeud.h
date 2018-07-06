@@ -29,14 +29,14 @@
 class QMenu;
 class RepondantCommande;
 
-namespace kangao {
+namespace danjo {
 
 class GestionnaireInterface;
 
-}  /* namespace kangao */
+}  /* namespace danjo */
 
 class VueEditeurNoeud : public QGraphicsView {
-	kangao::GestionnaireInterface *m_gestionnaire = nullptr;
+	danjo::GestionnaireInterface *m_gestionnaire = nullptr;
 	RepondantCommande *m_repondant_commande = nullptr;
 
 	QMenu *m_menu_contexte = nullptr;
@@ -45,7 +45,7 @@ class VueEditeurNoeud : public QGraphicsView {
 public:
 	explicit VueEditeurNoeud(
 			RepondantCommande *repondant,
-			kangao::GestionnaireInterface *gestionnaire,
+			danjo::GestionnaireInterface *gestionnaire,
 			QWidget *parent = nullptr);
 
 	explicit VueEditeurNoeud(QGraphicsScene *scene, QWidget *parent = nullptr);

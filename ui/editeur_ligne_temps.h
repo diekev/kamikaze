@@ -35,11 +35,11 @@ class QSpinBox;
 class QVBoxLayout;
 class Scene;
 
-namespace kangao {
+namespace danjo {
 
 class RepondantBouton;
 
-}  /* namespace kangao */
+}  /* namespace danjo */
 
 class EditeurLigneTemps : public BaseEditeur {
 	Q_OBJECT
@@ -57,7 +57,7 @@ class EditeurLigneTemps : public BaseEditeur {
 	bool m_timer_has_started = false;
 
 public:
-	explicit EditeurLigneTemps(kangao::RepondantBouton *repondant, QWidget *parent = nullptr);
+	explicit EditeurLigneTemps(danjo::RepondantBouton *repondant, QWidget *parent = nullptr);
 
 	void update_state(event_type event) override;
 

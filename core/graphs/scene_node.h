@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include <kangao/manipulable.h>
+#include <danjo/manipulable.h>
 #include <memory>
 #include <vector>
 
@@ -62,7 +62,7 @@ enum {
 	SNODE_OL_EXPANDED = (1 << 0),  /* Is it expanded in the outliner? */
 };
 
-class SceneNode : public kangao::Manipulable {
+class SceneNode : public danjo::Manipulable {
 protected:
 	std::vector<SceneInputSocketPtr> m_inputs = {};
 	std::vector<SceneOutputSocketPtr> m_outputs = {};

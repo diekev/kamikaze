@@ -37,11 +37,11 @@ class QtNode;
 class QtNodeGraphicsScene;
 class VueEditeurNoeud;
 
-namespace kangao {
+namespace danjo {
 
 class GestionnaireInterface;
 
-}  /* namespace kangao */
+}  /* namespace danjo */
 
 class EditeurGraphe : public BaseEditeur {
 	Q_OBJECT
@@ -64,7 +64,7 @@ class EditeurGraphe : public BaseEditeur {
 public:
 	explicit EditeurGraphe(
 			RepondantCommande *repondant,
-			kangao::GestionnaireInterface *gestionnaire,
+			danjo::GestionnaireInterface *gestionnaire,
 			QWidget *parent = nullptr);
 
 	virtual ~EditeurGraphe();

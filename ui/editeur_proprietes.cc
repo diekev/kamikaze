@@ -31,7 +31,7 @@
 
 #include <kamikaze/operateur.h>
 
-#include <kangao/kangao.h>
+#include <danjo/danjo.h>
 
 #include "core/graphs/object_graph.h"
 #include "core/object.h"
@@ -72,7 +72,7 @@ EditeurProprietes::EditeurProprietes(QWidget *parent)
 
 void EditeurProprietes::update_state(event_type event)
 {
-	kangao::Manipulable *manipulable = nullptr;
+	danjo::Manipulable *manipulable = nullptr;
 	auto scene = m_context->scene;
 	const char *chemin_interface = "";
 
@@ -88,7 +88,7 @@ void EditeurProprietes::update_state(event_type event)
 	if (event_category == event_type::object) {
 		if (is_elem(event_action, event_type::added, event_type::selected)) {
 			manipulable = scene->active_node();
-			chemin_interface = "interface/proprietes_objet.kangao";
+			chemin_interface = "interface/proprietes_objet.danjo";
 		}
 		else if (is_elem(event_action, event_type::removed)) {
 			efface_disposition();
@@ -132,21 +132,21 @@ void EditeurProprietes::update_state(event_type event)
 	dessine_interface(manipulable, chemin_interface);
 }
 
-void EditeurProprietes::dessine_interface(kangao::Manipulable *manipulable, const char *chemin_interface)
+void EditeurProprietes::dessine_interface(danjo::Manipulable *manipulable, const char *chemin_interface)
 {
 	manipulable->ajourne_proprietes();
 
-	const auto &texte = kangao::contenu_fichier(chemin_interface);
+	const auto &texte = danjo::contenu_fichier(chemin_interface);
 
 	if (texte.empty()) {
 		return;
 	}
 
-	kangao::DonneesInterface donnees;
+	danjo::DonneesInterface donnees;
 	donnees.manipulable = manipulable;
 	donnees.conteneur = this;
 
-	auto disposition = kangao::compile_interface(donnees, texte.c_str());
+	auto disposition = danjo::compile_interface(donnees, texte.c_str());
 
 	m_conteneur_disposition->setLayout(disposition);
 

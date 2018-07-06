@@ -42,7 +42,7 @@
 
 EditeurGraphe::EditeurGraphe(
 		RepondantCommande *repondant,
-		kangao::GestionnaireInterface *gestionnaire,
+		danjo::GestionnaireInterface *gestionnaire,
 		QWidget *parent)
 	: BaseEditeur(parent)
 	, m_view(new VueEditeurNoeud(repondant, gestionnaire, this))

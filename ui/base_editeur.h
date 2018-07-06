@@ -24,14 +24,14 @@
 
 #pragma once
 
-#include <kangao/conteneur_controles.h>
+#include <danjo/conteneur_controles.h>
 
 #include "context.h"
 
 class QFrame;
 class QHBoxLayout;
 
-class BaseEditeur : public kangao::ConteneurControles, public ContextListener {
+class BaseEditeur : public danjo::ConteneurControles, public ContextListener {
 protected:
 	QFrame *m_frame;
 	QHBoxLayout *m_layout;

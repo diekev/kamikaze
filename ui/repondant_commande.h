@@ -24,14 +24,14 @@
 
 #pragma once
 
-#include <kangao/repondant_bouton.h>
+#include <danjo/repondant_bouton.h>
 
 class Commande;
 class Context;
 class DonneesCommande;
 class Main;
 
-class RepondantCommande : public kangao::RepondantBouton {
+class RepondantCommande : public danjo::RepondantBouton {
 	Main *m_main = nullptr;
 	Context *m_contexte = nullptr;
 

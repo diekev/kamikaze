@@ -29,11 +29,11 @@
 class QScrollArea;
 class QVBoxLayout;
 
-namespace kangao {
+namespace danjo {
 
 class Manipulable;
 
-}  /* namespace kangao */
+}  /* namespace danjo */
 
 class EditeurProprietes : public BaseEditeur {
 	Q_OBJECT
@@ -45,7 +45,7 @@ class EditeurProprietes : public BaseEditeur {
 	QScrollArea *m_scroll;
 	QVBoxLayout *m_disposition_widget;
 
-	kangao::Manipulable *m_manipulable = nullptr;
+	danjo::Manipulable *m_manipulable = nullptr;
 
 public:
 	explicit EditeurProprietes(QWidget *parent = nullptr);
@@ -54,7 +54,7 @@ public:
 	void update_state(event_type event) override;
 
 private:
-	void dessine_interface(kangao::Manipulable *manipulable, const char *chemin_interface);
+	void dessine_interface(danjo::Manipulable *manipulable, const char *chemin_interface);
 
 	void ajourne_manipulable() override;
 

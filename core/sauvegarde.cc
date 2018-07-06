@@ -46,13 +46,13 @@ static std::string id_depuis_pointeur(void *pointeur)
 static void sauvegarde_proprietes(
 		tinyxml2::XMLDocument &doc,
 		tinyxml2::XMLElement *element,
-		kangao::Manipulable *manipulable)
+		danjo::Manipulable *manipulable)
 {
 	tinyxml2::XMLElement *racine_propriete = doc.NewElement("proprietes");
 	element->InsertEndChild(racine_propriete);
 
 	for (auto iter = manipulable->debut(); iter != manipulable->fin(); ++iter) {
-		kangao::Propriete prop = iter->second;
+		danjo::Propriete prop = iter->second;
 		auto nom = iter->first;
 
 		auto element_prop = doc.NewElement("propriete");
@@ -65,25 +65,25 @@ static void sauvegarde_proprietes(
 		auto element_donnees = doc.NewElement("donnees");
 
 		switch (prop.type) {
-			case kangao::TypePropriete::BOOL:
+			case danjo::TypePropriete::BOOL:
 			{
 				auto donnees = manipulable->evalue_bool(nom);
 				element_donnees->SetAttribute("valeur", donnees);
 				break;
 			}
-			case kangao::TypePropriete::ENTIER:
+			case danjo::TypePropriete::ENTIER:
 			{
 				auto donnees = manipulable->evalue_entier(nom);
 				element_donnees->SetAttribute("valeur", donnees);
 				break;
 			}
-			case kangao::TypePropriete::DECIMAL:
+			case danjo::TypePropriete::DECIMAL:
 			{
 				auto donnees = manipulable->evalue_decimal(nom);
 				element_donnees->SetAttribute("valeur", donnees);
 				break;
 			}
-			case kangao::TypePropriete::VECTEUR:
+			case danjo::TypePropriete::VECTEUR:
 			{
 				glm::vec3 donnees = manipulable->evalue_vecteur(nom);
 
@@ -92,7 +92,7 @@ static void sauvegarde_proprietes(
 				element_donnees->SetAttribute("valeurz", donnees.z);
 				break;
 			}
-			case kangao::TypePropriete::COULEUR:
+			case danjo::TypePropriete::COULEUR:
 			{
 				glm::vec3 donnees = manipulable->evalue_couleur(nom);
 
@@ -101,10 +101,10 @@ static void sauvegarde_proprietes(
 				element_donnees->SetAttribute("valeurz", donnees.z);
 				break;
 			}
-			case kangao::TypePropriete::ENUM:
-			case kangao::TypePropriete::FICHIER_SORTIE:
-			case kangao::TypePropriete::FICHIER_ENTREE:
-			case kangao::TypePropriete::CHAINE_CARACTERE:
+			case danjo::TypePropriete::ENUM:
+			case danjo::TypePropriete::FICHIER_SORTIE:
+			case danjo::TypePropriete::FICHIER_ENTREE:
+			case danjo::TypePropriete::CHAINE_CARACTERE:
 			{
 				std::string donnees = manipulable->evalue_chaine(nom);
 				element_donnees->SetAttribute("valeur", donnees.c_str());
@@ -235,33 +235,33 @@ erreur_fichier sauvegarde_projet(const filesystem::path &chemin, const Main &mai
 
 static void lecture_propriete(
 		tinyxml2::XMLElement *element,
-		kangao::Manipulable *manipulable)
+		danjo::Manipulable *manipulable)
 {
 	const auto type_prop = element->Attribute("type");
 	const auto nom_prop = element->Attribute("nom");
 
 	const auto element_donnees = element->FirstChildElement("donnees");
 
-	switch (static_cast<kangao::TypePropriete>(atoi(type_prop))) {
-		case kangao::TypePropriete::BOOL:
+	switch (static_cast<danjo::TypePropriete>(atoi(type_prop))) {
+		case danjo::TypePropriete::BOOL:
 		{
 			const auto donnees = element_donnees->Attribute("valeur");
 			manipulable->valeur_bool(nom_prop, atoi(donnees));
 			break;
 		}
-		case kangao::TypePropriete::ENTIER:
+		case danjo::TypePropriete::ENTIER:
 		{
 			const auto donnees = element_donnees->Attribute("valeur");
 			manipulable->valeur_entier(nom_prop, atoi(donnees));
 			break;
 		}
-		case kangao::TypePropriete::DECIMAL:
+		case danjo::TypePropriete::DECIMAL:
 		{
 			const auto donnees = element_donnees->Attribute("valeur");
 			manipulable->valeur_decimal(nom_prop, atof(donnees));
 			break;
 		}
-		case kangao::TypePropriete::VECTEUR:
+		case danjo::TypePropriete::VECTEUR:
 		{
 			const auto donnee_x = atof(element_donnees->Attribute("valeurx"));
 			const auto donnee_y = atof(element_donnees->Attribute("valeury"));
@@ -270,7 +270,7 @@ static void lecture_propriete(
 			manipulable->valeur_vecteur(nom_prop, donnees);
 			break;
 		}
-		case kangao::TypePropriete::COULEUR:
+		case danjo::TypePropriete::COULEUR:
 		{
 			const auto donnee_x = atof(element_donnees->Attribute("valeurx"));
 			const auto donnee_y = atof(element_donnees->Attribute("valeury"));
@@ -279,10 +279,10 @@ static void lecture_propriete(
 			manipulable->valeur_couleur(nom_prop, donnees);
 			break;
 		}
-		case kangao::TypePropriete::ENUM:
-		case kangao::TypePropriete::FICHIER_SORTIE:
-		case kangao::TypePropriete::FICHIER_ENTREE:
-		case kangao::TypePropriete::CHAINE_CARACTERE:
+		case danjo::TypePropriete::ENUM:
+		case danjo::TypePropriete::FICHIER_SORTIE:
+		case danjo::TypePropriete::FICHIER_ENTREE:
+		case danjo::TypePropriete::CHAINE_CARACTERE:
 		{
 			const auto donnees = element_donnees->Attribute("valeur");
 			manipulable->valeur_chaine(nom_prop, donnees);
@@ -293,7 +293,7 @@ static void lecture_propriete(
 
 static void lecture_proprietes(
 		tinyxml2::XMLElement *element,
-		kangao::Manipulable *manipulable)
+		danjo::Manipulable *manipulable)
 {
 	const auto racine_propriete = element->FirstChildElement("proprietes");
 	auto element_propriete = racine_propriete->FirstChildElement("propriete");

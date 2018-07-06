@@ -24,7 +24,7 @@
 
 #include "vue_editeur_noeud.h"
 
-#include <kangao/kangao.h>
+#include <danjo/danjo.h>
 
 #include <QKeyEvent>
 #include <QMenu>
@@ -37,18 +37,18 @@
 
 VueEditeurNoeud::VueEditeurNoeud(
 		RepondantCommande *repondant,
-		kangao::GestionnaireInterface *gestionnaire,
+		danjo::GestionnaireInterface *gestionnaire,
 		QWidget *parent)
 	: QGraphicsView(parent)
 	, m_gestionnaire(gestionnaire)
 	, m_repondant_commande(repondant)
 {
-	kangao::DonneesInterface donnees;
+	danjo::DonneesInterface donnees;
 	donnees.manipulable = nullptr;
 	donnees.conteneur = nullptr;
 	donnees.repondant_bouton = m_repondant_commande;
 
-	const auto texte_entree = kangao::contenu_fichier("interface/menu_editeur_noeud.kangao");
+	const auto texte_entree = danjo::contenu_fichier("interface/menu_editeur_noeud.danjo");
 	m_menu_contexte = m_gestionnaire->compile_menu(donnees, texte_entree.c_str());
 
 	setDragMode(QGraphicsView::ScrollHandDrag);

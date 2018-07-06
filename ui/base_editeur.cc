@@ -31,7 +31,7 @@
 #include <QVariant>
 
 BaseEditeur::BaseEditeur(QWidget *parent)
-	: kangao::ConteneurControles(parent)
+	: danjo::ConteneurControles(parent)
     , m_frame(new QFrame(this))
     , m_layout(new QHBoxLayout())
 {
